@@ -40,7 +40,7 @@ P.actions.skipIntro = () => { S.authMode = 'signup'; go(S.code ? 'account' : 'co
 /* ================= REGISTRO ================= */
 P.screens.code = {
   render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Crear cuenta</span></div>${steps(1)}<div class="scroll pad">
-    <div class="display" style="margin-top:22px">Tu <b>código</b> de invitación</div><p class="lead">Botella está en beta: entras con el código que te compartieron.</p>
+    <div class="display" style="margin-top:22px">Tu <b>código</b> de invitación</div><p class="lead">Por ahora Botella es solo con invitación: escribe el código que te compartieron.</p>
     <form id="codef" data-form="code"><label class="field" style="margin-top:26px"><input id="cd" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="BOTELLA-01" value="${esc(LS.get('code', '') || '')}" aria-label="Código de invitación"></label></form></div>
     <div class="foot pad"><button class="btn btn-a" data-act="codeNext">Continuar</button></div>`
 };
@@ -138,12 +138,12 @@ P.actions.finish = async el => {
 
 /* ================= ORILLA ================= */
 const SPOTS = [[8, 18], [50, 32], [18, 50], [58, 8], [30, 70], [62, 58]];
-const countHTML = () => { const n = S.me?.bottles || 0; return [0, 1, 2].map(i => `<i class="${i < Math.min(3, n) ? 'full' : ''}"></i>`).join('') + (n > 3 ? `<b class="more">+${n - 3}</b>` : ''); };
+const countHTML = () => { const n = S.me?.bottles || 0; return `${icon('bottle', 's')}<b class="num">${n}</b><span>${n === 1 ? 'botella' : 'botellas'}</span>`; };
 const meBtn = () => `<button class="iconbtn glass" data-go="perfil" data-fade aria-label="Tu perfil">${orb('var(--a)', 26)}</button>`;
 P.screens.orilla = {
   anim: night(.42, false),
   render: () => { const list = S.shore.slice(0, 6), n = S.shore.length; return `${sb_()}<div class="pad" style="flex:none">
-      <div class="top"><span class="wordmark" style="font-size:30px;flex:1">Botella</span><button class="count" data-go="store" data-fade aria-label="Te quedan ${S.me?.bottles || 0} botellas para lanzar. Ir al muelle">${countHTML()}</button>${meBtn()}</div>
+      <div class="top"><span class="wordmark" style="font-size:30px;flex:1">Botella</span><button class="mybottles" data-go="store" data-fade aria-label="Tienes ${S.me?.bottles || 0} botellas para lanzar. Ver el muelle">${countHTML()}</button>${meBtn()}</div>
     </div>
     <div style="flex:1;position:relative">
       ${list.map((b, i) => `<button class="float${b.status === 'opened' ? ' seen' : ''}" style="left:${SPOTS[i][0]}%;top:${SPOTS[i][1]}%" data-act="openB" data-id="${b.id}" aria-label="Abrir botella: ${esc(b.kind.toLowerCase())} desde ${esc(b.place)}">${btSVG(b.btype, b.glass, b.featured)}<span>${esc(b.kind)} · ${esc(b.place)}</span></button>`).join('')}
@@ -212,7 +212,7 @@ P.actions.sendAns = async el => {
     delete S.rec.ans; S.busy = false; S.shore = S.shore.filter(x => x.id !== b.id);
     if (S.me) S.me.bottles = res.left_bottles;
     await loadConvos(); P.hist = ['orilla']; await openChat(res.convo, { noPush: true });
-    P.timers.push(setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: res.rewarded ? 'Ganaste una botella' : 'Ya ganaste tus 3 botellas de hoy', text: res.rewarded ? 'Por responder. Úsala para lanzar la tuya.' : 'En el muelle puedes pedir más, gratis en la beta.', go: res.rewarded ? 'launch' : 'store' }), 900));
+    P.timers.push(setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: res.rewarded ? 'Ganaste una botella' : 'Ya ganaste tus 3 botellas de hoy', text: res.rewarded ? 'Por responder. Úsala para lanzar la tuya.' : 'En el muelle puedes pedir más, gratis por ahora.', go: res.rewarded ? 'launch' : 'store' }), 900));
   } catch (e) { S.busy = false; el.classList.remove('soft'); el.innerHTML = `${icon('send')} Enviar respuesta`; err(e, 'No se pudo enviar tu respuesta. Intenta otra vez.'); }
 };
 
@@ -231,7 +231,7 @@ P.screens.launch = {
       <div class="sec">${recBox('launch', 'Toca para grabarla. Hasta 60 segundos.')}</div>
       ${left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`}
     </div>
-    ${S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">Desliza la botella hacia arriba para lanzarla</span></div><button class="btn btn-ghost" data-act="throw" style="height:34px">O toca aquí para lanzar</button></div>` : ''}`; },
+    ${S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">Desliza la botella hacia arriba</span></div><button class="btn btn-a${left ? '' : ' soft'}" data-act="throw">${icon('send')} Lanzar al mar</button></div>` : ''}`; },
   after(sec) {
     const fb = sec.querySelector('#fb'); let y0 = null, dy = 0;
     sec.querySelector('#bbody').addEventListener('input', e => { S.body = e.target.value; });
@@ -255,7 +255,7 @@ const BT = {
 const btLeft = k => (k === 'color' ? S.me?.color_left : k === 'far' ? S.me?.far_left : S.me?.bottles) || 0;
 const btSVG = (k, glass, featured) => featured ? bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.32)') : k === 'color' ? bottleSVG('rgba(255,150,195,.95)', 'rgba(255,112,169,.22)') : k === 'far' ? bottleSVG('rgba(255,214,140,.95)', 'rgba(255,214,140,.22)') : glass && GLASS[glass] ? bottleSVG(GLASS[glass][0], GLASS[glass][1]) : bottleSVG();
 const btCol = b => !b ? '127,216,201' : b.featured || b.btype === 'far' ? '255,214,140' : b.btype === 'color' ? '255,112,169' : b.glass && GLASS[b.glass] ? GLASS[b.glass][2] : '127,216,201';
-const sampleNote = () => `<div class="samplenote rise d3">${icon('spark', 's')}<span><b>Botella de ejemplo.</b> Es una voz creada para la beta, para que pruebes cómo se siente Botella mientras llega más gente. Si respondes, te contesta.</span></div>`;
+const sampleNote = () => `<div class="samplenote rise d3">${icon('spark', 's')}<span><b>Botella de ejemplo.</b> Es una voz sintética para que pruebes Botella mientras se suma más gente. Si le respondes, te contesta.</span></div>`;
 function mareaLine() { const h = +new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour: 'numeric', hour12: false }); return h >= 21 ? 'llegó hoy a las 21:00' : 'hoy a las 21:00'; }
 function btypesHTML() { return Object.entries(BT).map(([k, b]) => `<button class="btype${S.btype === k ? ' on' : ''}${btLeft(k) ? '' : ' empty'}" data-act="btype" data-k="${k}" style="--bc:${b.col}"><span class="bsv">${btSVG(k)}</span><b>${b.name}</b><span>${b.sub}</span><em>${btLeft(k)}</em></button>`).join(''); }
 function targetOpts() { const v = S.target || 'topic:' + (S.me?.topics?.[0] || TOPICS[0]); S.target = v; return `<optgroup label="Por tema">${TOPICS.map(t => `<option value="topic:${t}"${v === 'topic:' + t ? ' selected' : ''}>Les gusta: ${t}</option>`).join('')}</optgroup><optgroup label="Por distrito">${DISTRICTS.filter(d => d !== 'Otro distrito').map(d => `<option value="district:${d}"${v === 'district:' + d ? ' selected' : ''}>Viven en ${d}</option>`).join('')}</optgroup>`; }
@@ -307,7 +307,7 @@ P.screens.thrown = {
     P.timers.push(setTimeout(() => set('El faro la guía', 'La luz del faro pasa por tu botella.', 'Busca orillas con tus mismos temas.'), 1300));
     const final = () => { const n = P.st.shores; if (n == null) { P.timers.push(setTimeout(final, 400)); return; } if (n < 0) return;
       set('En camino', n >= 10 ? 'Tu botella va hacia diez orillas.' : n >= 3 ? 'Tu botella va hacia tres orillas.' : n > 0 ? `Llegó a ${n === 1 ? 'una orilla' : n + ' orillas'}.` : 'Tu botella flota en el mar.',
-        (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 3 ? 'Si alguien responde, te avisamos. Si nadie la abre en 24 horas, la marea la lleva a otra orilla.' : 'Somos pocos en la beta: llegará a más personas a medida que se sumen. Te avisamos cuando alguien responda.')); };
+        (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 3 ? 'Si alguien responde, te avisamos. Si nadie la abre en 24 horas, la marea la lleva a otra orilla.' : 'Todavía somos pocos: llegará a más personas a medida que se sumen. Te avisamos cuando alguien responda.')); };
     P.timers.push(setTimeout(final, 3500));
   }
 };
@@ -370,7 +370,7 @@ function keysHTML(c) {
 P.screens.chat = {
   render: () => { const c = convo(); if (!c) return ''; const list = S.msgs[c.id] || []; return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 40)}<span class="title">${esc(c.alias)}<small>${c.sample ? 'de ejemplo · ' : ''}${c.revealed ? esc(c.place) + ' · ' : ''}${c.i_launched ? 'respondió tu botella' : 'respondiste su botella'}</small></span><button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
     <div class="scroll pad" id="thread"><div class="thread">
-      ${c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo: una voz creada para la beta, para que pruebes todo el recorrido. Con personas reales funciona igual.</span></div>` : ''}
+      ${c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo con una voz sintética, para que pruebes todo el recorrido. Con personas reales funciona igual.</span></div>` : ''}
       ${list.map(msgHTML).join('')}
       ${c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">Grabando una nota de voz…</span></div>` : ''}
       ${!c.closed && !c.revealed ? `<button class="reveal" data-act="chatMenu">${icon('eye', 's')}<span>${c.my_reveal ? 'Ya compartiste tu nombre. Se ve cuando la otra persona también lo comparta.' : c.other_reveal ? 'Quiere compartir su nombre contigo. Toca para compartir el tuyo.' : 'Son anónimos. Toca para compartir tu nombre.'}</span></button>` : ''}
@@ -457,7 +457,7 @@ P.screens.perfil = {
   anim: (ctx, w, h, t) => { const mx = sky(ctx, w, h, t, .2); waves(ctx, w, h, t, .2, mx, null, 3); },
   render: () => { const m = S.me || {}; return `${sb_()}<div class="top pad"><span class="title"></span>${(window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? '' : `<button class="iconbtn glass" data-act="install" aria-label="Instalar en tu celular">${icon('download')}</button>`}</div>
     <div class="scroll pad">
-      <div class="me rise">${orb('var(--a)', 88, true)}<div class="h2" style="margin-top:8px">${esc(m.name || '')}</div><div class="small muted">${esc(m.district || '')} · en la beta</div>${m.intro_voice ? vn(m.intro_voice, m.intro_secs || 10, { mine: true, peaks: m.intro_peaks }) : ''}<button class="btn btn-ghost btn-sm" data-act="reIntro" style="margin-top:6px">Grabar otra presentación</button></div>
+      <div class="me rise">${orb('var(--a)', 88, true)}<div class="h2" style="margin-top:8px">${esc(m.name || '')}</div><div class="small muted">${esc(m.district || '')}</div>${m.intro_voice ? vn(m.intro_voice, m.intro_secs || 10, { mine: true, peaks: m.intro_peaks }) : ''}<button class="btn btn-ghost btn-sm" data-act="reIntro" style="margin-top:6px">Grabar otra presentación</button></div>
       <div class="sec rise d1"><span class="eyebrow">Tus botellas</span><div class="stats"><div class="stat2"><b>${m.bottles ?? 0}</b><span>Normales</span></div><div class="stat2"><b style="color:#FF8FC0">${m.color_left ?? 0}</b><span>De color</span></div><div class="stat2"><b style="color:#FFD68C">${m.far_left ?? 0}</b><span>Llegan lejos</span></div></div><p class="small muted" style="margin:8px 0 0">Cada respuesta te regala una normal (te quedan ${Math.max(0, 3 - (m.earned_day === limaToday() ? m.earned : 0))} por ganar hoy).</p></div>
       <div class="invite rise d2"><span class="eyebrow a">Invita a un amigo</span><div class="h2" style="font-size:24px">Mientras más gente, más orillas.</div><div class="code"><span>${esc(inviteLink().replace(/^https?:\/\//, ''))}</span><button class="btn btn-a btn-sm" data-act="copyLink">${icon('copy', 's')} Copiar</button></div>${navigator.share ? `<button class="btn btn-glass" data-act="shareLink">${icon('export')} Compartir invitación</button>` : ''}</div>
       <div class="sec rise d3"><span class="eyebrow">Tu seguridad</span>
@@ -472,7 +472,7 @@ P.screens.perfil = {
 const limaToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
 const inviteLink = () => `${location.origin}/?c=${encodeURIComponent(S.me?.code_used || LS.get('code', '') || '')}`;
 P.actions.copyLink = el => { try { navigator.clipboard?.writeText(inviteLink()).catch(() => {}); } catch (e) {} el.innerHTML = `${icon('check', 's')} Copiado`; toast('Link copiado. Mándaselo a quien quieras invitar.'); };
-P.actions.shareLink = () => navigator.share({ title: 'Botella', text: 'Lanza tu voz al mar. Te invito a la beta de Botella:', url: inviteLink() }).catch(() => {});
+P.actions.shareLink = () => navigator.share({ title: 'Botella', text: 'Lanza tu voz al mar. Te invito a Botella:', url: inviteLink() }).catch(() => {});
 P.actions.pauseT = async el => {
   const on = !S.me.paused;
   try { const { error } = await sb.from('profiles').update({ paused: on }).eq('id', uid()); if (error) throw error; S.me.paused = on; el.setAttribute('aria-checked', on); toast(on ? 'Modo pausa activado.' : 'Volviste a estar visible.'); } catch (e) { err(e); }
@@ -496,7 +496,7 @@ P.actions.rules = () => sheet(`${sheetHead('Normas y privacidad')}<div class="ru
   <p><b>Para verse en persona,</b> elijan lugares públicos y avísale a alguien de confianza.</p>
   <p><b>Reportes.</b> Cada reporte bloquea a la persona y lo revisa el equipo. Una botella con dos reportes deja de viajar.</p>
   <p><b>Tus datos.</b> Guardamos tu correo, tu perfil y tus notas de voz para que la app funcione. No los vendemos ni los compartimos. Puedes borrar tu cuenta y todo se elimina.</p>
-  <p><b>Es una beta.</b> Puede haber errores; tus opiniones nos ayudan a mejorarla.</p></div><button class="btn btn-a" data-act="closeSheet" style="margin-top:8px">Entendido</button>`);
+  <p><b>Estamos empezando.</b> Puede haber errores; tus opiniones nos ayudan a mejorarla.</p></div><button class="btn btn-a" data-act="closeSheet" style="margin-top:8px">Entendido</button>`);
 P.actions.logout = async () => { await sb.auth.signOut().catch(() => {}); location.replace('/'); };
 P.actions.deleteAsk = () => sheet(`${sheetHead('¿Borrar tu cuenta?')}<p class="muted" style="font-size:14px;margin:0 0 16px">Se borran tu perfil, tus botellas, tus notas de voz y tus conversaciones. No se puede deshacer.</p><button class="btn btn-a" data-act="deleteGo">Borrar todo</button><button class="btn btn-ghost" data-act="closeSheet" style="margin-top:6px">Cancelar</button>`);
 P.actions.deleteGo = async el => {
