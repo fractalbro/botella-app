@@ -42,11 +42,12 @@ function callEnd(msg, remote) {
   if (P.curId === 'call') { if (S.convo && S.convo.id === C.convo) openChat(C.convo, { back: true, noPush: true }); else back(); }
   if (msg) toast(msg);
   // Después de hablar, lo natural es armar un plan.
+  if (C.state === 'live') { const tk = LS.get('talked', []); if (!tk.includes(C.convo)) { tk.push(C.convo); LS.set('talked', tk.slice(-200)); } }
   if (C.state === 'live' && Date.now() - (C.t0 || 0) > 4000) setTimeout(() => { if (P.curId === 'chat' && S.convo?.id === C.convo && !(S.msgs[C.convo] || []).some(m => m.body && m.body.startsWith('#plan|'))) P.actions.planAsk(); }, 1400);
 }
 async function callMic() { try { return await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Botella necesita tu micrófono para la llamada. Actívalo en los ajustes del navegador.'); return null; } }
 P.actions.call = async () => {
-  const c = convo(); if (!c || CALL) return; if (!(c.my_key && c.other_key)) return toast('La llamada se abre cuando los dos ponen su llave.');
+  const c = convo(); if (!c || CALL) return; if (!(c.my_key && c.other_key)) return toast('La llamada se abre cuando los dos la piden.');
   if (c.sample) return demoCall(c);
   if (!window.RTCPeerConnection) return toast('Este navegador no permite llamadas.');
   recCancel(); stopPlayer();
@@ -82,6 +83,7 @@ function subscribe() {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, ({ new: m }) => onMessage(m))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'deliveries', filter: `to_id=eq.${uid()}` }, () => onDelivery())
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'convos' }, ({ new: c }) => onConvo(c))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notices', filter: `to_id=eq.${uid()}` }, ({ new: n }) => onNotice(n))
     .subscribe();
 }
 async function onMessage(m) {
@@ -122,11 +124,19 @@ async function enter(fresh) {
     const ver = await rpc('app_version').catch(() => 0);
     const me = await loadMe();
     if (!me) { P.hist = []; go('about', { fade: true }); return; }
-    S.outdated = !(ver >= 3);
-    await refreshAll(); subscribe(); P.hist = []; P.st.shoreFresh = true;
+    S.outdated = !(ver >= 4);
+    await Promise.all([refreshAll(), loadHome(), loadDuos()]); subscribe(); P.hist = []; P.st.shoreFresh = true;
     go('orilla', { fade: true });
+    const first = S.firstRes; S.firstRes = null;
     if (S.outdated) setTimeout(outdatedSheet, 700);
+    else if (S.link?.l) { P.hist = ['orilla']; go('lecpub'); }
+    else if (S.link?.d) { P.hist = ['orilla']; go('duojoin'); }
+    else if (S.after === 'lectura') { S.after = null; P.hist = ['orilla']; go('lecturas'); }
+    else if (first?.convo) { P.hist = ['orilla']; await openChat(first.convo, { noPush: true }); setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu respuesta llegó', text: 'Ya tienes tu primera conversación. Te contesta en un minuto.' }), 900); }
     else if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu regalo de bienvenida', text: '3 normales, 2 de color, 1 que llega lejos, 1 marea destacada y 1 con lacre.', go: 'store' }), 1200);
+    if (S.pendingGo && !S.link) { const g = S.pendingGo; S.pendingGo = null; LS.set('seenAt', new Date().toISOString()); setTimeout(() => noticeGo(g), 300); }
+    else if (!fresh) setTimeout(missed, 1500); else LS.set('seenAt', new Date().toISOString());
+    pushSync().catch(() => {}); ping(4000);
   } catch (e) { err(e, 'No pudimos conectar con el mar. Revisa tu internet.'); go('splash'); }
 }
 /* Si el servidor no tiene la última versión de supabase/schema.sql, se dice claro en vez de mostrar saldos en cero. */
@@ -146,18 +156,22 @@ function boot() {
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[role=button][data-act]')) e.target.click(); });
   bindHold();
   new ResizeObserver(() => { sizeCanvas(); drawFrame(performance.now()); }).observe(phoneEl());
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.me && !CALL) { loadMe().then(() => Promise.all([loadShore(), loadConvos()])).then(() => { if (['orilla', 'convos', 'perfil'].includes(P.curId)) rerender(); }).catch(() => {}); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.me && !CALL) { loadMe().then(() => Promise.all([loadShore(), loadConvos(), loadHome()])).then(() => { if (['orilla', 'convos', 'perfil'].includes(P.curId)) rerender(); missed(); }).catch(() => {}); ping(); } });
   requestAnimationFrame(loop);
   if (document.fonts?.ready) document.fonts.ready.then(() => drawFrame(performance.now()));
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('/sw.js').catch(() => {});
 
-  const q = new URLSearchParams(location.search), code = q.get('c');
-  if (code) { S.code = code.trim().toUpperCase(); LS.set('code', S.code); history.replaceState(null, '', location.pathname); }
+  const q = new URLSearchParams(location.search), code = q.get('c'), dl = q.get('d'), ll = q.get('l');
+  if (code) { S.code = code.trim().toUpperCase(); LS.set('code', S.code); }
+  if (dl || ll) S.link = ll ? { l: ll.slice(0, 40) } : { d: dl.slice(0, 40) };
+  if (q.get('go')) S.pendingGo = { go: q.get('go'), ref: q.get('ref') };
+  if (code || dl || ll || q.get('go')) history.replaceState(null, '', location.pathname);
   sb.auth.onAuthStateChange((ev, ses) => {
     if (ev === 'PASSWORD_RECOVERY') { S.session = ses; setTimeout(() => sheet(`${sheetHead('Tu nueva contraseña')}<label class="field"><input id="npw" type="password" autocomplete="new-password" placeholder="8 caracteres o más" aria-label="Nueva contraseña"></label><button class="btn btn-a" data-act="newPass" style="margin-top:12px">Guardar</button>`), 400); }
     if (ev === 'SIGNED_OUT') { S.session = null; }
   });
-  sb.auth.getSession().then(({ data }) => { S.session = data && data.session; if (S.session) enter(); else go('splash'); }).catch(() => go('splash'));
+  const guest = () => go(S.link?.l ? 'lecpub' : S.link?.d ? 'duojoin' : 'splash');
+  sb.auth.getSession().then(({ data }) => { S.session = data && data.session; if (S.session) enter(); else guest(); }).catch(guest);
 }
 P.actions.newPass = async () => { const p = $('#npw').value; if (p.length < 8) return toast('La contraseña necesita 8 caracteres o más.'); const { error } = await sb.auth.updateUser({ password: p }); if (error) return err(error); closeSheet(); toast('Listo, ya tienes contraseña nueva.'); enter(); };
 boot();
