@@ -295,7 +295,7 @@ function needVoice(id) {
 
 /* ================= DATOS ================= */
 async function rpc(name, args) { const { data, error } = await sb.rpc(name, args); if (error) throw error; return data; }
-async function loadMe() { const d = await rpc('tide'); S.me = Array.isArray(d) ? d[0] : d; return S.me; }
+async function loadMe() { let d = await rpc('tide'); d = Array.isArray(d) ? d[0] : d; S.me = d && d.id ? d : null; return S.me; } // sin perfil, el servidor devuelve una fila vacía
 async function loadShore() { S.shore = (await rpc('shore')) || []; }
 async function loadBottles() { S.bottles = (await rpc('my_bottles')) || []; }
 async function loadConvos() { S.convos = (await rpc('my_convos')) || []; watchPending(); }
