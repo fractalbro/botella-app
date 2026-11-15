@@ -1,8 +1,21 @@
 /* Botella · ajustes de producción sobre el estilo del prototipo */
+html,body{margin:0}
+/* App a pantalla completa: en el celular ocupa todo; en pantallas grandes el mar llena la ventana y el contenido va en una columna. */
 @supports (height:100dvh){html,body{height:100dvh}}
+body{overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+.stage,.phone{position:relative;width:100%;height:100%;overflow:hidden;background:var(--bg)}
 .sbs{height:max(14px,env(safe-area-inset-top,0px));flex:none}
-@media (min-width:561px){.sbs{height:22px}}
-.guide .small{font-size:12px;color:var(--dim)}
+.screen>:not(canvas):not(.sheet){width:100%;max-width:520px;margin-inline:auto}
+.sheet,.toast,.banner{margin-inline:auto;max-width:520px}
+.sheet{max-width:560px}
+.toast{max-width:480px}
+.tabs{padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.foot{padding-bottom:max(20px,env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.sbs{height:28px}.tabs{border-top:0;background:none;backdrop-filter:none}}
+.boot{display:grid;place-items:center}
+.boot .wordmark{font-size:64px;opacity:.9;animation:breathe 1.6s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.45}}
 .screen>.top:first-child,.screen>.sbs+.top{padding-top:2px}
 .float.seen{opacity:.6}
 .sys{align-self:center;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:6px 12px;border-radius:14px;background:var(--glass);margin:6px auto}
@@ -28,3 +41,8 @@
 .check u{color:var(--fg)}
 .field input::placeholder{color:var(--dim)}
 .btn[disabled]{opacity:.5}
+.banner{top:max(12px,env(safe-area-inset-top,0px))}
+@media (min-width:700px){
+  .screen.sea>.pad[style*="linear-gradient"],.screen.sea>.scroll[style*="linear-gradient"]{background:none!important}
+  .screen.sea::after{content:"";position:absolute;left:0;right:0;bottom:0;height:62%;background:linear-gradient(transparent,rgba(3,16,28,.92) 55%);z-index:-1;pointer-events:none}
+}

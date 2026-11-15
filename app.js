@@ -124,7 +124,7 @@ function lighthouse(ctx, x, y, s, t, beamA, on = 1) {
 }
 const night = (horizon, withBottle) => (ctx, w, h, t) => {
   const mx = sky(ctx, w, h, t, horizon);
-  waves(ctx, w, h, t, horizon, mx, (i, wv) => { if (withBottle && i === 2) { const bx = w * .4 + Math.sin(t * .25) * w * .05, by = wv(bx), sl = (wv(bx + 6) - wv(bx - 6)) / 12; bottle(ctx, bx, by - 6, Math.min(w, h) * .0042 + .3, Math.atan(sl) - .35); } });
+  waves(ctx, w, h, t, horizon, mx, (i, wv) => { if (withBottle && i === 2) { const bx = w * .4 + Math.sin(t * .25) * w * .05, by = wv(bx), sl = (wv(bx + 6) - wv(bx - 6)) / 12; bottle(ctx, bx, by - 6, Math.min(Math.min(w, h) * .0042 + .3, 1.5), Math.atan(sl) - .35); } });
 };
 const ease = k => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
 const since = key => (performance.now() - (P.st[key] || 0)) / 1000;
@@ -152,7 +152,7 @@ function go(id, { back = false, fade = false, noPush = false } = {}) {
   [...app.children].forEach(c => { if (c !== old) c.remove(); });
   const sec = document.createElement('section');
   const dir = same || fade ? 'enter-fade' : back ? 'enter-b' : 'enter-f';
-  sec.className = 'screen ' + (reduceMotion || same ? '' : dir) + (def.cls ? ' ' + def.cls : '');
+  sec.className = 'screen ' + (reduceMotion || same ? '' : dir) + (def.cls ? ' ' + def.cls : '') + (def.anim ? ' sea' : '');
   sec.innerHTML = (def.anim ? '<canvas class="bgc" aria-hidden="true"></canvas>' : '') + def.render();
   app.appendChild(sec); P.root = sec;
   if (old) {

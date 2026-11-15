@@ -1,4 +1,4 @@
-/* Layout: desktop = a phone on a dark stage with a guide to jump between screens; phones get the app full-screen. Each concept sets --a / --a-ink / --bg. */
+/* Botella · estilo base (del prototipo). Layout de app nativa en app.css. */
 :root{
   --fg:#F4EFE7;
   --muted:#ADA6A2;
@@ -18,24 +18,6 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 input{font:inherit;color:inherit}
 
 /* stage */
-.stage{height:100%;display:flex;align-items:center;justify-content:center;gap:64px;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:radial-gradient(900px 600px at 18% 12%,color-mix(in srgb,var(--a) 9%,transparent),transparent 62%),var(--stage)}
-.guide{width:290px;max-height:100%;overflow:auto;scrollbar-width:none}
-.guide .tag{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--a)}
-.guide .mark{font-family:var(--display);font-weight:200;font-size:56px;line-height:.95;letter-spacing:-.04em;margin:10px 0 0}
-.guide p{color:var(--muted);margin:14px 0 26px;max-width:30ch;font-size:14px}
-.guide ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
-.guide li button{width:100%;display:flex;gap:12px;align-items:baseline;padding:9px 10px;border-radius:10px;text-align:left;color:var(--muted)}
-.guide li button::before{counter-increment:s;content:counter(s,decimal-leading-zero);font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums;width:18px}
-.guide li button:hover,.guide li button.on{background:var(--glass);color:var(--fg)}
-.guide .reset{margin-top:18px;color:var(--a);font-weight:600;font-size:13px}
-.guide .meta{margin-top:28px;font-size:11px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
-.phone{position:relative;width:390px;height:min(844px,100%);border-radius:54px;overflow:hidden;background:var(--bg);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 0 10px #121014,0 0 0 11px rgba(255,255,255,.06),0 40px 120px rgba(0,0,0,.65);flex:none}
-@media (max-width:980px){.guide{display:none}}
-@media (max-width:560px){
-  .stage{padding:0}
-  .phone{width:100%;height:100%;border-radius:0;box-shadow:none}
-  .sb{display:none!important}
-}
 
 /* screens */
 #app{position:absolute;inset:0}

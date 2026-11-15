@@ -5,8 +5,7 @@
 P.screens.splash = {
   anim: night(.3, true),
   render: () => `${sb_()}<div style="flex:1"></div><div class="pad" style="padding-bottom:30px;background:linear-gradient(transparent,rgba(3,16,28,.92) 30%)">
-    <span class="eyebrow a rise">Beta · Lima</span>
-    <div class="wordmark rise d1" style="font-size:92px;margin-top:8px">Botella</div>
+    <div class="wordmark rise d1" style="font-size:92px">Botella</div>
     <p class="rise d2" style="font-family:var(--display);font-weight:200;font-size:24px;letter-spacing:-.02em;color:var(--a);margin:10px 0 0">Lanza tu voz al mar.</p>
     <p class="lead rise d3">Graba una pregunta o algo que quieras contar. Llega a tres personas afines y quien quiere, te responde.</p>
     <div class="foot rise d4" style="padding-bottom:0"><button class="btn btn-a" data-go="intro">Empezar</button><button class="btn btn-ghost" data-act="toLogin">Ya tengo cuenta</button></div></div>`
@@ -32,8 +31,7 @@ P.screens.intro = {
   render: () => { const i = S.slide || 0, s = SLIDES[i], last = i === SLIDES.length - 1; return `${sb_()}<div class="top pad"><span style="flex:1"></span><button class="btn btn-ghost btn-sm" data-act="skipIntro">Saltar</button></div><div style="flex:1" data-act="slideNext"></div>
     <div class="pad" style="padding-bottom:26px;background:linear-gradient(transparent,var(--bg) 26%)">
       <div class="dots" aria-label="Paso ${i + 1} de ${SLIDES.length}">${SLIDES.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
-      <span class="eyebrow a rise" style="display:block;margin-top:18px">${i + 1} de ${SLIDES.length}</span>
-      <div class="display rise d1" style="margin-top:8px">${s.title}</div><p class="lead rise d2">${s.text}</p>
+      <div class="display rise d1" style="margin-top:20px">${s.title}</div><p class="lead rise d2">${s.text}</p>
       <div class="foot" style="padding-bottom:0"><button class="btn btn-a" data-act="slideNext">${last ? 'Crear mi cuenta' : 'Siguiente'}</button>${last ? '<button class="btn btn-ghost" data-act="toLogin">Ya tengo cuenta</button>' : ''}</div></div>`; }
 };
 P.actions.slideNext = () => { if ((S.slide || 0) < SLIDES.length - 1) { S.slide++; go('intro', { noPush: true }); } else P.actions.skipIntro(); };
@@ -120,7 +118,7 @@ P.screens.topics = {
     <div class="display" style="margin-top:22px">¿De qué te gusta <b>hablar</b>?</div><p class="lead">Elige al menos tres. Así tus botellas llegan a personas afines.</p>
     <div class="chips" id="tops" style="margin-top:20px">${TOPICS.map(g => `<button class="chip genre${D.topics.includes(g) ? ' on' : ''}" data-act="topic" data-v="${g}" aria-pressed="${D.topics.includes(g)}">${g}</button>`).join('')}</div>
     <div class="sec"><span class="eyebrow">¿Qué buscas?</span><div class="chips">${SEEKS.map(g => `<button class="chip${D.seeks.includes(g) ? ' on' : ''}" data-act="seek" data-v="${g}" aria-pressed="${D.seeks.includes(g)}">${g}</button>`).join('')}</div></div>
-    <div class="note" style="margin-block:22px 8px">${icon('shield')}<span>Nada de fotos ni apellidos. Si algo te incomoda, lo reportas con un toque y lo revisamos.</span></div></div>
+    </div>
     <div class="foot pad"><button class="btn btn-a" data-act="finish">Llegar a mi orilla</button></div>`; }
 };
 const togIn = (arr, v, el) => { const i = arr.indexOf(v); if (i >= 0) arr.splice(i, 1); else arr.push(v); el.classList.toggle('on', i < 0); el.setAttribute('aria-pressed', i < 0); };
@@ -177,7 +175,7 @@ P.screens.open = {
   render: () => { const b = S.sel; if (!b) return ''; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Llegó a tu orilla<small>${ago(b.arrived)} · desde ${esc(b.place)}</small></span><button class="iconbtn glass" data-act="reportB" aria-label="Reportar esta botella">${icon('flag')}</button></div>
     <div style="height:17%;flex:none"></div>
     ${P.st.uncorked ? `<div class="scroll pad"><div class="paper"><span class="eyebrow">${esc(b.kind)} · desde ${esc(b.place)}</span>${b.body ? `<div class="q">${esc(b.body)}</div>` : '<div class="q">Escucha su voz.</div>'}${vn(b.voice, b.voice_secs, { peaks: b.voice_peaks })}</div>
-    <p class="small muted rise d3" style="margin-top:14px">No sabes quién es. Solo escuchas su voz. Si respondes, se abre una conversación privada.</p></div>
+    <p class="small muted rise d3" style="margin-top:14px">Si respondes, se abre una conversación privada entre los dos.</p></div>
     <div class="foot pad"><button class="btn btn-a" data-go="answer">${icon('mic')} Responder con mi voz</button><button class="btn btn-ghost" data-act="toSea">Devolver al mar</button></div>`
     : `<div style="flex:1"></div><div class="pad" style="padding-bottom:12px"><span class="eyebrow a rise">${esc(b.kind)} · desde ${esc(b.place)}</span><div class="display rise d1" style="font-size:34px;margin-top:8px">Alguien lanzó esto <b>al mar</b>.</div><p class="lead rise d2">Descórchala para escuchar su voz.</p></div>
     <div class="foot pad">${holdBtn('uncork', `${icon('bottle')} Mantén para descorchar`, 900)}</div>`}`; },
@@ -201,7 +199,7 @@ P.screens.answer = {
   render: () => { const b = S.sel; if (!b) return ''; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Tu respuesta<small>Para alguien de ${esc(b.place)}</small></span></div>
     <div class="scroll pad"><div class="minipaper rise" style="margin-top:6px"><small>${esc(b.kind)}</small>${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</div>
     <div class="sec">${recBox('ans', 'Responde con calma. Hasta 60 segundos.')}</div>
-    <p class="small muted">Responder es gratis y te da una botella para lanzar, hasta 3 al día.</p></div>
+    <p class="small muted">Cada respuesta te regala una botella, hasta 3 al día.</p></div>
     <div class="foot pad"><button class="btn btn-a${S.rec.ans ? '' : ' soft'}" data-act="sendAns" data-needs="ans">${icon('send')} Enviar respuesta</button></div>`; }
 };
 P.actions.sendAns = async el => {
@@ -296,7 +294,6 @@ P.screens.mine = {
     ${S.bottles.length ? S.bottles.map((b, i) => { const sub = b.answers ? `Llegó a ${b.shores} ${b.shores === 1 ? 'orilla' : 'orillas'} · ${b.answers} ${b.answers === 1 ? 'respuesta' : 'respuestas'}` : b.shores ? `En el mar · llegó a ${b.shores} ${b.shores === 1 ? 'orilla' : 'orillas'}${b.opened ? ` · ${b.opened === 1 ? 'la abrió 1 persona' : 'la abrieron ' + b.opened}` : ''}` : 'Flotando · espera a que llegue gente nueva';
       return `<div class="row rise d${Math.min(i, 4)}${b.answers ? '' : ' drift'}" ${b.answers ? `data-act="mineGo" data-id="${b.id}" role="button" tabindex="0"` : ''}><span style="flex:1;min-width:0"><span class="t" style="font-weight:300;font-size:18px">${esc(b.body || b.kind + ' de ' + fmt(b.voice_secs))}</span><span class="s">${sub}</span><span class="shores">${Array.from({ length: Math.max(3, Math.min(b.shores, 8)) }, (_, k) => `<i class="${k < b.opened ? 'on' : ''}"></i>`).join('')}</span>${vn(b.voice, b.voice_secs, { mine: true, peaks: b.voice_peaks })}${b.answers ? '' : `<span class="driftb">${bottleSVG()}</span>`}</span>${b.answers ? '<span class="pill a">Escuchar</span>' : ''}</div>`; }).join('')
       : `<div class="empty rise"><span style="width:120px;display:block;margin:30px auto 10px">${bottleSVG()}</span><div class="h3" style="text-align:center">Todavía no lanzas ninguna</div><p class="small muted" style="text-align:center;margin:6px auto 18px;max-width:30ch">Graba una pregunta o algo que quieras contar, y lánzala.</p><button class="btn btn-a" data-go="launch">${icon('bottle')} Lanzar una botella</button></div>`}
-    <div class="note" style="margin-block:22px">${icon('shield')}Tu botella no lleva tu nombre. Solo se ve tu distrito.</div>
   </div>${tabsHTML('mine')}`,
   async after() { if (!P.st.mineFresh) { P.st.mineFresh = true; try { await loadBottles(); if (P.curId === 'mine') rerender(); } catch (e) {} } },
   leave() { P.st.mineFresh = false; }
@@ -307,8 +304,7 @@ P.actions.mineGo = (el, e) => { if (e && e.target.closest('.vn')) return; const 
 P.screens.convos = {
   render: () => `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Conversaciones</span>${meBtn()}</div>
     ${S.convos.length ? S.convos.map((c, i) => `<button class="row rise d${Math.min(i, 4)}" data-act="chatGo" data-id="${c.id}">${orb(colorOf(c.id), 46)}<span style="min-width:0;flex:1"><span class="t">${esc(c.alias)}</span><span class="s">${c.closed ? 'Conversación cerrada' : unread(c) ? 'Te mandó una nota de voz' : c.my_key && c.other_key ? 'Ya pueden llamarse' : c.i_launched ? 'Respondió tu botella' : 'Respondiste su botella'} · ${ago(c.last_at)}</span></span>${unread(c) ? '<span class="dotnew" aria-label="Nuevo"></span>' : c.my_key && c.other_key && !c.closed ? '<span class="pill a">Llamada</span>' : ''}</button>`).join('')
-      : `<div class="empty rise"><div class="h3" style="text-align:center;margin-top:40px">Aún no hay conversaciones</div><p class="small muted" style="text-align:center;margin:6px auto 18px;max-width:30ch">Se abren cuando respondes una botella o alguien responde la tuya.</p><button class="btn btn-glass" data-go="orilla" data-fade>Ir a mi orilla</button></div>`}
-    <div class="note" style="margin-top:22px">${icon('lock')}Son anónimos hasta que los dos deciden compartir su nombre.</div>
+      : `<div class="empty rise"><div class="h3" style="text-align:center;margin-top:40px">Aún no hay conversaciones</div><p class="small muted" style="text-align:center;margin:6px auto 18px;max-width:30ch">Se abren cuando respondes una botella o alguien responde la tuya. Son anónimas hasta que los dos compartan su nombre.</p><button class="btn btn-glass" data-go="orilla" data-fade>Ir a mi orilla</button></div>`}
   </div>${tabsHTML('convos')}`,
   async after() { if (!P.st.convosFresh) { P.st.convosFresh = true; try { await loadConvos(); if (P.curId === 'convos') rerender(); } catch (e) {} } },
   leave() { P.st.convosFresh = false; }
@@ -433,7 +429,7 @@ P.screens.perfil = {
         <button class="setrow" data-act="logout">${icon('out')}<span style="flex:1"><b>Cerrar sesión</b></span></button>
         <button class="setrow" data-act="deleteAsk">${icon('trash')}<span style="flex:1"><b>Borrar mi cuenta</b><span>Se borra todo: tu perfil, tus botellas y tus conversaciones.</span></span></button>
       </div>
-      <div class="note" style="margin-block:18px 24px">${icon('heart')}Esto es una beta. Cuéntanos qué te gustó y qué no: cada opinión cambia la app.</div>
+      <div style="height:24px"></div>
     </div>${tabsHTML('perfil')}`; }
 };
 const limaToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });

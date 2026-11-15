@@ -40,6 +40,7 @@ const srv = http.createServer((q, r) => {
   });
   await step('perfil', async () => { await tap('.tabs button', 'Perfil'); await p.waitForTimeout(500); await shot('perfil'); await tap('[data-act=rules]'); await shot('normas'); await tap('.sheet [data-act=closeSheet]'); });
   await step('reportar', async () => { await tap('.tabs button', 'Orilla'); await p.waitForTimeout(600); await tap('.float'); await p.waitForTimeout(400); await tap('[data-act=reportB]'); await shot('reportar'); await tap('[data-act=reportBGo]'); await p.waitForTimeout(600); await shot('orilla-despues'); });
+  await step('escritorio', async () => { await p.setViewportSize({ width: 1280, height: 820 }); await p.waitForTimeout(500); await shot('escritorio-orilla'); await tap('.tabs button', 'Conversaciones'); await p.waitForTimeout(400); await tap('[data-act=chatGo]'); await p.waitForTimeout(600); await shot('escritorio-chat'); await tap('[data-act=back]'); await tap('.tabs button', 'Orilla'); await p.waitForTimeout(400); await tap('[data-go=launch]'); await shot('escritorio-lanzar'); });
   const desk = await b.newPage({ viewport: { width: 1280, height: 860 } }); await desk.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); await desk.goto('http://localhost:4610/'); await desk.waitForTimeout(1200); await desk.screenshot({ path: `${out}/${String(++n).padStart(2, '0')}-escritorio.png` });
   console.log(errs.length ? errs.join('\n') : 'SIN ERRORES'); await b.close(); srv.close();
 })();
