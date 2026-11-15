@@ -1326,8 +1326,9 @@ begin
   return aid;
 end $$;
 
-create or replace function public.lectura_pending(p_limit int default 5) returns table (id uuid, voice text) language sql security definer set search_path = public as $$
-  select a.id, a.voice from lectura_answers a where a.status = 'pending' and a.created_at < now() - interval '30 seconds' order by a.created_at limit p_limit;
+drop function if exists public.lectura_pending(int);
+create or replace function public.lectura_pending(p_limit int default 5) returns table (id uuid, voice text, question text) language sql security definer set search_path = public as $$
+  select a.id, a.voice, l.question from lectura_answers a join lecturas l on l.id = a.lectura where a.status = 'pending' and a.created_at < now() - interval '30 seconds' order by a.created_at limit p_limit;
 $$;
 create or replace function public.lectura_resolve(p_id uuid, p_status text, p_reason text, p_transcript text) returns void language plpgsql security definer set search_path = public as $$
 declare a lectura_answers; own uuid;
