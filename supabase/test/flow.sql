@@ -7,6 +7,8 @@ insert into auth.users(id) values
  ('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002'),('00000000-0000-0000-0000-000000000003'),
  ('00000000-0000-0000-0000-000000000004'),('00000000-0000-0000-0000-000000000005');
 
+-- El recorrido base corre sin las personas de ejemplo; al final se prueban aparte.
+update bottles set hidden = true where owner in (select id from profiles where is_sample);
 set role authenticated;
 -- código inválido
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
@@ -17,7 +19,11 @@ end $$;
 select pg_temp.ok(check_code('botella-01'), 'código en minúsculas vale');
 
 -- cinco personas: 1 y 2 comparten temas
-insert into profiles(id, name, district, topics, code_used, bottles) values (auth.uid(), 'Ana', 'Lince', '{Música,Cine,Libros}', 'botella-01', 99);
+do $$ begin begin insert into profiles(id, name, district, topics, code_used, bottles) values (auth.uid(), 'Ana', 'Lince', '{Música,Cine,Libros}', 'botella-01', 99); raise exception 'debió fallar';
+  exception when insufficient_privilege then null; end; end $$;
+do $$ begin begin insert into profiles(id, name, district, code_used, is_sample) values (auth.uid(), 'Ana', 'Lince', 'x', true); raise exception 'debió fallar';
+  exception when insufficient_privilege then null; end; end $$;
+insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Ana', 'Lince', '{Música,Cine,Libros}', 'botella-01');
 select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 3 and (select color_left from profiles where id = auth.uid()) = 2 and (select far_left from profiles where id = auth.uid()) = 1, 'regalo de bienvenida: 3 normales, 2 de color, 1 lejos, y el cliente no puede regalarse más');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Beto', 'Barranco', '{Música,Cine,Libros}', 'BOTELLA-01');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Cami', 'Surco', '{Música,Cine}', 'BOTELLA-01');
@@ -147,5 +153,88 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
 select pg_temp.ok((select left_far from launch_bottle('Historia', null, '00000000-0000-0000-0000-000000000002/f1.m4a', 5, null, 'far')) = 0, 'gasté la que llega lejos');
 do $$ begin begin perform launch_bottle('Historia', null, '00000000-0000-0000-0000-000000000002/f2.m4a', 5, null, 'far'); raise exception 'debió fallar';
   exception when others then if sqlerrm not like '%lejos%' then raise; end if; end; end $$;
+reset role;
+-- ===== personas de ejemplo =====
+update bottles set hidden = false where owner in (select id from profiles where is_sample);
+insert into auth.users(id) values ('00000000-0000-0000-0000-000000000007');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007');
+insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Gabi', 'Surco', '{Música,Viajes,Arte}', 'BOTELLA-01');
+select pg_temp.ok((select tide_left from tide()) = 1 and (select gifts_left from profiles) = 1, 'regalo: 1 marea destacada y 1 lacre');
+select pg_temp.ok((select count(*) from shore()) >= 3, 'la orilla nueva nunca está vacía: llegan botellas de ejemplo');
+select pg_temp.ok((select bool_and(sample) from shore() where voice like 'seed/%'), 'las de ejemplo vienen marcadas');
+select pg_temp.ok((select rewarded from answer_delivery((select id from shore() where sample limit 1), '00000000-0000-0000-0000-000000000007/a1.m4a', 7)), 'responder una de ejemplo también regala botella');
+select pg_temp.ok((select count(*) from messages where convo_id = (select id from my_convos() limit 1)) = 2, 'su respuesta todavía no se ve');
+select pg_temp.ok((select next_at from my_convos() limit 1) > now(), 'la app sabe cuándo llega su respuesta');
+reset role;
+update messages set created_at = clock_timestamp() where created_at > now();
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007');
+select pg_temp.ok((select count(*) from messages where convo_id = (select id from my_convos() limit 1)) = 3, 'la persona de ejemplo respondió con su voz');
+select pg_temp.ok(not (select last_mine from my_convos() limit 1), 'queda como no leída');
+select pg_temp.ok((select sample and call_voice like 'seed/%' from my_convos() limit 1), 'la conversación sabe que es de ejemplo y trae su saludo');
+select set_reveal((select id from my_convos() limit 1), true);
+select pg_temp.ok((select revealed and intro_voice like 'seed/%' from my_convos() limit 1), 'al compartir mi nombre, la persona de ejemplo comparte el suyo');
+select pg_temp.ok(set_key((select id from my_convos() limit 1)), 'con una persona de ejemplo la llamada se abre al poner mi llave');
+-- regalo y plan
+select pg_temp.ok(send_gift((select id from my_convos() limit 1)) = 0, 'mandé mi botella con lacre');
+do $$ begin begin perform send_gift((select id from my_convos() limit 1)); raise exception 'debió fallar';
+  exception when others then if sqlerrm not like '%lacre%' then raise; end if; end; end $$;
+select send_plan((select id from my_convos() limit 1), 'Un café frente al mar', 'Este sábado, 5 p.m.');
+reset role;
+update messages set created_at = clock_timestamp() where created_at > now();
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007');
+select pg_temp.ok(exists (select 1 from messages where body = '#planok|'), 'la persona de ejemplo aceptó el plan');
+-- lanzar con pocos: alguien de ejemplo responde
+reset role;
+update profiles set paused = true where not is_sample and id <> '00000000-0000-0000-0000-000000000007';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007');
+select pg_temp.ok((select shores from launch_bottle('Pregunta', '¿Qué te hace feliz?', '00000000-0000-0000-0000-000000000007/l1.m4a', 6, null, 'free', null, null, true)) >= 1, 'mi botella llega a alguien aunque seamos pocos');
+select pg_temp.ok((select tide_left from profiles) = 0, 'usé mi marea destacada');
+select pg_temp.ok((select count(*) from my_convos() where i_launched) = 0, 'la conversación aparece recién cuando responde');
+reset role;
+update messages set created_at = clock_timestamp() where created_at > now();
+update deliveries set opened_at = clock_timestamp() where opened_at > now();
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007');
+select pg_temp.ok((select count(*) from my_convos() where i_launched) = 1, 'alguien de ejemplo respondió mi botella');
+select pg_temp.ok((select answers from my_bottles() where body = '¿Qué te hace feliz?') = 1, 'mis botellas cuenta su respuesta');
+select pg_temp.ok((select openers from my_bottles() where body = '¿Qué te hace feliz?') is null, 'sin "quién la abrió" no veo quién');
+-- muelle
+select pg_temp.ok((select bottles from beta_get('p10')) >= 10, 'pack de 10 botellas');
+select pg_temp.ok((select color_left from beta_get('color')) = 3, 'una de color más');
+select pg_temp.ok((select far_left from beta_get('far')) = 2, 'una que llega lejos más');
+select pg_temp.ok((select tide_left from beta_get('tide')) = 1, 'una marea destacada más');
+select pg_temp.ok((select gifts_left from beta_get('gift')) = 1, 'una botella con lacre más');
+select pg_temp.ok((select glass from beta_get('glass:ambar')) = 'ambar', 'vidrio ámbar');
+select pg_temp.ok((select who_open from beta_get('who')), 'quién la abrió activado');
+select pg_temp.ok(jsonb_array_length((select openers from my_bottles() where body = '¿Qué te hace feliz?')) = 1, 'ahora veo desde qué distrito la abrieron');
+select pg_temp.ok((select captain from beta_get('captain')), 'plan Capitán');
+do $$ begin begin perform beta_get('gratis-todo'); raise exception 'debió fallar';
+  exception when others then if sqlerrm not like '%muelle%' then raise; end if; end; end $$;
+reset role;
+update profiles set daily_day = lima_today() - 1, bottles = 20 where id = '00000000-0000-0000-0000-000000000007';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007');
+select pg_temp.ok((select bottles from tide()) = 23, 'Capitán: 3 botellas al día y no se pierden las compradas');
+select pg_temp.ok((select glass from launch_bottle('Historia', null, '00000000-0000-0000-0000-000000000007/l2.m4a', 6) l join bottles b on b.id = l.bottle) = 'ambar', 'la botella sale en mi vidrio');
+-- marea
+select pg_temp.ok((select count(*) from marea() where sample) >= 2, 'la marea trae botellas destacadas');
+select pg_temp.ok(marea_take((select bottle from marea() where taken is null and not mine limit 1)) is not null, 'abrir una de la marea la trae a mi orilla');
+-- salidas
+select pg_temp.ok((select count(*) from outings_list()) = 3, 'hay salidas de ejemplo');
+select pg_temp.ok((select bool_and(starts_at > now()) from outings_list()), 'las salidas de ejemplo siempre están por venir');
+select outing_join((select id from outings_list() limit 1), true);
+select pg_temp.ok((select joined from outings_list() limit 1), 'me apunté a una salida');
+select outing_join((select id from outings_list() limit 1), false);
+select pg_temp.ok(not (select joined from outings_list() limit 1), 'me desapunté');
+select pg_temp.ok(outing_create('Atardecer en Barranco', 'Puente de los Suspiros', now() + interval '2 days', 6, 'Vamos a ver el atardecer') is not null, 'propuse una salida');
+select pg_temp.ok((select count(*) from outings_list() where mine) = 1, 'veo mi salida');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select outing_join((select id from outings_list() where name = 'Atardecer en Barranco'), true);
+select pg_temp.ok((select taken from outings_list() where name = 'Atardecer en Barranco') = 2, 'alguien se apuntó a mi salida');
+select pg_temp.ok(app_version() = 3, 'versión del servidor');
 reset role;
 \echo 'TODO OK'

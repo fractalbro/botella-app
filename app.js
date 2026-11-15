@@ -40,11 +40,16 @@ const ICONS = {
   pausei: '<rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/>', block: '<circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/>',
   copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>', flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   more: '<circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/>',
-  out: '<path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/>', trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'
+  out: '<path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/>', trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 016 0v2"/>', users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14a6 6 0 013.5 6"/>',
+  pin: '<path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>', gift: '<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3 9h18M12 9v11M12 9c-2-4-6-4-6-1.5S10 9 12 9zM12 9c2-4 6-4 6-1.5S14 9 12 9z"/>',
+  tide: '<path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><circle cx="12" cy="7" r="3"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/>'
 };
 const icon = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 const sb_ = () => '<div class="sbs" aria-hidden="true"></div>';
 const orb = (c, size = 44, talk = false) => `<span class="orb${talk ? ' talk' : ''}" style="--c:${c};width:${size}px;height:${size}px" aria-hidden="true"></span>`;
+const GLASS = { verde: ['rgba(150,225,140,.95)', 'rgba(110,200,110,.24)', '140,215,130'], ambar: ['rgba(240,170,90,.95)', 'rgba(220,140,60,.26)', '235,165,85'], esmerilado: ['rgba(235,242,248,.95)', 'rgba(220,232,240,.3)', '225,236,245'] };
 const bottleSVG = (stroke = 'rgba(170,240,228,.9)', fill = 'rgba(127,216,201,.2)') => `<svg viewBox="0 0 120 40" aria-hidden="true"><path d="M16 6h56q14 0 18 8h18v12H90q-4 8-18 8H16q-10 0-10-14T16 6z" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/><rect x="22" y="14" width="48" height="12" rx="5" fill="#F6E7C4"/><rect x="108" y="15" width="8" height="10" fill="#8A5A33"/></svg>`;
 const ago = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); if (m < 1) return 'ahora'; if (m < 60) return `hace ${m} min`; const h = Math.round(m / 60); if (h < 24) return `hace ${h} h`; const d = Math.round(h / 24); return d === 1 ? 'ayer' : `hace ${d} días`; };
 const clock = iso => { const d = new Date(iso), t = d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false }); const today = new Date().toDateString() === d.toDateString(); const y = new Date(Date.now() - 864e5).toDateString() === d.toDateString(); return today ? `Hoy, ${t}` : y ? `Ayer, ${t}` : `${d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })}, ${t}`; };
@@ -53,7 +58,7 @@ const clock = iso => { const d = new Date(iso), t = d.toLocaleTimeString('es-PE'
 const S = {
   session: null, me: null, shore: [], bottles: [], convos: [], msgs: {}, sel: null, convo: null, launching: false,
   slide: 0, authMode: 'signup', code: null, draft: { name: '', district: 'Barranco', adult: false, topics: [], seeks: [] },
-  kind: 'Pregunta', idea: -1, btype: 'free', target: null, body: '', rec: {}, busy: false
+  kind: 'Pregunta', idea: -1, btype: 'free', target: null, featured: false, body: '', rec: {}, busy: false, marea: [], outings: [], outdated: false
 };
 const P = { screens: {}, actions: {}, cur: null, curId: null, hist: [], timers: [], canvas: null, ctx: null, root: null, t0: performance.now(), st: {} };
 const readMap = LS.get('read', {});
@@ -165,14 +170,14 @@ function go(id, { back = false, fade = false, noPush = false } = {}) {
   if (P.canvas) drawFrame(performance.now());
 }
 const rerender = () => { if (P.curId) go(P.curId, { noPush: true }); };
-function back() { const prev = P.hist.pop(); go(prev || (S.me ? 'orilla' : 'splash'), { back: true }); }
+function back() { let prev = P.hist.pop(); while (prev && prev === P.curId) prev = P.hist.pop(); go(prev || (S.me ? 'orilla' : 'splash'), { back: true }); }
 P.actions.back = back;
 const backBtn = () => `<button class="iconbtn glass" data-act="back" aria-label="Volver">${icon('back')}</button>`;
 const steps = n => `<div class="pad" style="flex:none"><div class="progress" aria-label="Paso ${n} de 6"><i style="width:${n / 6 * 100}%"></i></div></div>`;
 
 function tabsHTML(active) {
   const badge = S.convos.filter(unread).length;
-  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['convos', 'Conversaciones', 'chat'], ['perfil', 'Perfil', 'user']];
+  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['convos', 'Conversaciones', 'chat'], ['store', 'Muelle', 'bag']];
   return `<nav class="tabs" aria-label="Secciones">${items.map(([id, label, ic]) => `<button class="${id === active ? 'on' : ''}" data-go="${id}" data-fade ${id === active ? 'aria-current="page"' : ''}>${icon(ic)}${label}${id === 'convos' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('')}</nav>`;
 }
 
@@ -194,7 +199,9 @@ function bindHold() {
 
 /* ================= VOZ ================= */
 const URLS = new Map();
+const seedURL = p => '/seed/v/' + p.slice(5);
 async function signed(paths) {
+  paths.forEach(p => { if (p && p.startsWith('seed/') && !URLS.has(p)) URLS.set(p, seedURL(p)); });
   const need = [...new Set(paths.filter(p => p && !p.startsWith('blob:') && !URLS.has(p)))];
   if (need.length) { const { data } = await sb.storage.from('voice').createSignedUrls(need, 60 * 60 * 3); (data || []).forEach(d => { if (d.signedUrl) URLS.set(d.path, d.signedUrl); }); }
   return paths.map(p => p && p.startsWith('blob:') ? p : URLS.get(p));
@@ -291,6 +298,26 @@ async function rpc(name, args) { const { data, error } = await sb.rpc(name, args
 async function loadMe() { const d = await rpc('tide'); S.me = Array.isArray(d) ? d[0] : d; return S.me; }
 async function loadShore() { S.shore = (await rpc('shore')) || []; }
 async function loadBottles() { S.bottles = (await rpc('my_bottles')) || []; }
-async function loadConvos() { S.convos = (await rpc('my_convos')) || []; }
+async function loadConvos() { S.convos = (await rpc('my_convos')) || []; watchPending(); }
+async function loadMarea() { S.marea = (await rpc('marea')) || []; }
+async function loadOutings() { S.outings = (await rpc('outings_list')) || []; }
+/* respuestas programadas (las personas de ejemplo responden a los pocos segundos): la app vuelve a mirar justo a esa hora */
+let pendT = null;
+function watchPending(extraMs) {
+  P.extra = (P.extra || []).filter(t => t > Date.now()); if (extraMs) P.extra.push(Date.now() + extraMs);
+  const nexts = [...S.convos.map(c => c.next_at && new Date(c.next_at).getTime()).filter(Boolean), ...P.extra];
+  if (!nexts.length) return; const at = Math.min(...nexts); if (P.pendAt && P.pendAt <= at && P.pendAt > Date.now()) return;
+  clearTimeout(pendT); P.pendAt = at;
+  pendT = setTimeout(async () => {
+    P.pendAt = 0; const before = new Map(S.convos.map(c => [c.id, c.last_at]));
+    try { await loadConvos(); } catch (e) { return; }
+    for (const c of S.convos) {
+      if (c.last_mine || before.get(c.id) === c.last_at) continue;
+      if (P.curId === 'chat' && S.convo && S.convo.id === c.id) { S.convo = c; await loadMsgs(c.id).catch(() => {}); markRead(c.id); if (!(REC.mr && REC.id === 'chat') && !playBtn) rerender(); continue; }
+      banner({ ic: orb(colorOf(c.id), 34), title: before.has(c.id) ? c.alias : 'Alguien respondió tu botella', text: before.has(c.id) ? 'Te mandó una nota de voz' : 'Toca para escuchar su respuesta.', go: 'chat', v: c.id });
+    }
+    if (['convos', 'orilla', 'mine'].includes(P.curId)) rerender();
+  }, Math.max(800, at - Date.now() + 1200));
+}
 async function loadMsgs(cid) { const { data, error } = await sb.from('messages').select('*').eq('convo_id', cid).order('created_at'); if (error) throw error; S.msgs[cid] = data || []; }
 const refreshAll = () => Promise.all([loadShore(), loadBottles(), loadConvos()]);

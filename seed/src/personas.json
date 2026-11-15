@@ -1,0 +1,266 @@
+{
+ "voices": {
+  "dora": "kokoro:28",
+  "alex": "kokoro:29",
+  "santa": "kokoro:53",
+  "claude": "piper:es_MX-claude-high",
+  "ald": "piper:es_MX-ald-medium",
+  "daniela": "piper:es_AR-daniela-high"
+ },
+ "people": [
+  {
+   "id": "majo",
+   "name": "Majo",
+   "voice": "dora",
+   "speed": 1.0,
+   "district": "Barranco",
+   "topics": [
+    "Música",
+    "La ciudad",
+    "Arte",
+    "Viajes"
+   ],
+   "featured": true,
+   "kind": "Pregunta",
+   "body": "¿Qué harías un domingo si nadie en esta ciudad te conociera?",
+   "say": "Hola, soy Majo. Te pregunto algo que me da vueltas desde hace días. ¿Qué harías un domingo si nadie en esta ciudad te conociera? Yo creo que me iría sola al malecón, con audífonos, a ver el atardecer sin apuro. Cuéntame el tuyo.",
+   "reply": "¡Qué bonito escucharte! Me encantó lo que contaste. Yo también tengo esa idea de perderme un domingo cualquiera. Si quieres seguimos hablando por aquí, me hace bien esta conversa.",
+   "intro": "Hola, soy Majo, de Barranco. Me gusta la música en vivo y caminar sin rumbo por la ciudad.",
+   "call": "¡Hola! Qué raro y qué lindo escuchar tu voz así, en vivo. Te cuento que hoy estuve en el malecón pensando justo en lo que me dijiste."
+  },
+  {
+   "id": "leo",
+   "name": "Leo",
+   "voice": "alex",
+   "speed": 1.0,
+   "district": "Lince",
+   "topics": [
+    "Cine",
+    "Libros",
+    "La ciudad",
+    "Trabajo"
+   ],
+   "kind": "Confesión",
+   "body": "Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.",
+   "say": "Te confieso algo. Me mudé a Lima hace tres meses por chamba y todavía no tengo con quién ir al cine. Voy solo los martes porque está más barato, pero me encantaría comentar la película con alguien a la salida.",
+   "reply": "Oye, gracias por responder, de verdad. Me alegró el día. Si te animas, la próxima película que vea te la cuento por aquí, y tú me recomiendas otra.",
+   "intro": "Qué tal, soy Leo. Vivo en Lince, me encanta el cine y siempre tengo un libro en la mochila.",
+   "call": "¡Hola! Pucha, qué nervios, es la primera llamada que hago por aquí. ¿Cómo estás? Justo salí del cine."
+  },
+  {
+   "id": "rocio",
+   "name": "Rocío",
+   "voice": "claude",
+   "speed": 0.97,
+   "district": "Jesús María",
+   "topics": [
+    "Comida",
+    "La ciudad",
+    "Amor",
+    "Música"
+   ],
+   "kind": "Historia",
+   "body": "Lo más raro que me pasó en una combi.",
+   "say": "Te cuento lo más raro que me pasó en una combi. Un señor subió con una guitarra, empezó a tocar un vals y al final toda la combi estaba cantando. El cobrador también. Llegué tarde al trabajo, pero feliz. ¿Y a ti qué te pasó en una combi?",
+   "reply": "¡Me hiciste reír un montón! Gracias por contarme. Lima tiene esas cosas, ¿no? Cuando quieras me mandas otra historia.",
+   "intro": "Hola, soy Rocío, de Jesús María. Cocino rico, o eso dicen, y me encantan los valses.",
+   "call": "¡Aló! Ay, qué gusto escucharte en vivo. Te iba a mandar otra historia de combi, pero mejor te la cuento ahorita."
+  },
+  {
+   "id": "ivan",
+   "name": "Iván",
+   "voice": "ald",
+   "speed": 1.0,
+   "district": "Surco",
+   "topics": [
+    "Música",
+    "Fútbol",
+    "Tecnología",
+    "Viajes"
+   ],
+   "kind": "Pregunta",
+   "body": "¿Qué canción te devuelve a tus 15 años?",
+   "say": "A ver, una pregunta fácil, o no tanto. ¿Qué canción te devuelve a tus quince años? La mía es una de rock en español que escuchaba en un discman todo rayado. La pongo y vuelvo a estar en el colegio.",
+   "reply": "¡Buenazo! Ya me la puse mientras te respondo. Qué buena memoria tienes. Mándame otra canción cuando quieras, armamos una lista entre los dos.",
+   "intro": "Hola, soy Iván, de Surco. Fútbol los sábados, música todo el día.",
+   "call": "¡Hola, hola! Qué bacán poder hablar así. Oye, ¿sigues escuchando esa canción? Yo no me la saco de la cabeza."
+  },
+  {
+   "id": "vale",
+   "name": "Vale",
+   "voice": "daniela",
+   "speed": 1.0,
+   "district": "Miraflores",
+   "topics": [
+    "Música",
+    "Amor",
+    "Viajes",
+    "Arte"
+   ],
+   "kind": "Confesión",
+   "body": "Nunca he ido sola a un concierto y quiero intentarlo.",
+   "say": "Confesión. Nunca he ido sola a un concierto y este año quiero intentarlo. Me da un poco de miedo quedarme ahí parada sin nadie con quien cantar. ¿Tú lo has hecho? ¿Qué tal fue?",
+   "reply": "Gracias por darme ánimos, en serio. Creo que sí me voy a animar. Si voy, te cuento cómo me fue con una nota de voz desde la salida.",
+   "intro": "Hola, soy Vale, de Miraflores. Fan de los conciertos, aunque todavía no me atrevo a ir sola.",
+   "call": "¡Hola! Qué emoción escucharte. Oye, compré la entrada para el concierto. Ya no hay vuelta atrás."
+  },
+  {
+   "id": "nico",
+   "name": "Nico",
+   "voice": "santa",
+   "speed": 1.0,
+   "district": "San Miguel",
+   "topics": [
+    "Comida",
+    "La ciudad",
+    "Fútbol",
+    "Trabajo"
+   ],
+   "kind": "Pregunta",
+   "body": "¿Cuál es tu huarique favorito y por qué nadie lo conoce?",
+   "say": "Pregunta seria. ¿Cuál es tu huarique favorito y por qué nadie lo conoce? El mío es una sanguchería en San Miguel que abre solo de noche. El pan con chicharrón no tiene comparación. Pásame el tuyo, prometo no contarle a nadie.",
+   "reply": "Ya lo anoté, causa. Este fin de semana voy a probarlo y te cuento si está a la altura. Gracias por compartir tu secreto.",
+   "intro": "Qué tal, soy Nico, de San Miguel. Siempre buscando el próximo huarique.",
+   "call": "¡Hola! Oye, fui al huarique que me dijiste. Te tengo que contar todo."
+  },
+  {
+   "id": "belen",
+   "name": "Belén",
+   "voice": "claude",
+   "speed": 0.93,
+   "district": "Pueblo Libre",
+   "topics": [
+    "Libros",
+    "Filosofía",
+    "La ciudad",
+    "Arte"
+   ],
+   "kind": "Historia",
+   "body": "El día que me perdí en el Centro y terminó siendo lo mejor.",
+   "say": "Una historia corta. Una vez me perdí en el Centro de Lima buscando una librería. Terminé en un patio antiguo lleno de plantas, con una señora que me invitó un café y me contó su vida entera. Nunca encontré la librería, pero fue el mejor sábado del año.",
+   "reply": "Qué lindo lo que me contaste. Me quedé pensando un buen rato. Gracias por tomarte el tiempo de responderme con tu voz.",
+   "intro": "Hola, soy Belén, de Pueblo Libre. Me pierdo seguido, sobre todo en las librerías.",
+   "call": "¡Hola! Qué bueno escucharte. Te llamo desde una librería, por si te preguntabas dónde estoy."
+  },
+  {
+   "id": "ale",
+   "name": "Ale",
+   "voice": "dora",
+   "speed": 0.94,
+   "district": "Chorrillos",
+   "topics": [
+    "Filosofía",
+    "Amor",
+    "Libros",
+    "Viajes"
+   ],
+   "kind": "Pregunta",
+   "body": "¿Qué le dirías a tu yo de hace diez años?",
+   "say": "Hola. ¿Qué le dirías a tu yo de hace diez años? Yo le diría que se calme, que todo lo que le preocupa se va a resolver, y que llame más seguido a su abuela. Me encantaría escuchar el tuyo.",
+   "reply": "Me emocionó tu respuesta, no te voy a mentir. Gracias por tu sinceridad. Aquí estoy si quieres seguir conversando.",
+   "intro": "Hola, soy Ale, de Chorrillos. Me gustan las preguntas difíciles y las caminatas frente al mar.",
+   "call": "¡Hola! Qué bonito que nos animamos a hablar. Hoy llamé a mi abuela, por cierto."
+  },
+  {
+   "id": "diego",
+   "name": "Diego",
+   "voice": "alex",
+   "speed": 1.06,
+   "district": "San Borja",
+   "topics": [
+    "Tecnología",
+    "Trabajo",
+    "Cine",
+    "Música"
+   ],
+   "kind": "Confesión",
+   "body": "Trabajo desde casa y a veces paso días sin hablar con nadie.",
+   "say": "Te confieso que trabajo desde casa y a veces paso días enteros sin hablar con nadie en voz alta. Por eso me animé a lanzar esta botella. Solo quería escuchar otra voz. ¿Cómo estuvo tu día?",
+   "reply": "No sabes cuánto me alegró escucharte. Ya tengo con quién hablar mientras preparo mi café. Gracias, de verdad.",
+   "intro": "Hola, soy Diego, de San Borja. Programo desde casa y salgo a correr para no volverme loco.",
+   "call": "¡Hola! Qué tal. Hoy por fin hablé con alguien en voz alta, y eres tú."
+  },
+  {
+   "id": "caro",
+   "name": "Caro",
+   "voice": "claude",
+   "speed": 1.02,
+   "district": "Magdalena",
+   "topics": [
+    "Viajes",
+    "La ciudad",
+    "Arte",
+    "Comida"
+   ],
+   "featured": true,
+   "kind": "Pregunta",
+   "body": "¿Cuál es el mejor atardecer que has visto en Lima?",
+   "say": "Hola, soy Caro. ¿Cuál es el mejor atardecer que has visto en Lima? Para mí fue uno en la Costa Verde, después de un invierno gris eterno. El cielo se puso naranja y la gente se paró a mirarlo. Cuéntame el tuyo.",
+   "reply": "¡Ese atardecer suena precioso! Ya quiero ir a verlo. Gracias por responder, me alegraste la tarde.",
+   "intro": "Hola, soy Caro, de Magdalena. Colecciono atardeceres y recetas de mi mamá.",
+   "call": "¡Hola! Te llamo justo cuando se está poniendo el sol. Qué casualidad, ¿no?"
+  },
+  {
+   "id": "sebas",
+   "name": "Sebas",
+   "voice": "ald",
+   "speed": 1.08,
+   "district": "La Molina",
+   "topics": [
+    "Fútbol",
+    "La ciudad",
+    "Tecnología",
+    "Comida"
+   ],
+   "kind": "Historia",
+   "body": "La vez que me quedé dormido en el Metropolitano.",
+   "say": "Te cuento. Una vez me quedé dormido en el Metropolitano saliendo de la universidad y desperté en Chorrillos, ya de noche. Terminé comiendo un ceviche frente al mar con plata prestada. Ahora pongo alarma en el bus.",
+   "reply": "¡Jajaja, qué buena! Me alegra no ser el único al que le pasan esas cosas. Cuéntame más cuando quieras.",
+   "intro": "Hola, soy Sebas, de La Molina. Duermo en cualquier bus y como ceviche en cualquier lugar.",
+   "call": "¡Hola! Te llamo despierto, para variar. ¿Qué tal tu día?"
+  },
+  {
+   "id": "andrea",
+   "name": "Andrea",
+   "voice": "dora",
+   "speed": 1.06,
+   "district": "San Isidro",
+   "topics": [
+    "Trabajo",
+    "Libros",
+    "Filosofía",
+    "Arte"
+   ],
+   "kind": "Pregunta",
+   "body": "Si pudieras aprender algo nuevo este año, ¿qué sería?",
+   "say": "Una pregunta para ti. Si pudieras aprender algo nuevo este año, ¿qué sería? Yo quiero aprender a tocar cajón, aunque mis vecinos no estén muy de acuerdo. ¿Y tú?",
+   "reply": "¡Me encanta tu idea! Creo que deberíamos animarnos los dos. Te cuento cómo me va con el cajón.",
+   "intro": "Hola, soy Andrea, de San Isidro. Aprendiendo cajón, con paciencia y vecinos pacientes.",
+   "call": "¡Hola! Ya tuve mi primera clase de cajón. Te tengo que contar."
+  }
+ ],
+ "answers": [
+  {
+   "voice": "claude",
+   "say": "Hola, me llegó tu botella justo cuando volvía a casa. Me hizo pensar un montón. Te respondo con calma: me encantó escucharte, y creo que tenemos más en común de lo que parece."
+  },
+  {
+   "voice": "alex",
+   "say": "Qué tal, me llegó tu botella. Te escuché dos veces, la verdad. Me gustó mucho lo que dijiste. Si quieres seguimos conversando por aquí."
+  },
+  {
+   "voice": "dora",
+   "say": "¡Hola! Tu botella llegó a mi orilla en Barranco. Qué bonito lo que contaste. Te cuento lo mío en la próxima nota de voz, ¿va?"
+  }
+ ],
+ "planok": [
+  {
+   "voice": "dora",
+   "say": "¡Me encanta el plan! Ahí nos vemos. Yo llevo las ganas de conversar."
+  },
+  {
+   "voice": "ald",
+   "say": "¡De una! Me parece perfecto. Nos vemos ahí."
+  }
+ ]
+}

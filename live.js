@@ -41,10 +41,13 @@ function callEnd(msg, remote) {
   const ch = C.ch; if (ch) setTimeout(() => sb.removeChannel(ch), remote ? 0 : 400);
   if (P.curId === 'call') { if (S.convo && S.convo.id === C.convo) openChat(C.convo, { back: true, noPush: true }); else back(); }
   if (msg) toast(msg);
+  // Después de hablar, lo natural es armar un plan.
+  if (C.state === 'live' && Date.now() - (C.t0 || 0) > 4000) setTimeout(() => { if (P.curId === 'chat' && S.convo?.id === C.convo && !(S.msgs[C.convo] || []).some(m => m.body && m.body.startsWith('#plan|'))) P.actions.planAsk(); }, 1400);
 }
 async function callMic() { try { return await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Botella necesita tu micrófono para la llamada. Actívalo en los ajustes del navegador.'); return null; } }
 P.actions.call = async () => {
   const c = convo(); if (!c || CALL) return; if (!(c.my_key && c.other_key)) return toast('La llamada se abre cuando los dos ponen su llave.');
+  if (c.sample) return demoCall(c);
   if (!window.RTCPeerConnection) return toast('Este navegador no permite llamadas.');
   recCancel(); stopPlayer();
   const stream = await callMic(); if (!stream) return;
@@ -66,7 +69,7 @@ P.screens.call = {
   render: () => { const C = CALL; if (!C) return ''; const col = colorOf(C.convo);
     const label = C.state === 'live' ? callClock() : C.state === 'incoming' ? 'Te llama' : C.state === 'connecting' ? 'Conectando…' : 'Llamando…';
     return `${sb_()}<div class="scroll pad call" style="display:flex;flex-direction:column;justify-content:space-between;padding-block:24px 34px">
-    <div class="who"><span class="eyebrow a">Llamada de voz</span><div class="h2" style="margin-top:6px">${esc(C.name)}</div><div class="muted small">Se conocieron por una botella</div></div>
+    <div class="who" style="padding-top:clamp(60px,14vh,140px)"><span class="eyebrow a">Llamada de voz</span><div class="h2" style="margin-top:6px">${esc(C.name)}</div><div class="muted small">Se conocieron por una botella</div></div>
     <div style="display:grid;justify-items:center;gap:14px"><div style="display:flex;gap:26px;align-items:center">${orb(col, 96, C.state === 'live')}${orb('var(--a)', 72, false)}</div><div class="num" id="calltime" style="font-family:var(--display);font-weight:200;font-size:44px;letter-spacing:-.03em">${label}</div><div class="small muted" style="text-align:center;max-width:28ch">Sin fotos ni video. Solo sus voces.</div></div>
     <div class="ctrls">${C.state === 'incoming' ? `<button class="end" data-act="callEnd" aria-label="Rechazar">${icon('end')}</button><button class="accept" data-act="callAccept" aria-label="Contestar">${icon('phone')}</button>` : `<button data-act="callMute" class="${C.mute ? 'on' : ''}" aria-label="Silenciar">${icon('mute')}</button><button class="end" data-act="callEnd" aria-label="Colgar">${icon('end')}</button>`}</div></div>`; }
 };
@@ -91,7 +94,7 @@ async function onMessage(m) {
   if (P.curId === 'chat' && S.convo && S.convo.id === c.id) { markRead(c.id); if (!(REC.mr && REC.id === 'chat') && !playBtn) rerender(); return; }
   if (m.body && m.body.startsWith('#bottle|')) banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Alguien respondió tu botella', text: 'Toca para escuchar su respuesta.', go: 'chat', v: c.id });
   else if (m.voice) banner({ ic: orb(colorOf(c.id), 34), title: c.alias, text: 'Te mandó una nota de voz', go: 'chat', v: c.id });
-  if (['convos', 'orilla', 'mine', 'perfil'].includes(P.curId)) rerender();
+  if (['convos', 'orilla', 'mine', 'perfil', 'store'].includes(P.curId)) rerender();
 }
 let shoreT = null;
 function onDelivery() {
@@ -116,12 +119,20 @@ async function onConvo(row) {
 /* ================= ARRANQUE ================= */
 async function enter(fresh) {
   try {
+    const ver = await rpc('app_version').catch(() => 0);
     const me = await loadMe();
     if (!me) { P.hist = []; go('about', { fade: true }); return; }
+    S.outdated = !(ver >= 3);
     await refreshAll(); subscribe(); P.hist = []; P.st.shoreFresh = true;
     go('orilla', { fade: true });
-    if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu regalo de bienvenida', text: '3 botellas normales, 2 de color y 1 que llega lejos.', go: S.shore.length ? 'orilla' : 'launch' }), 1200);
+    if (S.outdated) setTimeout(outdatedSheet, 700);
+    else if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu regalo de bienvenida', text: '3 normales, 2 de color, 1 que llega lejos, 1 marea destacada y 1 con lacre.', go: 'store' }), 1200);
   } catch (e) { err(e, 'No pudimos conectar con el mar. Revisa tu internet.'); go('splash'); }
+}
+/* Si el servidor no tiene la última versión de supabase/schema.sql, se dice claro en vez de mostrar saldos en cero. */
+function outdatedSheet() {
+  sheet(`${sheetHead('Falta actualizar el servidor')}<p class="muted" style="font-size:14px;margin:0 0 12px">Esta versión de Botella necesita la última versión de la base de datos. Por eso pueden faltar botellas o el muelle.</p>
+    <p class="small" style="margin:0 0 16px">Quien administra la beta: en Supabase, abre <b>SQL Editor</b>, pega el archivo <b>supabase/schema.sql</b> completo y toca <b>Run</b>. No borra nada.</p><button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
 }
 function boot() {
   document.addEventListener('click', e => {

@@ -1,0 +1,20 @@
+# Aplica supabase/schema.sql en Supabase cada vez que cambia. Necesita el secreto SUPABASE_DB_URL
+# (Supabase > Connect > Session pooler > URI, con tu contraseña de la base). Sin el secreto, no hace nada.
+name: Actualizar base de datos
+on:
+  push:
+    branches: [main]
+    paths: [supabase/schema.sql]
+  workflow_dispatch:
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aplicar schema.sql
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB" ]; then echo "Falta el secreto SUPABASE_DB_URL: no se aplicó nada."; exit 0; fi
+          sudo apt-get install -y -qq postgresql-client >/dev/null
+          psql "$DB" -v ON_ERROR_STOP=1 -q -f supabase/schema.sql

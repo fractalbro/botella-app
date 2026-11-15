@@ -143,14 +143,15 @@ const meBtn = () => `<button class="iconbtn glass" data-go="perfil" data-fade ar
 P.screens.orilla = {
   anim: night(.42, false),
   render: () => { const list = S.shore.slice(0, 6), n = S.shore.length; return `${sb_()}<div class="pad" style="flex:none">
-      <div class="top"><span class="wordmark" style="font-size:30px;flex:1">Botella</span><span class="count" aria-label="Te quedan ${S.me?.bottles || 0} botellas para lanzar">${countHTML()}</span>${meBtn()}</div>
+      <div class="top"><span class="wordmark" style="font-size:30px;flex:1">Botella</span><button class="count" data-go="store" data-fade aria-label="Te quedan ${S.me?.bottles || 0} botellas para lanzar. Ir al muelle">${countHTML()}</button>${meBtn()}</div>
     </div>
     <div style="flex:1;position:relative">
-      ${list.map((b, i) => `<button class="float${b.status === 'opened' ? ' seen' : ''}" style="left:${SPOTS[i][0]}%;top:${SPOTS[i][1]}%" data-act="openB" data-id="${b.id}" aria-label="Abrir botella: ${esc(b.kind.toLowerCase())} desde ${esc(b.place)}">${btSVG(b.btype)}<span>${esc(b.kind)} · ${esc(b.place)}</span></button>`).join('')}
+      ${list.map((b, i) => `<button class="float${b.status === 'opened' ? ' seen' : ''}" style="left:${SPOTS[i][0]}%;top:${SPOTS[i][1]}%" data-act="openB" data-id="${b.id}" aria-label="Abrir botella: ${esc(b.kind.toLowerCase())} desde ${esc(b.place)}">${btSVG(b.btype, b.glass, b.featured)}<span>${esc(b.kind)} · ${esc(b.place)}</span></button>`).join('')}
     </div>
     <div class="pad" style="flex:none;padding-bottom:14px;background:linear-gradient(transparent,rgba(3,16,28,.9) 40%)">
       <div class="h2" style="font-size:24px">${n ? `${n === 1 ? 'Una botella llegó' : n + ' botellas llegaron'} a tu orilla` : 'Tu orilla está en calma'}</div>
-      <p class="small muted" style="margin:6px 0 14px">${n ? 'Toca una para escucharla. Cada respuesta te da otra botella para lanzar, hasta 3 al día.' : 'Lanza la primera. Cuando alguien lance una, la marea la trae hasta aquí.'}</p>
+      <p class="small muted" style="margin:6px 0 12px">${n ? 'Toca una para escucharla. Cada respuesta te da otra botella para lanzar, hasta 3 al día.' : 'Lanza la primera. Cuando alguien lance una, la marea la trae hasta aquí.'}</p>
+      <div class="quick"><button class="tide" data-go="marea">${icon('tide', 's')}<span><b>La marea</b>${mareaLine()}</span></button><button class="tide" data-go="salidas">${icon('users', 's')}<span><b>Salidas</b>en grupo, gratis</span></button></div>
       <button class="btn btn-a" data-go="launch">${icon('bottle')} Lanzar una botella</button>
     </div>${tabsHTML('orilla')}`; },
   async after() { if (!P.st.shoreFresh) { P.st.shoreFresh = true; try { await Promise.all([loadMe(), loadShore()]); if (P.curId === 'orilla') rerender(); } catch (e) {} } },
@@ -168,16 +169,16 @@ P.screens.open = {
     const shake = st.holdAt && !st.uncorked ? Math.min(1, (performance.now() - st.holdAt) / 900) : 0;
     if (shake) { bx += Math.sin(t * 60) * 2 * shake; by += Math.cos(t * 50) * 1.5 * shake; }
     const k = st.uncorked ? Math.min(1, since('corkAt') / .7) : 0, e = ease(k);
-    bottle(ctx, bx, by, sc, -.25 - e * .2, .8 + shake, '127,216,201', false);
+    bottle(ctx, bx, by, sc, -.25 - e * .2, .8 + shake, btCol(S.sel), false);
     const rot = -.25 - e * .2; ctx.save(); ctx.fillStyle = '#8A5A33'; ctx.translate(bx + 56 * sc * Math.cos(rot) + e * 50, by + 56 * sc * Math.sin(rot) - e * 80 + e * e * 40); ctx.rotate(rot + e * 4); ctx.fillRect(-4 * sc, -5 * sc, 8 * sc, 10 * sc); ctx.restore();
     if (st.uncorked && k < 1) for (let i = 0; i < 10; i++) { const a = -1.4 + i * .14, r = e * 60; ctx.fillStyle = `rgba(246,231,196,${1 - e})`; ctx.beginPath(); ctx.arc(bx + 56 * sc * Math.cos(rot) + Math.cos(a) * r, by + 56 * sc * Math.sin(rot) + Math.sin(a) * r, 2, 0, 7); ctx.fill(); }
   },
-  render: () => { const b = S.sel; if (!b) return ''; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Llegó a tu orilla<small>${ago(b.arrived)} · desde ${esc(b.place)}</small></span><button class="iconbtn glass" data-act="reportB" aria-label="Reportar esta botella">${icon('flag')}</button></div>
+  render: () => { const b = S.sel; if (!b) return ''; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">${b.featured ? 'Llegó con la marea' : 'Llegó a tu orilla'}<small>${ago(b.arrived)} · desde ${esc(b.place)}</small></span><button class="iconbtn glass" data-act="reportB" aria-label="Reportar esta botella">${icon('flag')}</button></div>
     <div style="height:17%;flex:none"></div>
     ${P.st.uncorked ? `<div class="scroll pad"><div class="paper"><span class="eyebrow">${esc(b.kind)} · desde ${esc(b.place)}</span>${b.body ? `<div class="q">${esc(b.body)}</div>` : '<div class="q">Escucha su voz.</div>'}${vn(b.voice, b.voice_secs, { peaks: b.voice_peaks })}</div>
-    <p class="small muted rise d3" style="margin-top:14px">Si respondes, se abre una conversación privada entre los dos.</p></div>
+    ${b.sample ? sampleNote() : ''}<p class="small muted rise d3" style="margin-top:14px">Si respondes, se abre una conversación privada entre los dos.</p></div>
     <div class="foot pad"><button class="btn btn-a" data-go="answer">${icon('mic')} Responder con mi voz</button><button class="btn btn-ghost" data-act="toSea">Devolver al mar</button></div>`
-    : `<div style="flex:1"></div><div class="pad" style="padding-bottom:12px"><span class="eyebrow a rise">${esc(b.kind)} · desde ${esc(b.place)}</span><div class="display rise d1" style="font-size:34px;margin-top:8px">Alguien lanzó esto <b>al mar</b>.</div><p class="lead rise d2">Descórchala para escuchar su voz.</p></div>
+    : `<div style="flex:1"></div><div class="pad" style="padding-bottom:12px"><span class="eyebrow a rise">${esc(b.kind)} · desde ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><div class="display rise d1" style="font-size:34px;margin-top:8px">Alguien lanzó esto <b>al mar</b>.</div><p class="lead rise d2">Descórchala para escuchar su voz.</p></div>
     <div class="foot pad">${holdBtn('uncork', `${icon('bottle')} Mantén para descorchar`, 900)}</div>`}`; },
   after() { setTimeout(() => { P.st.flyR = null; }, 700); }
 };
@@ -211,7 +212,7 @@ P.actions.sendAns = async el => {
     delete S.rec.ans; S.busy = false; S.shore = S.shore.filter(x => x.id !== b.id);
     if (S.me) S.me.bottles = res.left_bottles;
     await loadConvos(); P.hist = ['orilla']; await openChat(res.convo, { noPush: true });
-    P.timers.push(setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: res.rewarded ? 'Una botella llegó a tu muelle' : 'Ya ganaste tus 3 botellas de hoy', text: res.rewarded ? 'Por responder. Úsala para lanzar la tuya.' : 'Mañana puedes ganar 3 más respondiendo.', go: 'launch' }), 900));
+    P.timers.push(setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: res.rewarded ? 'Ganaste una botella' : 'Ya ganaste tus 3 botellas de hoy', text: res.rewarded ? 'Por responder. Úsala para lanzar la tuya.' : 'En el muelle puedes pedir más, gratis en la beta.', go: res.rewarded ? 'launch' : 'store' }), 900));
   } catch (e) { S.busy = false; el.classList.remove('soft'); el.innerHTML = `${icon('send')} Enviar respuesta`; err(e, 'No se pudo enviar tu respuesta. Intenta otra vez.'); }
 };
 
@@ -225,9 +226,10 @@ P.screens.launch = {
         <div class="ideas" id="ideas" style="margin-top:10px">${ideasHTML()}</div></div>
       <div class="sec"><span class="eyebrow">Tipo de botella</span><div class="btypes" id="btypes">${btypesHTML()}</div>
         ${S.btype === 'color' ? `<label class="field select" style="margin-top:10px"><select id="btarget" aria-label="A quién llega">${targetOpts()}</select></label>` : ''}
-        <p class="small muted" style="margin:8px 0 0">${BT[S.btype].desc}</p></div>
+        <p class="small muted" style="margin:8px 0 0">${BT[S.btype].desc}</p>
+        <button class="setrow" role="switch" aria-checked="${S.featured}" data-act="featT" style="margin-top:10px">${icon('tide')}<span style="flex:1"><b>Que salga en la marea de las 21:00</b><span>${(S.me?.tide_left || 0) ? `Arriba de todas, para todo Lima. Te ${S.me.tide_left === 1 ? 'queda 1' : 'quedan ' + S.me.tide_left}.` : 'No te quedan. Pide una en el muelle.'}</span></span><span class="sw"></span></button></div>
       <div class="sec">${recBox('launch', 'Toca para grabarla. Hasta 60 segundos.')}</div>
-      ${left ? '' : '<p class="small muted" style="margin:0 0 16px">' + (S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra; mañana también recibes una gratis.' : 'Ya usaste las de este tipo. Elige otra.') + '</p>'}
+      ${left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`}
     </div>
     ${S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">Desliza la botella hacia arriba para lanzarla</span></div><button class="btn btn-ghost" data-act="throw" style="height:34px">O toca aquí para lanzar</button></div>` : ''}`; },
   after(sec) {
@@ -251,10 +253,15 @@ const BT = {
   far: { name: 'Llega lejos', sub: '10 orillas', desc: 'La escuchan 10 personas en vez de 3.', col: '255,214,140' }
 };
 const btLeft = k => (k === 'color' ? S.me?.color_left : k === 'far' ? S.me?.far_left : S.me?.bottles) || 0;
-const btSVG = k => k === 'color' ? bottleSVG('rgba(255,150,195,.95)', 'rgba(255,112,169,.22)') : k === 'far' ? bottleSVG('rgba(255,214,140,.95)', 'rgba(255,214,140,.22)') : bottleSVG();
+const btSVG = (k, glass, featured) => featured ? bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.32)') : k === 'color' ? bottleSVG('rgba(255,150,195,.95)', 'rgba(255,112,169,.22)') : k === 'far' ? bottleSVG('rgba(255,214,140,.95)', 'rgba(255,214,140,.22)') : glass && GLASS[glass] ? bottleSVG(GLASS[glass][0], GLASS[glass][1]) : bottleSVG();
+const btCol = b => !b ? '127,216,201' : b.featured || b.btype === 'far' ? '255,214,140' : b.btype === 'color' ? '255,112,169' : b.glass && GLASS[b.glass] ? GLASS[b.glass][2] : '127,216,201';
+const sampleNote = () => `<div class="samplenote rise d3">${icon('spark', 's')}<span><b>Botella de ejemplo.</b> Es una voz creada para la beta, para que pruebes cómo se siente Botella mientras llega más gente. Si respondes, te contesta.</span></div>`;
+function mareaLine() { const h = +new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour: 'numeric', hour12: false }); return h >= 21 ? 'llegó hoy a las 21:00' : 'hoy a las 21:00'; }
 function btypesHTML() { return Object.entries(BT).map(([k, b]) => `<button class="btype${S.btype === k ? ' on' : ''}${btLeft(k) ? '' : ' empty'}" data-act="btype" data-k="${k}" style="--bc:${b.col}"><span class="bsv">${btSVG(k)}</span><b>${b.name}</b><span>${b.sub}</span><em>${btLeft(k)}</em></button>`).join(''); }
 function targetOpts() { const v = S.target || 'topic:' + (S.me?.topics?.[0] || TOPICS[0]); S.target = v; return `<optgroup label="Por tema">${TOPICS.map(t => `<option value="topic:${t}"${v === 'topic:' + t ? ' selected' : ''}>Les gusta: ${t}</option>`).join('')}</optgroup><optgroup label="Por distrito">${DISTRICTS.filter(d => d !== 'Otro distrito').map(d => `<option value="district:${d}"${v === 'district:' + d ? ' selected' : ''}>Viven en ${d}</option>`).join('')}</optgroup>`; }
-P.actions.btype = el => { const k = el.dataset.k; if (!btLeft(k)) return toast(k === 'free' ? 'Te quedaste sin botellas normales. Responde una y ganas otra.' : 'Ya usaste las de este tipo.'); S.btype = k; go('launch', { noPush: true }); };
+P.actions.btype = el => { S.btype = el.dataset.k; go('launch', { noPush: true }); };
+P.actions.featT = el => { if (!S.featured && !(S.me?.tide_left > 0)) { return P.actions.getMore({ dataset: { k: 'tide' } }); } S.featured = !S.featured; el.setAttribute('aria-checked', S.featured); };
+P.actions.getMore = async el => { const k = el.dataset.k; try { await claim(k); if (k === 'tide') S.featured = true; if (P.curId === 'launch') go('launch', { noPush: true }); } catch (e) { err(e); } };
 P.actions.throw = async () => {
   const r = S.rec.launch; if (!r) return needVoice('launch');
   if (!btLeft(S.btype)) { const fb = $('#fb'); if (fb) fb.style.transform = ''; return toast(S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra.' : 'Ya usaste las de este tipo. Elige otra.'); }
@@ -264,8 +271,10 @@ P.actions.throw = async () => {
     const path = await upload(r.blob, r.ext);
     const [tk, tv] = S.btype === 'color' ? (S.target || '').split(':') : [];
     P.st.btype = S.btype;
-    const [res] = await rpc('launch_bottle', { p_kind: S.kind, p_body: S.body.trim() || null, p_voice: path, p_secs: r.secs, p_peaks: r.peaks, p_type: S.btype, p_topic: tk === 'topic' ? tv : null, p_district: tk === 'district' ? tv : null });
-    delete S.rec.launch; S.body = ''; S.idea = -1; Object.assign(S.me, { bottles: res.left_bottles, color_left: res.left_color, far_left: res.left_far }); P.st.shores = res.shores; if (!btLeft(S.btype)) S.btype = 'free'; loadBottles().catch(() => {});
+    P.st.featured = S.featured && S.me?.tide_left > 0;
+    const [res] = await rpc('launch_bottle', { p_kind: S.kind, p_body: S.body.trim() || null, p_voice: path, p_secs: r.secs, p_peaks: r.peaks, p_type: S.btype, p_topic: tk === 'topic' ? tv : null, p_district: tk === 'district' ? tv : null, p_featured: P.st.featured });
+    delete S.rec.launch; S.body = ''; S.idea = -1; S.featured = false; Object.assign(S.me, { bottles: res.left_bottles, color_left: res.left_color, far_left: res.left_far, tide_left: res.left_tide ?? S.me.tide_left }); P.st.shores = res.shores; if (!btLeft(S.btype)) S.btype = 'free'; loadBottles().catch(() => {});
+    watchPending(75000); watchPending(150000);
   } catch (e) { P.st.shores = -1; err(e, 'Tu botella no pudo salir. Intenta otra vez.'); go('launch', { noPush: true }); }
   S.launching = false;
 };
@@ -278,7 +287,7 @@ P.screens.thrown = {
     const lx = w * .9, ly = h * horizon - 8, beamOn = k > 1.2 && k < 3.4 ? Math.min(1, (k - 1.2) * 3, (3.4 - k) * 3) : .25;
     const beamA = k > 1.2 && k < 3.4 ? -.28 + Math.sin((k - 1.2) / 2.2 * Math.PI) * .32 : -.1;
     lighthouse(ctx, lx, ly, 7, t, beamA, beamOn);
-    const n = st.shores > 0 ? st.shores : 3, col = (BT[st.btype] || BT.free).col;
+    const n = st.shores > 0 ? st.shores : 3, col = st.featured ? '255,214,140' : S.me?.glass && st.btype === 'free' ? GLASS[S.me.glass][2] : (BT[st.btype] || BT.free).col;
     waves(ctx, w, h, t, horizon, mx, (i, wv) => {
       if (i !== 1) return;
       if (k < .9) { const u = k / .9, x = w * (.7 - u * .28), y = h * (.98 - Math.sin(u * Math.PI) * .5); bottle(ctx, x, Math.min(y, h * .98), .8, u * 7, 1, col); }
@@ -298,7 +307,7 @@ P.screens.thrown = {
     P.timers.push(setTimeout(() => set('El faro la guía', 'La luz del faro pasa por tu botella.', 'Busca orillas con tus mismos temas.'), 1300));
     const final = () => { const n = P.st.shores; if (n == null) { P.timers.push(setTimeout(final, 400)); return; } if (n < 0) return;
       set('En camino', n >= 10 ? 'Tu botella va hacia diez orillas.' : n >= 3 ? 'Tu botella va hacia tres orillas.' : n > 0 ? `Llegó a ${n === 1 ? 'una orilla' : n + ' orillas'}.` : 'Tu botella flota en el mar.',
-        n >= 3 ? 'Si alguien responde, te avisamos. Si nadie la abre en 24 horas, la marea la lleva a otra orilla.' : 'Somos pocos en la beta: llegará a más personas a medida que se sumen. Invita a alguien desde tu perfil.'); };
+        (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 3 ? 'Si alguien responde, te avisamos. Si nadie la abre en 24 horas, la marea la lleva a otra orilla.' : 'Somos pocos en la beta: llegará a más personas a medida que se sumen. Te avisamos cuando alguien responda.')); };
     P.timers.push(setTimeout(final, 3500));
   }
 };
@@ -308,13 +317,18 @@ P.actions.toMine = () => { P.hist = ['orilla']; go('mine', { fade: true, noPush:
 P.screens.mine = {
   render: () => `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Mis botellas</span>${meBtn()}</div>
     ${S.bottles.length ? S.bottles.map((b, i) => { const sub = b.answers ? `Llegó a ${b.shores} ${b.shores === 1 ? 'orilla' : 'orillas'} · ${b.answers} ${b.answers === 1 ? 'respuesta' : 'respuestas'}` : b.shores ? `En el mar · llegó a ${b.shores} ${b.shores === 1 ? 'orilla' : 'orillas'}${b.opened ? ` · ${b.opened === 1 ? 'la abrió 1 persona' : 'la abrieron ' + b.opened}` : ''}` : 'Flotando · espera a que llegue gente nueva';
-      return `<div class="row rise d${Math.min(i, 4)}${b.answers ? '' : ' drift'}" ${b.answers ? `data-act="mineGo" data-id="${b.id}" role="button" tabindex="0"` : ''}><span style="flex:1;min-width:0"><span class="t" style="font-weight:300;font-size:18px">${esc(b.body || b.kind + ' de ' + fmt(b.voice_secs))}</span><span class="s">${sub}</span><span class="shores">${Array.from({ length: Math.max(3, Math.min(b.shores, 8)) }, (_, k) => `<i class="${k < b.opened ? 'on' : ''}"></i>`).join('')}</span>${vn(b.voice, b.voice_secs, { mine: true, peaks: b.voice_peaks })}${b.answers ? '' : `<span class="driftb">${bottleSVG()}</span>`}</span>${b.answers ? '<span class="pill a">Escuchar</span>' : ''}</div>`; }).join('')
+      return `<div class="row rise d${Math.min(i, 4)}${b.answers ? '' : ' drift'}" ${b.answers ? `data-act="mineGo" data-id="${b.id}" role="button" tabindex="0"` : ''}><span style="flex:1;min-width:0"><span class="t" style="font-weight:300;font-size:18px">${esc(b.body || b.kind + ' de ' + fmt(b.voice_secs))}</span><span class="s">${sub}</span>${openersHTML(b)}<span class="shores">${Array.from({ length: Math.max(3, Math.min(b.shores, 8)) }, (_, k) => `<i class="${k < b.opened ? 'on' : ''}"></i>`).join('')}</span>${vn(b.voice, b.voice_secs, { mine: true, peaks: b.voice_peaks })}${b.answers ? '' : `<span class="driftb">${bottleSVG()}</span>`}</span>${b.answers ? '<span class="pill a">Escuchar</span>' : ''}</div>`; }).join('')
       : `<div class="empty rise"><span style="width:120px;display:block;margin:30px auto 10px">${bottleSVG()}</span><div class="h3" style="text-align:center">Todavía no lanzas ninguna</div><p class="small muted" style="text-align:center;margin:6px auto 18px;max-width:30ch">Graba una pregunta o algo que quieras contar, y lánzala.</p><button class="btn btn-a" data-go="launch">${icon('bottle')} Lanzar una botella</button></div>`}
   </div>${tabsHTML('mine')}`,
   async after() { if (!P.st.mineFresh) { P.st.mineFresh = true; try { await loadBottles(); if (P.curId === 'mine') rerender(); } catch (e) {} } },
   leave() { P.st.mineFresh = false; }
 };
-P.actions.mineGo = (el, e) => { if (e && e.target.closest('.vn')) return; const b = S.bottles.find(x => x.id === el.dataset.id); if (!b) return; if (b.answers > 1) { go('convos', { fade: true }); return; } if (b.convo) openChat(b.convo); };
+function openersHTML(b) {
+  if (!b.opened) return '';
+  if (!b.openers) return `<button class="who-up" data-act="toStore">${icon('eye', 's')} Ver desde dónde la abrieron</button>`;
+  return `<span class="who">${b.openers.slice(0, 4).map(o => `<i>${icon(o.answered ? 'chat' : 'eye', 's')}${esc(o.place)} · ${ago(o.at)}</i>`).join('')}</span>`;
+}
+P.actions.mineGo = (el, e) => { if (e && e.target.closest('.who-up')) return; if (e && e.target.closest('.vn')) return; const b = S.bottles.find(x => x.id === el.dataset.id); if (!b) return; if (b.answers > 1) { go('convos', { fade: true }); return; } if (b.convo) openChat(b.convo); };
 
 /* ================= CONVERSACIONES ================= */
 P.screens.convos = {
@@ -337,32 +351,38 @@ const convo = () => S.convo;
 function msgHTML(m, i) {
   const me = m.sender === uid();
   if (m.body && m.body.startsWith('#bottle|')) { const [, kind, text] = m.body.split('|'); return `<div class="msg${me ? ' me' : ''} rise"><div class="minipaper"><small>${me ? 'Tu botella' : 'Su botella'} · ${esc((kind || '').toLowerCase())}</small>${esc(text || 'Una nota de voz')}</div>${vn(m.voice, m.voice_secs, { mine: me, peaks: m.voice_peaks })}<span class="when">${clock(m.created_at)}</span></div>`; }
+  if (m.body && m.body.startsWith('#gift|')) return `<div class="msg${me ? ' me' : ''} rise"><div class="giftcard"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span><b>${me ? 'Le mandaste una botella con lacre' : 'Te mandó una botella con lacre'}</b><span>${me ? 'Se queda dorada en esta conversación.' : 'Te regaló una botella para lanzar.'}</span></div><span class="when">${clock(m.created_at)}</span></div>`;
+  if (m.body && m.body.startsWith('#plan|')) { const [, place, when] = m.body.split('|'); const ok = (S.msgs[convo().id] || []).some(x => x.body === '#planok|' && x.sender !== m.sender && x.created_at > m.created_at); const later = (S.msgs[convo().id] || []).some(x => x.body && x.body.startsWith('#plan|') && x.created_at > m.created_at);
+    return `<div class="msg${me ? ' me' : ''} rise"><div class="plancard">${icon('pin')}<span class="eyebrow ${ok ? 'a' : ''}">${ok ? 'Plan aceptado' : me ? 'Propusiste un plan' : 'Te propone un plan'}</span><b>${esc(place)}</b><span>${esc(when)}</span>${!me && !ok && !later && !convo().closed ? '<button class="btn btn-a btn-sm" data-act="planOk">Acepto</button>' : ''}</div><span class="when">${clock(m.created_at)}</span></div>`; }
+  if (m.body === '#planok|') return `<div class="sys">${icon('check', 's')} ${me ? 'Aceptaste el plan' : 'Aceptó el plan'} · lugares públicos y avísale a alguien de confianza</div>`;
   if (m.body && m.body.startsWith('#call|')) return `<div class="sys">${icon('phone', 's')} ${me ? 'Llamaste' : 'Te llamó'} · ${clock(m.created_at)}</div>`;
   if (!m.voice) return '';
   return `<div class="msg${me ? ' me' : ''}${i > S.msgs[convo().id].length - 4 ? ' rise' : ''}">${vn(m.voice, m.voice_secs, { mine: me, peaks: m.voice_peaks })}<span class="when">${clock(m.created_at)}</span></div>`;
 }
 function keysHTML(c) {
   if (c.closed) return '<div class="divider">Esta conversación terminó</div>';
-  if (c.my_key && c.other_key) return `<div class="divider">Ya pueden llamarse</div><div class="keys"><div class="pair"><span class="k on">${icon('check')}</span><span class="link on"></span><span class="k on">${icon('check')}</span></div><p>Los dos dijeron que sí. Solo voz, sin video.</p><button class="btn btn-a" data-act="call">${icon('phone')} Llamar</button></div>`;
+  if (c.my_key && c.other_key) return `<div class="divider">Ya pueden llamarse</div><div class="keys"><div class="pair"><span class="k on">${icon('check')}</span><span class="link on"></span><span class="k on">${icon('check')}</span></div><p>Los dos dijeron que sí. Solo voz, sin video.</p><button class="btn btn-a" data-act="call">${icon('phone')} Llamar</button><button class="btn btn-ghost" data-act="planAsk">${icon('pin')} Armar un plan</button></div>`;
   const other = c.revealed ? c.alias : 'esta persona';
   return `<div class="divider">¿Hablan en vivo?</div><div class="keys"><div class="pair"><span class="k${c.my_key ? ' on' : ''}">${c.my_key ? icon('check') : icon('bottle')}</span><span class="link"></span><span class="k${c.other_key ? ' on' : ''}">${c.other_key ? icon('check') : icon('bottle')}</span></div>
     <p>${c.my_key ? `Tu llave ya está puesta. Esperando a ${esc(other)}.` : c.other_key ? `${c.revealed ? esc(c.alias) : 'Esta persona'} ya quiere hablar. Pon tu llave y se abre la llamada.` : 'La llamada se abre solo si los dos la tocan.'}</p>
     <button class="btn btn-a" data-act="key"${c.my_key ? ' disabled' : ''}>${c.my_key ? 'Esperando…' : `${icon('phone')} Tocar para llamar`}</button></div>`;
 }
 P.screens.chat = {
-  render: () => { const c = convo(); if (!c) return ''; const list = S.msgs[c.id] || []; return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 40)}<span class="title">${esc(c.alias)}<small>${c.revealed ? esc(c.place) + ' · ' : ''}${c.i_launched ? 'respondió tu botella' : 'respondiste su botella'}</small></span><button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
+  render: () => { const c = convo(); if (!c) return ''; const list = S.msgs[c.id] || []; return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 40)}<span class="title">${esc(c.alias)}<small>${c.sample ? 'de ejemplo · ' : ''}${c.revealed ? esc(c.place) + ' · ' : ''}${c.i_launched ? 'respondió tu botella' : 'respondiste su botella'}</small></span><button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
     <div class="scroll pad" id="thread"><div class="thread">
+      ${c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo: una voz creada para la beta, para que pruebes todo el recorrido. Con personas reales funciona igual.</span></div>` : ''}
       ${list.map(msgHTML).join('')}
+      ${c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">Grabando una nota de voz…</span></div>` : ''}
       ${!c.closed && !c.revealed ? `<button class="reveal" data-act="chatMenu">${icon('eye', 's')}<span>${c.my_reveal ? 'Ya compartiste tu nombre. Se ve cuando la otra persona también lo comparta.' : c.other_reveal ? 'Quiere compartir su nombre contigo. Toca para compartir el tuyo.' : 'Son anónimos. Toca para compartir tu nombre.'}</span></button>` : ''}
       ${keysHTML(c)}
     </div></div>
     ${c.closed ? '' : `<div class="foot pad cfoot" id="cfoot">${chatFoot()}</div>`}`; },
-  after(sec) { const s = sec.querySelector('#thread'); if (s) s.scrollTop = s.scrollHeight; },
+  after(sec) { const s = sec.querySelector('#thread'); if (s) s.scrollTop = s.scrollHeight; watchPending(); },
   leave() { if (S.convo) markRead(S.convo.id); }
 };
 function chatFoot() {
   if (REC.mr && REC.id === 'chat') return `<button class="iconbtn glass" data-act="chatRecCancel" aria-label="Cancelar">${icon('close')}</button><div class="clive"><span class="num" id="ctime">0:00</span><span class="cwave" id="cwave"></span></div><button class="iconbtn sendb" data-act="chatRecSend" aria-label="Enviar nota de voz">${icon('send')}</button>`;
-  return `<span class="small muted" style="text-align:center">Toca el micrófono para grabar</span><button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
+  return `<button class="iconbtn glass giftb" data-act="giftAsk" aria-label="Mandar una botella con lacre">${icon('gift')}</button><span class="small muted" style="text-align:center">Toca el micrófono para grabar</span><button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
 }
 P.actions.chatRec = async () => {
   if (REC.mr || CALL) return;
@@ -395,6 +415,7 @@ P.actions.chatMenu = () => {
     ${c.closed ? '' : `<button class="setrow" role="switch" aria-checked="${c.my_reveal}" data-act="reveal">${icon('eye')}<span style="flex:1"><b>Compartir mi nombre</b><span>${c.revealed ? 'Los dos lo compartieron.' : 'Se muestra solo cuando los dos lo comparten.'}</span></span><span class="sw"></span></button>`}
     ${c.revealed && c.intro_voice ? `<div class="setrow" style="cursor:default">${icon('user')}<span style="flex:1"><b>Su presentación</b>${vn(c.intro_voice, c.intro_secs || 10)}</span></div>` : ''}
     ${c.closed ? '' : `<button class="setrow" data-act="blockAsk">${icon('block')}<span style="flex:1"><b>Bloquear</b><span>Termina la conversación y no vuelven a cruzarse.</span></span></button>`}
+    ${c.closed ? '' : `<button class="setrow" data-act="planAsk">${icon('pin')}<span style="flex:1"><b>Armar un plan</b><span>Propón un lugar público y un día.</span></span></button><button class="setrow" data-act="giftAsk">${icon('gift')}<span style="flex:1"><b>Mandar botella con lacre</b><span>Un regalo dorado que se queda en la conversación.</span></span></button>`}
     <button class="setrow" data-act="reportAsk">${icon('flag')}<span style="flex:1"><b>Reportar</b><span>Bloquea y nos avisa para revisar.</span></span></button>`);
 };
 P.actions.reveal = async el => {

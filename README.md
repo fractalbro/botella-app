@@ -22,3 +22,13 @@ Más códigos: `insert into codes(code) values ('AMIGOS-02');`
 ## Pruebas
 - Reglas del servidor contra Postgres local: `PGHOST=... PGPORT=... PGUSER=... sh supabase/test/run.sh`
 - Recorrido completo de la interfaz con cliente falso: `node test/smoke.js shots`
+
+## Personas de ejemplo (beta)
+Mientras llega gente, 12 personas de ejemplo con voces sintéticas (Kokoro y Piper, libres) llenan la orilla, responden tus botellas,
+aceptan llamadas de ejemplo y planes. Se ven marcadas como "de ejemplo". Las voces están en `seed/v/` y se regeneran con
+`seed/src/make_voices.py` + `seed/src/make_sql.py`. Para apagarlas:
+`update public.bottles set hidden = true where owner in (select id from public.profiles where is_sample);`
+
+## Actualizar la base de datos sola
+Agrega en GitHub > Settings > Secrets and variables > Actions el secreto `SUPABASE_DB_URL` (Supabase > Connect > Session pooler > URI).
+Desde ahí, cada cambio a `supabase/schema.sql` se aplica solo. Sin el secreto, hay que pegar el archivo en el SQL Editor.
