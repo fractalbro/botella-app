@@ -53,7 +53,7 @@ const clock = iso => { const d = new Date(iso), t = d.toLocaleTimeString('es-PE'
 const S = {
   session: null, me: null, shore: [], bottles: [], convos: [], msgs: {}, sel: null, convo: null, launching: false,
   slide: 0, authMode: 'signup', code: null, draft: { name: '', district: 'Barranco', adult: false, topics: [], seeks: [] },
-  kind: 'Pregunta', idea: -1, body: '', rec: {}, busy: false
+  kind: 'Pregunta', idea: -1, btype: 'free', target: null, body: '', rec: {}, busy: false
 };
 const P = { screens: {}, actions: {}, cur: null, curId: null, hist: [], timers: [], canvas: null, ctx: null, root: null, t0: performance.now(), st: {} };
 const readMap = LS.get('read', {});
@@ -122,9 +122,9 @@ function lighthouse(ctx, x, y, s, t, beamA, on = 1) {
   ctx.fillStyle = '#0A1B2B'; ctx.beginPath(); ctx.moveTo(-s * .8, -s * 2.9); ctx.lineTo(0, -s * 3.6); ctx.lineTo(s * .8, -s * 2.9); ctx.fill();
   ctx.restore();
 }
-const night = (horizon, withBottle) => (ctx, w, h, t) => {
+const night = (horizon, withBottle, layer = 2) => (ctx, w, h, t) => {
   const mx = sky(ctx, w, h, t, horizon);
-  waves(ctx, w, h, t, horizon, mx, (i, wv) => { if (withBottle && i === 2) { const bx = w * .4 + Math.sin(t * .25) * w * .05, by = wv(bx), sl = (wv(bx + 6) - wv(bx - 6)) / 12; bottle(ctx, bx, by - 6, Math.min(Math.min(w, h) * .0042 + .3, 1.5), Math.atan(sl) - .35); } });
+  waves(ctx, w, h, t, horizon, mx, (i, wv) => { if (withBottle && i === layer) { const bx = w * .4 + Math.sin(t * .25) * w * .05, by = wv(bx), sl = (wv(bx + 6) - wv(bx - 6)) / 12; bottle(ctx, bx, by - 6, Math.min(Math.min(w, h) * .0042 + .3, 1.5), Math.atan(sl) - .35); } });
 };
 const ease = k => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
 const since = key => (performance.now() - (P.st[key] || 0)) / 1000;
@@ -267,7 +267,7 @@ function recBox(id, hint = 'Toca para grabar. Hasta 60 segundos.') {
 }
 P.actions.recToggle = async btn => {
   const id = btn.dataset.id, box = document.getElementById('rec-' + id); if (!box) return;
-  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) { S.rec[id] = r; P.actions.recorded?.(id); } box.outerHTML = recBox(id); refreshNeeds(); return; }
+  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) S.rec[id] = r; if (box.isConnected) box.outerHTML = recBox(id); refreshNeeds(); if (r) P.actions.recorded?.(id); return; }
   if (REC.mr) return;
   const wave = box.querySelector('.wave'), time = box.querySelector('.time'), hint = box.querySelector('.hint');
   const ok = await recStart(MAXV, (t, s) => {

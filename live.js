@@ -120,7 +120,7 @@ async function enter(fresh) {
     if (!me) { P.hist = []; go('about', { fade: true }); return; }
     await refreshAll(); subscribe(); P.hist = []; P.st.shoreFresh = true;
     go('orilla', { fade: true });
-    if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tienes 2 botellas para lanzar', text: S.shore.length ? 'Y ya te llegaron botellas: escúchalas.' : 'Lanza la primera: graba una pregunta.', go: S.shore.length ? 'orilla' : 'launch' }), 1200);
+    if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu regalo de bienvenida', text: '3 botellas normales, 2 de color y 1 que llega lejos.', go: S.shore.length ? 'orilla' : 'launch' }), 1200);
   } catch (e) { err(e, 'No pudimos conectar con el mar. Revisa tu internet.'); go('splash'); }
 }
 function boot() {

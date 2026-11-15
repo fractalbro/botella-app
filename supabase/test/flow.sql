@@ -18,7 +18,7 @@ select pg_temp.ok(check_code('botella-01'), 'código en minúsculas vale');
 
 -- cinco personas: 1 y 2 comparten temas
 insert into profiles(id, name, district, topics, code_used, bottles) values (auth.uid(), 'Ana', 'Lince', '{Música,Cine,Libros}', 'botella-01', 99);
-select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 2, 'el cliente no puede regalarse botellas');
+select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 3 and (select color_left from profiles where id = auth.uid()) = 2 and (select far_left from profiles where id = auth.uid()) = 1, 'regalo de bienvenida: 3 normales, 2 de color, 1 lejos, y el cliente no puede regalarse más');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Beto', 'Barranco', '{Música,Cine,Libros}', 'BOTELLA-01');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Cami', 'Surco', '{Música,Cine}', 'BOTELLA-01');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Dani', 'Lince', '{Fútbol}', 'BOTELLA-01');
@@ -35,7 +35,7 @@ select pg_temp.ok((select count(*) from tide()) = 1, 'la marea devuelve mi perfi
 do $$ begin begin perform launch_bottle('Pregunta', 'x', '00000000-0000-0000-0000-000000000002/a.m4a', 10); raise exception 'debió fallar';
   exception when others then if sqlerrm not like '%voz%' then raise; end if; end; end $$;
 select pg_temp.ok((select shores from launch_bottle('Pregunta', '¿Cuál es tu lugar secreto en Lima?', '00000000-0000-0000-0000-000000000001/b1.m4a', 12)) = 3, 'llega a 3 orillas');
-select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 1, 'gasté una botella');
+select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 2, 'gasté una botella');
 select pg_temp.ok((select count(*) from bottles) = 1, 'veo mi botella');
 select pg_temp.ok((select shores from my_bottles()) = 3, 'mis botellas cuenta 3 orillas');
 reset role;
@@ -54,7 +54,7 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
 select open_delivery((select id from shore()));
 select pg_temp.ok((select status from shore()) = 'opened', 'quedó abierta');
 select pg_temp.ok((select rewarded from answer_delivery((select id from shore()), '00000000-0000-0000-0000-000000000002/r1.m4a', 20)), 'responder regala una botella');
-select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 3, 'Beto ahora tiene 3');
+select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 4, 'Beto ahora tiene 4');
 select pg_temp.ok((select count(*) from shore()) = 0, 'la botella salió de su orilla');
 select pg_temp.ok((select alias from my_convos()) = 'Alguien de Lince', 'conversación anónima');
 select pg_temp.ok((select count(*) from messages) = 2, 'la conversación empieza con la botella y la respuesta');
@@ -102,7 +102,7 @@ update profiles set paused = false where id = '00000000-0000-0000-0000-000000000
 update profiles set daily_day = lima_today() - 1 where id = '00000000-0000-0000-0000-000000000003';
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
-select pg_temp.ok((select bottles from tide()) = 3, 'botella gratis del día');
+select pg_temp.ok((select bottles from tide()) = 4, 'botella gratis del día');
 reset role;
 select pg_temp.ok(exists (select 1 from deliveries where status = 'drifted'), 'la marea movió las botellas viejas');
 select pg_temp.ok(exists (select 1 from deliveries where to_id = '00000000-0000-0000-0000-000000000005' and status = 'waiting'), 'llegaron a una orilla nueva');
@@ -133,5 +133,19 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000006');
 insert into profiles(id, name, district, code_used) values (auth.uid(), 'Fer', 'Lince', 'BOTELLA-01');
 select tide();
 select pg_temp.ok((select count(*) from shore()) >= 1, 'la persona nueva ya tiene botellas en su orilla');
+reset role;
+-- botella de color: llega primero a quien tiene ese tema
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+do $$ begin begin perform launch_bottle('Pregunta', null, '00000000-0000-0000-0000-000000000002/c0.m4a', 5, null, 'color'); raise exception 'debió fallar';
+  exception when others then if sqlerrm not like '%Elige%' then raise; end if; end; end $$;
+select pg_temp.ok((select left_color from launch_bottle('Pregunta', null, '00000000-0000-0000-0000-000000000002/c1.m4a', 5, null, 'color', 'Arte')) = 1, 'gasté una de color');
+reset role;
+select pg_temp.ok(exists (select 1 from deliveries d join bottles b on b.id = d.bottle_id where b.voice like '%c1.m4a' and d.to_id = '00000000-0000-0000-0000-000000000005'), 'la de color llegó a quien le gusta el Arte');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.ok((select left_far from launch_bottle('Historia', null, '00000000-0000-0000-0000-000000000002/f1.m4a', 5, null, 'far')) = 0, 'gasté la que llega lejos');
+do $$ begin begin perform launch_bottle('Historia', null, '00000000-0000-0000-0000-000000000002/f2.m4a', 5, null, 'far'); raise exception 'debió fallar';
+  exception when others then if sqlerrm not like '%lejos%' then raise; end if; end; end $$;
 reset role;
 \echo 'TODO OK'

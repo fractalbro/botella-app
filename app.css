@@ -46,3 +46,42 @@ input,textarea{-webkit-user-select:text;user-select:text}
   .screen.sea>.pad[style*="linear-gradient"],.screen.sea>.scroll[style*="linear-gradient"]{background:none!important}
   .screen.sea::after{content:"";position:absolute;left:0;right:0;bottom:0;height:62%;background:linear-gradient(transparent,rgba(3,16,28,.92) 55%);z-index:-1;pointer-events:none}
 }
+/* Pantallas chicas (iPhone 13 mini, SE) y Safari con barras */
+.display{font-size:clamp(30px,9.4vw,40px)}
+.h2{font-size:clamp(24px,7.2vw,28px)}
+.paper .q{font-size:clamp(21px,6.4vw,27px)}
+.stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat2{padding:12px}
+.stat2 b{font-size:32px}
+.toast{top:max(14px,env(safe-area-inset-top,0px));bottom:auto;animation:toastTop 3.4s ease forwards}
+@keyframes toastTop{0%{opacity:0;transform:translateY(-10px)}8%,88%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+.ideas{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-22px;padding-inline:22px;scroll-snap-type:x proximity}
+.ideas::-webkit-scrollbar{display:none}
+.ideas .idea{flex:none;width:auto;max-width:78%;white-space:normal;border:1px solid var(--line);border-radius:18px;padding:10px 14px;font-size:15px;line-height:1.25;scroll-snap-align:start;background:var(--glass)}
+.ideas .idea.on{color:var(--fg);border-color:var(--a)}
+.ideas .idea.on::before{content:none}
+.select{position:relative}
+.select select{appearance:none;-webkit-appearance:none;flex:1;min-width:0;background:none;border:0;outline:0;color:var(--fg);font:inherit;font-size:16px;height:100%}
+.select select option{color:#000}
+.select::after{content:"";width:8px;height:8px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translateY(-3px);flex:none}
+@media (max-height:700px){
+  .rec{gap:8px;padding-block:2px}
+  .rec .time{font-size:28px}
+  .rec .wave{height:40px}
+  .rec .mic{width:72px;height:72px}
+  .fling{height:76px}
+  .fling .fb{width:80px}
+  .foot{padding-top:8px;gap:4px}
+  .btn{height:52px}
+  .sec{margin-top:20px}
+  .splash-wm{font-size:80px!important}
+}
+/* tipos de botella */
+.btypes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.btype{position:relative;display:grid;justify-items:start;gap:1px;text-align:left;padding:10px 10px 10px 12px;border-radius:18px;border:1px solid var(--line);background:var(--glass)}
+.btype .bsv{width:52px;margin-bottom:4px;filter:drop-shadow(0 0 8px rgba(var(--bc),.45))}
+.btype b{font-size:13px;font-weight:600}
+.btype span{font-size:11.5px;color:var(--muted)}
+.btype em{position:absolute;top:8px;right:10px;font-style:normal;font-weight:700;font-size:12px;color:rgb(var(--bc))}
+.btype.on{border-color:rgb(var(--bc));background:color-mix(in srgb,rgb(var(--bc)) 12%,transparent)}
+.btype.empty{opacity:.4}

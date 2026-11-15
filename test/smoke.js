@@ -10,7 +10,7 @@ const srv = http.createServer((q, r) => {
 }).listen(4610);
 (async () => {
   const b = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] });
-  const ctx = await b.newContext({ ...devices['iPhone 13'], permissions: ['microphone'], serviceWorkers: 'block' }); const p = await ctx.newPage(); const errs = [];
+  const ctx = await b.newContext({ ...devices[process.env.DEVICE || 'iPhone 13'], permissions: ['microphone'], serviceWorkers: 'block' }); const p = await ctx.newPage(); const errs = [];
   await p.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   p.on('pageerror', e => errs.push('PAGE ' + e.message)); p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|fonts/.test(m.text())) errs.push('CON ' + m.text()); });
   let n = 0; const shot = async name => { await p.waitForTimeout(700); await p.screenshot({ path: `${out}/${String(++n).padStart(2, '0')}-${name}.png` }); };
@@ -23,7 +23,7 @@ const srv = http.createServer((q, r) => {
   await step('registro', async () => {
     await tap('[data-go=intro]'); await shot('intro-1'); await tap('.foot [data-act=slideNext]'); await shot('intro-2'); await tap('.foot [data-act=slideNext]'); await shot('intro-3'); await tap('.foot [data-act=slideNext]');
     await shot('cuenta'); await p.fill('#em', 'ana@correo.com'); await p.fill('#pw', '12345678'); await tap('[data-act=authGo]'); await p.waitForTimeout(500);
-    await shot('sobre-ti'); await p.fill('#nm', 'Ana'); await tap('#dist .chip', 'Lince'); await tap('[data-act=adult]'); await shot('sobre-ti-lleno'); await tap('[data-act=aboutNext]');
+    await shot('sobre-ti'); await p.fill('#nm', 'Ana'); await p.selectOption('#dist', 'Lince'); await tap('[data-act=adult]'); await shot('sobre-ti-lleno'); await tap('[data-act=aboutNext]');
     await shot('voz'); await record(); await shot('voz-lista'); await tap('[data-act=voiceNext]');
     for (const t of ['Música', 'Cine', 'Libros']) await tap('#tops .chip', t); await tap('.chip', 'Conversaciones profundas'); await shot('temas'); await tap('[data-act=finish]'); await p.waitForTimeout(900);
   });
@@ -35,7 +35,7 @@ const srv = http.createServer((q, r) => {
   });
   await step('conversaciones', async () => { await tap('.tabs button', 'Conversaciones'); await p.waitForTimeout(500); await shot('conversaciones'); await tap('[data-act=chatGo][data-id=c-ale]'); await p.waitForTimeout(600); await shot('chat-ale'); await tap('[data-act=key]'); await p.waitForTimeout(3200); await shot('tierra-a-la-vista'); await tap('.btn-ghost', 'Después'); await p.waitForTimeout(500); await shot('chat-llamar'); await tap('[data-act=chatMenu]'); await shot('chat-menu'); await tap('[data-act=reveal]'); await p.waitForTimeout(600); await shot('chat-revelado'); });
   await step('lanzar', async () => {
-    await tap('[data-act=back]'); await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await shot('lanzar'); await tap('.idea'); await record(); await shot('lanzar-lista');
+    await tap('[data-act=back]'); await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await shot('lanzar'); await tap('.idea'); await tap('[data-act=btype][data-k=color]'); await p.selectOption('#btarget', 'district:Barranco'); await shot('lanzar-color'); await record(); await shot('lanzar-lista');
     await tap('[data-act=throw]'); await p.waitForTimeout(1500); await shot('lanzada-1'); await p.waitForTimeout(2500); await shot('lanzada-2'); await tap('[data-act=toMine]'); await p.waitForTimeout(600); await shot('mis-botellas');
   });
   await step('perfil', async () => { await tap('.tabs button', 'Perfil'); await p.waitForTimeout(500); await shot('perfil'); await tap('[data-act=rules]'); await shot('normas'); await tap('.sheet [data-act=closeSheet]'); });

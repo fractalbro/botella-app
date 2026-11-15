@@ -30,7 +30,7 @@ create table if not exists public.profiles (
   intro_peaks jsonb,
   code_used text,
   paused boolean not null default false,
-  bottles int not null default 2,      -- botellas para lanzar
+  bottles int not null default 3,      -- botellas normales para lanzar
   daily_day date,                      -- último día en que recibió su botella gratis
   earned_day date,                     -- día del contador de respuestas premiadas
   earned int not null default 0,       -- botellas ganadas respondiendo hoy (máx. 3)
@@ -38,6 +38,9 @@ create table if not exists public.profiles (
   last_seen timestamptz not null default now()
 );
 alter table public.profiles enable row level security;
+-- Botellas especiales de regalo para la beta: de color (eliges a quién llega) y que llega lejos (10 orillas).
+alter table public.profiles add column if not exists color_left int not null default 2;
+alter table public.profiles add column if not exists far_left int not null default 1;
 
 revoke update on public.profiles from authenticated;
 grant update (name, district, topics, seeks, intro_voice, intro_secs, intro_peaks, paused, last_seen) on public.profiles to authenticated;
@@ -57,7 +60,7 @@ begin
   end if;
   update codes set uses = uses + 1 where code = upper(trim(new.code_used));
   new.code_used := upper(trim(new.code_used));
-  new.bottles := 2; new.daily_day := lima_today(); new.earned_day := lima_today(); new.earned := 0; new.paused := false;
+  new.bottles := 3; new.color_left := 2; new.far_left := 1; new.daily_day := lima_today(); new.earned_day := lima_today(); new.earned := 0; new.paused := false;
   new.created_at := now(); new.last_seen := now();
   return new;
 end $$;
@@ -103,6 +106,9 @@ create table if not exists public.bottles (
   hidden boolean not null default false, -- la apaga un reporte
   created_at timestamptz not null default now()
 );
+alter table public.bottles add column if not exists btype text not null default 'free' check (btype in ('free','color','far'));
+alter table public.bottles add column if not exists target_topic text;
+alter table public.bottles add column if not exists target_district text;
 alter table public.bottles enable row level security;
 drop policy if exists "mis botellas" on public.bottles;
 create policy "mis botellas" on public.bottles for select to authenticated using (owner = auth.uid());
@@ -187,7 +193,9 @@ begin
       and not exists (select 1 from deliveries d where d.bottle_id = bo.id and d.to_id = p.id)
       and not blocked(p.id, bo.owner)
       and not exists (select 1 from convos c where c.bottle_id = bo.id and c.b = p.id)
-    order by cardinality(array(select unnest(p.topics) intersect select unnest(mine))) desc,
+    order by -- una botella de color llega primero a quien cumple lo que eligió quien la lanzó
+             ((bo.target_topic is null or bo.target_topic = any(p.topics)) and (bo.target_district is null or p.district = bo.target_district)) desc,
+             cardinality(array(select unnest(p.topics) intersect select unnest(mine))) desc,
              (select count(*) from deliveries w where w.to_id = p.id and w.status = 'waiting') asc,
              (p.last_seen > now() - interval '3 days') desc,
              random()
@@ -217,7 +225,7 @@ begin
     for update of d skip locked
   loop
     update deliveries set status = 'drifted' where id = r.id;
-    if (select count(*) from deliveries where bottle_id = r.bottle_id) < 12 then perform deliver(r.bottle_id, 1); end if;
+    if (select count(*) from deliveries where bottle_id = r.bottle_id) < 15 then perform deliver(r.bottle_id, 1); end if;
   end loop;
   -- Si mi orilla está casi vacía, el mar me trae botellas recientes que todavía buscan quién las escuche.
   if not me.paused then
@@ -227,7 +235,7 @@ begin
         and not blocked(b.owner, me.id)
         and not exists (select 1 from deliveries d where d.bottle_id = b.id and d.to_id = me.id)
         and (select count(*) from deliveries d where d.bottle_id = b.id and d.status in ('waiting','opened')) < 3
-        and (select count(*) from deliveries d where d.bottle_id = b.id) < 12
+        and (select count(*) from deliveries d where d.bottle_id = b.id) < 15
       order by b.created_at desc
       limit greatest(0, 3 - (select count(*) from deliveries d where d.to_id = me.id and d.status in ('waiting','opened')))
     loop
@@ -238,30 +246,41 @@ begin
 end $$;
 grant execute on function public.tide() to authenticated;
 
-create or replace function public.launch_bottle(p_kind text, p_body text, p_voice text, p_secs int, p_peaks jsonb default null)
-returns table (bottle uuid, shores int, left_bottles int) language plpgsql security definer set search_path = public as $$
+drop function if exists public.launch_bottle(text, text, text, int, jsonb);
+drop function if exists public.launch_bottle(text, text, text, int, jsonb, text, text, text);
+create or replace function public.launch_bottle(p_kind text, p_body text, p_voice text, p_secs int, p_peaks jsonb default null,
+  p_type text default 'free', p_topic text default null, p_district text default null)
+returns table (bottle uuid, shores int, left_bottles int, left_color int, left_far int) language plpgsql security definer set search_path = public as $$
 declare me profiles; bid uuid; n int;
 begin
   select * into me from profiles where id = auth.uid() for update;
   if me.id is null then raise exception 'Primero crea tu cuenta.'; end if;
-  if me.bottles < 1 then raise exception 'Te quedaste sin botellas. Responde una y ganas otra.'; end if;
+  p_type := coalesce(p_type, 'free');
+  if p_type = 'free' and me.bottles < 1 then raise exception 'Te quedaste sin botellas. Responde una y ganas otra.'; end if;
+  if p_type = 'color' and me.color_left < 1 then raise exception 'Ya usaste tus botellas de color.'; end if;
+  if p_type = 'far' and me.far_left < 1 then raise exception 'Ya usaste tu botella que llega lejos.'; end if;
+  if p_type not in ('free','color','far') then raise exception 'Ese tipo de botella no existe.'; end if;
+  if p_type = 'color' and p_topic is null and p_district is null then raise exception 'Elige a quién quieres que llegue tu botella de color.'; end if;
   if p_voice is null or split_part(p_voice, '/', 1) <> me.id::text then raise exception 'Falta tu nota de voz.'; end if;
   if (select count(*) from bottles where owner = me.id and created_at > now() - interval '1 hour') >= 6 then
     raise exception 'Lanzaste muchas botellas seguidas. Espera un rato.';
   end if;
-  insert into bottles(owner, kind, body, voice, voice_secs, voice_peaks)
-    values (me.id, p_kind, nullif(trim(p_body), ''), p_voice, least(greatest(p_secs, 1), 60), p_peaks) returning id into bid;
-  update profiles set bottles = bottles - 1 where id = me.id;
-  n := deliver(bid, 3);
-  return query select bid, n, me.bottles - 1;
+  insert into bottles(owner, kind, body, voice, voice_secs, voice_peaks, btype, target_topic, target_district)
+    values (me.id, p_kind, nullif(trim(p_body), ''), p_voice, least(greatest(p_secs, 1), 60), p_peaks, p_type,
+            case when p_type = 'color' then p_topic end, case when p_type = 'color' then p_district end) returning id into bid;
+  update profiles set bottles = bottles - (p_type = 'free')::int, color_left = color_left - (p_type = 'color')::int, far_left = far_left - (p_type = 'far')::int
+    where id = me.id returning * into me;
+  n := deliver(bid, case when p_type = 'far' then 10 else 3 end);
+  return query select bid, n, me.bottles, me.color_left, me.far_left;
 end $$;
-grant execute on function public.launch_bottle(text, text, text, int, jsonb) to authenticated;
+grant execute on function public.launch_bottle(text, text, text, int, jsonb, text, text, text) to authenticated;
 
 -- Mi orilla: lo que me llegó. Nunca devuelve quién la lanzó.
+drop function if exists public.shore();
 create or replace function public.shore() returns table (
-  id uuid, status text, arrived timestamptz, kind text, body text, voice text, voice_secs int, voice_peaks jsonb, place text
+  id uuid, status text, arrived timestamptz, kind text, body text, voice text, voice_secs int, voice_peaks jsonb, place text, btype text
 ) language sql stable security definer set search_path = public as $$
-  select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, p.district
+  select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, p.district, b.btype
   from deliveries d join bottles b on b.id = d.bottle_id join profiles p on p.id = b.owner
   where d.to_id = auth.uid() and d.status in ('waiting','opened') and not b.hidden and not blocked(b.owner, auth.uid())
   order by d.created_at desc limit 20;
@@ -277,7 +296,7 @@ create or replace function public.return_delivery(p_id uuid) returns void langua
 declare d deliveries;
 begin
   update deliveries set status = 'returned' where id = p_id and to_id = auth.uid() and status in ('waiting','opened') returning * into d;
-  if d.id is not null and (select count(*) from deliveries where bottle_id = d.bottle_id) < 12 then perform deliver(d.bottle_id, 1); end if;
+  if d.id is not null and (select count(*) from deliveries where bottle_id = d.bottle_id) < 15 then perform deliver(d.bottle_id, 1); end if;
 end $$;
 grant execute on function public.return_delivery(uuid) to authenticated;
 
@@ -305,16 +324,18 @@ end $$;
 grant execute on function public.answer_delivery(uuid, text, int, jsonb) to authenticated;
 
 -- Mis botellas con su viaje: a cuántas orillas llegó, cuántos la abrieron y cuántos respondieron.
+drop function if exists public.my_bottles();
 create or replace function public.my_bottles() returns table (
   id uuid, kind text, body text, voice text, voice_secs int, voice_peaks jsonb, created_at timestamptz,
-  shores int, opened int, answers int, waiting int, convo uuid
+  shores int, opened int, answers int, waiting int, convo uuid, btype text, target text
 ) language sql stable security definer set search_path = public as $$
   select b.id, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, b.created_at,
     (select count(*) from deliveries d where d.bottle_id = b.id)::int,
     (select count(*) from deliveries d where d.bottle_id = b.id and d.opened_at is not null)::int,
     (select count(*) from convos c where c.bottle_id = b.id)::int,
     (select count(*) from deliveries d where d.bottle_id = b.id and d.status = 'waiting')::int,
-    (select c.id from convos c where c.bottle_id = b.id order by c.created_at limit 1)
+    (select c.id from convos c where c.bottle_id = b.id order by c.created_at limit 1),
+    b.btype, coalesce(b.target_topic, b.target_district)
   from bottles b where b.owner = auth.uid() order by b.created_at desc limit 50;
 $$;
 grant execute on function public.my_bottles() to authenticated;
