@@ -107,10 +107,10 @@ P.actions.aboutNext = () => {
   go('voice');
 };
 P.screens.voice = {
-  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Crear cuenta</span></div>${steps(4)}<div class="scroll pad">
+  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Crear cuenta</span>${S.rec.intro ? '' : '<button class="linkbtn" data-act="voiceLater">Después</button>'}</div>${steps(4)}<div class="scroll pad">
     <div class="display" style="margin-top:22px">En vez de foto, <b>tu voz</b>.</div><p class="lead">Di tu apodo y algo que te guste, como “Soy Dani y veo cine de terror”. Hoy no la escucha nadie: se abre con alguien solo cuando los dos compartan su nombre. Puedes cambiarla cuando quieras.</p>
     <div class="sec">${recBox('intro', 'Toca para grabar. Con 5 segundos basta.')}</div></div>
-    <div class="foot pad"><button class="btn btn-a${S.rec.intro ? '' : ' soft'}" data-needs="intro" data-act="voiceNext">Continuar</button><button class="btn btn-ghost" data-act="voiceLater">Grabarla después</button></div>`
+    <div class="foot pad"><button class="btn btn-a${S.rec.intro ? '' : ' soft'}" data-needs="intro" data-act="voiceNext">Continuar</button></div>`
 };
 // La presentación no frena el registro: se pide de nuevo cuando compartes tu nombre.
 P.actions.voiceLater = () => { delete S.rec.intro; go('topics'); };
