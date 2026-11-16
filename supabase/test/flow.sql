@@ -242,7 +242,7 @@ select pg_temp.ok((select count(*) from outings_list() where mine) = 1, 'veo mi 
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
 select outing_join((select id from outings_list() where name = 'Atardecer en Barranco'), true);
 select pg_temp.ok((select taken from outings_list() where name = 'Atardecer en Barranco') = 2, 'alguien se apuntó a mi salida');
-select pg_temp.ok(app_version() = 5, 'versión del servidor');
+select pg_temp.ok(app_version() = 6, 'versión del servidor');
 reset role;
 
 -- ===== volver: avisos, constancia, caducidad, marea, enfriamiento =====
@@ -390,6 +390,15 @@ select lectura_put((select id from lecturas), 'lectura/a3.m4a', 8, null, 'dev-2'
 select pg_temp.ok((select count(*) from lectura_answers) = 2, 'una respuesta por dispositivo');
 select lectura_resolve((select id from lectura_answers where status = 'pending'), 'ok', null, 'qué lindo eres');
 select pg_temp.ok((select count(*) from notices where kind = 'lectura' and to_id = '00000000-0000-0000-0000-000000000008') = 2, 'cada respuesta aprobada avisa a quien preguntó');
+-- con cuenta: la respuesta guarda quién fue y quien preguntó ve el nombre; nadie responde su propia lectura
+select lectura_put(lectura_take((select slug from lecturas), 'u-1', 'ip-7'), 'lectura/a4.m4a', 6, null, 'u-1', 'ip-7', 'ok', null, 'hola', '00000000-0000-0000-0000-000000000001');
+do $$ begin begin perform lectura_put((select id from lecturas), 'lectura/a5.m4a', 6, null, 'u-8', 'ip-8', 'ok', null, null, '00000000-0000-0000-0000-000000000008'); raise exception 'debió fallar';
+  exception when others then if sqlerrm not like '%propia lectura%' then raise; end if; end; end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000008');
+select pg_temp.ok((select count(*) from jsonb_array_elements(lectura_inbox((select id from lecturas))) e where e->>'name' = (select name from profiles where id = '00000000-0000-0000-0000-000000000001')) = 1, 'quien pregunta ve el nombre de quien respondió con cuenta');
+reset role;
+delete from lectura_answers where device = 'u-1';
+select pg_temp.ok(check_code('L:' || (select slug from lecturas limit 1)) and not check_code('L:noexiste'), 'un link de lectura abierta sirve de invitación');
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000008');
 select pg_temp.ok((my_lecturas()->0->>'answers')::int = 2 and (my_lecturas()->0->>'fresh')::int = 2, 'Hugo ve dos respuestas nuevas');

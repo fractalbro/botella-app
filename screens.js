@@ -562,7 +562,7 @@ P.screens.perfil = {
       <div class="sec rise d2"><span class="eyebrow">Tu voz</span>
         <button class="setrow" data-go="bitacora">${icon('flame')}<span style="flex:1"><b>Tu bitácora</b><span>${S.home?.streak ? plural(S.home.streak, 'día seguido', 'días seguidos') + ' · ' : ''}tus días seguidos y lo que ganas con ellos.</span></span>${icon('arrow', 's')}</button>
         <button class="setrow" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Con qué temas conectó tu voz.</span></span>${icon('arrow', 's')}</button>
-        <button class="setrow" data-act="toLecturas">${icon('quote')}<span style="flex:1"><b>Pide una lectura</b><span>Tus amigos te dicen qué piensan de ti, con su voz y sin nombre.</span></span>${icon('arrow', 's')}</button>
+        <button class="setrow" data-act="toLecturas">${icon('quote')}<span style="flex:1"><b>Pide una lectura</b><span>Tus amigos te dicen qué piensan de ti, con su voz.</span></span>${icon('arrow', 's')}</button>
         ${pushRow()}</div>
       <div class="sec rise d3"><span class="eyebrow">Tu seguridad</span>
         <button class="setrow" role="switch" aria-checked="${!!m.paused}" data-act="pauseT">${icon('pausei')}<span style="flex:1"><b>Modo pausa</b><span>No te llegan botellas nuevas. Tus conversaciones siguen.</span></span><span class="sw"></span></button>
@@ -600,7 +600,7 @@ P.actions.rules = () => sheet(`${sheetHead('Normas y privacidad')}<div class="ru
   <p><b>Tu voz.</b> Una botella llega a pocas personas con cuenta: 8 (y 4 más si nadie responde en 6 horas), 20 si llega lejos o 12 si es para dos. Una nota de una conversación, solo la otra persona. En Botella no hay botón para descargar ni reenviar audios.</p>
   <p><b>Para verse en persona,</b> elijan un lugar público, de día o con gente alrededor, y cuéntale a alguien de confianza a dónde vas.</p>
   <p><b>Reportes.</b> Cada reporte bloquea a la persona y lo revisa alguien del equipo. No le avisamos quién fue. Una botella con dos reportes deja de viajar.</p>
-  <p><b>Lecturas.</b> Las respuestas llegan sin nombre y pasan por un filtro automático antes de entregarse. Quien pidió la lectura puede borrar, reportar y bloquear. La voz no se cambia: un amigo puede reconocerla.</p>
+  <p><b>Lecturas.</b> Se responden con tu cuenta de Botella. Quien pidió la lectura escucha tu voz primero y después ve tu nombre. Cada respuesta pasa por un filtro automático antes de entregarse, y quien la pidió puede borrar, reportar y bloquear.</p>
   <p><b>Tus datos.</b> Guardamos tu correo, tu perfil y tus notas de voz para que la app funcione. No los vendemos ni los compartimos. Puedes borrar tu cuenta y todo se elimina.</p>
   <p><b>Estamos empezando.</b> Puede haber errores; tus opiniones nos ayudan a mejorarla.</p></div><button class="btn btn-a" data-act="closeSheet" style="margin-top:8px">Entendido</button>`);
 P.actions.logout = async () => { await sb.auth.signOut().catch(() => {}); location.replace('/'); };

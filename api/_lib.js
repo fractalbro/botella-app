@@ -128,4 +128,15 @@ async function moderate(question, buf, type, ext) {
 }
 const WHY = { insulto: 'suena a insulto', amenaza: 'suena a amenaza', acoso: 'suena a acoso', odio: 'tiene lenguaje de odio', sexual_fuerte: 'es demasiado explícita', menores: 'no cumple las normas', autolesion: 'no cumple las normas' };
 const json = (res, code, body) => { res.statusCode = code; res.setHeader('content-type', 'application/json; charset=utf-8'); res.setHeader('cache-control', 'no-store'); res.end(JSON.stringify(body)); };
-module.exports = { crypto, SB, KEY, GROQ, SITE, rpc, kv, storage, vapid, drain, moderate, WHY, json, b64u, unb64u, encrypt, vapidAuth, makeVapid, NOISE };
+// Valida la sesión de quien llama y devuelve su id solo si ya tiene perfil en Botella.
+async function authUser(token) {
+  const r = await fetch(`${SB}/auth/v1/user`, { headers: { apikey: KEY, Authorization: 'Bearer ' + token } });
+  if (!r.ok) return null; const u = await r.json().catch(() => null); if (!u || !u.id) return null;
+  const q = await fetch(`${SB}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=id`, { headers: hdr() });
+  const d = q.ok ? await q.json().catch(() => []) : []; return d[0] ? u.id : null;
+}
+async function ownerOf(lectura) {
+  const q = await fetch(`${SB}/rest/v1/lecturas?id=eq.${encodeURIComponent(lectura)}&select=owner`, { headers: hdr() });
+  const d = q.ok ? await q.json().catch(() => []) : []; return d[0] && d[0].owner;
+}
+module.exports = { authUser, ownerOf, crypto, SB, KEY, GROQ, SITE, rpc, kv, storage, vapid, drain, moderate, WHY, json, b64u, unb64u, encrypt, vapidAuth, makeVapid, NOISE };

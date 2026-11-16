@@ -11,9 +11,14 @@ create table if not exists public.codes (
 alter table public.codes enable row level security; -- la app nunca lee la lista
 insert into public.codes(code) values ('BOTELLA-01') on conflict do nothing;
 
-create or replace function public.check_code(p_code text) returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from codes where code = upper(trim(p_code)) and active and uses < max_uses);
-$$;
+-- Un link de lectura abierta también sirve de invitación ('L:<slug>'): quien responde crea su cuenta ahí mismo.
+create or replace function public.check_code(p_code text) returns boolean language plpgsql stable security definer set search_path = public as $$
+begin
+  if upper(trim(coalesce(p_code, ''))) like 'L:%' then
+    return exists (select 1 from lecturas where lower(slug) = lower(substr(trim(p_code), 3)) and not closed and closes_at > now());
+  end if;
+  return exists (select 1 from codes where code = upper(trim(p_code)) and active and uses < max_uses);
+end $$;
 grant execute on function public.check_code(text) to anon, authenticated;
 
 create or replace function public.lima_today() returns date language sql stable as $$ select (now() at time zone 'America/Lima')::date $$;
@@ -74,7 +79,7 @@ create policy "editar mi perfil" on public.profiles for update to authenticated 
 create or replace function public.profile_defaults() returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.is_sample then return new; end if; -- solo las crea este archivo (el cliente no puede escribir is_sample)
-  if not exists (select 1 from codes where code = upper(trim(coalesce(new.code_used, ''))) and active and uses < max_uses) then
+  if not check_code(new.code_used) then
     raise exception 'Ese código de invitación no es válido.';
   end if;
   update codes set uses = uses + 1 where code = upper(trim(new.code_used));
@@ -317,7 +322,7 @@ create table if not exists public.duos (
 alter table public.duos enable row level security;
 
 -- ========== PIDE UNA LECTURA ==========
--- Una pregunta guiada que se comparte por link. Responden con su voz, sin cuenta y de forma anónima.
+-- Una pregunta guiada que se comparte por link. Desde el 16/11 se responde con cuenta: quien pregunta escucha la voz y después ve el nombre.
 create table if not exists public.lecturas (
   id uuid primary key default gen_random_uuid(),
   slug text unique not null default left(replace(gen_random_uuid()::text, '-', ''), 12),
@@ -342,6 +347,7 @@ create table if not exists public.lectura_answers (
   unique (lectura, device)
 );
 alter table public.lectura_answers enable row level security;
+alter table public.lectura_answers add column if not exists author uuid references public.profiles(id) on delete set null;
 create table if not exists public.lectura_blocks (
   owner uuid not null references public.profiles(id) on delete cascade,
   device text not null, ip text, ip_until timestamptz,
@@ -483,7 +489,7 @@ begin
   if p_type = 'free' and me.bottles < 1 then raise exception 'Te quedaste sin botellas. Responde una o pide más en el muelle.'; end if;
   if p_type = 'color' and me.color_left < 1 then raise exception 'Ya usaste tus botellas de color. Pide más en el muelle.'; end if;
   if p_type = 'far' and me.far_left < 1 then raise exception 'Ya usaste tu botella que llega lejos. Pide otra en el muelle.'; end if;
-  if p_featured and me.tide_left < 1 then raise exception 'Te quedaste sin marea destacada. Pide otra en el muelle.'; end if;
+  if p_featured and me.tide_left < 1 then raise exception 'Te quedaste sin botellas doradas. Pide otra en el muelle.'; end if;
   if p_type = 'color' and p_topic is null and p_district is null then raise exception 'Elige a quién quieres que llegue tu botella de color.'; end if;
   if p_voice is null or split_part(p_voice, '/', 1) <> me.id::text then raise exception 'Falta tu nota de voz.'; end if;
   if (select count(*) from bottles where owner = me.id and created_at > now() - interval '1 hour') >= 6 then
@@ -1156,7 +1162,7 @@ begin
   if heard and answered and launched and not me.quest_done then
     update profiles set quest_done = true, far_left = far_left + 1 where id = me.id and not quest_done returning * into me;
     just := me.id is not null;
-    if just then perform notify(me.id, 'quest', 'Completaste tu primer día', 'Ganaste una botella que llega lejos: la escuchan 10 personas.', 'launch'); end if;
+    if just then perform notify(me.id, 'quest', 'Completaste tu primer día', 'Ganaste una botella que llega lejos: llega a 20 personas.', 'launch'); end if;
     select * into me from profiles where id = auth.uid();
   end if;
   alive := case when me.streak_day >= d - 1 then me.streak else 0 end;
@@ -1283,8 +1289,8 @@ $$;
 grant execute on function public.my_lecturas() to authenticated;
 
 create or replace function public.lectura_inbox(p_id uuid) returns jsonb language sql stable security definer set search_path = public as $$
-  select coalesce(jsonb_agg(jsonb_build_object('id', a.id, 'voice', a.voice, 'secs', a.voice_secs, 'peaks', a.voice_peaks, 'at', a.created_at, 'heard', a.heard) order by a.created_at desc), '[]'::jsonb)
-  from lectura_answers a join lecturas l on l.id = a.lectura where l.id = p_id and l.owner = auth.uid() and a.status = 'ok';
+  select coalesce(jsonb_agg(jsonb_build_object('id', a.id, 'voice', a.voice, 'secs', a.voice_secs, 'peaks', a.voice_peaks, 'at', a.created_at, 'heard', a.heard, 'name', p.name) order by a.created_at desc), '[]'::jsonb)
+  from lectura_answers a join lecturas l on l.id = a.lectura left join profiles p on p.id = a.author where l.id = p_id and l.owner = auth.uid() and a.status = 'ok';
 $$;
 grant execute on function public.lectura_inbox(uuid) to authenticated;
 
@@ -1346,18 +1352,21 @@ begin
   return l.id;
 end $$;
 
-create or replace function public.lectura_put(p_lectura uuid, p_voice text, p_secs int, p_peaks jsonb, p_device text, p_ip text, p_status text, p_reason text, p_transcript text)
+drop function if exists public.lectura_put(uuid, text, int, jsonb, text, text, text, text, text);
+create or replace function public.lectura_put(p_lectura uuid, p_voice text, p_secs int, p_peaks jsonb, p_device text, p_ip text, p_status text, p_reason text, p_transcript text, p_author uuid default null)
 returns uuid language plpgsql security definer set search_path = public as $$
 declare aid uuid; own uuid;
 begin
+  if p_author is not null and p_author = (select owner from lecturas where id = p_lectura) then raise exception 'Es tu propia lectura: compártela para que te respondan.'; end if;
   delete from lectura_answers where lectura = p_lectura and device = p_device and status = 'blocked' and p_status <> 'blocked';
   insert into lectura_answers(lectura, voice, voice_secs, voice_peaks, device, ip, status, reason, transcript)
     values (p_lectura, p_voice, least(greatest(p_secs, 1), 60), p_peaks, p_device, p_ip, p_status, left(p_reason, 200), left(p_transcript, 2000))
-    on conflict (lectura, device) do update set voice = excluded.voice, voice_secs = excluded.voice_secs, voice_peaks = excluded.voice_peaks, status = excluded.status, reason = excluded.reason, transcript = excluded.transcript, created_at = now()
+    on conflict (lectura, device) do update set author = coalesce(p_author, lectura_answers.author), voice = excluded.voice, voice_secs = excluded.voice_secs, voice_peaks = excluded.voice_peaks, status = excluded.status, reason = excluded.reason, transcript = excluded.transcript, created_at = now()
     returning id into aid;
+  if p_author is not null then update lectura_answers set author = p_author where id = aid; end if;
   if p_status = 'ok' then
     select owner into own from lecturas where id = p_lectura;
-    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Una voz anónima te contestó. Escúchala.', 'lecturas', p_lectura::text);
+    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Te contestaron con su voz. Escúchala.', 'lecturas', p_lectura::text);
   end if;
   return aid;
 end $$;
@@ -1372,13 +1381,13 @@ begin
   update lectura_answers set status = p_status, reason = left(p_reason, 200), transcript = left(p_transcript, 2000) where id = p_id and status = 'pending' returning * into a;
   if a.id is not null and p_status = 'ok' then
     select owner into own from lecturas where id = a.lectura;
-    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Una voz anónima te contestó. Escúchala.', 'lecturas', a.lectura::text);
+    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Te contestaron con su voz. Escúchala.', 'lecturas', a.lectura::text);
   end if;
 end $$;
 
 -- Funciones que solo usa el servidor (api/*.js con la llave secreta): nadie más las ejecuta.
 do $$ declare f text; begin
-  foreach f in array array['push_take(int)', 'push_gone(text)', 'lectura_take(text, text, text)', 'lectura_put(uuid, text, int, jsonb, text, text, text, text, text)',
+  foreach f in array array['push_take(int)', 'push_gone(text)', 'lectura_take(text, text, text)', 'lectura_put(uuid, text, int, jsonb, text, text, text, text, text, uuid)',
                            'lectura_pending(int)', 'lectura_resolve(uuid, text, text, text)'] loop
     execute 'revoke execute on function public.' || f || ' from public, anon, authenticated';
     begin execute 'grant execute on function public.' || f || ' to service_role'; exception when undefined_object then null; end;
@@ -1389,7 +1398,7 @@ do $$ begin
 end $$;
 
 -- La app pregunta esto al abrir: si el servidor quedó desactualizado, lo dice en vez de fallar en silencio.
-create or replace function public.app_version() returns int language sql immutable as $$ select 5 $$;
+create or replace function public.app_version() returns int language sql immutable as $$ select 6 $$;
 grant execute on function public.app_version() to anon, authenticated;
 
 -- Las funciones de servicio no se exponen.

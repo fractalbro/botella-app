@@ -124,7 +124,7 @@ async function enter(fresh) {
     const ver = await rpc('app_version').catch(() => 0);
     const me = await loadMe();
     if (!me) { P.hist = []; go('about', { fade: true }); return; }
-    S.outdated = !(ver >= 5);
+    S.outdated = !(ver >= 6);
     await Promise.all([refreshAll(), loadHome(), loadDuos()]); subscribe(); P.hist = []; P.st.shoreFresh = true;
     go('orilla', { fade: true });
     const first = S.firstRes; S.firstRes = null;

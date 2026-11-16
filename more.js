@@ -242,15 +242,15 @@ P.actions.duoJoin = async el => {
 /* ================= PIDE UNA LECTURA ================= */
 const LQ = ['¿Qué es lo primero que pensaste de mí cuando me conociste?', '¿Qué recuerdo conmigo no se te olvida?', '¿Qué es lo que más te gusta de mí?', '¿Qué canción te hace pensar en mí?', 'Si me describieras con tres palabras, ¿cuáles serían?', '¿Qué crees que hago mejor que nadie?', '¿Qué momento conmigo te hizo reír más?', '¿Qué te da curiosidad de mí y nunca me preguntaste?', '¿Qué plan me propondrías para este fin de semana?', '¿En qué crees que he cambiado desde que me conoces?', '¿Qué te gustaría que hiciéramos juntos este año?', '¿Qué consejo me darías con cariño?'];
 const lecLink = slug => linkTo('l', slug);
-const lecMsg = l => ({ title: 'Te pido una lectura', text: `Te pido una lectura: "${l.question}" Respóndeme con tu voz. Va sin tu nombre: Botella no me dice quién fue.`, url: lecLink(l.slug) });
+const lecMsg = l => ({ title: 'Te pido una lectura', text: `Te pido una lectura: "${l.question}" Respóndeme con tu voz en Botella. Primero escucho tu voz y después veo quién eres.`, url: lecLink(l.slug) });
 P.screens.lecturas = {
   render: () => { const ls = S.lecturas || [];
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Pide una lectura</span></div><div class="scroll pad">
     <div class="display rise" style="font-size:32px;margin-top:4px">¿Qué piensan <b>de ti</b>?</div>
-    <p class="lead rise d1">Elige una pregunta, grábala y comparte el link. Tus amigos responden con su voz, sin cuenta y sin nombre. Adivinar quién fue es parte de la gracia.</p>
+    <p class="lead rise d1">Elige una pregunta, grábala y comparte el link. Tus amigos responden con su voz desde Botella. Escuchas cada voz primero y después ves quién fue: adivinar antes es parte de la gracia.</p>
     <button class="btn btn-a rise d2" data-act="lecNew" style="margin-top:16px">${icon('quote')} Pedir una lectura</button>
     ${ls.length ? `<div class="sec rise d3"><span class="eyebrow">Tus lecturas</span>${ls.map(l => `<button class="lrow" data-act="lecOpen" data-id="${l.id}"><span style="flex:1;min-width:0"><span class="t">${esc(l.question)}</span><span class="s">${l.open ? `Abierta · cierra en ${until(l.closes_at)}` : 'Cerrada'} · ${plural(l.answers, 'respuesta', 'respuestas')}</span></span>${l.fresh ? `<span class="cnt">${l.fresh}</span>` : icon('arrow', 's')}</button>`).join('')}</div>` : ''}
-    <div class="safe rise d3">${icon('shield')}<span><b>Sin nombre, con cuidado.</b> Cada respuesta pasa por un filtro antes de llegarte: los insultos, las amenazas y lo muy explícito no se entregan. Puedes borrar, reportar o bloquear cualquier respuesta.</span></div>
+    <div class="safe rise d3">${icon('shield')}<span><b>Con cuidado.</b> Cada respuesta pasa por un filtro antes de llegarte: los insultos, las amenazas y lo muy explícito no se entregan. Puedes borrar, reportar o bloquear cualquier respuesta.</span></div>
     <div style="height:24px"></div></div>`; },
   async after() { if (!P.st.lecFresh) { P.st.lecFresh = true; try { await loadLecturas(); if (P.curId === 'lecturas') rerender(); } catch (e) {} } },
   leave() { P.st.lecFresh = false; }
@@ -285,13 +285,13 @@ P.screens.lectura = {
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Tu lectura<small>${l.open ? `Abierta · cierra en ${until(l.closes_at)}` : 'Cerrada'}</small></span>${l.open ? `<button class="iconbtn glass" data-act="lecMenu" aria-label="Opciones">${icon('more')}</button>` : ''}</div><div class="scroll pad">
     <div class="paper rise" style="margin-top:6px"><span class="eyebrow">Tu pregunta</span><div class="q">${esc(l.question)}</div>${vn(l.voice, l.secs, { mine: true, peaks: l.peaks })}</div>
     ${l.open ? `<div class="sharebox rise d1">${isNew ? '<b>Tu link está listo.</b>' : ''}<span class="small muted">${isNew ? 'Compártelo por WhatsApp o en tus historias. Mientras más gente, más voces.' : 'Compártela otra vez para recibir más voces.'}</span><div class="code"><span>${esc(lecLink(l.slug).replace(/^https?:\/\//, ''))}</span><button class="btn btn-a btn-sm" data-act="lecCopy">${icon('copy', 's')} Copiar</button></div><button class="btn btn-a" data-act="lecShare">${icon('export')} Compartir mi lectura</button></div>` : ''}
-    <div class="sec rise d2"><span class="eyebrow">${as.length ? plural(as.length, 'voz sin nombre', 'voces sin nombre') : 'Respuestas'}</span>
-      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s">Sin nombre · ${ago(a.at)}${a.heard ? '' : ' · nueva'}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
+    <div class="sec rise d2"><span class="eyebrow">${as.length ? plural(as.length, 'voz', 'voces') : 'Respuestas'}</span>
+      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s"><b class="who">${a.heard ? esc(a.name || 'Sin nombre') : 'Escúchala para ver quién es'}</b> · ${ago(a.at)}${a.heard ? '' : ' · nueva'}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
         : `<p class="small muted">${l.open ? 'Todavía no llega ninguna. Aparecen aquí apenas alguien responda.' : 'Esta lectura cerró sin respuestas.'}</p>`}
       ${l.pending ? `<p class="small muted" style="margin-top:10px">${icon('clock', 's')} ${plural(l.pending, 'respuesta espera', 'respuestas esperan')} la revisión del filtro.</p>` : ''}
       ${l.filtered ? `<p class="small muted" style="margin-top:10px">${icon('shield', 's')} El filtro frenó ${plural(l.filtered, 'respuesta que no cumplía', 'respuestas que no cumplían')} las normas. No te ${l.filtered === 1 ? 'llegó' : 'llegaron'}.</p>` : ''}</div>
     <div style="height:24px"></div></div>`; },
-  after(sec) { sec.addEventListener('click', e => { const row = e.target.closest('[data-play]')?.closest('[data-heard]'); if (!row) return; const a = (S.lecAns || []).find(x => x.id === row.dataset.heard); if (a && !a.heard) { a.heard = true; row.classList.remove('new'); rpc('lectura_heard', { p_answer: a.id }).then(() => { loadLecturas(); loadHome(); }).catch(() => {}); } }); },
+  after(sec) { sec.addEventListener('click', e => { const row = e.target.closest('[data-play]')?.closest('[data-heard]'); if (!row) return; const a = (S.lecAns || []).find(x => x.id === row.dataset.heard); if (a && !a.heard) { a.heard = true; row.classList.remove('new'); const w = row.querySelector('.who'); if (w) w.textContent = a.name || 'Sin nombre'; rpc('lectura_heard', { p_answer: a.id }).then(() => { loadLecturas(); loadHome(); }).catch(() => {}); } }); },
   leave() { P.st.lecNewId = null; }
 };
 P.actions.lecShare = el => share(el, lecMsg(S.lec));
@@ -300,7 +300,7 @@ P.actions.lecMenu = () => sheet(`${sheetHead('Tu lectura')}<button class="setrow
 P.actions.lecClose = async () => { closeSheet(); try { await rpc('lectura_close', { p_id: S.lec.id }); await loadLecturas(); S.lec = S.lecturas.find(l => l.id === S.lec.id); rerender(); toast('Cerraste tu lectura.'); } catch (e) { err(e); } };
 P.actions.ansMenu = el => { S.ansId = el.dataset.id; sheet(`${sheetHead('Esta respuesta')}
   <button class="setrow" data-act="ansDel">${icon('trash')}<span style="flex:1"><b>Borrar</b><span>Desaparece de tu lectura.</span></span></button>
-  <button class="setrow" data-act="ansReport">${icon('block')}<span style="flex:1"><b>Reportar y bloquear</b><span>Se borra, la revisamos y quien la mandó no podrá volver a responderte. No te decimos quién fue, y esa persona no se entera de que la bloqueaste.</span></span></button>`); };
+  <button class="setrow" data-act="ansReport">${icon('block')}<span style="flex:1"><b>Reportar y bloquear</b><span>Se borra, la revisamos y esa persona no podrá volver a responderte. No se entera de que la bloqueaste.</span></span></button>`); };
 const ansDone = async (fn, msg) => { closeSheet(); try { await fn(); S.lecAns = (await rpc('lectura_inbox', { p_id: S.lec.id })) || []; await loadLecturas(); S.lec = S.lecturas.find(l => l.id === S.lec.id) || S.lec; rerender(); toast(msg); loadHome(); } catch (e) { err(e); } };
 P.actions.ansDel = () => ansDone(() => rpc('lectura_answer_delete', { p_answer: S.ansId }), 'Respuesta borrada.');
 P.actions.ansReport = () => ansDone(() => rpc('lectura_answer_report', { p_answer: S.ansId, p_reason: 'Respuesta de lectura reportada' }), 'Gracias por avisar. Esa persona ya no puede responderte.');
@@ -316,25 +316,28 @@ P.screens.lecpub = {
       <div class="foot rise d3" style="padding-bottom:0"><button class="btn btn-a" data-act="lecMine">${icon('quote')} Pedir mi propia lectura</button>${S.me ? `<button class="btn btn-ghost" data-act="leaveLink">Ir a mi orilla</button>` : `<button class="btn btn-ghost" data-act="leaveLink">Conocer Botella</button>`}</div></div>`;
     if (l.mine) return gone('Esta lectura es tuya', 'Compártela con tus amigos para recibir sus voces.', `<button class="btn btn-a" data-act="lecToMine">Ver mis respuestas</button>`);
     if (!l.open) return gone('Esta lectura ya cerró', `${l.name ? esc(l.name) + ' ya no recibe respuestas. ' : ''}Puedes pedir la tuya y ver qué te dicen.`, `<button class="btn btn-a" data-act="lecMine">${icon('quote')} Pedir mi propia lectura</button>`);
-    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span><span class="pill">${icon('lock', 's')} Sin nombre</span></div><div style="height:6%;flex:none"></div>
+    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span><span class="pill">${icon('user', 's')} Con tu cuenta</span></div><div style="height:6%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 50px)">
       <span class="eyebrow a rise">${esc(l.name)} te pide una lectura</span>
       <div class="paper rise d1" style="margin-top:12px"><div class="q">${esc(l.question)}</div>${vn(l.voice, l.secs, { peaks: l.peaks })}</div>
-      <div class="sec" style="margin-top:20px"><span class="eyebrow">Respóndele con tu voz</span><p class="small muted" style="margin:-4px 0 0">Sin cuenta y sin nombre. Botella no le dice quién eres; si reconoce tu voz, queda entre ustedes.${l.answers ? ` Ya ${l.answers === 1 ? 'respondió 1 persona' : 'respondieron ' + l.answers + ' personas'}.` : ''}</p>${recBox('lp', 'Toca para grabar. Una frase basta.')}</div>
-      <button class="check" role="checkbox" aria-checked="${!!S.lpAdult}" data-act="lpAdult"><span class="box">${icon('check', 's')}</span><span>Tengo 18 años o más.</span></button>
-      <p class="small muted" style="margin:12px 0 0">${icon('shield', 's')} Di lo que piensas, con respeto. Un filtro revisa cada respuesta: los insultos, las amenazas y lo muy explícito no se entregan. Tu audio lo recibe solo ${esc(l.name)}, que puede borrarlo. No pedimos tu número ni tu correo.</p><div style="height:10px"></div></div>
-    ${S.rec.lp ? `<div class="foot pad"><button class="btn btn-a" data-needs="lp" data-act="lpSend">${icon('send')} Enviar mi respuesta</button></div>` : ''}`; }, // el pie aparece al grabar: así el micrófono queda a la vista
-  async after() { if (S.lecPeek) return; try { S.lecPeek = (await rpc('lectura_peek', { p_slug: S.link.l })) || { open: false, name: '' }; } catch (e) { S.lecPeek = { open: false, name: '' }; } if (P.curId === 'lecpub') rerender(); }
+      <div class="sec" style="margin-top:20px"><span class="eyebrow">Respóndele con tu voz</span><p class="small muted" style="margin:-4px 0 0">Respondes con tu cuenta de Botella. ${esc(l.name)} escucha tu voz primero y después ve tu nombre.${l.answers ? ` Ya ${l.answers === 1 ? 'respondió 1 persona' : 'respondieron ' + l.answers + ' personas'}.` : ''}</p>${recBox('lp', 'Toca para grabar. Una frase basta.')}</div>
+      <p class="small muted" style="margin:12px 0 0">${icon('shield', 's')} Di lo que piensas, con respeto. Un filtro revisa cada respuesta: los insultos, las amenazas y lo muy explícito no se entregan. Tu audio lo recibe solo ${esc(l.name)}, que puede borrarlo.</p><div style="height:10px"></div></div>
+    ${S.rec.lp ? `<div class="foot pad"><button class="btn btn-a" data-needs="lp" data-act="lpSend">${icon('send')} ${S.me ? 'Enviar mi respuesta' : 'Crear mi cuenta y enviar'}</button></div>` : ''}`; }, // el pie aparece al grabar: así el micrófono queda a la vista
+  async after() { if (S.after === 'lp' && S.me && S.rec.lp && !S.busy) return P.actions.lpSend(); if (S.lecPeek) return; try { S.lecPeek = (await rpc('lectura_peek', { p_slug: S.link.l })) || { open: false, name: '' }; } catch (e) { S.lecPeek = { open: false, name: '' }; } if (P.curId === 'lecpub') rerender(); }
 };
 P.actions.lpAdult = el => { S.lpAdult = !S.lpAdult; el.setAttribute('aria-checked', S.lpAdult); };
 P.actions.lpSend = async el => {
-  const r = S.rec.lp; if (!r) return needVoice('lp'); if (!S.lpAdult) return toast('Confirma que tienes 18 años o más.'); if (S.busy) return;
-  S.busy = true; el.classList.add('soft'); el.textContent = 'Enviando tu voz…';
+  const r = S.rec.lp; if (!r) return needVoice('lp');
+  // Las lecturas se responden con cuenta: tu voz te espera mientras la creas y sale sola al terminar.
+  if (!S.me) { S.after = 'lp'; if (!S.code) S.code = 'L:' + S.link.l; toast('Guardamos tu respuesta. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
+  if (S.busy) return;
+  S.busy = true; if (el) { el.classList.add('soft'); el.textContent = 'Enviando tu voz…'; }
   try {
-    const res = await fetch('/api/lectura', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ slug: S.link.l, device: deviceId(), adult: true, audio: await b64(r.blob), mime: r.blob.type || (r.ext === 'm4a' ? 'audio/mp4' : 'audio/webm'), secs: r.secs, peaks: r.peaks }) });
+    const tok = (await sb.auth.getSession()).data?.session?.access_token || '';
+    const res = await fetch('/api/lectura', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + tok }, body: JSON.stringify({ slug: S.link.l, device: deviceId(), adult: true, audio: await b64(r.blob), mime: r.blob.type || (r.ext === 'm4a' ? 'audio/mp4' : 'audio/webm'), secs: r.secs, peaks: r.peaks }) });
     const d = await res.json().catch(() => ({})); S.busy = false;
     if (!res.ok) { if (d.code === 'filtered' || d.code === 'empty') { delete S.rec.lp; rerender(); return sheet(`${sheetHead(d.code === 'empty' ? 'No se entendió tu voz' : 'Esta respuesta no se entregó')}<p class="muted" style="font-size:14px;margin:0 0 16px">${esc(d.message || '')}</p><button class="btn btn-a" data-act="closeSheet">Grabar otra</button>`); } rerender(); return toast(d.message || 'No se pudo enviar tu respuesta. Intenta otra vez.'); }
-    delete S.rec.lp; S.lecSent = d; hap([10, 30, 20]); rerender();
+    delete S.rec.lp; S.lecSent = d; S.after = null; hap([10, 30, 20]); rerender();
   } catch (e) { S.busy = false; rerender(); toast(navigator.onLine ? 'No se pudo enviar tu respuesta. Intenta otra vez.' : 'Sin conexión. Revisa tu internet e intenta otra vez.'); }
 };
 P.actions.lecMine = () => { S.link = null; S.lecPeek = null; S.lecSent = null; if (S.me) { P.hist = ['orilla']; go('lecturas'); } else { S.after = 'lectura'; P.actions.skipIntro(); } };
