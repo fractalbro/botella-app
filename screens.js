@@ -336,9 +336,28 @@ function openersHTML(b) {
 P.actions.mineGo = (el, e) => { if (e && e.target.closest('.who-up')) return; if (e && e.target.closest('.vn')) return; const b = S.bottles.find(x => x.id === el.dataset.id); if (!b) return; if (b.answers > 1) { go('convos', { fade: true }); return; } if (b.convo) openChat(b.convo); };
 
 /* ================= CONVERSACIONES ================= */
+/* Bandeja de conversaciones: hora a la derecha, punto de no escuchado, qué pasó al último y en qué etapa van.
+   Referencias de Mobbin: Messages de Apple (punto y hora) y Meetup (filtro "No leídos"). */
+const stamp = iso => { const d = new Date(iso), n = new Date(); if (d.toDateString() === n.toDateString()) return hm(iso); if (new Date(Date.now() - 864e5).toDateString() === d.toDateString()) return 'Ayer'; return Date.now() - d < 6 * 864e5 ? d.toLocaleDateString('es-PE', { weekday: 'short' }).replace('.', '') : d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }).replace('.', ''); };
+const pending = c => !c.closed && !c.cooled && !c.last_mine;
+function stageName(c) { const s = stageOf(c); return s.plan ? 'Plan' : s.spoke ? 'Plan' : s.voices ? 'Llamada' : 'Voces'; }
+function convoRow(c, i) {
+  const nw = unread(c), off = c.closed || c.cooled;
+  const prev = c.closed ? 'Conversación cerrada' : c.cooled ? 'Volvió al mar' : nw ? 'Nota de voz nueva' : c.last_mine ? 'Tú: nota de voz' : c.my_key && c.other_key ? 'Ya pueden llamarse' : c.i_launched ? 'Respondió tu botella' : 'Respondiste su botella';
+  return `<button class="crow${nw ? ' new' : ''}${off ? ' off' : ''} rise d${Math.min(i, 4)}" data-act="chatGo" data-id="${c.id}">
+    <span class="cdot" aria-hidden="true"></span>${orb(colorOf(c.id), 48)}
+    <span class="cmain"><span class="cl1"><b>${esc(c.alias)}</b><time datetime="${c.last_at}">${stamp(c.last_at)}</time></span>
+      <span class="cl2">${icon(off ? 'tide' : c.last_mine ? 'check' : 'mic', 's')}<span>${prev}</span>${off ? '' : `<em>${stageName(c)}</em>`}</span></span></button>`;
+}
+function convoListHTML() {
+  const n = S.convos.filter(pending).length, f = P.st.cf === 'p' && n ? 'p' : 'all', list = f === 'p' ? S.convos.filter(pending) : S.convos;
+  return `${S.convos.length > 1 ? `<div class="chips cfil rise" role="tablist"><button class="chip${f === 'all' ? ' on' : ''}" role="tab" aria-selected="${f === 'all'}" data-act="cFil" data-f="all">Todas</button><button class="chip${f === 'p' ? ' on' : ''}" role="tab" aria-selected="${f === 'p'}" data-act="cFil" data-f="p">Te toca responder${n ? ` <b class="cnt">${n}</b>` : ''}</button></div>` : ''}
+    <div class="clist">${list.map(convoRow).join('')}</div>`;
+}
+P.actions.cFil = el => { if (el.dataset.f === 'p' && !S.convos.some(pending)) return toast('Estás al día: no te toca responder a nadie.'); P.st.cf = el.dataset.f; rerender(); };
 P.screens.convos = {
   render: () => `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Conversaciones</span>${meBtn()}</div>
-    ${S.convos.length ? S.convos.map((c, i) => `<button class="row rise d${Math.min(i, 4)}" data-act="chatGo" data-id="${c.id}">${orb(colorOf(c.id), 46)}<span style="min-width:0;flex:1"><span class="t">${esc(c.alias)}</span><span class="s">${c.closed ? 'Conversación cerrada' : c.cooled ? 'Volvió al mar' : unread(c) ? 'Te mandó una nota de voz' : c.my_key && c.other_key ? 'Ya pueden llamarse' : c.i_launched ? 'Respondió tu botella' : 'Respondiste su botella'} · ${ago(c.last_at)}</span></span>${unread(c) ? '<span class="dotnew" aria-label="Nuevo"></span>' : c.my_key && c.other_key && !c.closed ? '<span class="pill a">Llamada</span>' : ''}</button>`).join('')
+    ${S.convos.length ? convoListHTML()
       : `<div class="empty rise"><div class="h3" style="text-align:center;margin-top:40px">Aún no hay conversaciones</div><p class="small muted" style="text-align:center;margin:6px auto 18px;max-width:30ch">Se abren cuando respondes una botella o alguien responde la tuya. Son anónimas hasta que los dos compartan su nombre.</p><button class="btn btn-glass" data-go="orilla" data-fade>Ir a mi orilla</button></div>`}
   </div>${tabsHTML('convos')}`,
   async after() { if (!P.st.convosFresh) { P.st.convosFresh = true; try { await loadConvos(); if (P.curId === 'convos') rerender(); } catch (e) {} } },
@@ -355,15 +374,28 @@ async function openChat(cid, opts = {}) {
 const convo = () => S.convo;
 function msgHTML(m, i) {
   const me = m.sender === uid();
-  if (m.body && m.body.startsWith('#bottle|')) { const [, kind, text] = m.body.split('|'), mb = convo().i_launched, duo = convo().duo; return `<div class="msg${mb ? ' me' : ''} rise"><div class="minipaper"><small>${mb ? 'Tu botella' : 'Su botella'}${duo ? ' para dos' : ''} · ${esc((kind || '').toLowerCase())}</small>${esc(text || 'Una nota de voz')}</div>${vn(m.voice, m.voice_secs, { mine: mb, peaks: m.voice_peaks })}<span class="when">${clock(m.created_at)}</span></div>`; }
+  if (m.body && m.body.startsWith('#bottle|')) { const [, kind, text] = m.body.split('|'), mb = convo().i_launched, duo = convo().duo; return `<div class="msg${mb ? ' me' : ''} rise"><div class="minipaper"><small>${mb ? 'Tu botella' : 'Su botella'}${duo ? ' para dos' : ''} · ${esc((kind || '').toLowerCase())}</small>${esc(text || 'Una nota de voz')}</div>${vn(m.voice, m.voice_secs, { mine: mb, peaks: m.voice_peaks })}<span class="when">${hm(m.created_at)}</span></div>`; }
   if (m.body === '#bottle2|') { const mb = convo().i_launched; return `<div class="msg${mb ? ' me' : ''}"><span class="when" style="margin:0 0 4px">${m.sender === uid() ? 'Tu mitad' : 'La otra voz de la botella'}</span>${vn(m.voice, m.voice_secs, { mine: mb, peaks: m.voice_peaks })}</div>`; }
-  if (m.body && m.body.startsWith('#gift|')) return `<div class="msg${me ? ' me' : ''} rise"><div class="giftcard"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span><b>${me ? 'Le mandaste una botella con lacre' : 'Te mandó una botella con lacre'}</b><span>${me ? 'Se queda dorada en esta conversación.' : 'Te regaló una botella para lanzar.'}</span></div><span class="when">${clock(m.created_at)}</span></div>`;
+  if (m.body && m.body.startsWith('#gift|')) return `<div class="msg${me ? ' me' : ''} rise"><div class="giftcard"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span><b>${me ? 'Le mandaste una botella con lacre' : 'Te mandó una botella con lacre'}</b><span>${me ? 'Se queda dorada en esta conversación.' : 'Te regaló una botella para lanzar.'}</span></div><span class="when">${hm(m.created_at)}</span></div>`;
   if (m.body && m.body.startsWith('#plan|')) { const [, place, when] = m.body.split('|'); const ok = (S.msgs[convo().id] || []).some(x => x.body === '#planok|' && x.sender !== m.sender && x.created_at > m.created_at); const later = (S.msgs[convo().id] || []).some(x => x.body && x.body.startsWith('#plan|') && x.created_at > m.created_at);
-    return `<div class="msg${me ? ' me' : ''} rise"><div class="plancard">${icon('pin')}<span class="eyebrow ${ok ? 'a' : ''}">${ok ? 'Plan aceptado' : me ? 'Propusiste un plan' : 'Te propone un plan'}</span><b>${esc(place)}</b><span>${esc(when)}</span>${!me && !ok && !later && !convo().closed ? '<button class="btn btn-a btn-sm" data-act="planOk">Acepto</button>' : ''}</div><span class="when">${clock(m.created_at)}</span></div>`; }
+    return `<div class="msg${me ? ' me' : ''} rise"><div class="plancard">${icon('pin')}<span class="eyebrow ${ok ? 'a' : ''}">${ok ? 'Plan aceptado' : me ? 'Propusiste un plan' : 'Te propone un plan'}</span><b>${esc(place)}</b><span>${esc(when)}</span>${!me && !ok && !later && !convo().closed ? '<button class="btn btn-a btn-sm" data-act="planOk">Acepto</button>' : ''}</div><span class="when">${hm(m.created_at)}</span></div>`; }
   if (m.body === '#planok|') return `<div class="sys">${icon('check', 's')} ${me ? 'Aceptaste el plan' : 'Aceptó el plan'} · lugares públicos y avísale a alguien de confianza</div>`;
-  if (m.body && m.body.startsWith('#call|')) return `<div class="sys">${icon('phone', 's')} ${me ? 'Llamaste' : 'Te llamó'} · ${clock(m.created_at)}</div>`;
+  if (m.body && m.body.startsWith('#call|')) return `<div class="sys">${icon('phone', 's')} ${me ? 'Llamaste' : 'Te llamó'} · ${hm(m.created_at)}</div>`;
   if (!m.voice) return '';
-  return `<div class="msg${me ? ' me' : ''}${i > S.msgs[convo().id].length - 4 ? ' rise' : ''}">${vn(m.voice, m.voice_secs, { mine: me, peaks: m.voice_peaks })}<span class="when">${clock(m.created_at)}</span></div>`;
+  return `<div class="msg${me ? ' me' : ''}${i > S.msgs[convo().id].length - 4 ? ' rise' : ''}">${vn(m.voice, m.voice_secs, { mine: me, peaks: m.voice_peaks })}<span class="when">${hm(m.created_at)}</span></div>`;
+}
+/* Separadores de día, como en las apps de mensajes: una sola fecha por día y la hora en cada nota. */
+const hm = iso => new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false });
+function dayLabel(iso) {
+  const d = new Date(iso), n = new Date(), y = new Date(Date.now() - 864e5);
+  if (d.toDateString() === n.toDateString()) return 'Hoy';
+  if (d.toDateString() === y.toDateString()) return 'Ayer';
+  const l = d.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
+  return l.charAt(0).toUpperCase() + l.slice(1);
+}
+function threadHTML(list) {
+  let last = '';
+  return list.map((m, i) => { const h = msgHTML(m, i); if (!h || !m.created_at) return h; const d = new Date(m.created_at).toDateString(); const sep = d !== last ? `<div class="day" role="separator">${dayLabel(m.created_at)}</div>` : ''; last = d; return sep + h; }).join('');
 }
 /* La conversación avanza por etapas: primero las voces, después los nombres, la llamada y, si les nace, un plan.
    Todas se ven desde el inicio; las que faltan muestran qué las abre. */
@@ -423,7 +455,7 @@ P.screens.chat = {
     ${c.closed ? '' : `<div class="pad stagebar">${stagesHTML(c)}<p class="nextl">${nextLine(c)}</p></div>`}
     <div class="scroll pad" id="thread"><div class="thread">
       ${c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo con una voz sintética, para que pruebes todo el recorrido. Con personas reales funciona igual.</span></div>` : ''}
-      ${list.map(msgHTML).join('')}
+      ${threadHTML(list)}
       ${c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">Grabando una nota de voz…</span></div>` : ''}
       ${!c.closed && !c.cooled && !c.revealed && (c.other_reveal || c.my_reveal) ? `<button class="reveal" data-act="chatMenu">${icon('eye', 's')}<span>${c.my_reveal ? 'Ya compartiste tu nombre. Se ve cuando la otra persona también lo comparta.' : 'Quiere compartir su nombre contigo. Toca para compartir el tuyo.'}</span></button>` : ''}
       ${stageCard(c)}

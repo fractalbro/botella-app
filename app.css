@@ -366,3 +366,25 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .wd.on i{border:0;background:rgba(255,176,97,.2);color:#FFB061}
 .wd.now i{border-style:solid;border-color:#FFB061}
 .wd.now small{color:var(--fg)}
+
+/* Bandeja de conversaciones (referencias Mobbin: Messages de Apple, Meetup) */
+.cfil{margin:2px 0 6px}
+.cfil .chip .cnt{margin-left:4px}
+.clist{display:grid}
+.crow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0 13px 14px;margin-left:-14px;border-top:1px solid var(--line);position:relative}
+.clist .crow:first-child{border-top:0}
+.crow .cdot{position:absolute;left:0;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:transparent}
+.crow.new .cdot{background:var(--a);box-shadow:0 0 10px var(--a)}
+.crow .cmain{flex:1;min-width:0;display:grid;gap:3px}
+.crow .cl1{display:flex;align-items:baseline;gap:10px}
+.crow .cl1 b{flex:1;min-width:0;font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .cl1 time{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.crow.new .cl1 time{color:var(--a);font-weight:600}
+.crow .cl2{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);min-width:0}
+.crow .cl2 .i{width:14px;height:14px;flex:none;opacity:.8}
+.crow .cl2>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow.new .cl2{color:var(--fg);font-weight:500}
+.crow .cl2 em{font-style:normal;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:10px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;flex:none}
+.crow.off{opacity:.62}
+/* Separador de día en la conversación */
+.thread .day{justify-self:center;font-size:11.5px;font-weight:600;color:var(--dim);padding:4px 12px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-block:2px}
