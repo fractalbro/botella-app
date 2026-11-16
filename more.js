@@ -95,7 +95,7 @@ P.screens.bitacora = {
           return `<${ok && u.item ? 'button data-act="wear" data-k="' + u.item + '"' : 'div'} class="urow${ok ? ' ok' : ''}"><span class="ua">${u.kind === 'glass' ? `<span class="bsv">${btSVG('free', u.item)}</span>` : u.kind === 'gift' ? `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>` : `<span class="bsv">${btSVG(u.kind)}</span>`}</span><span class="tx"><b>${u.name}</b><span>${u.days} días seguidos</span></span>${ok ? (u.item ? `<span class="pill${on ? ' a' : ''}">${on ? 'Usando' : 'Usar'}</span>` : `<span class="pill a">${icon('check', 's')} Ganado</span>`) : `<span class="pill">${icon('lock', 's')} ${u.days - n === 1 ? 'Falta 1' : u.days - n > 0 ? 'Faltan ' + (u.days - n) : 'Pronto'}</span>`}</${ok && u.item ? 'button' : 'div'}>`; }).join('')}
         <p class="small muted" style="margin:10px 0 0">Tu mejor racha: ${plural(h.best || 0, 'día', 'días')}. Lo que ganas se queda contigo aunque la racha se corte.</p></div>
       <div class="sec"><span class="eyebrow">Tu voz</span>
-        <button class="setrow" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira por qué distritos viajó.</span></span>${icon('arrow', 's')}</button>
+        <button class="setrow" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira con qué temas conectó.</span></span>${icon('arrow', 's')}</button>
         ${pushRow()}</div>
       <div style="height:24px"></div></div>`; },
   async after() { if (!P.st.bitFresh) { P.st.bitFresh = true; try { await Promise.all([loadMe(), loadHome()]); if (P.curId === 'bitacora') rerender(); } catch (e) {} } },
@@ -110,28 +110,29 @@ function weekHTML(n, today) {
 P.actions.wear = async el => { const k = S.me?.glass === el.dataset.k ? 'glass:none' : 'glass:' + el.dataset.k; try { const me = await rpc('beta_get', { p_item: k }); S.me = Array.isArray(me) ? me[0] : me; rerender(); toast(k === 'glass:none' ? 'Volviste al vidrio de siempre.' : 'Listo: tus botellas viajan en tu vidrio nuevo.'); } catch (e) { err(e); } };
 
 /* ================= EL MAPA DE TU VOZ ================= */
-/* Lima dibujada a mano alzada: la costa a la izquierda y cada distrito como una luz. */
-const MAP = { 'Los Olivos': [44, 8], 'Lima Centro': [54, 24], 'San Miguel': [22, 38], 'Pueblo Libre': [35, 34], 'Jesús María': [49, 37], 'Lince': [56, 45], 'Magdalena': [32, 47], 'San Isidro': [47, 54], 'San Borja': [68, 52], 'La Molina': [88, 44], 'Miraflores': [44, 66], 'Surco': [70, 68], 'Barranco': [49, 79], 'Chorrillos': [55, 91], 'Otro distrito': [84, 14] };
+/* Tu voz en el centro y los temas alrededor, como constelación: se enciende cada tema con el que conectó tu voz.
+   Nunca se muestran distritos: lo que cuenta es con qué conectas, no de dónde es nadie. */
 function mapSVG(places) {
-  const by = Object.fromEntries((places || []).map(p => [p.place, p])), mine = S.me?.district;
-  const dots = Object.entries(MAP).map(([name, [x, y]]) => { const p = by[name], n = p ? p.opened : 0, r = n ? Math.min(1.5 + Math.sqrt(n) * .6, 3.4) : 1, left = x > 80;
-    return `<g class="md${n ? ' on' : ''}${p && p.answered ? ' ans' : ''}">${n ? `<circle cx="${x}" cy="${y}" r="${r + 3}" class="halo"/>` : ''}<circle cx="${x}" cy="${y}" r="${r}"/>${n || name === mine ? `<text x="${left ? x : x + r + 2}" y="${left ? y + r + 3.6 : y + 1.2}" text-anchor="${left ? 'middle' : 'start'}">${esc(name === 'Otro distrito' ? 'Más allá' : name)}${n ? ` · ${n}` : ''}</text>` : ''}</g>`; }).join('');
-  const me = MAP[mine]; const rays = me ? (places || []).filter(p => MAP[p.place] && p.place !== mine).map(p => `<path class="ray" d="M${me[0]} ${me[1]} Q${(me[0] + MAP[p.place][0]) / 2 - 6} ${(me[1] + MAP[p.place][1]) / 2 - 4} ${MAP[p.place][0]} ${MAP[p.place][1]}"/>`).join('') : '';
-  return `<svg class="mapsvg" viewBox="0 0 100 100" role="img" aria-label="Mapa de Lima con los distritos a los que llegó tu voz"><path class="sea" d="M0 0H26C20 12 12 22 10 32c4 6 12 10 18 17 6 6 10 13 15 20 4 6 4 14 6 21l3 10H0z"/><path class="coast" d="M26 0C20 12 12 22 10 32c4 6 12 10 18 17 6 6 10 13 15 20 4 6 4 14 6 21l3 10"/><text class="seat" x="6" y="62" transform="rotate(62 6 62)">Océano Pacífico</text>${rays}${dots}${me ? `<circle class="home" cx="${me[0]}" cy="${me[1]}" r="1.6"/>` : ''}</svg>`;
+  const by = Object.fromEntries((places || []).map(p => [p.place, p])), mine = S.me?.topics || [], N = TOPICS.length;
+  const pos = TOPICS.map((t, i) => { const a = -Math.PI / 2 + i / N * Math.PI * 2; return [t, 50 + Math.cos(a) * 33, 50 + Math.sin(a) * 33, Math.cos(a)]; });
+  const rays = pos.filter(([t]) => by[t]).map(([t, x, y]) => `<path class="ray" d="M50 50 Q${(50 + x) / 2 + (y - 50) * .18} ${(50 + y) / 2 - (x - 50) * .18} ${x} ${y}"/>`).join('');
+  const dots = pos.map(([t, x, y, c]) => { const p = by[t], n = p ? p.opened : 0, r = n ? Math.min(1.8 + Math.sqrt(n) * .7, 3.8) : 1.1, anchor = c > .3 ? 'start' : c < -.3 ? 'end' : 'middle', lx = x + (c > .3 ? r + 2 : c < -.3 ? -(r + 2) : 0), ly = y + (Math.abs(c) <= .3 ? (y < 50 ? -(r + 2.2) : r + 4.4) : 1.2);
+    return `<g class="md${n ? ' on' : ''}${p && p.answered ? ' ans' : ''}${mine.includes(t) ? ' mine' : ''}">${n ? `<circle cx="${x}" cy="${y}" r="${r + 3}" class="halo"/>` : ''}<circle cx="${x}" cy="${y}" r="${r}"/><text x="${lx}" y="${ly}" text-anchor="${anchor}">${esc(t)}${n ? ` · ${n}` : ''}</text></g>`; }).join('');
+  return `<svg class="mapsvg" viewBox="0 0 100 100" role="img" aria-label="Los temas con los que conectó tu voz"><circle class="orbit" cx="50" cy="50" r="33"/>${rays}${dots}<circle class="home" cx="50" cy="50" r="3"/><text class="you" x="50" y="58" text-anchor="middle">Tu voz</text></svg>`;
 }
 P.screens.mapa = {
   render: () => { const m = S.map, ps = m?.places || [];
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">El mapa de tu voz</span></div><div class="scroll pad">
-    <div class="display rise" style="font-size:32px;margin-top:4px">${!m ? 'Buscando <b>tu voz</b>…' : ps.length ? `Tu voz llegó a <b>${plural(ps.length, 'distrito', 'distritos')}</b>.` : 'Tu voz todavía <b>no viaja</b>.'}</div>
+    <div class="display rise" style="font-size:32px;margin-top:4px">${!m ? 'Buscando <b>tu voz</b>…' : ps.length ? `Tu voz conectó con <b>${plural(ps.length, 'tema', 'temas')}</b>.` : 'Tu voz todavía <b>no viaja</b>.'}</div>
     <div class="mapbox rise d1">${mapSVG(ps)}</div>
     ${m ? `<div class="stats rise d2"><div class="stat2"><b>${m.heard}</b><span>${m.heard === 1 ? 'persona la escuchó' : 'personas la escucharon'}</span></div><div class="stat2"><b>${m.answers}</b><span>${m.answers === 1 ? 'te respondió' : 'te respondieron'}</span></div><div class="stat2"><b>${m.bottles}</b><span>${m.bottles === 1 ? 'botella lanzada' : 'botellas lanzadas'}</span></div></div>` : ''}
-    <p class="small muted" style="margin:12px 0 0">${ps.length ? 'Cada luz es un distrito donde alguien descorchó una botella tuya. Las doradas te respondieron.' : 'Cuando alguien descorche una botella tuya, su distrito se enciende aquí.'}</p>
+    <p class="small muted" style="margin:12px 0 0">${ps.length ? 'Cada luz es un tema que compartes con alguien que descorchó una botella tuya. Las doradas te respondieron. Nunca mostramos de dónde es nadie.' : 'Cuando alguien descorche una botella tuya, se enciende el tema que comparten.'}</p>
     ${ps.length ? '' : `<button class="btn btn-a" data-go="launch" style="margin-top:16px">${icon('bottle')} Lanzar una botella</button>`}
     <div style="height:24px"></div></div>`; },
   async after() { if (!P.st.mapFresh) { P.st.mapFresh = true; try { await loadMap(); if (P.curId === 'mapa') rerender(); } catch (e) {} } },
   leave() { P.st.mapFresh = false; }
 };
-const mapCard = () => `<button class="mapcard rise" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira por qué distritos viajaron tus botellas.</span></span>${icon('arrow', 's')}</button>`;
+const mapCard = () => `<button class="mapcard rise" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira con qué temas conectó tu voz.</span></span>${icon('arrow', 's')}</button>`;
 
 /* ================= LA MAREA: PREGUNTA DEL DÍA ================= */
 async function loadMareaNow() { const d = await rpc('marea_now'); S.mareaNow = d; S.marea = d?.featured || []; }
@@ -217,7 +218,7 @@ P.screens.duojoin = {
     return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span></div><div style="height:8%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 50px)">
       <span class="eyebrow a rise">Botella para dos</span><div class="display rise d1" style="font-size:32px;margin-top:8px"><b>${esc(d.name)}</b> quiere lanzar una botella contigo.</div>
-      <div class="paper rise d2" style="margin-top:16px"><span class="eyebrow">${esc(d.kind)} · su mitad, desde ${esc(d.place)}</span><div class="q">${esc(d.body || 'Escucha su voz.')}</div>${vn(d.voice, d.secs, { peaks: d.peaks })}</div>
+      <div class="paper rise d2" style="margin-top:16px"><span class="eyebrow">${esc(d.kind)} · su mitad${d.place ? ' · ' + esc(d.place) : ''}</span><div class="q">${esc(d.body || 'Escucha su voz.')}</div>${vn(d.voice, d.secs, { peaks: d.peaks })}</div>
       <div class="sec"><span class="eyebrow">Tu mitad</span>${recBox('duo2', 'Graba tu parte. Hasta 60 segundos.')}</div>
       <p class="small muted">Sale al mar con las dos voces y llega a 6 personas. Quien responda, les responde a los dos.</p><div style="height:10px"></div></div>
     <div class="foot pad"><button class="btn btn-a${S.rec.duo2 ? '' : ' soft'}" data-needs="duo2" data-act="duoJoin">${icon('send')} ${S.me ? 'Lanzar juntos' : 'Crear mi cuenta y lanzar'}</button></div>`; },

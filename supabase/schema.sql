@@ -108,6 +108,27 @@ alter table public.blocks enable row level security;
 drop policy if exists "mis bloqueos" on public.blocks;
 create policy "mis bloqueos" on public.blocks for select to authenticated using (a = auth.uid());
 
+-- Lo que se ve de alguien antes de saber su nombre: un tema que comparten, nunca el distrito.
+-- El distrito queda privado: solo acerca botellas y sugiere lugares para un plan.
+create or replace function public.vibe(p_viewer uuid, p_other uuid) returns text language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select u.t from unnest((select topics from profiles where id = p_other)) with ordinality u(t, i)
+      where u.t = any(coalesce((select topics from profiles where id = p_viewer), '{}')) order by u.i limit 1),
+    (select topics[1] from profiles where id = p_other));
+$$;
+create or replace function public.vibe_phrase(t text) returns text language sql immutable as $$
+  select case t when 'Música' then 'ama la música' when 'Cine' then 'ama el cine' when 'Libros' then 'ama los libros'
+    when 'Viajes' then 'ama viajar' when 'Fútbol' then 'ama el fútbol' when 'Comida' then 'ama comer rico'
+    when 'La ciudad' then 'ama la ciudad' when 'Trabajo' then 'vive su trabajo' when 'Filosofía' then 'ama la filosofía'
+    when 'Amor' then 'cree en el amor' when 'Tecnología' then 'ama la tecnología' when 'Arte' then 'ama el arte'
+    else 'ama ' || lower(t) end;
+$$;
+create or replace function public.alguien(p_viewer uuid, p_other uuid) returns text language sql stable security definer set search_path = public as $$
+  select coalesce('Alguien que ' || vibe_phrase(vibe(p_viewer, p_other)), 'Alguien');
+$$;
+revoke execute on function public.vibe(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.alguien(uuid, uuid) from public, anon, authenticated;
+
 create or replace function public.blocked(x uuid, y uuid) returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from blocks where (a = x and b = y) or (a = y and b = x));
 $$;
@@ -349,6 +370,8 @@ begin
              -- una botella de color llega primero a quien cumple lo que eligió quien la lanzó
              ((bo.target_topic is null or bo.target_topic = any(p.topics)) and (bo.target_district is null or p.district = bo.target_district)) desc,
              cardinality(array(select unnest(p.topics) intersect select unnest(mine))) desc,
+             -- el distrito nunca se muestra, pero acerca: a igual afinidad, primero alguien cercano
+             (p.district = (select q.district from profiles q where q.id = bo.owner)) desc,
              (select count(*) from deliveries w where w.to_id = p.id and w.status = 'waiting') asc,
              (p.last_seen > now() - interval '3 days') desc,
              random()
@@ -431,7 +454,7 @@ begin
   if s.id is null or cl.voice is null then return 0; end if;
   insert into deliveries(bottle_id, to_id, status, created_at, opened_at) values (bo.id, s.id, 'answered', now(), now() + interval '30 seconds');
   foreach who in array array_remove(array[bo.owner, bo.partner], null) loop
-    perform notify(who, 'opened', 'Tu botella llegó a ' || s.district, 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text, now() + interval '30 seconds');
+    perform notify(who, 'opened', 'Tu botella llegó a ' || lower(alguien(who, s.id)), 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text, now() + interval '30 seconds');
     insert into convos(bottle_id, a, b) values (bo.id, who, s.id) returning id into cid;
     insert into messages(convo_id, sender, voice, voice_secs, voice_peaks, body, created_at)
       values (cid, bo.owner, bo.voice, bo.voice_secs, bo.voice_peaks, '#bottle|' || bo.kind || '|' || coalesce(bo.body, ''), now());
@@ -485,9 +508,9 @@ create or replace function public.shore() returns table (
   featured boolean, glass text, sample boolean, expires_at timestamptz, tide_day date,
   voice2 text, voice2_secs int, voice2_peaks jsonb, place2 text
 ) language sql stable security definer set search_path = public as $$
-  select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, p.district, b.btype, b.featured, b.glass, p.is_sample,
+  select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, vibe(auth.uid(), b.owner), b.btype, b.featured, b.glass, p.is_sample,
     case when d.status = 'waiting' then coalesce(d.expires_at, d.created_at + interval '24 hours') else d.opened_at + interval '48 hours' end,
-    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (select q.district from profiles q where q.id = b.partner and b.voice2 is not null)
+    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (case when b.voice2 is not null then vibe(auth.uid(), b.partner) end)
   from deliveries d join bottles b on b.id = d.bottle_id join profiles p on p.id = b.owner
   where d.to_id = auth.uid() and d.status in ('waiting','opened') and not b.hidden and not blocked(b.owner, auth.uid())
     and (d.status <> 'waiting' or coalesce(d.expires_at, d.created_at + interval '24 hours') > now())
@@ -558,9 +581,9 @@ create or replace function public.my_bottles() returns table (
     (select count(*) from deliveries d where d.bottle_id = b.id and d.status = 'waiting')::int,
     (select c.id from convos c where c.bottle_id = b.id and c.a = auth.uid() and exists (select 1 from messages m where m.convo_id = c.id and m.sender = c.b and m.created_at <= now()) order by c.created_at limit 1),
     b.btype, coalesce(b.target_topic, b.target_district), b.featured,
-    -- "Quién la abrió" (del muelle): el distrito y la hora de cada persona que la abrió. Nunca el nombre.
+    -- "Quién la abrió" (del muelle): el tema en común y la hora de cada persona que la abrió. Nunca el nombre.
     case when (select who_open from profiles where id = auth.uid()) then
-      (select coalesce(jsonb_agg(jsonb_build_object('place', p.district, 'at', d.opened_at, 'answered', d.status = 'answered') order by d.opened_at desc), '[]'::jsonb)
+      (select coalesce(jsonb_agg(jsonb_build_object('place', vibe(auth.uid(), p.id), 'at', d.opened_at, 'answered', d.status = 'answered') order by d.opened_at desc), '[]'::jsonb)
        from deliveries d join profiles p on p.id = d.to_id where d.bottle_id = b.id and d.opened_at <= now()) end,
     b.tide_day, b.voice2 is not null, b.voice2, b.voice2_secs, b.voice2_peaks,
     b.tide_day is not null and now() < ((b.tide_day + time '21:00') at time zone 'America/Lima')
@@ -568,7 +591,7 @@ create or replace function public.my_bottles() returns table (
 $$;
 grant execute on function public.my_bottles() to authenticated;
 
--- Conversaciones: el otro es "Alguien de <distrito>" hasta que los dos revelan su nombre.
+-- Conversaciones: el otro es "Alguien que ama el cine" (un tema en común) hasta que los dos revelan su nombre.
 drop function if exists public.my_convos();
 create or replace function public.my_convos() returns table (
   id uuid, alias text, place text, revealed boolean, my_reveal boolean, other_reveal boolean,
@@ -577,8 +600,8 @@ create or replace function public.my_convos() returns table (
   cool_at timestamptz, cooled boolean, duo boolean, my_voices int, other_voices int
 ) language sql stable security definer set search_path = public as $$
   select c.id,
-    case when c.reveal_a and c.reveal_b then o.name else 'Alguien de ' || o.district end,
-    o.district, c.reveal_a and c.reveal_b,
+    case when c.reveal_a and c.reveal_b then o.name else alguien(auth.uid(), o.id) end,
+    vibe(auth.uid(), o.id), c.reveal_a and c.reveal_b,
     case when c.a = auth.uid() then c.reveal_a else c.reveal_b end,
     case when c.a = auth.uid() then c.reveal_b else c.reveal_a end,
     case when c.a = auth.uid() then c.key_a else c.key_b end,
@@ -707,7 +730,7 @@ drop function if exists public.marea();
 create or replace function public.marea() returns table (
   bottle uuid, kind text, body text, voice text, voice_secs int, voice_peaks jsonb, place text, glass text, sample boolean, created_at timestamptz, mine boolean, taken text
 ) language sql stable security definer set search_path = public as $$
-  select b.id, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, p.district, b.glass, p.is_sample, b.created_at, b.owner = auth.uid(),
+  select b.id, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, vibe(auth.uid(), b.owner), b.glass, p.is_sample, b.created_at, b.owner = auth.uid(),
     (select d.status from deliveries d where d.bottle_id = b.id and d.to_id = auth.uid())
   from bottles b join profiles p on p.id = b.owner
   where b.featured and not b.hidden and not blocked(b.owner, auth.uid()) and (p.is_sample or b.created_at > now() - interval '48 hours')
@@ -805,7 +828,7 @@ create or replace function public.outings_list() returns table (
     case when o.weekly and o.starts_at < now() then o.starts_at + ceil(extract(epoch from now() - o.starts_at) / 604800) * interval '7 days' else o.starts_at end,
     o.cap,
     (1 + (select count(*) from outing_members m where m.outing = o.id) + case when p.is_sample then (abs(hashtext(o.id::text)) % 3) + 1 else 0 end)::int,
-    o.descr, p.name, p.district, o.owner = auth.uid(),
+    o.descr, p.name, vibe(auth.uid(), o.owner), o.owner = auth.uid(),
     exists (select 1 from outing_members m where m.outing = o.id and m.member = auth.uid()), o.boosted, p.is_sample
   from outings o join profiles p on p.id = o.owner
   where not o.cancelled and (o.weekly or o.starts_at > now() - interval '3 hours') and not blocked(o.owner, auth.uid())
@@ -892,7 +915,7 @@ begin
   if new.voice is not null and new.body is null then perform bump_streak(new.sender); end if;
   rcpt := case when new.sender = c.a then c.b else c.a end;
   select * into snd from profiles where id = new.sender;
-  who := case when c.reveal_a and c.reveal_b then snd.name else 'Alguien de ' || snd.district end;
+  who := case when c.reveal_a and c.reveal_b then snd.name else alguien(rcpt, snd.id) end;
   if new.body is null then
     first := new.sender = c.b and not exists (select 1 from messages m where m.convo_id = c.id and m.sender = c.b and m.id <> new.id and m.voice is not null);
     perform notify(rcpt, 'msg', case when first then 'Respondieron tu botella' else who end,
@@ -907,15 +930,14 @@ end $$;
 drop trigger if exists on_message on public.messages;
 create trigger on_message after insert on public.messages for each row execute function public.on_message();
 
--- "Tu botella llegó a Barranco": cuando alguien descorcha una botella tuya.
+-- "Tu botella llegó a alguien que ama el cine": cuando alguien descorcha una botella tuya.
 create or replace function public.on_open() returns trigger language plpgsql security definer set search_path = public as $$
 declare bo bottles; place text; who uuid;
 begin
   if old.status = 'waiting' and new.status = 'opened' then
     select * into bo from bottles where id = new.bottle_id;
-    select district into place from profiles where id = new.to_id;
     foreach who in array array_remove(array[bo.owner, bo.partner], null) loop
-      perform notify(who, 'opened', 'Tu botella llegó a ' || place, 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text);
+      perform notify(who, 'opened', 'Tu botella llegó a ' || lower(alguien(who, new.to_id)), 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text);
     end loop;
   end if;
   return new;
@@ -968,7 +990,7 @@ begin
       'count', (select count(*) from bottles where tide_day = d and not hidden)),
     'last', jsonb_build_object('day', ld, 'question', tide_question(ld), 'unlocked', unlocked,
       'voices', coalesce((select jsonb_agg(v order by v->>'at' desc) from (
-        select jsonb_build_object('bottle', b.id, 'place', p.district, 'secs', b.voice_secs, 'peaks', b.voice_peaks, 'glass', b.glass, 'at', b.created_at,
+        select jsonb_build_object('bottle', b.id, 'place', vibe(auth.uid(), b.owner), 'secs', b.voice_secs, 'peaks', b.voice_peaks, 'glass', b.glass, 'at', b.created_at,
           'mine', b.owner = auth.uid(), 'taken', (select x.status from deliveries x where x.bottle_id = b.id and x.to_id = auth.uid())) as v
         from bottles b join profiles p on p.id = b.owner
         where b.tide_day = ld and not b.hidden and not blocked(b.owner, auth.uid()) order by b.created_at desc limit 30) t), '[]'::jsonb)),
@@ -1149,10 +1171,10 @@ begin
 end $$;
 grant execute on function public.home() to authenticated;
 
--- El mapa de tu voz: en qué distritos abrieron y respondieron tus botellas.
+-- El mapa de tu voz: con qué temas conectó tu voz (los temas en común de quienes abrieron y respondieron).
 create or replace function public.voice_map() returns jsonb language sql stable security definer set search_path = public as $$
   with o as (
-    select p.district as place, x.status from deliveries x join bottles b on b.id = x.bottle_id join profiles p on p.id = x.to_id
+    select coalesce(vibe(auth.uid(), p.id), 'Otros') as place, x.status from deliveries x join bottles b on b.id = x.bottle_id join profiles p on p.id = x.to_id
     where auth.uid() in (b.owner, b.partner) and x.opened_at <= now())
   select jsonb_build_object(
     'places', coalesce((select jsonb_agg(jsonb_build_object('place', t.place, 'opened', t.n, 'answered', t.a) order by t.n desc) from (select place, count(*) n, count(*) filter (where status = 'answered') a from o group by place) t), '[]'::jsonb),
@@ -1180,7 +1202,7 @@ end $$;
 grant execute on function public.duo_start(text, text, text, int, jsonb) to authenticated;
 
 create or replace function public.duo_peek(p_token text) returns jsonb language sql stable security definer set search_path = public as $$
-  select jsonb_build_object('token', d.token, 'kind', d.kind, 'body', d.body, 'name', p.name, 'place', p.district, 'voice', d.voice, 'secs', d.voice_secs, 'peaks', d.voice_peaks,
+  select jsonb_build_object('token', d.token, 'kind', d.kind, 'body', d.body, 'name', p.name, 'place', vibe(auth.uid(), d.owner), 'voice', d.voice, 'secs', d.voice_secs, 'peaks', d.voice_peaks,
     'status', case when d.status = 'open' and d.expires_at < now() then 'cancelled' else d.status end, 'mine', d.owner = auth.uid())
   from duos d join profiles p on p.id = d.owner where d.token = p_token;
 $$;

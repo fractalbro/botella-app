@@ -52,7 +52,7 @@ set role authenticated;
 -- Beto abre y escucha
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
 select pg_temp.ok((select count(*) from shore()) = 1, 'Beto tiene 1 botella en su orilla');
-select pg_temp.ok((select place from shore()) = 'Lince', 'se ve el distrito, no el nombre');
+select pg_temp.ok((select place from shore()) = 'Música', 'se ve un tema en común, ni el distrito ni el nombre');
 select pg_temp.ok(can_hear('00000000-0000-0000-0000-000000000001/b1.m4a'), 'Beto puede escuchar la botella que le llegó');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000005');
 select pg_temp.ok(not can_hear('00000000-0000-0000-0000-000000000001/b1.m4a'), 'Eli no puede escucharla');
@@ -62,13 +62,13 @@ select pg_temp.ok((select status from shore()) = 'opened', 'quedó abierta');
 select pg_temp.ok((select rewarded from answer_delivery((select id from shore()), '00000000-0000-0000-0000-000000000002/r1.m4a', 20)), 'responder regala una botella');
 select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 4, 'Beto ahora tiene 4');
 select pg_temp.ok((select count(*) from shore()) = 0, 'la botella salió de su orilla');
-select pg_temp.ok((select alias from my_convos()) = 'Alguien de Lince', 'conversación anónima');
+select pg_temp.ok((select alias from my_convos()) = 'Alguien que ama la música', 'conversación anónima: se ve un tema en común');
 select pg_temp.ok((select count(*) from messages) = 2, 'la conversación empieza con la botella y la respuesta');
 
 -- Ana ve la respuesta
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
 select pg_temp.ok((select answers from my_bottles()) = 1, 'Ana ve 1 respuesta');
-select pg_temp.ok((select alias from my_convos()) = 'Alguien de Barranco', 'Ana ve a Alguien de Barranco');
+select pg_temp.ok((select alias from my_convos()) = 'Alguien que ama la música' and (select place from my_convos()) <> 'Barranco', 'Ana no ve el distrito de Beto');
 select pg_temp.ok(can_hear('00000000-0000-0000-0000-000000000002/r1.m4a'), 'Ana escucha la respuesta');
 insert into messages(convo_id, sender, voice, voice_secs) values ((select id from my_convos()), auth.uid(), '00000000-0000-0000-0000-000000000001/m2.m4a', 8);
 do $$ begin begin insert into messages(convo_id, sender, body) values ((select id from my_convos()), auth.uid(), 'texto libre'); raise exception 'debió fallar';
@@ -262,12 +262,12 @@ set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000009');
 select open_delivery((select id from shore() limit 1));
 reset role;
-select pg_temp.ok(exists (select 1 from notices where to_id = '00000000-0000-0000-0000-000000000008' and kind = 'opened' and title = 'Tu botella llegó a Lince'), 'aviso: tu botella llegó a Lince');
+select pg_temp.ok(exists (select 1 from notices where to_id = '00000000-0000-0000-0000-000000000008' and kind = 'opened' and title = 'Tu botella llegó a alguien que ama la música'), 'aviso: tu botella llegó a alguien que ama la música');
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000009');
 select answer_delivery((select id from shore() limit 1), '00000000-0000-0000-0000-000000000009/r1.m4a', 8);
 reset role;
-select pg_temp.ok(exists (select 1 from notices where to_id = '00000000-0000-0000-0000-000000000008' and kind = 'msg' and title = 'Respondieron tu botella' and body like 'Alguien de Lince%'), 'aviso: respondieron tu botella');
+select pg_temp.ok(exists (select 1 from notices where to_id = '00000000-0000-0000-0000-000000000008' and kind = 'msg' and title = 'Respondieron tu botella' and body like 'Alguien que ama la música%'), 'aviso: respondieron tu botella');
 select pg_temp.ok(not exists (select 1 from notices n join profiles p on p.id = n.to_id where p.is_sample), 'las personas de ejemplo no reciben avisos');
 -- constancia: tercer día seguido desbloquea el vidrio coral
 update profiles set streak = 2, streak_day = lima_today() - 1 where id = '00000000-0000-0000-0000-000000000009';
@@ -356,7 +356,7 @@ select pg_temp.ok(not (select open_voice(voice) from duos), 'al completarse, la 
 select pg_temp.ok(exists (select 1 from notices where kind = 'duo' and to_id = '00000000-0000-0000-0000-000000000008' and title = 'Inés grabó su mitad'), 'Hugo recibe el aviso');
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
-select pg_temp.ok((select place = 'Barranco' and place2 = 'Lince' and voice2 like '%/d2.m4a' from shore() where voice2 is not null), 'a Juan le llega con las dos voces y los dos distritos');
+select pg_temp.ok((select place = 'Música' and place2 = 'Música' and voice2 like '%/d2.m4a' from shore() where voice2 is not null), 'a Juan le llega con las dos voces y lo que comparte con cada una');
 select pg_temp.ok(can_hear('00000000-0000-0000-0000-000000000009/d2.m4a'), 'Juan puede escuchar la segunda voz');
 select answer_delivery((select id from shore() where voice2 is not null), '00000000-0000-0000-0000-000000000010/da.m4a', 9);
 select pg_temp.ok((select count(*) from my_convos() where duo) = 2, 'responder a un dúo abre una conversación con cada uno');
@@ -429,7 +429,7 @@ select pg_temp.ok((select far_left from profiles) = 2, 'y gana una botella que l
 select pg_temp.ok(not (home()->'quest'->>'just')::boolean and (home()->'quest'->>'done')::boolean, 'el premio se entrega una sola vez');
 select pg_temp.ok((voice_map()->>'bottles')::int = 1, 'el mapa de su voz cuenta su botella');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000008');
-select pg_temp.ok((select count(*) from jsonb_array_elements(voice_map()->'places') p where p->>'place' = 'Lince') = 1 and (voice_map()->>'heard')::int >= 1, 'el mapa de Hugo muestra que su voz llegó a Lince');
+select pg_temp.ok((select count(*) from jsonb_array_elements(voice_map()->'places') p where p->>'place' = 'Música') = 1 and not exists (select 1 from jsonb_array_elements(voice_map()->'places') p where p->>'place' in ('Lince','Surco','Barranco')) and (voice_map()->>'heard')::int >= 1, 'el mapa de Hugo muestra temas, nunca distritos');
 select push_subscribe('https://push.example/hugo', 'k', 'a');
 do $$ begin begin perform push_take(10); raise exception 'debió fallar'; exception when insufficient_privilege then null; end; end $$;
 reset role;

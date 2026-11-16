@@ -20,6 +20,9 @@ const MAXV = 60, MINV = 2, MAXCALL = 30 * 60;
 
 const DISTRICTS = ['Barranco', 'Miraflores', 'San Isidro', 'Surco', 'Lince', 'Magdalena', 'Jesús María', 'Pueblo Libre', 'San Miguel', 'San Borja', 'La Molina', 'Chorrillos', 'Lima Centro', 'Los Olivos', 'Otro distrito'];
 const TOPICS = ['Música', 'Cine', 'Libros', 'Viajes', 'Fútbol', 'Comida', 'La ciudad', 'Trabajo', 'Filosofía', 'Amor', 'Tecnología', 'Arte'];
+/* Antes de saber su nombre, de alguien se ve un tema que comparten contigo, nunca su distrito (igual que vibe_phrase en el servidor). */
+const LOVES = { 'Música': 'ama la música', 'Cine': 'ama el cine', 'Libros': 'ama los libros', 'Viajes': 'ama viajar', 'Fútbol': 'ama el fútbol', 'Comida': 'ama comer rico', 'La ciudad': 'ama la ciudad', 'Trabajo': 'vive su trabajo', 'Filosofía': 'ama la filosofía', 'Amor': 'cree en el amor', 'Tecnología': 'ama la tecnología', 'Arte': 'ama el arte' };
+const someone = t => t ? 'alguien que ' + (LOVES[t] || 'ama ' + String(t).toLowerCase()) : 'alguien';
 const SEEKS = ['Conversaciones profundas', 'Reírme un rato', 'Conocer gente en Lima', 'Que alguien me escuche'];
 const KINDS = { Pregunta: ['¿Qué canción te devuelve a tus 15 años?', '¿Cuál es tu lugar secreto en Lima?', '¿Qué harías si mañana no tuvieras que trabajar?'], 'Confesión': ['Nunca he ido sola al cine y quiero intentarlo.', 'Extraño tener alguien con quien hablar de libros.'], Historia: ['Lo más raro que me pasó en una combi.', 'El día que me perdí en el Centro y fue lo mejor.'] };
 

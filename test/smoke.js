@@ -51,7 +51,7 @@ const srv = http.createServer((q, r) => {
     await tap('[data-act=duoStart]'); await p.waitForTimeout(900); await shot('duo-esperando'); await tap('[data-act=toMine]'); await p.waitForTimeout(700); await shot('mis-botellas-duo');
   });
   await step('lanzar', async () => {
-    await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('.idea'); await tap('[data-act=btype][data-k=color]'); await p.selectOption('#btarget', 'district:Barranco'); await record(); await shot('lanzar-lista');
+    await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('.idea'); await tap('[data-act=btype][data-k=color]'); await p.selectOption('#btarget', 'topic:Cine'); await record(); await shot('lanzar-lista');
     await tap('[data-act=throw]'); await p.waitForTimeout(4000); await shot('lanzada'); await p.waitForTimeout(1600); await shot('avisos-pregunta'); await tap('.sheet [data-act=closeSheet]').catch(() => {}); await tap('[data-act=toMine]'); await p.waitForTimeout(600);
   });
   await step('marea-hoy', async () => { await tap('.tabs button', 'Orilla'); await p.waitForTimeout(800); await shot('orilla-tu-dia'); await tap('.today'); await p.waitForTimeout(900); await shot('marea-pregunta'); await record(); await tap('[data-act=tideSend]'); await p.waitForTimeout(1200); await shot('marea-respondida'); await p.locator('.screen:not(.exiting) .scroll').evaluate(e => e.scrollTo(0, 500)); await shot('marea-voces'); await tap('[data-act=back]'); await p.waitForTimeout(500); });

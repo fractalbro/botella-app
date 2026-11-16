@@ -388,3 +388,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .crow.off{opacity:.62}
 /* Separador de día en la conversación */
 .thread .day{justify-self:center;font-size:11.5px;font-weight:600;color:var(--dim);padding:4px 12px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-block:2px}
+/* Constelación de temas (reemplaza el mapa de distritos) */
+.mapsvg .orbit{fill:none;stroke:rgba(170,240,228,.14);stroke-width:.4;stroke-dasharray:1 1.4}
+.mapsvg .md.mine text{fill:rgba(244,239,231,.75)}
+.mapsvg .you{font-size:3px;font-weight:600;fill:var(--a);font-family:var(--sans)}
