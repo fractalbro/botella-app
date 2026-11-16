@@ -195,7 +195,7 @@ P.screens.duowait = {
   render: () => { const d = S.duoWait || {}; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Botella para dos</span></div><div style="flex:1"></div>
     <div class="pad" style="padding-bottom:22px;background:linear-gradient(transparent,rgba(3,16,28,.94) 30%)">
       <span class="eyebrow a rise">Tu mitad está lista</span><div class="display rise d1" style="margin-top:8px">Falta la voz de <b>tu dúo</b>.</div>
-      <p class="lead rise d2">Mándale este link a un amigo. Escucha tu mitad, graba la suya y la botella sale al mar con las dos voces, hacia 6 orillas.</p>
+      <p class="lead rise d2">Mándale este link a un amigo. Escucha tu mitad, graba la suya y la botella sale al mar con las dos voces, hacia 12 orillas.</p>
       <div class="code rise d3"><span>${esc(duoLink(d.token || '').replace(/^https?:\/\//, ''))}</span><button class="btn btn-a btn-sm" data-act="duoCopy">${icon('copy', 's')} Copiar</button></div>
       <div class="foot" style="padding-bottom:0"><button class="btn btn-a" data-act="duoShare">${icon('export')} Invitar a mi dúo</button><button class="btn btn-ghost" data-act="toMine">Listo, la veo en mis botellas</button></div>
       <p class="small muted" style="margin:4px 0 0;text-align:center">Tiene 3 días. Si nadie graba, tu botella vuelve a tu muelle.</p></div>`; }

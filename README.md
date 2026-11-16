@@ -1,6 +1,6 @@
 # Botella · beta
 
-Lanza tu voz al mar: grabas una pregunta, llega a tres personas afines y quien quiere, te responde con su voz.
+Lanza tu voz al mar: grabas una pregunta, llega a ocho personas afines y quien quiere, te responde con su voz.
 
 PWA estática sin build: `index.html`, `app.js` (base, voz, dibujo del mar), `screens.js` (pantallas), `extras.js` (muelle, marea destacada, salidas, regalos, planes), `more.js` (primer día, constancia, pregunta de la marea, mapa de tu voz, botella para dos, lecturas, avisos push), `live.js` (llamadas, avisos en vivo, arranque), `styles.css` (estilo del prototipo) y `app.css`.
 Backend: Supabase (auth, Postgres con RLS, Storage para notas de voz, Realtime para avisos y señalización de llamadas) y funciones de Vercel en `api/` (avisos push y filtro de las lecturas).

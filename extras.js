@@ -6,7 +6,7 @@
 const STORE = {
   specials: [
     { k: 'color', name: 'Botella de color', tag: 'tú eliges', desc: 'Elige a quién llega: por tema o por distrito.', price: '2.90', art: () => btSVG('color') , left: () => S.me?.color_left },
-    { k: 'far', name: 'Botella que llega lejos', tag: '10 orillas', desc: 'La escuchan 10 personas en vez de 3.', price: '5.90', art: () => btSVG('far'), left: () => S.me?.far_left },
+    { k: 'far', name: 'Botella que llega lejos', tag: '20 orillas', desc: 'La escuchan 20 personas en vez de 8.', price: '5.90', art: () => btSVG('far'), left: () => S.me?.far_left },
     { k: 'tide', name: 'Marea destacada', tag: '21:00', desc: 'Tu botella sale en la marea de la noche, arriba de todas.', price: '1.90', art: () => btSVG('free', null, true), left: () => S.me?.tide_left },
     { k: 'who', name: 'Quién la abrió', tag: 'para siempre', desc: 'Mira desde qué distrito y a qué hora abrieron cada botella tuya.', price: '4.90', art: () => `<span class="iart">${icon('eye')}</span>`, own: () => S.me?.who_open }
   ],

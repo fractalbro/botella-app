@@ -242,7 +242,7 @@ select pg_temp.ok((select count(*) from outings_list() where mine) = 1, 'veo mi 
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
 select outing_join((select id from outings_list() where name = 'Atardecer en Barranco'), true);
 select pg_temp.ok((select taken from outings_list() where name = 'Atardecer en Barranco') = 2, 'alguien se apuntó a mi salida');
-select pg_temp.ok(app_version() = 4, 'versión del servidor');
+select pg_temp.ok(app_version() = 5, 'versión del servidor');
 reset role;
 
 -- ===== volver: avisos, constancia, caducidad, marea, enfriamiento =====
@@ -437,4 +437,15 @@ select pg_temp.ok((select count(*) from push_take(500) where endpoint = 'https:/
 update notices set pushed_at = null where to_id = '00000000-0000-0000-0000-000000000008'; update profiles set last_seen = now() - interval '10 minutes' where id = '00000000-0000-0000-0000-000000000008';
 select pg_temp.ok((select count(*) from push_take(500) where endpoint = 'https://push.example/hugo') >= 3, 'con la app cerrada, los avisos salen por push');
 select pg_temp.ok((select count(*) from push_take(500)) = 0, 'y cada aviso sale una sola vez');
+-- segunda tanda: si en 6 horas nadie respondió, llega a 4 orillas más (una sola vez)
+reset role;
+delete from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
+create temp table w2 as select count(*) n from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
+update bottles set created_at = now() - interval '7 hours' where voice like '%011/l.m4a';
+select tick();
+select pg_temp.ok((select wave2 from bottles where voice like '%011/l.m4a'), 'a las 6 horas sin respuesta sale la segunda tanda');
+select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) between (select n from w2) + 1 and (select n from w2) + 4 and (select n from w2) = 0, 'la segunda tanda suma hasta 4 orillas');
+create temp table w3 as select count(*) n from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
+select tick();
+select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) = (select n from w3), 'la segunda tanda sale una sola vez');
 \echo 'TODO OK'

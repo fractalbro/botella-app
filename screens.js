@@ -7,14 +7,14 @@ P.screens.splash = {
   render: () => `${sb_()}<div style="flex:1"></div><div class="pad" style="padding-bottom:30px;background:linear-gradient(transparent,rgba(3,16,28,.92) 30%)">
     <div class="wordmark splash-wm rise d1" style="font-size:92px">Botella</div>
     <p class="rise d2" style="font-family:var(--display);font-weight:200;font-size:24px;letter-spacing:-.02em;color:var(--a);margin:10px 0 0">Lanza tu voz al mar.</p>
-    <p class="lead rise d3">Aquí vales por lo que dices, no por cómo te ves. Graba una pregunta o algo que quieras contar: llega a tres personas afines y quien quiere, te responde.</p>
+    <p class="lead rise d3">Aquí vales por lo que dices, no por cómo te ves. Graba una pregunta o algo que quieras contar: llega a ocho personas afines y quien quiere, te responde.</p>
     <div class="foot rise d4" style="padding-bottom:0"><button class="btn btn-a" data-act="firstGo">${icon('bottle')} Escuchar una botella</button><button class="btn btn-ghost" data-go="intro">Crear mi cuenta</button><button class="linkbtn" data-act="toLogin">Ya tengo cuenta</button></div></div>`
 };
 P.actions.toLogin = () => { S.authMode = 'login'; go('account'); };
 
 const SLIDES = [
   { title: 'Graba una pregunta y <b>lánzala al mar</b>.', text: 'O algo que quieras contar. Sin fotos y sin perfil: solo tu voz.' },
-  { title: 'Llega a <b>tres orillas</b>.', text: 'La escuchan tres personas afines. Si alguien responde, se abre una conversación privada y anónima.' },
+  { title: 'Llega a <b>ocho orillas</b>.', text: 'La escuchan ocho personas afines. Si en 6 horas nadie responde, el mar la lleva a cuatro más. Si alguien responde, se abre una conversación privada y anónima.' },
   { title: 'Responder te da <b>otra botella</b>.', text: 'Cada respuesta tuya te regala una botella para lanzar, hasta 3 al día. Si nadie la abre, la marea la lleva a otra orilla.' }
 ];
 P.screens.intro = {
@@ -227,7 +227,7 @@ P.screens.launch = {
       <div class="chips rise d1" style="margin-top:16px" id="kinds">${Object.keys(KINDS).map(k => `<button class="chip${S.kind === k ? ' on' : ''}" data-act="kind" data-k="${k}">${k}</button>`).join('')}</div>
       <div class="sec rise d2" style="margin-top:18px"><label class="field"><input id="bbody" maxlength="140" value="${esc(S.body)}" placeholder="Escríbela en una línea (opcional)" aria-label="Tu botella en una línea"></label>
         <div class="ideas" id="ideas" style="margin-top:10px">${ideasHTML()}</div></div>
-      <div class="sec"><button class="setrow duot" role="switch" aria-checked="${!!S.duoOn}" data-act="duoT">${icon('duo')}<span style="flex:1"><b>Botella para dos</b><span>Grabas tu mitad, un amigo graba la suya y sale al mar con las dos voces, hacia 6 orillas.</span></span><span class="sw"></span></button></div>
+      <div class="sec"><button class="setrow duot" role="switch" aria-checked="${!!S.duoOn}" data-act="duoT">${icon('duo')}<span style="flex:1"><b>Botella para dos</b><span>Grabas tu mitad, un amigo graba la suya y sale al mar con las dos voces, hacia 12 orillas.</span></span><span class="sw"></span></button></div>
       ${S.duoOn ? '' : `<div class="sec"><span class="eyebrow">Tipo de botella</span><div class="btypes" id="btypes">${btypesHTML()}</div>
         ${S.btype === 'color' ? `<label class="field select" style="margin-top:10px"><select id="btarget" aria-label="A quién llega">${targetOpts()}</select></label>` : ''}
         <p class="small muted" style="margin:8px 0 0">${BT[S.btype].desc}</p>
@@ -252,9 +252,9 @@ function ideasHTML() { return KINDS[S.kind].map((q, i) => `<button class="idea${
 P.actions.kind = el => { S.kind = el.dataset.k; S.idea = -1; document.querySelectorAll('#kinds .chip').forEach(c => c.classList.toggle('on', c.dataset.k === S.kind)); $('#ideas').innerHTML = ideasHTML(); };
 P.actions.idea = el => { S.idea = +el.dataset.i; S.body = KINDS[S.kind][S.idea]; $('#bbody').value = S.body; $('#ideas').innerHTML = ideasHTML(); };
 const BT = {
-  free: { name: 'Normal', sub: '3 orillas', desc: 'Llega a 3 personas con tus mismos temas.', col: '127,216,201' },
-  color: { name: 'De color', sub: 'tú eliges', desc: 'Llega a 3 personas del tema o distrito que elijas.', col: '255,112,169' },
-  far: { name: 'Llega lejos', sub: '10 orillas', desc: 'La escuchan 10 personas en vez de 3.', col: '255,214,140' }
+  free: { name: 'Normal', sub: '8 orillas', desc: 'Llega a 8 personas afines, y a 4 más si nadie responde en 6 horas.', col: '127,216,201' },
+  color: { name: 'De color', sub: 'tú eliges', desc: 'Llega a 8 personas del tema o distrito que elijas.', col: '255,112,169' },
+  far: { name: 'Llega lejos', sub: '20 orillas', desc: 'La escuchan 20 personas en vez de 8.', col: '255,214,140' }
 };
 const btLeft = k => (k === 'color' ? S.me?.color_left : k === 'far' ? S.me?.far_left : S.me?.bottles) || 0;
 const btSVG = (k, glass, featured) => featured ? bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.32)') : k === 'color' ? bottleSVG('rgba(255,150,195,.95)', 'rgba(255,112,169,.22)') : k === 'far' ? bottleSVG('rgba(255,214,140,.95)', 'rgba(255,214,140,.22)') : glass && GLASS[glass] ? bottleSVG(GLASS[glass][0], GLASS[glass][1]) : bottleSVG();
@@ -310,8 +310,8 @@ P.screens.thrown = {
     const set = (a, b, c) => { const e1 = $('#tstat'), e2 = $('#thead'), e3 = $('#tlead'); if (!e1) return; [e1, e2, e3].forEach(e => { e.classList.remove('rise'); void e.offsetWidth; e.classList.add('rise'); }); e1.textContent = a; e2.textContent = b; e3.textContent = c; };
     P.timers.push(setTimeout(() => set('El faro la guía', 'La luz del faro pasa por tu botella.', 'Busca orillas con tus mismos temas.'), 1300));
     const final = () => { const n = P.st.shores; if (n == null) { P.timers.push(setTimeout(final, 400)); return; } if (n < 0) return;
-      set('En camino', n >= 10 ? 'Tu botella va hacia diez orillas.' : n >= 3 ? 'Tu botella va hacia tres orillas.' : n > 0 ? `Llegó a ${n === 1 ? 'una orilla' : n + ' orillas'}.` : 'Tu botella flota en el mar.',
-        (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 3 ? (P.st.duo ? 'Lleva las dos voces. Quien responda, les responde a los dos. ' : '') + 'Si alguien responde, te avisamos. Si nadie la abre, la marea de las 21:00 la lleva a otra orilla.' : 'Todavía somos pocos: llegará a más personas a medida que se sumen. Te avisamos cuando alguien responda.')); };
+      set('En camino', n > 1 ? `Tu botella va hacia ${n} orillas.` : n === 1 ? 'Llegó a una orilla.' : 'Tu botella flota en el mar.',
+        (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 8 ? (P.st.duo ? 'Lleva las dos voces. Quien responda, les responde a los dos. ' : '') + 'Si alguien responde, te avisamos. Si nadie la abre, la marea de las 21:00 la lleva a otra orilla.' : 'Todavía somos pocos: llegará a más personas a medida que se sumen. Te avisamos cuando alguien responda.')); };
     P.timers.push(setTimeout(final, 3500));
   }
 };
@@ -548,7 +548,7 @@ P.actions.install = () => {
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); P.st.bip = e; });
 P.actions.rules = () => sheet(`${sheetHead('Normas y privacidad')}<div class="rulesbox">
   <p><b>Solo mayores de 18.</b> Si alguien parece menor de edad, repórtalo.</p>
-  <p><b>Respeto.</b> Coquetear está bien, como en la vida real. Nada de insultos, amenazas, odio, acoso ni contenido sexual explícito. Nada de pedir dinero, cuentas o datos personales.</p>
+  <p><b>Respeto.</b> Coquetear está bien, como en la vida real. Nada de insultos, amenazas, odio ni contenido sexual explícito. Nada de pedir dinero, cuentas o datos personales.</p>
   <p><b>Anónimo de verdad.</b> Tus botellas solo muestran tu distrito. Tu nombre y tu presentación se ven solo cuando los dos deciden compartirlos.</p>
   <p><b>Para verse en persona,</b> elijan lugares públicos y avísale a alguien de confianza.</p>
   <p><b>Reportes.</b> Cada reporte bloquea a la persona y lo revisa el equipo. Una botella con dos reportes deja de viajar.</p>
