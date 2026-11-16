@@ -23,7 +23,7 @@ const TOPICS = ['Música', 'Cine', 'Libros', 'Viajes', 'Fútbol', 'Comida', 'La 
 /* Antes de saber su nombre, de alguien se ve un tema que comparten contigo, nunca su distrito (igual que vibe_phrase en el servidor). */
 const LOVES = { 'Música': 'ama la música', 'Cine': 'ama el cine', 'Libros': 'ama los libros', 'Viajes': 'ama viajar', 'Fútbol': 'ama el fútbol', 'Comida': 'ama comer rico', 'La ciudad': 'ama la ciudad', 'Trabajo': 'vive su trabajo', 'Filosofía': 'ama la filosofía', 'Amor': 'cree en el amor', 'Tecnología': 'ama la tecnología', 'Arte': 'ama el arte' };
 const someone = t => t ? 'alguien que ' + (LOVES[t] || 'ama ' + String(t).toLowerCase()) : 'alguien';
-const SEEKS = ['Conversaciones profundas', 'Reírme un rato', 'Conocer gente en Lima', 'Que alguien me escuche'];
+const SEEKS = ['Conversaciones profundas', 'Reírme un rato', 'Conocer gente en Lima', 'Que alguien me escuche', 'Conocer a alguien especial'];
 const KINDS = { Pregunta: ['¿Qué canción te devuelve a tus 15 años?', '¿Cuál es tu lugar secreto en Lima?', '¿Qué harías si mañana no tuvieras que trabajar?'], 'Confesión': ['Nunca he ido sola al cine y quiero intentarlo.', 'Extraño tener alguien con quien hablar de libros.'], Historia: ['Lo más raro que me pasó en una combi.', 'El día que me perdí en el Centro y fue lo mejor.'] };
 
 const ICONS = {
@@ -85,7 +85,7 @@ function err(e, fallback) {
   console.error(e); if (!navigator.onLine) return toast('Sin conexión. Revisa tu internet e intenta otra vez.');
   const m = e && e.message || '';
   const mine = /[áéíóú¿¡ñ]|Ese |Esta |Te |Primero|Falta|Lanzaste|botella/.test(m) && !/row-level|violates|JWT|fetch|policy/i.test(m);
-  toast(mine ? m : (fallback || 'Algo salió mal. Intenta otra vez.'));
+  toast(mine ? m : (fallback || 'No salió. Fue cosa nuestra: intenta otra vez en un momento.'));
 }
 function closeSheet() { document.getElementById('sheet')?.remove(); }
 P.actions.closeSheet = closeSheet;
@@ -135,12 +135,13 @@ const night = (horizon, withBottle, layer = 2) => (ctx, w, h, t) => {
   waves(ctx, w, h, t, horizon, mx, (i, wv) => { if (withBottle && i === layer) { const bx = w * .4 + Math.sin(t * .25) * w * .05, by = wv(bx), sl = (wv(bx + 6) - wv(bx - 6)) / 12; bottle(ctx, bx, by - 6, Math.min(Math.min(w, h) * .0042 + .3, 1.5), Math.atan(sl) - .35); } });
 };
 const ease = k => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
-const since = key => (performance.now() - (P.st[key] || 0)) / 1000;
+// Con "reducir movimiento" las escenas se muestran en su cuadro final, no en el inicial.
+const since = key => reduceMotion ? 99 : (performance.now() - (P.st[key] || 0)) / 1000;
 
 /* ================= NAVEGACIÓN ================= */
 function sizeCanvas() {
   if (!P.canvas) return;
-  const r = P.canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+  const r = P.canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 1.5);
   P.cw = r.width; P.ch = r.height; P.canvas.width = Math.round(r.width * dpr); P.canvas.height = Math.round(r.height * dpr);
   P.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
@@ -160,19 +161,24 @@ function go(id, { back = false, fade = false, noPush = false } = {}) {
   [...app.children].forEach(c => { if (c !== old) c.remove(); });
   const sec = document.createElement('section');
   const dir = same || fade ? 'enter-fade' : back ? 'enter-b' : 'enter-f';
-  sec.className = 'screen ' + (reduceMotion || same ? '' : dir) + (def.cls ? ' ' + def.cls : '') + (def.anim ? ' sea' : '');
+  sec.className = 'screen ' + (same ? 'still ' : '') + (reduceMotion ? (same ? '' : 'enter-fade') : same ? '' : dir) + (def.cls ? ' ' + def.cls : '') + (def.anim ? ' sea' : '');
   sec.innerHTML = (def.anim ? '<canvas class="bgc" aria-hidden="true"></canvas>' : '') + def.render();
   app.appendChild(sec); P.root = sec;
   if (old) {
     if (same || reduceMotion) old.remove();
-    else { old.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); old.setAttribute('aria-hidden', 'true'); old.classList.remove('enter-f', 'enter-b', 'enter-fade'); old.classList.add('exiting', fade ? 'exit-fade' : back ? 'exit-b' : 'exit-f'); setTimeout(() => old.remove(), 440); }
+    else { old.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); old.setAttribute('aria-hidden', 'true'); old.classList.remove('enter-f', 'enter-b', 'enter-fade'); old.classList.add('exiting', fade ? 'exit-fade' : back ? 'exit-b' : 'exit-f'); setTimeout(() => old.remove(), 260); }
   }
+  guard();
   if (keepScroll) { const s = sec.querySelector('.scroll'); if (s) s.scrollTop = keepScroll; }
   P.canvas = sec.querySelector('canvas.bgc'); P.ctx = P.canvas?.getContext('2d'); sizeCanvas();
   def.after?.(sec);
   if (P.canvas) drawFrame(performance.now());
 }
 const rerender = () => { if (P.curId) go(P.curId, { noPush: true }); };
+// Atrás de Android y el gesto de borde vuelven a la pantalla anterior, sin salir de la app.
+// Una sola entrada de guardia en el historial: el atrás del teléfono cierra la hoja o vuelve una pantalla.
+const guard = () => { try { if (P.hist.length && !history.state?.g) history.pushState({ g: 1 }, ''); } catch (e) {} };
+addEventListener('popstate', () => { if (document.getElementById('sheet')) closeSheet(); else if (P.hist.length) back(); guard(); });
 function back() { let prev = P.hist.pop(); while (prev && prev === P.curId) prev = P.hist.pop(); go(prev || (S.me ? 'orilla' : 'splash'), { back: true }); }
 P.actions.back = back;
 const backBtn = () => `<button class="iconbtn glass" data-act="back" aria-label="Volver">${icon('back')}</button>`;
@@ -197,42 +203,69 @@ function bindHold() {
     timer = setTimeout(() => { const a = h.dataset.hold; stop(); P.holdFired = performance.now(); P.actions[a]?.(h); }, ms);
   });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => document.addEventListener(t, e => { if (!el) return; if (t === 'pointerleave' && e.target !== el) return; stop(); P.st.holdAt = 0; }, true));
-  document.addEventListener('click', e => { const h = e.target.closest('[data-hold]'); if (!h) return; if (e.detail === 0) P.actions[h.dataset.hold]?.(h); else if (!h.classList.contains('on') && performance.now() - (P.holdFired || 0) > 800) toast('Mantén presionado un momento.'); });
+  document.addEventListener('click', e => { const h = e.target.closest('[data-hold]'); if (!h) return; if (e.detail === 0) P.actions[h.dataset.hold]?.(h); else if (!h.classList.contains('on') && !P.holdAuto && performance.now() - (P.holdFired || 0) > 800) {
+      // Un toque también descorcha: el relleno corre solo y se mantiene el ritual.
+      const ms = parseInt(getComputedStyle(h).getPropertyValue('--hold')) || 900; h.classList.add('on'); hap(6); P.holdAuto = true; P.st.holdAt = performance.now();
+      setTimeout(() => { P.holdAuto = false; P.st.holdAt = 0; if (!h.isConnected) return; h.classList.remove('on'); P.holdFired = performance.now(); P.actions[h.dataset.hold]?.(h); }, ms);
+    } });
 }
 
 /* ================= VOZ ================= */
-const URLS = new Map();
+const URLS = new Map(), URLX = new Map();
+// Ondas reales de las voces de ejemplo (antes salían inventadas).
+let SEEDPEAKS = {}; fetch('/seed/v/peaks.json').then(r => r.ok ? r.json() : {}).then(j => { SEEDPEAKS = j || {}; }).catch(() => {});
 const seedURL = p => '/seed/v/' + p.slice(5);
 async function signed(paths) {
   paths.forEach(p => { if (p && p.startsWith('seed/') && !URLS.has(p)) URLS.set(p, seedURL(p)); });
+  // Los links firmados duran 3 h: pasadas 2,5 h se piden otra vez (si no, al volver al día siguiente nada suena).
+  paths.forEach(p => { if (p && URLX.has(p) && URLX.get(p) < Date.now()) { URLS.delete(p); URLX.delete(p); } });
   const need = [...new Set(paths.filter(p => p && !p.startsWith('blob:') && !URLS.has(p)))];
-  if (need.length) { const { data } = await sb.storage.from('voice').createSignedUrls(need, 60 * 60 * 3); (data || []).forEach(d => { if (d.signedUrl) URLS.set(d.path, d.signedUrl); }); }
+  if (need.length) { const { data } = await sb.storage.from('voice').createSignedUrls(need, 60 * 60 * 3); (data || []).forEach(d => { if (d.signedUrl) { URLS.set(d.path, d.signedUrl); URLX.set(d.path, Date.now() + 2.5 * 3600e3); } }); }
   return paths.map(p => p && p.startsWith('blob:') ? p : URLS.get(p));
 }
 async function upload(blob, ext) { const path = `${uid()}/${crypto.randomUUID()}.${ext}`; const { error } = await sb.storage.from('voice').upload(path, blob, { contentType: blob.type || undefined, upsert: false }); if (error) throw error; return path; }
 
 const REC = { mr: null, chunks: [], t0: 0, iv: null, stream: null, mime: '', an: null, ac: null, samples: [], id: null };
+// Un solo contexto de audio para toda la app (iPhone limita cuántos se abren) y que se reanuda con cada toque.
+let AC = null;
+function audioCtx() { try { if (!AC) { const C = window.AudioContext || window.webkitAudioContext; if (C) AC = new C(); } if (AC && AC.state !== 'running') AC.resume().catch(() => {}); } catch (e) {} return AC; }
+document.addEventListener('pointerdown', () => { if (AC && AC.state !== 'running') AC.resume().catch(() => {}); }, true);
+// Micrófono denegado: una hoja con la salida según el error y el teléfono, no un aviso que se va.
+function micHelp(e) {
+  const ua = navigator.userAgent, ios = /iP(hone|ad|od)/.test(ua) || (/Mac/.test(ua) && 'ontouchend' in document), inApp = /Instagram|FBAN|FBAV|TikTok|Line\//.test(ua), pwa = matchMedia('(display-mode: standalone)').matches, n = e && e.name;
+  let steps;
+  if (inApp) steps = ios ? 'Estás dentro de otra app. Toca <b>···</b> arriba y elige <b>Abrir en Safari</b>.' : 'Estás dentro de otra app. Toca <b>⋮</b> arriba y elige <b>Abrir en Chrome</b>.';
+  else if (n === 'NotFoundError') steps = 'No encontramos un micrófono. Si usas audífonos, desconéctalos y prueba otra vez.';
+  else if (n === 'NotReadableError' || n === 'AbortError') steps = 'Otra app está usando el micrófono, quizá una llamada. Ciérrala y vuelve a tocar.';
+  else if (ios) steps = pwa ? 'Abre <b>Ajustes</b>, busca <b>Botella</b> o <b>Safari</b>, entra a <b>Micrófono</b> y elige <b>Permitir</b>. Luego vuelve aquí.' : 'Toca <b>aA</b> a la izquierda de la dirección, luego <b>Configuración del sitio web</b> y pon <b>Micrófono</b> en <b>Permitir</b>.';
+  else steps = pwa ? 'Mantén presionado el ícono de Botella, toca <b>Información de la app</b>, luego <b>Permisos</b> y activa <b>Micrófono</b>.' : 'Toca el ícono a la izquierda de la dirección, luego <b>Permisos</b> y activa <b>Micrófono</b>.';
+  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="font-size:14px;margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
+}
 function recMime() { if (!window.MediaRecorder) return null; for (const m of ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm']) if (MediaRecorder.isTypeSupported(m)) return m; return ''; }
 async function recStart(max, onTick, onAuto) {
-  const mime = recMime(); if (mime === null) { toast('Este navegador no permite grabar voz. Prueba con Chrome o Safari actualizados.'); return false; }
-  try { REC.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Botella necesita tu micrófono. Actívalo en los ajustes del navegador.'); return false; }
+  const mime = recMime(); if (mime === null) { toast('Aquí no se puede grabar. Si abriste el link desde Instagram o WhatsApp, toca ⋯ y elige “Abrir en el navegador”.'); return false; }
+  const ctx = audioCtx(); // se crea dentro del toque: en iPhone, si nace después, queda pausado y la onda sale plana
+  // Solo limpieza de captura: menos ruido, eco y volumen parejo. La voz no se modula.
+  try { REC.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: { ideal: 1 } } }); } catch (e) { micHelp(e); return false; }
   stopPlayer(); REC.mime = mime; REC.chunks = []; REC.samples = [];
-  try { REC.ac = new (window.AudioContext || window.webkitAudioContext)(); const s = REC.ac.createMediaStreamSource(REC.stream); REC.an = REC.ac.createAnalyser(); REC.an.fftSize = 64; REC.an.smoothingTimeConstant = .35; s.connect(REC.an); } catch (e) { REC.an = null; }
-  REC.mr = new MediaRecorder(REC.stream, mime ? { mimeType: mime } : undefined); REC.mr.ondataavailable = e => { if (e.data.size) REC.chunks.push(e.data); }; REC.mr.start(250); REC.t0 = Date.now(); hap(10);
-  const buf = new Uint8Array(32);
+  try { REC.src = ctx.createMediaStreamSource(REC.stream); REC.an = ctx.createAnalyser(); REC.an.fftSize = 2048; REC.an.smoothingTimeConstant = 0; REC.src.connect(REC.an); } catch (e) { REC.an = null; }
+  const opts = mime ? { mimeType: mime } : {}; opts.audioBitsPerSecond = /webm/.test(mime) ? 32000 : 64000; // una nota de 60 s pesa menos de medio mega
+  try { REC.mr = new MediaRecorder(REC.stream, opts); } catch (e) { REC.mr = new MediaRecorder(REC.stream, mime ? { mimeType: mime } : undefined); } REC.mr.ondataavailable = e => { if (e.data.size) REC.chunks.push(e.data); }; REC.mr.start(250); REC.t0 = Date.now(); hap(10);
+  const buf = new Uint8Array(2048);
   REC.iv = setInterval(() => {
-    const t = (Date.now() - REC.t0) / 1000; let lv = .15 + Math.random() * .2;
-    if (REC.an) { REC.an.getByteTimeDomainData(buf); let m = 0; for (const b of buf) m = Math.max(m, Math.abs(b - 128)); lv = Math.min(1, m / 70); }
+    const t = (Date.now() - REC.t0) / 1000; let lv = 0;
+    // Nivel real (RMS en dB, de -55 a -5 dBFS): la onda se parece a lo que dijiste.
+    if (REC.an) { REC.an.getByteTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; s += v * v; } lv = Math.min(1, Math.max(0, (20 * Math.log10(Math.sqrt(s / buf.length) + 1e-6) + 55) / 50)); }
     REC.samples.push(lv); onTick && onTick(t, REC.samples); if (t >= max) { hap(20); onAuto && onAuto(); }
   }, 50);
   return true;
 }
-function toPeaks(s, n = 28) { if (!s.length) return null; const o = []; for (let i = 0; i < n; i++) { const a = Math.floor(i * s.length / n), b = Math.max(a + 1, Math.floor((i + 1) * s.length / n)); o.push(Math.max(...s.slice(a, b))); } const mx = Math.max(...o) || 1; return o.map(v => Math.round(Math.max(.12, v / mx) * 100) / 100); }
+function toPeaks(s, n = 28) { if (!s.length || !Math.max(...s)) return null; const o = []; for (let i = 0; i < n; i++) { const a = Math.floor(i * s.length / n), b = Math.max(a + 1, Math.floor((i + 1) * s.length / n)); o.push(Math.max(...s.slice(a, b))); } const mx = Math.max(...o) || 1; return o.map(v => Math.round(Math.max(.12, v / mx) * 100) / 100); }
 function recStop() {
   return new Promise(res => {
     const mr = REC.mr; if (!mr) { res(null); return; } clearInterval(REC.iv);
     const secs = Math.round((Date.now() - REC.t0) / 1000), peaks = toPeaks(REC.samples);
-    const done = () => { REC.stream && REC.stream.getTracks().forEach(t => t.stop()); try { REC.ac && REC.ac.close(); } catch (e) {} REC.mr = null; REC.id = null; };
+    const done = () => { REC.stream && REC.stream.getTracks().forEach(t => t.stop()); try { REC.src && REC.src.disconnect(); } catch (e) {} REC.mr = null; REC.id = null; };
     mr.onstop = () => {
       const type = (mr.mimeType || REC.mime || 'audio/webm'); const blob = new Blob(REC.chunks, { type: type.split(';')[0] }); done(); hap(8);
       if (secs < MINV) { toast('Muy cortita. Graba al menos 2 segundos.'); res(null); return; }
@@ -241,10 +274,11 @@ function recStop() {
     try { mr.stop(); } catch (e) { done(); res(null); }
   });
 }
-function recCancel() { if (REC.mr) { clearInterval(REC.iv); try { REC.mr.onstop = null; REC.mr.stop(); } catch (e) {} REC.stream && REC.stream.getTracks().forEach(t => t.stop()); try { REC.ac && REC.ac.close(); } catch (e) {} REC.mr = null; REC.id = null; } }
+function recCancel() { if (REC.mr) { clearInterval(REC.iv); try { REC.mr.onstop = null; REC.mr.stop(); } catch (e) {} REC.stream && REC.stream.getTracks().forEach(t => t.stop()); try { REC.src && REC.src.disconnect(); } catch (e) {} REC.mr = null; REC.id = null; } }
 
 /* nota de voz: botón con barras */
 function bars(peaks, seed, n = 26) {
+  if (!(peaks && peaks.length) && SEEDPEAKS[seed]) peaks = SEEDPEAKS[seed];
   const r = rng(hash(seed)); let b = '';
   for (let i = 0; i < n; i++) { const p = peaks && peaks.length ? peaks[Math.floor(i * peaks.length / n)] : null; const h = p != null ? Math.round(6 + p * 20) : 6 + Math.round((Math.sin(i * .55 + (hash(seed) % 7)) * .5 + .5) * 14 + r() * 8); b += `<i style="height:${h}px"></i>`; }
   return b;
@@ -258,26 +292,31 @@ async function play(btn) {
   const path = btn.dataset.play, dur = +btn.dataset.secs;
   if (playBtn === btn && player) { player.pause(); return; }
   stopPlayer();
-  let [url] = await signed([path]);
-  if (!url) { toast('No pudimos cargar esta nota de voz.'); return; }
+  if (navigator.onLine === false) { toast('Sin conexión. Se escucha cuando vuelvas.'); return; }
+  btn.classList.add('loading');
+  let url; try { [url] = await signed([path]); } catch (e) {}
+  if (!url) { btn.classList.remove('loading'); toast('No cargó esta nota de voz. Revisa tu internet y tócala otra vez.'); return; }
   const a = new Audio(); a.setAttribute('playsinline', ''); a.preload = 'auto'; a.src = url; player = a; playBtn = btn;
   const bs = [...btn.querySelectorAll('.vb i')];
-  const reset = () => { btn.querySelector('.vp').innerHTML = icon('play', 's'); bs.forEach(b => b.classList.remove('on')); btn.querySelector('.vd').textContent = fmt(dur); if (player === a) { player = null; playBtn = null; } };
+  const reset = () => { btn.classList.remove('loading'); btn.querySelector('.vp').innerHTML = icon('play', 's'); bs.forEach(b => b.classList.remove('on')); btn.querySelector('.vd').textContent = fmt(dur); if (player === a) { player = null; playBtn = null; } };
   a.onplay = () => { btn.querySelector('.vp').innerHTML = icon('pause', 's'); };
+  a.onwaiting = a.onstalled = () => btn.classList.add('loading'); a.onplaying = () => btn.classList.remove('loading');
   a.ontimeupdate = () => { const d = isFinite(a.duration) && a.duration > 0 ? a.duration : dur; const p = a.currentTime / d; bs.forEach((b, i) => b.classList.toggle('on', (i + .5) / bs.length <= p)); btn.querySelector('.vd').textContent = fmt(Math.max(0, Math.ceil(d - a.currentTime))); };
-  a.onpause = a.onended = reset; a.onerror = () => { reset(); toast('No pudimos reproducir esta nota de voz.'); };
+  a.onpause = a.onended = reset;
+  // Si el link venció o falló la red, se pide de nuevo una vez antes de avisar.
+  a.onerror = () => { reset(); if (!btn.dataset.retried && !path.startsWith('blob:') && !path.startsWith('seed/')) { btn.dataset.retried = 1; URLS.delete(path); URLX.delete(path); play(btn); return; } toast('No cargó esta nota de voz. Revisa tu internet y tócala otra vez.'); };
   a.play().catch(() => reset());
 }
 
 /* grabadora grande (registro, lanzar, responder) */
-function recBox(id, hint = 'Toca para grabar. Hasta 60 segundos.') {
+function recBox(id, hint = 'Toca para grabar. Con 10 segundos basta.') {
   const r = S.rec[id];
   if (r) return `<div class="rec" id="rec-${id}"><div class="eyebrow a">Tu nota de voz</div>${vn(r.url, r.secs, { mine: true, peaks: r.peaks })}<button class="btn-ghost btn btn-sm" data-act="rerec" data-id="${id}">Volver a grabar</button></div>`;
   return `<div class="rec" id="rec-${id}"><div class="time num">0:00</div><div class="wave"></div><button class="mic" data-act="recToggle" data-id="${id}" aria-label="Grabar">${icon('mic')}</button><div class="hint">${hint}</div></div>`;
 }
 P.actions.recToggle = async btn => {
   const id = btn.dataset.id, box = document.getElementById('rec-' + id); if (!box) return;
-  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) S.rec[id] = r; if (box.isConnected) box.outerHTML = recBox(id); refreshNeeds(); if (r) P.actions.recorded?.(id); return; }
+  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) S.rec[id] = r; if (box.isConnected) box.outerHTML = recBox(id); refreshNeeds(); if (r) P.actions.recorded?.(id); if (r && (id === 'lp' || id === 'duo2')) rerender(); return; }
   if (REC.mr) return;
   const wave = box.querySelector('.wave'), time = box.querySelector('.time'), hint = box.querySelector('.hint');
   const ok = await recStart(MAXV, (t, s) => {
@@ -286,9 +325,9 @@ P.actions.recToggle = async btn => {
     if (wave.children.length > 64) wave.firstChild.remove();
   }, () => P.actions.recToggle(btn));
   if (!ok) return;
-  REC.id = id; box.classList.add('live'); btn.innerHTML = icon('stop'); btn.setAttribute('aria-label', 'Detener'); hint.textContent = 'Grabando… toca para terminar'; wave.innerHTML = '';
+  REC.id = id; box.classList.add('live'); btn.innerHTML = icon('stop'); btn.setAttribute('aria-label', 'Detener'); hint.textContent = 'Grabando… toca el cuadrado para terminar'; wave.innerHTML = '';
 };
-P.actions.rerec = el => { const id = el.dataset.id; delete S.rec[id]; document.getElementById('rec-' + id).outerHTML = recBox(id); refreshNeeds(); P.actions.recorded?.(id); };
+P.actions.rerec = el => { const id = el.dataset.id; delete S.rec[id]; document.getElementById('rec-' + id).outerHTML = recBox(id); refreshNeeds(); P.actions.recorded?.(id); if (id === 'lp' || id === 'duo2') rerender(); };
 function refreshNeeds() { document.querySelectorAll('[data-needs]').forEach(b => b.classList.toggle('soft', !S.rec[b.dataset.needs])); }
 function needVoice(id) {
   toast('Primero graba tu nota de voz: toca el micrófono.');
