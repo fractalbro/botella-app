@@ -359,3 +359,10 @@ input,textarea{-webkit-user-select:text;user-select:text}
   .shorebot .quick .tide .cnt{font-size:10px}
 }
 .scard{flex-wrap:wrap}.scard .tx{flex:1 1 150px}
+.week{display:flex;justify-content:space-between;gap:6px;margin:18px auto 0;max-width:320px}
+.wd{display:grid;justify-items:center;gap:6px;flex:1}
+.wd small{font-size:11px;font-weight:600;color:var(--muted)}
+.wd i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1.5px dashed var(--dim)}
+.wd.on i{border:0;background:rgba(255,176,97,.2);color:#FFB061}
+.wd.now i{border-style:solid;border-color:#FFB061}
+.wd.now small{color:var(--fg)}

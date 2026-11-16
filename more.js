@@ -87,6 +87,7 @@ P.screens.bitacora = {
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Tu bitácora</span></div>
     <div class="scroll pad">
       <div class="streakbig rise"><b class="num">${n}</b><span>${n === 1 ? 'día seguido' : 'días seguidos'}</span></div>
+      ${weekHTML(n, h.today)}
       <p class="lead rise d1" style="margin:6px auto 0;text-align:center">${h.today ? 'Hoy ya usaste tu voz. Vuelve mañana para seguir.' : n ? 'Usa tu voz hoy para no perder la cuenta: lanza, responde o deja tu voz en la marea.' : 'Cada día que usas tu voz cuenta: lanza, responde o deja tu voz en la marea.'}</p>
       ${nx ? `<div class="nextup rise d2"><span class="eyebrow a">Próximo regalo</span><b>${nx.name}</b><span class="bar"><i style="width:${Math.max(6, (n - prev) / (nx.days - prev) * 100)}%"></i></span><span class="small muted">${nx.days - n === 1 ? 'Falta 1 día' : `Faltan ${nx.days - n} días`} · al llegar a ${nx.days} días seguidos</span></div>` : ''}
       <div class="sec rise d3"><span class="eyebrow">Se gana con constancia, no se compra</span>
@@ -100,6 +101,12 @@ P.screens.bitacora = {
   async after() { if (!P.st.bitFresh) { P.st.bitFresh = true; try { await Promise.all([loadMe(), loadHome()]); if (P.curId === 'bitacora') rerender(); } catch (e) {} } },
   leave() { P.st.bitFresh = false; }
 };
+/* la semana en curso: cada día con voz se enciende (como las rachas de las apps de hábitos) */
+function weekHTML(n, today) {
+  const t = limaNow(), dow = (t.getDay() + 6) % 7, end = today ? 0 : 1;
+  return `<div class="week rise d1" aria-label="Esta semana">${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => { const back = dow - i, on = back >= end && back < end + n, now = back === 0;
+    return `<span class="wd${on ? ' on' : ''}${now ? ' now' : ''}"><small>${d}</small><i>${on ? icon('flame', 's') : ''}</i></span>`; }).join('')}</div>`;
+}
 P.actions.wear = async el => { const k = S.me?.glass === el.dataset.k ? 'glass:none' : 'glass:' + el.dataset.k; try { const me = await rpc('beta_get', { p_item: k }); S.me = Array.isArray(me) ? me[0] : me; rerender(); toast(k === 'glass:none' ? 'Volviste al vidrio de siempre.' : 'Listo: tus botellas viajan en tu vidrio nuevo.'); } catch (e) { err(e); } };
 
 /* ================= EL MAPA DE TU VOZ ================= */
