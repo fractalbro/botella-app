@@ -11,9 +11,14 @@ create table if not exists public.codes (
 alter table public.codes enable row level security; -- la app nunca lee la lista
 insert into public.codes(code) values ('BOTELLA-01') on conflict do nothing;
 
-create or replace function public.check_code(p_code text) returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from codes where code = upper(trim(p_code)) and active and uses < max_uses);
-$$;
+-- Un link de lectura abierta también sirve de invitación ('L:<slug>'): quien responde crea su cuenta ahí mismo.
+create or replace function public.check_code(p_code text) returns boolean language plpgsql stable security definer set search_path = public as $$
+begin
+  if upper(trim(coalesce(p_code, ''))) like 'L:%' then
+    return exists (select 1 from lecturas where lower(slug) = lower(substr(trim(p_code), 3)) and not closed and closes_at > now());
+  end if;
+  return exists (select 1 from codes where code = upper(trim(p_code)) and active and uses < max_uses);
+end $$;
 grant execute on function public.check_code(text) to anon, authenticated;
 
 create or replace function public.lima_today() returns date language sql stable as $$ select (now() at time zone 'America/Lima')::date $$;
@@ -74,7 +79,7 @@ create policy "editar mi perfil" on public.profiles for update to authenticated 
 create or replace function public.profile_defaults() returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.is_sample then return new; end if; -- solo las crea este archivo (el cliente no puede escribir is_sample)
-  if not exists (select 1 from codes where code = upper(trim(coalesce(new.code_used, ''))) and active and uses < max_uses) then
+  if not check_code(new.code_used) then
     raise exception 'Ese código de invitación no es válido.';
   end if;
   update codes set uses = uses + 1 where code = upper(trim(new.code_used));
@@ -107,6 +112,27 @@ create table if not exists public.blocks (
 alter table public.blocks enable row level security;
 drop policy if exists "mis bloqueos" on public.blocks;
 create policy "mis bloqueos" on public.blocks for select to authenticated using (a = auth.uid());
+
+-- Lo que se ve de alguien antes de saber su nombre: un tema que comparten, nunca el distrito.
+-- El distrito queda privado: solo acerca botellas y sugiere lugares para un plan.
+create or replace function public.vibe(p_viewer uuid, p_other uuid) returns text language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select u.t from unnest((select topics from profiles where id = p_other)) with ordinality u(t, i)
+      where u.t = any(coalesce((select topics from profiles where id = p_viewer), '{}')) order by u.i limit 1),
+    (select topics[1] from profiles where id = p_other));
+$$;
+create or replace function public.vibe_phrase(t text) returns text language sql immutable as $$
+  select case t when 'Música' then 'ama la música' when 'Cine' then 'ama el cine' when 'Libros' then 'ama los libros'
+    when 'Viajes' then 'ama viajar' when 'Fútbol' then 'ama el fútbol' when 'Comida' then 'ama comer rico'
+    when 'La ciudad' then 'ama la ciudad' when 'Trabajo' then 'vive su trabajo' when 'Filosofía' then 'ama la filosofía'
+    when 'Amor' then 'cree en el amor' when 'Tecnología' then 'ama la tecnología' when 'Arte' then 'ama el arte'
+    else 'ama ' || lower(t) end;
+$$;
+create or replace function public.alguien(p_viewer uuid, p_other uuid) returns text language sql stable security definer set search_path = public as $$
+  select coalesce('Alguien que ' || vibe_phrase(vibe(p_viewer, p_other)), 'Alguien');
+$$;
+revoke execute on function public.vibe(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.alguien(uuid, uuid) from public, anon, authenticated;
 
 create or replace function public.blocked(x uuid, y uuid) returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from blocks where (a = x and b = y) or (a = y and b = x));
@@ -148,6 +174,7 @@ alter table public.bottles add column if not exists partner uuid references publ
 alter table public.bottles add column if not exists voice2 text;
 alter table public.bottles add column if not exists voice2_secs int;
 alter table public.bottles add column if not exists voice2_peaks jsonb;
+alter table public.bottles add column if not exists wave2 boolean not null default false; -- ya salió la segunda tanda (4 orillas más si nadie respondió en 6 horas)
 alter table public.bottles drop constraint if exists bottles_kind_check;
 alter table public.bottles add constraint bottles_kind_check check (kind in ('Pregunta','Confesión','Historia','Marea'));
 create index if not exists bottles_tide on public.bottles(tide_day) where tide_day is not null;
@@ -295,7 +322,7 @@ create table if not exists public.duos (
 alter table public.duos enable row level security;
 
 -- ========== PIDE UNA LECTURA ==========
--- Una pregunta guiada que se comparte por link. Responden con su voz, sin cuenta y de forma anónima.
+-- Una pregunta guiada que se comparte por link. Desde el 16/11 se responde con cuenta: quien pregunta escucha la voz y después ve el nombre.
 create table if not exists public.lecturas (
   id uuid primary key default gen_random_uuid(),
   slug text unique not null default left(replace(gen_random_uuid()::text, '-', ''), 12),
@@ -320,6 +347,7 @@ create table if not exists public.lectura_answers (
   unique (lectura, device)
 );
 alter table public.lectura_answers enable row level security;
+alter table public.lectura_answers add column if not exists author uuid references public.profiles(id) on delete set null;
 create table if not exists public.lectura_blocks (
   owner uuid not null references public.profiles(id) on delete cascade,
   device text not null, ip text, ip_until timestamptz,
@@ -348,6 +376,8 @@ begin
              -- una botella de color llega primero a quien cumple lo que eligió quien la lanzó
              ((bo.target_topic is null or bo.target_topic = any(p.topics)) and (bo.target_district is null or p.district = bo.target_district)) desc,
              cardinality(array(select unnest(p.topics) intersect select unnest(mine))) desc,
+             -- el distrito nunca se muestra, pero acerca: a igual afinidad, primero alguien cercano
+             (p.district = (select q.district from profiles q where q.id = bo.owner)) desc,
              (select count(*) from deliveries w where w.to_id = p.id and w.status = 'waiting') asc,
              (p.last_seen > now() - interval '3 days') desc,
              random()
@@ -381,8 +411,8 @@ begin
         and (b.tide_day is null or now() >= ((b.tide_day + time '21:00') at time zone 'America/Lima'))
         and not blocked(b.owner, me.id) and not (select is_sample from profiles o where o.id = b.owner)
         and not exists (select 1 from deliveries d where d.bottle_id = b.id and d.to_id = me.id)
-        and (select count(*) from deliveries d where d.bottle_id = b.id and d.status in ('waiting','opened')) < 3
-        and (select count(*) from deliveries d where d.bottle_id = b.id) < 15
+        and (select count(*) from deliveries d where d.bottle_id = b.id and d.status in ('waiting','opened')) < 8
+        and (select count(*) from deliveries d where d.bottle_id = b.id) < 20
       order by b.created_at desc
       limit greatest(0, 3 - (select count(*) from deliveries d where d.to_id = me.id and d.status in ('waiting','opened')))
     loop
@@ -430,7 +460,7 @@ begin
   if s.id is null or cl.voice is null then return 0; end if;
   insert into deliveries(bottle_id, to_id, status, created_at, opened_at) values (bo.id, s.id, 'answered', now(), now() + interval '30 seconds');
   foreach who in array array_remove(array[bo.owner, bo.partner], null) loop
-    perform notify(who, 'opened', 'Tu botella llegó a ' || s.district, 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text, now() + interval '30 seconds');
+    perform notify(who, 'opened', 'Tu botella llegó a ' || lower(alguien(who, s.id)), 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text, now() + interval '30 seconds');
     insert into convos(bottle_id, a, b) values (bo.id, who, s.id) returning id into cid;
     insert into messages(convo_id, sender, voice, voice_secs, voice_peaks, body, created_at)
       values (cid, bo.owner, bo.voice, bo.voice_secs, bo.voice_peaks, '#bottle|' || bo.kind || '|' || coalesce(bo.body, ''), now());
@@ -459,7 +489,7 @@ begin
   if p_type = 'free' and me.bottles < 1 then raise exception 'Te quedaste sin botellas. Responde una o pide más en el muelle.'; end if;
   if p_type = 'color' and me.color_left < 1 then raise exception 'Ya usaste tus botellas de color. Pide más en el muelle.'; end if;
   if p_type = 'far' and me.far_left < 1 then raise exception 'Ya usaste tu botella que llega lejos. Pide otra en el muelle.'; end if;
-  if p_featured and me.tide_left < 1 then raise exception 'Te quedaste sin marea destacada. Pide otra en el muelle.'; end if;
+  if p_featured and me.tide_left < 1 then raise exception 'Te quedaste sin botellas doradas. Pide otra en el muelle.'; end if;
   if p_type = 'color' and p_topic is null and p_district is null then raise exception 'Elige a quién quieres que llegue tu botella de color.'; end if;
   if p_voice is null or split_part(p_voice, '/', 1) <> me.id::text then raise exception 'Falta tu nota de voz.'; end if;
   if (select count(*) from bottles where owner = me.id and created_at > now() - interval '1 hour') >= 6 then
@@ -471,7 +501,7 @@ begin
   update profiles set bottles = bottles - (p_type = 'free')::int, color_left = color_left - (p_type = 'color')::int, far_left = far_left - (p_type = 'far')::int,
     tide_left = tide_left - p_featured::int
     where id = me.id returning * into me;
-  n := deliver(bid, case when p_type = 'far' then 10 else 3 end);
+  n := deliver(bid, case when p_type = 'far' then 20 else 8 end);
   if n < 3 then n := n + sample_answer(bid); end if;
   return query select bid, n, me.bottles, me.color_left, me.far_left, me.tide_left;
 end $$;
@@ -484,9 +514,9 @@ create or replace function public.shore() returns table (
   featured boolean, glass text, sample boolean, expires_at timestamptz, tide_day date,
   voice2 text, voice2_secs int, voice2_peaks jsonb, place2 text
 ) language sql stable security definer set search_path = public as $$
-  select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, p.district, b.btype, b.featured, b.glass, p.is_sample,
+  select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, vibe(auth.uid(), b.owner), b.btype, b.featured, b.glass, p.is_sample,
     case when d.status = 'waiting' then coalesce(d.expires_at, d.created_at + interval '24 hours') else d.opened_at + interval '48 hours' end,
-    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (select q.district from profiles q where q.id = b.partner and b.voice2 is not null)
+    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (case when b.voice2 is not null then vibe(auth.uid(), b.partner) end)
   from deliveries d join bottles b on b.id = d.bottle_id join profiles p on p.id = b.owner
   where d.to_id = auth.uid() and d.status in ('waiting','opened') and not b.hidden and not blocked(b.owner, auth.uid())
     and (d.status <> 'waiting' or coalesce(d.expires_at, d.created_at + interval '24 hours') > now())
@@ -503,7 +533,7 @@ create or replace function public.return_delivery(p_id uuid) returns void langua
 declare d deliveries;
 begin
   update deliveries set status = 'returned' where id = p_id and to_id = auth.uid() and status in ('waiting','opened') returning * into d;
-  if d.id is not null and (select count(*) from deliveries where bottle_id = d.bottle_id) < 15 then perform deliver(d.bottle_id, 1); end if;
+  if d.id is not null and (select count(*) from deliveries where bottle_id = d.bottle_id) < 20 then perform deliver(d.bottle_id, 1); end if;
 end $$;
 grant execute on function public.return_delivery(uuid) to authenticated;
 
@@ -557,9 +587,9 @@ create or replace function public.my_bottles() returns table (
     (select count(*) from deliveries d where d.bottle_id = b.id and d.status = 'waiting')::int,
     (select c.id from convos c where c.bottle_id = b.id and c.a = auth.uid() and exists (select 1 from messages m where m.convo_id = c.id and m.sender = c.b and m.created_at <= now()) order by c.created_at limit 1),
     b.btype, coalesce(b.target_topic, b.target_district), b.featured,
-    -- "Quién la abrió" (del muelle): el distrito y la hora de cada persona que la abrió. Nunca el nombre.
+    -- "Quién la abrió" (del muelle): el tema en común y la hora de cada persona que la abrió. Nunca el nombre.
     case when (select who_open from profiles where id = auth.uid()) then
-      (select coalesce(jsonb_agg(jsonb_build_object('place', p.district, 'at', d.opened_at, 'answered', d.status = 'answered') order by d.opened_at desc), '[]'::jsonb)
+      (select coalesce(jsonb_agg(jsonb_build_object('place', vibe(auth.uid(), p.id), 'at', d.opened_at, 'answered', d.status = 'answered') order by d.opened_at desc), '[]'::jsonb)
        from deliveries d join profiles p on p.id = d.to_id where d.bottle_id = b.id and d.opened_at <= now()) end,
     b.tide_day, b.voice2 is not null, b.voice2, b.voice2_secs, b.voice2_peaks,
     b.tide_day is not null and now() < ((b.tide_day + time '21:00') at time zone 'America/Lima')
@@ -567,7 +597,7 @@ create or replace function public.my_bottles() returns table (
 $$;
 grant execute on function public.my_bottles() to authenticated;
 
--- Conversaciones: el otro es "Alguien de <distrito>" hasta que los dos revelan su nombre.
+-- Conversaciones: el otro es "Alguien que ama el cine" (un tema en común) hasta que los dos revelan su nombre.
 drop function if exists public.my_convos();
 create or replace function public.my_convos() returns table (
   id uuid, alias text, place text, revealed boolean, my_reveal boolean, other_reveal boolean,
@@ -576,8 +606,8 @@ create or replace function public.my_convos() returns table (
   cool_at timestamptz, cooled boolean, duo boolean, my_voices int, other_voices int
 ) language sql stable security definer set search_path = public as $$
   select c.id,
-    case when c.reveal_a and c.reveal_b then o.name else 'Alguien de ' || o.district end,
-    o.district, c.reveal_a and c.reveal_b,
+    case when c.reveal_a and c.reveal_b then o.name else alguien(auth.uid(), o.id) end,
+    vibe(auth.uid(), o.id), c.reveal_a and c.reveal_b,
     case when c.a = auth.uid() then c.reveal_a else c.reveal_b end,
     case when c.a = auth.uid() then c.reveal_b else c.reveal_a end,
     case when c.a = auth.uid() then c.key_a else c.key_b end,
@@ -706,7 +736,7 @@ drop function if exists public.marea();
 create or replace function public.marea() returns table (
   bottle uuid, kind text, body text, voice text, voice_secs int, voice_peaks jsonb, place text, glass text, sample boolean, created_at timestamptz, mine boolean, taken text
 ) language sql stable security definer set search_path = public as $$
-  select b.id, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, p.district, b.glass, p.is_sample, b.created_at, b.owner = auth.uid(),
+  select b.id, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, vibe(auth.uid(), b.owner), b.glass, p.is_sample, b.created_at, b.owner = auth.uid(),
     (select d.status from deliveries d where d.bottle_id = b.id and d.to_id = auth.uid())
   from bottles b join profiles p on p.id = b.owner
   where b.featured and not b.hidden and not blocked(b.owner, auth.uid()) and (p.is_sample or b.created_at > now() - interval '48 hours')
@@ -804,7 +834,7 @@ create or replace function public.outings_list() returns table (
     case when o.weekly and o.starts_at < now() then o.starts_at + ceil(extract(epoch from now() - o.starts_at) / 604800) * interval '7 days' else o.starts_at end,
     o.cap,
     (1 + (select count(*) from outing_members m where m.outing = o.id) + case when p.is_sample then (abs(hashtext(o.id::text)) % 3) + 1 else 0 end)::int,
-    o.descr, p.name, p.district, o.owner = auth.uid(),
+    o.descr, p.name, vibe(auth.uid(), o.owner), o.owner = auth.uid(),
     exists (select 1 from outing_members m where m.outing = o.id and m.member = auth.uid()), o.boosted, p.is_sample
   from outings o join profiles p on p.id = o.owner
   where not o.cancelled and (o.weekly or o.starts_at > now() - interval '3 hours') and not blocked(o.owner, auth.uid())
@@ -891,7 +921,7 @@ begin
   if new.voice is not null and new.body is null then perform bump_streak(new.sender); end if;
   rcpt := case when new.sender = c.a then c.b else c.a end;
   select * into snd from profiles where id = new.sender;
-  who := case when c.reveal_a and c.reveal_b then snd.name else 'Alguien de ' || snd.district end;
+  who := case when c.reveal_a and c.reveal_b then snd.name else alguien(rcpt, snd.id) end;
   if new.body is null then
     first := new.sender = c.b and not exists (select 1 from messages m where m.convo_id = c.id and m.sender = c.b and m.id <> new.id and m.voice is not null);
     perform notify(rcpt, 'msg', case when first then 'Respondieron tu botella' else who end,
@@ -906,15 +936,14 @@ end $$;
 drop trigger if exists on_message on public.messages;
 create trigger on_message after insert on public.messages for each row execute function public.on_message();
 
--- "Tu botella llegó a Barranco": cuando alguien descorcha una botella tuya.
+-- "Tu botella llegó a alguien que ama el cine": cuando alguien descorcha una botella tuya.
 create or replace function public.on_open() returns trigger language plpgsql security definer set search_path = public as $$
 declare bo bottles; place text; who uuid;
 begin
   if old.status = 'waiting' and new.status = 'opened' then
     select * into bo from bottles where id = new.bottle_id;
-    select district into place from profiles where id = new.to_id;
     foreach who in array array_remove(array[bo.owner, bo.partner], null) loop
-      perform notify(who, 'opened', 'Tu botella llegó a ' || place, 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text);
+      perform notify(who, 'opened', 'Tu botella llegó a ' || lower(alguien(who, new.to_id)), 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text);
     end loop;
   end if;
   return new;
@@ -950,7 +979,7 @@ begin
   if exists (select 1 from bottles where owner = me.id and tide_day = d) then raise exception 'Ya dejaste tu voz para la marea de hoy.'; end if;
   insert into bottles(owner, kind, body, voice, voice_secs, voice_peaks, glass, tide_day)
     values (me.id, 'Marea', tide_question(d), p_voice, least(greatest(p_secs, 1), 60), p_peaks, me.glass, d) returning id into bid;
-  if arrived then perform deliver(bid, 3); end if;
+  if arrived then perform deliver(bid, 8); end if;
   return jsonb_build_object('bottle', bid, 'arrived', arrived);
 end $$;
 grant execute on function public.tide_answer(text, int, jsonb) to authenticated;
@@ -967,7 +996,7 @@ begin
       'count', (select count(*) from bottles where tide_day = d and not hidden)),
     'last', jsonb_build_object('day', ld, 'question', tide_question(ld), 'unlocked', unlocked,
       'voices', coalesce((select jsonb_agg(v order by v->>'at' desc) from (
-        select jsonb_build_object('bottle', b.id, 'place', p.district, 'secs', b.voice_secs, 'peaks', b.voice_peaks, 'glass', b.glass, 'at', b.created_at,
+        select jsonb_build_object('bottle', b.id, 'place', vibe(auth.uid(), b.owner), 'secs', b.voice_secs, 'peaks', b.voice_peaks, 'glass', b.glass, 'at', b.created_at,
           'mine', b.owner = auth.uid(), 'taken', (select x.status from deliveries x where x.bottle_id = b.id and x.to_id = auth.uid())) as v
         from bottles b join profiles p on p.id = b.owner
         where b.tide_day = ld and not b.hidden and not blocked(b.owner, auth.uid()) order by b.created_at desc limit 30) t), '[]'::jsonb)),
@@ -975,11 +1004,11 @@ begin
 end $$;
 grant execute on function public.marea_now() to authenticated;
 
--- A las 21:00 la marea suelta las voces del día: cada una viaja a tres orillas y todos reciben el aviso.
+-- A las 21:00 la marea suelta las voces del día: cada una viaja a ocho orillas y todos reciben el aviso.
 create or replace function public.tide_release(d date) returns void language plpgsql security definer set search_path = public as $$
 declare r record; n int; q text := tide_question(d);
 begin
-  for r in select id from bottles where tide_day = d and not hidden loop perform deliver(r.id, 3); end loop;
+  for r in select id from bottles where tide_day = d and not hidden loop perform deliver(r.id, 8); end loop;
   select count(*) into n from bottles where tide_day = d and not hidden;
   insert into notices(to_id, kind, title, body, go)
   select p.id, 'tide', 'Llegó la marea de las 21:00',
@@ -1004,9 +1033,22 @@ begin
     order by x.created_at limit 40 for update of x skip locked
   loop
     update deliveries set status = 'drifted' where id = r.id;
-    if not r.hidden and not r.is_sample and r.created_at > now() - interval '7 days' and (select count(*) from deliveries where bottle_id = r.bottle_id) < 15 then
+    if not r.hidden and not r.is_sample and r.created_at > now() - interval '7 days' and (select count(*) from deliveries where bottle_id = r.bottle_id) < 20 then
       perform deliver(r.bottle_id, 1);
     end if;
+  end loop;
+  -- Segunda tanda: si en 6 horas nadie respondió, la botella llega a 4 orillas más (hasta 20 en total).
+  for r in
+    select b.id from bottles b join profiles o on o.id = b.owner
+    where not b.wave2 and not b.hidden and not o.is_sample and b.btype <> 'far'
+      and b.created_at < now() - interval '6 hours' and b.created_at > now() - interval '7 days'
+      and (b.tide_day is null or now() >= ((b.tide_day + time '21:00') at time zone 'America/Lima') + interval '6 hours')
+      and not exists (select 1 from convos c where c.bottle_id = b.id)
+    order by b.created_at limit 40 for update of b skip locked
+  loop
+    update bottles set wave2 = true where id = r.id;
+    n := least(4, 20 - (select count(*) from deliveries where bottle_id = r.id)::int);
+    if n > 0 then perform deliver(r.id, n); end if;
   end loop;
   -- 19:00: aviso a quien tiene botellas sin abrir que se van esta noche.
   if hr in (19, 20) then
@@ -1120,7 +1162,7 @@ begin
   if heard and answered and launched and not me.quest_done then
     update profiles set quest_done = true, far_left = far_left + 1 where id = me.id and not quest_done returning * into me;
     just := me.id is not null;
-    if just then perform notify(me.id, 'quest', 'Completaste tu primer día', 'Ganaste una botella que llega lejos: la escuchan 10 personas.', 'launch'); end if;
+    if just then perform notify(me.id, 'quest', 'Completaste tu primer día', 'Ganaste una botella que llega lejos: llega a 20 personas.', 'launch'); end if;
     select * into me from profiles where id = auth.uid();
   end if;
   alive := case when me.streak_day >= d - 1 then me.streak else 0 end;
@@ -1135,10 +1177,10 @@ begin
 end $$;
 grant execute on function public.home() to authenticated;
 
--- El mapa de tu voz: en qué distritos abrieron y respondieron tus botellas.
+-- El mapa de tu voz: con qué temas conectó tu voz (los temas en común de quienes abrieron y respondieron).
 create or replace function public.voice_map() returns jsonb language sql stable security definer set search_path = public as $$
   with o as (
-    select p.district as place, x.status from deliveries x join bottles b on b.id = x.bottle_id join profiles p on p.id = x.to_id
+    select coalesce(vibe(auth.uid(), p.id), 'Otros') as place, x.status from deliveries x join bottles b on b.id = x.bottle_id join profiles p on p.id = x.to_id
     where auth.uid() in (b.owner, b.partner) and x.opened_at <= now())
   select jsonb_build_object(
     'places', coalesce((select jsonb_agg(jsonb_build_object('place', t.place, 'opened', t.n, 'answered', t.a) order by t.n desc) from (select place, count(*) n, count(*) filter (where status = 'answered') a from o group by place) t), '[]'::jsonb),
@@ -1166,7 +1208,7 @@ end $$;
 grant execute on function public.duo_start(text, text, text, int, jsonb) to authenticated;
 
 create or replace function public.duo_peek(p_token text) returns jsonb language sql stable security definer set search_path = public as $$
-  select jsonb_build_object('token', d.token, 'kind', d.kind, 'body', d.body, 'name', p.name, 'place', p.district, 'voice', d.voice, 'secs', d.voice_secs, 'peaks', d.voice_peaks,
+  select jsonb_build_object('token', d.token, 'kind', d.kind, 'body', d.body, 'name', p.name, 'place', vibe(auth.uid(), d.owner), 'voice', d.voice, 'secs', d.voice_secs, 'peaks', d.voice_peaks,
     'status', case when d.status = 'open' and d.expires_at < now() then 'cancelled' else d.status end, 'mine', d.owner = auth.uid())
   from duos d join profiles p on p.id = d.owner where d.token = p_token;
 $$;
@@ -1186,7 +1228,7 @@ begin
   insert into bottles(owner, partner, kind, body, voice, voice_secs, voice_peaks, voice2, voice2_secs, voice2_peaks, glass)
     values (du.owner, me.id, du.kind, du.body, du.voice, du.voice_secs, du.voice_peaks, p_voice, least(greatest(p_secs, 1), 60), p_peaks, o.glass) returning id into bid;
   update duos set status = 'done', partner = me.id, bottle_id = bid where id = du.id;
-  n := deliver(bid, 6);
+  n := deliver(bid, 12);
   if n < 3 then n := n + sample_answer(bid); end if;
   perform notify(du.owner, 'duo', me.name || ' grabó su mitad', 'Su botella para dos ya está en el mar.', 'mine', bid::text);
   return jsonb_build_object('bottle', bid, 'shores', n);
@@ -1247,8 +1289,8 @@ $$;
 grant execute on function public.my_lecturas() to authenticated;
 
 create or replace function public.lectura_inbox(p_id uuid) returns jsonb language sql stable security definer set search_path = public as $$
-  select coalesce(jsonb_agg(jsonb_build_object('id', a.id, 'voice', a.voice, 'secs', a.voice_secs, 'peaks', a.voice_peaks, 'at', a.created_at, 'heard', a.heard) order by a.created_at desc), '[]'::jsonb)
-  from lectura_answers a join lecturas l on l.id = a.lectura where l.id = p_id and l.owner = auth.uid() and a.status = 'ok';
+  select coalesce(jsonb_agg(jsonb_build_object('id', a.id, 'voice', a.voice, 'secs', a.voice_secs, 'peaks', a.voice_peaks, 'at', a.created_at, 'heard', a.heard, 'name', p.name) order by a.created_at desc), '[]'::jsonb)
+  from lectura_answers a join lecturas l on l.id = a.lectura left join profiles p on p.id = a.author where l.id = p_id and l.owner = auth.uid() and a.status = 'ok';
 $$;
 grant execute on function public.lectura_inbox(uuid) to authenticated;
 
@@ -1310,18 +1352,21 @@ begin
   return l.id;
 end $$;
 
-create or replace function public.lectura_put(p_lectura uuid, p_voice text, p_secs int, p_peaks jsonb, p_device text, p_ip text, p_status text, p_reason text, p_transcript text)
+drop function if exists public.lectura_put(uuid, text, int, jsonb, text, text, text, text, text);
+create or replace function public.lectura_put(p_lectura uuid, p_voice text, p_secs int, p_peaks jsonb, p_device text, p_ip text, p_status text, p_reason text, p_transcript text, p_author uuid default null)
 returns uuid language plpgsql security definer set search_path = public as $$
 declare aid uuid; own uuid;
 begin
+  if p_author is not null and p_author = (select owner from lecturas where id = p_lectura) then raise exception 'Es tu propia lectura: compártela para que te respondan.'; end if;
   delete from lectura_answers where lectura = p_lectura and device = p_device and status = 'blocked' and p_status <> 'blocked';
   insert into lectura_answers(lectura, voice, voice_secs, voice_peaks, device, ip, status, reason, transcript)
     values (p_lectura, p_voice, least(greatest(p_secs, 1), 60), p_peaks, p_device, p_ip, p_status, left(p_reason, 200), left(p_transcript, 2000))
-    on conflict (lectura, device) do update set voice = excluded.voice, voice_secs = excluded.voice_secs, voice_peaks = excluded.voice_peaks, status = excluded.status, reason = excluded.reason, transcript = excluded.transcript, created_at = now()
+    on conflict (lectura, device) do update set author = coalesce(p_author, lectura_answers.author), voice = excluded.voice, voice_secs = excluded.voice_secs, voice_peaks = excluded.voice_peaks, status = excluded.status, reason = excluded.reason, transcript = excluded.transcript, created_at = now()
     returning id into aid;
+  if p_author is not null then update lectura_answers set author = p_author where id = aid; end if;
   if p_status = 'ok' then
     select owner into own from lecturas where id = p_lectura;
-    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Una voz anónima te contestó. Escúchala.', 'lecturas', p_lectura::text);
+    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Te contestaron con su voz. Escúchala.', 'lecturas', p_lectura::text);
   end if;
   return aid;
 end $$;
@@ -1336,13 +1381,13 @@ begin
   update lectura_answers set status = p_status, reason = left(p_reason, 200), transcript = left(p_transcript, 2000) where id = p_id and status = 'pending' returning * into a;
   if a.id is not null and p_status = 'ok' then
     select owner into own from lecturas where id = a.lectura;
-    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Una voz anónima te contestó. Escúchala.', 'lecturas', a.lectura::text);
+    perform notify(own, 'lectura', 'Llegó una respuesta a tu lectura', 'Te contestaron con su voz. Escúchala.', 'lecturas', a.lectura::text);
   end if;
 end $$;
 
 -- Funciones que solo usa el servidor (api/*.js con la llave secreta): nadie más las ejecuta.
 do $$ declare f text; begin
-  foreach f in array array['push_take(int)', 'push_gone(text)', 'lectura_take(text, text, text)', 'lectura_put(uuid, text, int, jsonb, text, text, text, text, text)',
+  foreach f in array array['push_take(int)', 'push_gone(text)', 'lectura_take(text, text, text)', 'lectura_put(uuid, text, int, jsonb, text, text, text, text, text, uuid)',
                            'lectura_pending(int)', 'lectura_resolve(uuid, text, text, text)'] loop
     execute 'revoke execute on function public.' || f || ' from public, anon, authenticated';
     begin execute 'grant execute on function public.' || f || ' to service_role'; exception when undefined_object then null; end;
@@ -1353,7 +1398,7 @@ do $$ begin
 end $$;
 
 -- La app pregunta esto al abrir: si el servidor quedó desactualizado, lo dice en vez de fallar en silencio.
-create or replace function public.app_version() returns int language sql immutable as $$ select 4 $$;
+create or replace function public.app_version() returns int language sql immutable as $$ select 6 $$;
 grant execute on function public.app_version() to anon, authenticated;
 
 -- Las funciones de servicio no se exponen.

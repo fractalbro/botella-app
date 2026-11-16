@@ -359,3 +359,128 @@ input,textarea{-webkit-user-select:text;user-select:text}
   .shorebot .quick .tide .cnt{font-size:10px}
 }
 .scard{flex-wrap:wrap}.scard .tx{flex:1 1 150px}
+.week{display:flex;justify-content:space-between;gap:6px;margin:18px auto 0;max-width:320px}
+.wd{display:grid;justify-items:center;gap:6px;flex:1}
+.wd small{font-size:11px;font-weight:600;color:var(--muted)}
+.wd i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1.5px dashed var(--dim)}
+.wd.on i{border:0;background:rgba(255,176,97,.2);color:#FFB061}
+.wd.now i{border-style:solid;border-color:#FFB061}
+.wd.now small{color:var(--fg)}
+
+/* Bandeja de conversaciones (referencias Mobbin: Messages de Apple, Meetup) */
+.cfil{margin:2px 0 6px}
+.cfil .chip .cnt{margin-left:4px}
+.clist{display:grid}
+.crow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0 13px 14px;margin-left:-14px;border-top:1px solid var(--line);position:relative}
+.clist .crow:first-child{border-top:0}
+.crow .cdot{position:absolute;left:0;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:transparent}
+.crow.new .cdot{background:var(--a);box-shadow:0 0 10px var(--a)}
+.crow .cmain{flex:1;min-width:0;display:grid;gap:3px}
+.crow .cl1{display:flex;align-items:baseline;gap:10px}
+.crow .cl1 b{flex:1;min-width:0;font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .cl1 time{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.crow.new .cl1 time{color:var(--a);font-weight:600}
+.crow .cl2{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);min-width:0}
+.crow .cl2 .i{width:14px;height:14px;flex:none;opacity:.8}
+.crow .cl2>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow.new .cl2{color:var(--fg);font-weight:500}
+.crow .cl2 em{font-style:normal;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:10px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;flex:none}
+.crow.off{opacity:.62}
+/* Separador de día en la conversación */
+.thread .day{justify-self:center;font-size:11.5px;font-weight:600;color:var(--dim);padding:4px 12px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-block:2px}
+/* Constelación de temas (reemplaza el mapa de distritos) */
+.mapsvg .orbit{fill:none;stroke:rgba(170,240,228,.14);stroke-width:.4;stroke-dasharray:1 1.4}
+.mapsvg .md.mine text{fill:rgba(244,239,231,.75)}
+.mapsvg .you{font-size:3px;font-weight:600;fill:var(--a);font-family:var(--sans)}
+
+/* ================= Revisión 16/11: visual ================= */
+/* Hojas opacas con velo: bloquear y reportar se leen sin lo de atrás */
+.sheet{background:#0E1B28;border-top:1px solid rgba(244,239,231,.16);box-shadow:0 0 0 200vmax rgba(2,8,14,.64),0 -24px 60px rgba(0,0,0,.55);max-height:88dvh;overflow-y:auto;overscroll-behavior:contain}
+.sheet .grab{background:rgba(244,239,231,.28)}
+/* Bandeja que no se sale en el SE */
+.crow .cmain{grid-template-columns:minmax(0,1fr)}
+.crow .cl1 time{flex:none}
+/* El tema completo en la cabecera del chat (dos líneas) */
+.top .title{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.15;font-size:14.5px}
+.top .title small{margin-top:2px}
+@media (max-width:360px){.top{gap:8px}.top .iconbtn{width:40px;height:40px}}
+/* Botón apagado que se ve apagado */
+.btn[disabled]{opacity:1;background:var(--glass2);color:var(--muted);border:1px solid var(--line);box-shadow:none}
+.btn[disabled] .i{opacity:.6}
+/* Una jerarquía: el resplandor solo en el principal del pie */
+.btn-a{box-shadow:none}
+.foot .btn-a,.shorebot .btn-a,.sheet>.btn-a{box-shadow:0 10px 28px -14px var(--a)}
+.scard .btn,.duoacts .btn,.code .btn,.sitem .pr .btn,.plancard .btn{height:40px;border-radius:20px;font-size:14px;padding:0 16px;box-shadow:none}
+button .pill.a{background:var(--a);color:var(--a-ink);font-size:12.5px;padding:7px 14px}
+.reveal{border-style:solid;border-color:color-mix(in srgb,var(--a) 40%,transparent);background:color-mix(in srgb,var(--a) 8%,transparent);color:var(--fg);font-size:13.5px;min-height:52px}
+.reveal::after{content:"";width:8px;height:8px;margin-left:auto;flex:none;border-right:1.5px solid var(--a);border-top:1.5px solid var(--a);transform:rotate(45deg)}
+/* Lo que el pie fijo tapa termina en desvanecido, no guillotinado */
+.scroll{padding-bottom:28px}
+.scroll:not(.thread){-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),transparent);mask-image:linear-gradient(#000 calc(100% - 28px),transparent)}
+@media (max-height:700px){.paper{padding:16px 16px 14px}.paper .q{margin:6px 0 12px}}
+/* Avisos que no tapan la flecha de volver */
+.toast{top:calc(max(14px,env(safe-area-inset-top,0px)) + 58px)}
+.banner span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* Legibilidad */
+:root{--dim:#938C8A}
+.paper .eyebrow,.paper .vn .vd,.minipaper small{color:#65563F}
+.small,.note,.samplenote,.safe,.transcript,.rec .hint,.nextl{font-size:13px}
+.eyebrow{font-size:11px;letter-spacing:.14em}
+.msg .when,.crow .cl1 time{font-size:12px}
+.lead{line-height:1.45}
+.today b,.mrow .t,.orow .t,.lrow .t,.ideas .idea,.minipaper{font-weight:400}
+/* "de ejemplo" deja de ser dorado: neutro y punteado */
+.samplenote{background:var(--glass);border:1px dashed rgba(244,239,231,.24)}
+.samplenote .i{color:var(--muted)}
+/* Pantalla chica */
+.btn{padding-inline:16px;min-width:0}
+@media (max-width:360px){
+  .float svg{width:72px;height:25px}
+  .float span{font-size:10.5px;padding:4px 8px;max-width:132px;overflow:hidden;text-overflow:ellipsis}
+  .tq{padding:14px}.tq .btn{font-size:14px;gap:6px}
+  .tabs button{font-size:10px}
+  .bal{gap:4px}.bal div{padding:10px 2px}.bal span{font-size:10px}
+}
+
+/* ================= Revisión 16/11: movimiento ================= */
+:root{--e-out:cubic-bezier(.2,.8,.2,1);--e-in:cubic-bezier(.4,0,1,1);--e-io:cubic-bezier(.45,0,.2,1);--e-spring:cubic-bezier(.2,1.3,.35,1);--t-screen:320ms;--t-exit:240ms;--t-rise:450ms}
+.enter-f,.enter-b{animation-duration:var(--t-screen)}
+.exit-f,.exit-b{animation-duration:var(--t-exit);animation-timing-function:var(--e-in)}
+.rise{animation-duration:var(--t-rise)}
+.rise.d1{animation-delay:60ms}.rise.d2{animation-delay:120ms}.rise.d3{animation-delay:180ms}.rise.d4{animation-delay:240ms}.rise.d5{animation-delay:300ms}
+/* Al refrescar la misma pantalla, las listas no vuelven a rebotar */
+.screen.still .rise{animation:none}
+/* Sin desenfoque sobre el mar vivo: más fluido en teléfonos modestos */
+.screen.sea .float span,.screen.sea .tide,.screen.sea .today,.screen.sea .iconbtn.glass,.screen.sea .mybottles,.screen.sea .streak,.screen.sea .tq,.screen.sea .mrow,.screen.sea .orow{-webkit-backdrop-filter:none;backdrop-filter:none;background-color:rgba(5,18,31,.86)}
+.screen.sea .tabs{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,18,31,.96)}
+/* Mantener: al soltar se vacía suave; al completar, un pequeño rebote */
+.hold .fill{transition:transform 260ms var(--e-out)}
+.hold.on .fill{transition:transform var(--hold,900ms) cubic-bezier(.35,0,.65,1);transform:scaleX(1)}
+/* Momento de conexión: legible antes, sin animar layout */
+.moment .mword{animation:mword2 700ms .8s var(--e-spring) both}
+@keyframes mword2{from{opacity:0;transform:scale(.7) translateY(10px)}to{opacity:1;transform:none}}
+.moment .eyebrow,.moment .lead{animation:rise var(--t-rise) 1.05s var(--e-out) both}
+.moment .foot{animation:rise var(--t-rise) 1.3s var(--e-out) both}
+@media (prefers-reduced-motion:reduce){
+  .enter-fade{animation-duration:160ms}
+  .rec.live .mic::before,.rec.live .mic::after{animation:none;opacity:.5;transform:scale(1.15)}
+  .clive::before,.boot .wordmark,.typing .dots3 i,.giftart .gb,.float.nudge svg{animation:none}
+}
+/* Tu última botella, en la orilla */
+.travel{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 10px;padding:9px 12px;border-radius:14px;border:1px solid var(--line);background:rgba(5,18,31,.86);color:var(--muted);font:inherit;font-size:13px;text-align:left}
+.travel .i{color:var(--a);flex:none}
+.travel>span:first-of-type{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.travel b{color:var(--fg);font-weight:500}
+.travel .shores{display:flex;gap:3px;flex:none;margin-top:0}
+.travel .shores i{width:4px;height:12px;border-radius:2px;background:rgba(244,239,231,.18)}
+.travel .shores i.on{background:var(--a)}
+@media (max-width:360px){.travel .shores{display:none}}
+/* Nota de voz cargando */
+.vn.loading .vp{position:relative}
+.vn.loading .vp::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid transparent;border-top-color:var(--a);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+@media (prefers-reduced-motion:reduce){.vn.loading .vp::after{animation:none;border-color:var(--a);opacity:.5}}
+/* El tema en común se lee completo: "Alguien que" chico arriba, lo que ama grande */
+.top .title small.pre{margin:0 0 1px;font-size:11px;letter-spacing:.04em}
+.top .title:has(small.pre){-webkit-line-clamp:3}
+.crow .cl1 b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}

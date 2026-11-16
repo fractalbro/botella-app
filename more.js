@@ -20,7 +20,7 @@ const UNLOCKS = [
   { days: 10, kind: 'far', name: 'Una botella que llega lejos' }, { days: 14, kind: 'glass', item: 'aurora', name: 'Vidrio aurora' },
   { days: 21, kind: 'gift', name: 'Dos botellas con lacre' }, { days: 30, kind: 'glass', item: 'luna', name: 'Vidrio de luna' }
 ];
-const FIRST = { id: 'first', first: true, bottle: '5a5ab000-0000-4000-8000-000000000004', status: 'waiting', kind: 'Pregunta', body: '¿Qué canción te devuelve a tus 15 años?', voice: 'seed/ivan-say.mp3', voice_secs: 14, voice_peaks: null, place: 'Surco', sample: true, btype: 'free', arrived: new Date().toISOString() };
+const FIRST = { id: 'first', first: true, bottle: '5a5ab000-0000-4000-8000-000000000004', status: 'waiting', kind: 'Pregunta', body: '¿Qué canción te devuelve a tus 15 años?', voice: 'seed/ivan-say.mp3', voice_secs: 14, voice_peaks: null, place: 'Música', sample: true, btype: 'free', arrived: new Date().toISOString() };
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 const b64 = blob => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = rej; fr.readAsDataURL(blob); });
 const deviceId = () => { let d = LS.get('device', ''); if (!d) { d = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()); LS.set('device', d); } return d; };
@@ -62,18 +62,18 @@ async function sendFirst() {
 }
 
 /* ================= ORILLA: TU DÍA ================= */
-function streakChip() { const n = S.home?.streak || 0; return `<button class="streak${S.home?.today ? ' on' : ''}" data-go="bitacora" aria-label="${n ? plural(n, 'día seguido', 'días seguidos') : 'Tu constancia'}. Ver tu bitácora">${icon('flame', 's')}<b class="num">${n}</b></button>`; }
+function streakChip() { const n = S.home?.streak || 0; return `<button class="streak${S.home?.today ? ' on' : ''}" data-go="bitacora" aria-label="${n ? plural(n, 'día seguido', 'días seguidos') : 'Tu constancia'}. Ver tu bitácora">${icon('flame', 's')}${n ? `<b class="num">${n}</b>` : ''}</button>`; } // nunca un cero que culpa
 function todayCard() {
   const h = S.home; if (!h) return '';
   const q = h.quest;
   if (q && !q.done) {
     const st = [q.heard, q.answered, q.launched], n = st.filter(Boolean).length;
-    const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 10 personas.'];
+    const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 20 personas.'];
     return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>`;
   }
   const t = h.tide || {}, left = tideIn();
   const [k, a, b] = t.arrived ? ['Llegó la marea', t.count ? `${plural(t.count, 'voz respondió', 'voces respondieron')} la pregunta de hoy` : 'Mira lo que trajo el mar esta noche', t.answered ? 'Escúchalas ahora.' : 'Deja la tuya para escucharlas.']
-    : t.answered ? ['La marea de las 21:00', 'Tu voz ya espera la marea', `Llega en ${left}${t.count > 1 ? ` con ${t.count - 1} ${t.count === 2 ? 'voz más' : 'voces más'}` : ''}.`]
+    : t.answered ? ['La marea de las 21:00', 'Tu voz ya espera la marea', `${left ? `Llega en ${left}` : 'Está por llegar'}${t.count > 1 ? ` con ${t.count - 1} ${t.count === 2 ? 'voz más' : 'voces más'}` : ''}.`]
       : ['Pregunta de hoy', t.question || '', `Deja tu voz antes de las 21:00${left ? ` · faltan ${left}` : ''}.`];
   return `<button class="today${t.arrived ? ' gold' : ''}" data-go="marea"><span class="ti">${icon('tide')}</span><span class="tx"><small>${k}</small><b>${esc(a)}</b><span>${b}</span></span>${icon('arrow', 's')}</button>`;
 }
@@ -86,45 +86,53 @@ P.screens.bitacora = {
     const prev = nx ? (UNLOCKS.filter(u => u.days <= n).pop()?.days || 0) : 0;
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Tu bitácora</span></div>
     <div class="scroll pad">
-      <div class="streakbig rise"><b class="num">${n}</b><span>${n === 1 ? 'día seguido' : 'días seguidos'}</span></div>
-      <p class="lead rise d1" style="margin:6px auto 0;text-align:center">${h.today ? 'Hoy ya usaste tu voz. Vuelve mañana para seguir.' : n ? 'Usa tu voz hoy para no perder la cuenta: lanza, responde o deja tu voz en la marea.' : 'Cada día que usas tu voz cuenta: lanza, responde o deja tu voz en la marea.'}</p>
+      <div class="streakbig rise">${n ? `<b class="num">${n}</b><span>${n === 1 ? 'día seguido' : 'días seguidos'}</span>` : '<b class="num" style="font-size:44px">Hoy empieza</b><span>tu próxima racha</span>'}</div>
+      ${weekHTML(n, h.today)}
+      <p class="lead rise d1" style="margin:6px auto 0;text-align:center">${h.today ? 'Hoy ya cuenta. Mañana, una nota de voz y sigues.' : n ? 'Hoy todavía no cuenta. Lanza, responde o deja tu voz en la marea y sumas un día.' : 'Cada día que usas tu voz cuenta: lanza, responde o deja tu voz en la marea.'}</p>
       ${nx ? `<div class="nextup rise d2"><span class="eyebrow a">Próximo regalo</span><b>${nx.name}</b><span class="bar"><i style="width:${Math.max(6, (n - prev) / (nx.days - prev) * 100)}%"></i></span><span class="small muted">${nx.days - n === 1 ? 'Falta 1 día' : `Faltan ${nx.days - n} días`} · al llegar a ${nx.days} días seguidos</span></div>` : ''}
       <div class="sec rise d3"><span class="eyebrow">Se gana con constancia, no se compra</span>
         ${UNLOCKS.map(u => { const ok = got.includes(u.days), on = u.item && m.glass === u.item;
-          return `<${ok && u.item ? 'button data-act="wear" data-k="' + u.item + '"' : 'div'} class="urow${ok ? ' ok' : ''}"><span class="ua">${u.kind === 'glass' ? `<span class="bsv">${btSVG('free', u.item)}</span>` : u.kind === 'gift' ? `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>` : `<span class="bsv">${btSVG(u.kind)}</span>`}</span><span class="tx"><b>${u.name}</b><span>${u.days} días seguidos</span></span>${ok ? (u.item ? `<span class="pill${on ? ' a' : ''}">${on ? 'Usando' : 'Usar'}</span>` : `<span class="pill a">${icon('check', 's')} Ganado</span>`) : `<span class="pill">${icon('lock', 's')} ${u.days - n === 1 ? 'Falta 1' : u.days - n > 0 ? 'Faltan ' + (u.days - n) : 'Pronto'}</span>`}</${ok && u.item ? 'button' : 'div'}>`; }).join('')}
+          return `<${ok && u.item ? 'button data-act="wear" data-k="' + u.item + '"' : 'div'} class="urow${ok ? ' ok' : ''}"><span class="ua">${u.kind === 'glass' ? `<span class="bsv">${btSVG('free', u.item)}</span>` : u.kind === 'gift' ? `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>` : `<span class="bsv">${btSVG(u.kind)}</span>`}</span><span class="tx"><b>${u.name}</b><span>${u.days} días seguidos</span></span>${ok ? (u.item ? `<span class="pill${on ? '' : ' a'}">${on ? 'Usando' : 'Usar'}</span>` : `<span class="pill a">${icon('check', 's')} Ganado</span>`) : `<span class="pill">${icon('lock', 's')} ${u.days - n === 1 ? 'Falta 1' : u.days - n > 0 ? 'Faltan ' + (u.days - n) : 'Pronto'}</span>`}</${ok && u.item ? 'button' : 'div'}>`; }).join('')}
         <p class="small muted" style="margin:10px 0 0">Tu mejor racha: ${plural(h.best || 0, 'día', 'días')}. Lo que ganas se queda contigo aunque la racha se corte.</p></div>
       <div class="sec"><span class="eyebrow">Tu voz</span>
-        <button class="setrow" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira por qué distritos viajó.</span></span>${icon('arrow', 's')}</button>
+        <button class="setrow" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira con qué temas conectó.</span></span>${icon('arrow', 's')}</button>
         ${pushRow()}</div>
       <div style="height:24px"></div></div>`; },
   async after() { if (!P.st.bitFresh) { P.st.bitFresh = true; try { await Promise.all([loadMe(), loadHome()]); if (P.curId === 'bitacora') rerender(); } catch (e) {} } },
   leave() { P.st.bitFresh = false; }
 };
+/* la semana en curso: cada día con voz se enciende (como las rachas de las apps de hábitos) */
+function weekHTML(n, today) {
+  const t = limaNow(), dow = (t.getDay() + 6) % 7, end = today ? 0 : 1;
+  return `<div class="week rise d1" aria-label="Esta semana">${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => { const back = dow - i, on = back >= end && back < end + n, now = back === 0;
+    return `<span class="wd${on ? ' on' : ''}${now ? ' now' : ''}"><small>${d}</small><i>${on ? icon('flame', 's') : ''}</i></span>`; }).join('')}</div>`;
+}
 P.actions.wear = async el => { const k = S.me?.glass === el.dataset.k ? 'glass:none' : 'glass:' + el.dataset.k; try { const me = await rpc('beta_get', { p_item: k }); S.me = Array.isArray(me) ? me[0] : me; rerender(); toast(k === 'glass:none' ? 'Volviste al vidrio de siempre.' : 'Listo: tus botellas viajan en tu vidrio nuevo.'); } catch (e) { err(e); } };
 
 /* ================= EL MAPA DE TU VOZ ================= */
-/* Lima dibujada a mano alzada: la costa a la izquierda y cada distrito como una luz. */
-const MAP = { 'Los Olivos': [44, 8], 'Lima Centro': [54, 24], 'San Miguel': [22, 38], 'Pueblo Libre': [35, 34], 'Jesús María': [49, 37], 'Lince': [56, 45], 'Magdalena': [32, 47], 'San Isidro': [47, 54], 'San Borja': [68, 52], 'La Molina': [88, 44], 'Miraflores': [44, 66], 'Surco': [70, 68], 'Barranco': [49, 79], 'Chorrillos': [55, 91], 'Otro distrito': [84, 14] };
+/* Tu voz en el centro y los temas alrededor, como constelación: se enciende cada tema con el que conectó tu voz.
+   Nunca se muestran distritos: lo que cuenta es con qué conectas, no de dónde es nadie. */
 function mapSVG(places) {
-  const by = Object.fromEntries((places || []).map(p => [p.place, p])), mine = S.me?.district;
-  const dots = Object.entries(MAP).map(([name, [x, y]]) => { const p = by[name], n = p ? p.opened : 0, r = n ? Math.min(1.5 + Math.sqrt(n) * .6, 3.4) : 1, left = x > 80;
-    return `<g class="md${n ? ' on' : ''}${p && p.answered ? ' ans' : ''}">${n ? `<circle cx="${x}" cy="${y}" r="${r + 3}" class="halo"/>` : ''}<circle cx="${x}" cy="${y}" r="${r}"/>${n || name === mine ? `<text x="${left ? x : x + r + 2}" y="${left ? y + r + 3.6 : y + 1.2}" text-anchor="${left ? 'middle' : 'start'}">${esc(name === 'Otro distrito' ? 'Más allá' : name)}${n ? ` · ${n}` : ''}</text>` : ''}</g>`; }).join('');
-  const me = MAP[mine]; const rays = me ? (places || []).filter(p => MAP[p.place] && p.place !== mine).map(p => `<path class="ray" d="M${me[0]} ${me[1]} Q${(me[0] + MAP[p.place][0]) / 2 - 6} ${(me[1] + MAP[p.place][1]) / 2 - 4} ${MAP[p.place][0]} ${MAP[p.place][1]}"/>`).join('') : '';
-  return `<svg class="mapsvg" viewBox="0 0 100 100" role="img" aria-label="Mapa de Lima con los distritos a los que llegó tu voz"><path class="sea" d="M0 0H26C20 12 12 22 10 32c4 6 12 10 18 17 6 6 10 13 15 20 4 6 4 14 6 21l3 10H0z"/><path class="coast" d="M26 0C20 12 12 22 10 32c4 6 12 10 18 17 6 6 10 13 15 20 4 6 4 14 6 21l3 10"/><text class="seat" x="6" y="62" transform="rotate(62 6 62)">Océano Pacífico</text>${rays}${dots}${me ? `<circle class="home" cx="${me[0]}" cy="${me[1]}" r="1.6"/>` : ''}</svg>`;
+  const by = Object.fromEntries((places || []).map(p => [p.place, p])), mine = S.me?.topics || [], N = TOPICS.length;
+  const pos = TOPICS.map((t, i) => { const a = -Math.PI / 2 + i / N * Math.PI * 2; return [t, 50 + Math.cos(a) * 33, 50 + Math.sin(a) * 33, Math.cos(a)]; });
+  const rays = pos.filter(([t]) => by[t]).map(([t, x, y]) => `<path class="ray" d="M50 50 Q${(50 + x) / 2 + (y - 50) * .18} ${(50 + y) / 2 - (x - 50) * .18} ${x} ${y}"/>`).join('');
+  const dots = pos.map(([t, x, y, c]) => { const p = by[t], n = p ? p.opened : 0, r = n ? Math.min(1.8 + Math.sqrt(n) * .7, 3.8) : 1.1, anchor = c > .3 ? 'start' : c < -.3 ? 'end' : 'middle', lx = x + (c > .3 ? r + 2 : c < -.3 ? -(r + 2) : 0), ly = y + (Math.abs(c) <= .3 ? (y < 50 ? -(r + 2.2) : r + 4.4) : 1.2);
+    return `<g class="md${n ? ' on' : ''}${p && p.answered ? ' ans' : ''}${mine.includes(t) ? ' mine' : ''}">${n ? `<circle cx="${x}" cy="${y}" r="${r + 3}" class="halo"/>` : ''}<circle cx="${x}" cy="${y}" r="${r}"/><text x="${lx}" y="${ly}" text-anchor="${anchor}">${esc(t)}${n ? ` · ${n}` : ''}</text></g>`; }).join('');
+  return `<svg class="mapsvg" viewBox="0 0 100 100" role="img" aria-label="Los temas con los que conectó tu voz"><circle class="orbit" cx="50" cy="50" r="33"/>${rays}${dots}<circle class="home" cx="50" cy="50" r="3"/><text class="you" x="50" y="58" text-anchor="middle">Tu voz</text></svg>`;
 }
 P.screens.mapa = {
   render: () => { const m = S.map, ps = m?.places || [];
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">El mapa de tu voz</span></div><div class="scroll pad">
-    <div class="display rise" style="font-size:32px;margin-top:4px">${!m ? 'Buscando <b>tu voz</b>…' : ps.length ? `Tu voz llegó a <b>${plural(ps.length, 'distrito', 'distritos')}</b>.` : 'Tu voz todavía <b>no viaja</b>.'}</div>
+    <div class="display rise" style="font-size:32px;margin-top:4px">${!m ? 'Buscando <b>tu voz</b>…' : ps.length ? `Tu voz conectó con <b>${plural(ps.length, 'tema', 'temas')}</b>.` : 'Tu voz todavía <b>no viaja</b>.'}</div>
     <div class="mapbox rise d1">${mapSVG(ps)}</div>
     ${m ? `<div class="stats rise d2"><div class="stat2"><b>${m.heard}</b><span>${m.heard === 1 ? 'persona la escuchó' : 'personas la escucharon'}</span></div><div class="stat2"><b>${m.answers}</b><span>${m.answers === 1 ? 'te respondió' : 'te respondieron'}</span></div><div class="stat2"><b>${m.bottles}</b><span>${m.bottles === 1 ? 'botella lanzada' : 'botellas lanzadas'}</span></div></div>` : ''}
-    <p class="small muted" style="margin:12px 0 0">${ps.length ? 'Cada luz es un distrito donde alguien descorchó una botella tuya. Las doradas te respondieron.' : 'Cuando alguien descorche una botella tuya, su distrito se enciende aquí.'}</p>
+    <p class="small muted" style="margin:12px 0 0">${ps.length ? 'Cada luz es un tema que compartes con alguien que descorchó una botella tuya. Las doradas te respondieron. Nunca mostramos de dónde es nadie.' : 'Cuando alguien descorche una botella tuya, se enciende el tema que comparten.'}</p>
     ${ps.length ? '' : `<button class="btn btn-a" data-go="launch" style="margin-top:16px">${icon('bottle')} Lanzar una botella</button>`}
     <div style="height:24px"></div></div>`; },
   async after() { if (!P.st.mapFresh) { P.st.mapFresh = true; try { await loadMap(); if (P.curId === 'mapa') rerender(); } catch (e) {} } },
   leave() { P.st.mapFresh = false; }
 };
-const mapCard = () => `<button class="mapcard rise" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira por qué distritos viajaron tus botellas.</span></span>${icon('arrow', 's')}</button>`;
+const mapCard = () => `<button class="mapcard rise" data-go="mapa">${icon('map')}<span style="flex:1"><b>El mapa de tu voz</b><span>Mira con qué temas conectó tu voz.</span></span>${icon('arrow', 's')}</button>`;
 
 /* ================= LA MAREA: PREGUNTA DEL DÍA ================= */
 async function loadMareaNow() { const d = await rpc('marea_now'); S.mareaNow = d; S.marea = d?.featured || []; }
@@ -140,16 +148,16 @@ P.screens.marea = {
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
       <div class="tq rise" id="tq"><span class="eyebrow a">Pregunta de hoy</span><div class="q">${esc(t.question || '')}</div>
         ${t.answered ? `<div class="tdone">${icon('check', 's')}<span>${t.arrived ? 'Tu voz ya viaja con la marea de hoy.' : `Tu voz espera la marea. Llega en ${left || 'un momento'}.`}</span></div>`
-          : `${recBox('tide', 'Responde con tu voz. Hasta 60 segundos.')}<button class="btn btn-a${S.rec.tide ? '' : ' soft'}" data-needs="tide" data-act="tideSend">${icon('tide')} ${t.arrived ? 'Dejar mi voz en la marea' : 'Dejar mi voz para las 21:00'}</button>`}
+          : `${recBox('tide', 'Responde con tu voz. Una frase basta.')}<button class="btn btn-a${S.rec.tide ? '' : ' soft'}" data-needs="tide" data-act="tideSend">${icon('tide')} ${t.arrived ? 'Dejar mi voz en la marea' : 'Dejar mi voz para las 21:00'}</button>`}
         <p class="small muted" style="margin:10px 0 0">${t.count ? `${plural(t.count, 'voz ya respondió', 'voces ya respondieron')} hoy. ` : ''}Todos responden la misma pregunta y a las 21:00 la marea suelta las voces.</p></div>
       ${L ? `<div class="sec rise d1"><span class="eyebrow">${lastName}</span><p class="small muted" style="margin:-4px 0 10px">${esc(L.question)}</p>
-        ${vs.length ? vs.map(v => `<button class="mrow voice${L.unlocked || v.mine ? '' : ' locked'}" data-act="tideOpen" data-id="${v.bottle}"${v.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', v.glass)}</span><span style="flex:1;min-width:0"><span class="t">Una voz desde ${esc(v.place)}</span><span class="eyebrow">${fmt(v.secs)}</span></span>${v.mine ? '<span class="pill">Tuya</span>' : v.taken === 'answered' ? '<span class="pill">Respondida</span>' : L.unlocked ? '<span class="pill a">Abrir</span>' : `<span class="pill">${icon('lock', 's')}</span>`}</button>`).join('')
-          : `<p class="small muted">${t.arrived ? 'Todavía nadie dejó su voz hoy. Sé la primera.' : 'Anoche la marea llegó sin voces. Deja la tuya para la de hoy.'}</p>`}
+        ${vs.length ? vs.map(v => `<button class="mrow voice${L.unlocked || v.mine ? '' : ' locked'}" data-act="tideOpen" data-id="${v.bottle}"${v.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', v.glass)}</span><span style="flex:1;min-width:0"><span class="t">Una voz de ${esc(someone(v.place))}</span><span class="eyebrow">${fmt(v.secs)}</span></span>${v.mine ? '<span class="pill">Tuya</span>' : v.taken === 'answered' ? '<span class="pill">Respondida</span>' : L.unlocked ? '<span class="pill a">Abrir</span>' : `<span class="pill">${icon('lock', 's')}</span>`}</button>`).join('')
+          : `<p class="small muted">${t.arrived ? 'Todavía nadie dejó su voz hoy. Que la tuya sea la primera.' : 'Anoche la marea llegó sin voces. Deja la tuya para la de hoy.'}</p>`}
         ${vs.length && !L.unlocked ? `<p class="small" style="margin:10px 0 0;color:#FFD68C">Deja tu voz en la pregunta de hoy y se abren todas.</p>` : ''}</div>` : ''}
       <div class="sec rise d2"><span class="eyebrow">Botellas doradas</span><p class="small muted" style="margin:-4px 0 4px">Alguien quiso que llegaran primero a todo Lima.</p>
-      ${list.length ? list.map(b => `<button class="mrow" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · desde ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="pill">Tuya</span>' : b.taken === 'answered' ? '<span class="pill">Respondida</span>' : '<span class="pill a">Abrir</span>'}</button>`).join('')
+      ${list.length ? list.map(b => `<button class="mrow" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="pill">Tuya</span>' : b.taken === 'answered' ? '<span class="pill">Respondida</span>' : '<span class="pill a">Abrir</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay botellas doradas.</p>'}
-      <button class="btn btn-glass" data-act="mareaLaunch" style="margin-top:14px">${icon('tide')} Que la mía salga dorada</button></div>
+      <button class="btn btn-glass" data-act="mareaLaunch" style="margin-top:14px">${icon('tide')} Lanzar una dorada</button></div>
       <div style="height:16px"></div></div>`; },
   async after() { if (!P.st.mareaFresh) { P.st.mareaFresh = true; try { await loadMareaNow(); if (P.curId === 'marea' && !(REC.mr && REC.id === 'tide')) rerender(); } catch (e) {} } },
   leave() { P.st.mareaFresh = false; }
@@ -187,33 +195,33 @@ P.screens.duowait = {
   anim: (ctx, w, h, t) => { const mx = sky(ctx, w, h, t, .46); waves(ctx, w, h, t, .46, mx, (i, wv) => { if (i !== 1) return; const bx = w * .38 + Math.sin(t * .3) * 8, by = wv(bx); bottle(ctx, bx, by - 6, .9, -.3, 1); ctx.globalAlpha = .35 + Math.sin(t * 2) * .12; bottle(ctx, w * .64, wv(w * .64) - 6, .9, Math.PI + .3, .4, '255,214,140'); ctx.globalAlpha = 1; }); },
   render: () => { const d = S.duoWait || {}; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Botella para dos</span></div><div style="flex:1"></div>
     <div class="pad" style="padding-bottom:22px;background:linear-gradient(transparent,rgba(3,16,28,.94) 30%)">
-      <span class="eyebrow a rise">Tu mitad está lista</span><div class="display rise d1" style="margin-top:8px">Falta la voz de <b>tu dúo</b>.</div>
-      <p class="lead rise d2">Mándale este link a un amigo. Escucha tu mitad, graba la suya y la botella sale al mar con las dos voces, hacia 6 orillas.</p>
+      <span class="eyebrow a rise">Tu mitad está lista</span><div class="display rise d1" style="margin-top:8px">Falta <b>la otra voz</b>.</div>
+      <p class="lead rise d2">Mándale este link a quien quieras. Escucha tu mitad, graba la suya y la botella sale con las dos voces a 12 personas.</p>
       <div class="code rise d3"><span>${esc(duoLink(d.token || '').replace(/^https?:\/\//, ''))}</span><button class="btn btn-a btn-sm" data-act="duoCopy">${icon('copy', 's')} Copiar</button></div>
-      <div class="foot" style="padding-bottom:0"><button class="btn btn-a" data-act="duoShare">${icon('export')} Invitar a mi dúo</button><button class="btn btn-ghost" data-act="toMine">Listo, la veo en mis botellas</button></div>
-      <p class="small muted" style="margin:4px 0 0;text-align:center">Tiene 3 días. Si nadie graba, tu botella vuelve a tu muelle.</p></div>`; }
+      <div class="foot" style="padding-bottom:0"><button class="btn btn-a" data-act="duoShare">${icon('export')} Mandar el link</button><button class="btn btn-ghost" data-act="toMine">Listo, la veo en mis botellas</button></div>
+      <p class="small muted" style="margin:4px 0 0;text-align:center">Tiene 3 días. Si nadie graba, te devolvemos tu botella.</p></div>`; }
 };
 const duoMsg = d => ({ title: 'Botella para dos', text: `Lancemos una botella juntos en Botella${d.body ? `: "${d.body}"` : ''}. Yo ya grabé mi mitad, falta la tuya.`, url: duoLink(d.token) });
 P.actions.duoShare = el => share(el, duoMsg(S.duoWait || {}));
-P.actions.duoCopy = el => { try { navigator.clipboard?.writeText(duoLink(S.duoWait.token)).catch(() => {}); } catch (e) {} el.innerHTML = `${icon('check', 's')} Copiado`; toast('Link copiado. Mándaselo a tu dúo.'); };
+P.actions.duoCopy = el => { try { navigator.clipboard?.writeText(duoLink(S.duoWait.token)).catch(() => {}); } catch (e) {} el.innerHTML = `${icon('check', 's')} Copiado`; toast('Link copiado. Mándaselo a quien quieras.'); };
 P.actions.duoAgain = el => { const d = (S.duos || []).find(x => x.token === el.dataset.id); if (d) share(el, duoMsg(d)); };
-P.actions.duoCancel = async el => { try { S.me.bottles = await rpc('duo_cancel', { p_token: el.dataset.id }); await loadDuos(); rerender(); toast('Cancelada. Tu botella volvió a tu muelle.'); } catch (e) { err(e); } };
-const duosHTML = () => (S.duos || []).map(d => `<div class="row duorow rise"><span style="flex:1;min-width:0"><span class="eyebrow a">Para dos · esperando a tu dúo</span><span class="t" style="font-weight:300;font-size:18px">${esc(d.body || d.kind + ' de ' + fmt(d.secs))}</span><span class="s">Vence en ${until(d.expires_at)}</span><span class="duoacts"><button class="btn btn-a btn-sm" data-act="duoAgain" data-id="${d.token}">${icon('export', 's')} Invitar</button><button class="btn btn-ghost btn-sm" data-act="duoCancel" data-id="${d.token}">Cancelar</button></span></span></div>`).join('');
+P.actions.duoCancel = async el => { try { S.me.bottles = await rpc('duo_cancel', { p_token: el.dataset.id }); await loadDuos(); rerender(); toast('Cancelada. Te devolvemos tu botella.'); } catch (e) { err(e); } };
+const duosHTML = () => (S.duos || []).map(d => `<div class="row duorow rise"><span style="flex:1;min-width:0"><span class="eyebrow a">Para dos · esperando la otra voz</span><span class="t" style="font-weight:300;font-size:18px">${esc(d.body || d.kind + ' de ' + fmt(d.secs))}</span><span class="s">Vence en ${until(d.expires_at)}</span><span class="duoacts"><button class="btn btn-a btn-sm" data-act="duoAgain" data-id="${d.token}">${icon('export', 's')} Invitar</button><button class="btn btn-ghost btn-sm" data-act="duoCancel" data-id="${d.token}">Cancelar</button></span></span></div>`).join('');
 
 /* quien recibe el link */
 P.screens.duojoin = {
   anim: night(.2, false),
   render: () => { const d = S.duoPeek;
     if (!d) return `${sb_()}<div class="scroll pad" style="display:grid;place-items:center"><p class="muted">Buscando la botella…</p></div>`;
-    if (d.status !== 'open') return gone('Esta botella para dos ya no está esperando', d.status === 'done' ? 'Alguien ya grabó la otra mitad y salió al mar.' : 'Venció o la cancelaron. Pídele a tu amigo que te mande otra.');
-    if (d.mine) return gone('Esta es tu mitad', 'La otra la graba tu dúo. Mándale el link a un amigo.', `<button class="btn btn-a" data-act="duoMine">${icon('export')} Invitar a mi dúo</button>`);
+    if (d.status !== 'open') return gone('Esta botella para dos ya no está esperando', d.status === 'done' ? 'Alguien ya grabó la otra mitad y salió al mar.' : 'Venció o la cancelaron. Pide que te manden otra.');
+    if (d.mine) return gone('Esta es tu mitad', 'La otra mitad la graba alguien más. Mándale el link a quien quieras.', `<button class="btn btn-a" data-act="duoMine">${icon('export')} Mandar el link</button>`);
     return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span></div><div style="height:8%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 50px)">
       <span class="eyebrow a rise">Botella para dos</span><div class="display rise d1" style="font-size:32px;margin-top:8px"><b>${esc(d.name)}</b> quiere lanzar una botella contigo.</div>
-      <div class="paper rise d2" style="margin-top:16px"><span class="eyebrow">${esc(d.kind)} · su mitad, desde ${esc(d.place)}</span><div class="q">${esc(d.body || 'Escucha su voz.')}</div>${vn(d.voice, d.secs, { peaks: d.peaks })}</div>
-      <div class="sec"><span class="eyebrow">Tu mitad</span>${recBox('duo2', 'Graba tu parte. Hasta 60 segundos.')}</div>
-      <p class="small muted">Sale al mar con las dos voces y llega a 6 personas. Quien responda, les responde a los dos.</p><div style="height:10px"></div></div>
-    <div class="foot pad"><button class="btn btn-a${S.rec.duo2 ? '' : ' soft'}" data-needs="duo2" data-act="duoJoin">${icon('send')} ${S.me ? 'Lanzar juntos' : 'Crear mi cuenta y lanzar'}</button></div>`; },
+      <div class="paper rise d2" style="margin-top:16px"><span class="eyebrow">${esc(d.kind)} · su mitad${d.place ? ' · ' + esc(d.place) : ''}</span><div class="q">${esc(d.body || 'Escucha su voz.')}</div>${vn(d.voice, d.secs, { peaks: d.peaks })}</div>
+      <div class="sec"><span class="eyebrow">Tu mitad</span>${recBox('duo2', 'Graba tu mitad. Con 10 segundos basta.')}</div>
+      <p class="small muted">Sale al mar con las dos voces y llega a 12 personas. Si alguien responde, les llega a los dos.</p><div style="height:10px"></div></div>
+    ${S.rec.duo2 ? `<div class="foot pad"><button class="btn btn-a" data-needs="duo2" data-act="duoJoin">${icon('send')} ${S.me ? 'Lanzar juntos' : 'Crear mi cuenta y lanzar'}</button></div>` : ''}`; },
   async after() { if (S.duoPeek) return; try { S.duoPeek = (await rpc('duo_peek', { p_token: S.link.d })) || { status: 'cancelled' }; } catch (e) { S.duoPeek = { status: 'cancelled' }; } if (P.curId === 'duojoin') rerender(); }
 };
 const gone = (t, s, extra = '') => `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span></div><div style="flex:1"></div><div class="pad" style="padding-bottom:26px"><div class="display" style="font-size:32px">${t}</div><p class="lead">${s}</p><div class="foot" style="padding-bottom:0">${extra}<button class="btn ${extra ? 'btn-ghost' : 'btn-a'}" data-act="leaveLink">${S.me ? 'Ir a mi orilla' : 'Conocer Botella'}</button></div></div>`;
@@ -221,7 +229,7 @@ P.actions.leaveLink = () => { S.link = null; S.after = null; P.hist = []; if (S.
 P.actions.duoMine = () => { S.duoWait = { token: S.link.d, kind: S.duoPeek.kind, body: S.duoPeek.body || '' }; S.link = null; P.hist = ['orilla']; go('duowait'); };
 P.actions.duoJoin = async el => {
   const r = S.rec.duo2; if (!r) return needVoice('duo2');
-  if (!S.me) { S.after = 'duo'; toast('Tu mitad está guardada. Crea tu cuenta para lanzarla.'); return P.actions.skipIntro(); }
+  if (!S.me) { S.after = 'duo'; toast('Guardamos tu mitad. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
   if (S.busy) return; S.busy = true; el.classList.add('soft'); el.textContent = 'Lanzando…';
   try {
     const path = await upload(r.blob, r.ext); const d = await rpc('duo_join', { p_token: S.link.d, p_voice: path, p_secs: r.secs, p_peaks: r.peaks });
@@ -234,26 +242,26 @@ P.actions.duoJoin = async el => {
 /* ================= PIDE UNA LECTURA ================= */
 const LQ = ['¿Qué es lo primero que pensaste de mí cuando me conociste?', '¿Qué recuerdo conmigo no se te olvida?', '¿Qué es lo que más te gusta de mí?', '¿Qué canción te hace pensar en mí?', 'Si me describieras con tres palabras, ¿cuáles serían?', '¿Qué crees que hago mejor que nadie?', '¿Qué momento conmigo te hizo reír más?', '¿Qué te da curiosidad de mí y nunca me preguntaste?', '¿Qué plan me propondrías para este fin de semana?', '¿En qué crees que he cambiado desde que me conoces?', '¿Qué te gustaría que hiciéramos juntos este año?', '¿Qué consejo me darías con cariño?'];
 const lecLink = slug => linkTo('l', slug);
-const lecMsg = l => ({ title: 'Te pido una lectura', text: `Te pido una lectura: "${l.question}" Respóndeme con tu voz. Es anónimo, no voy a saber quién fue.`, url: lecLink(l.slug) });
+const lecMsg = l => ({ title: 'Te pido una lectura', text: `Te pido una lectura: "${l.question}" Respóndeme con tu voz en Botella. Primero escucho tu voz y después veo quién eres.`, url: lecLink(l.slug) });
 P.screens.lecturas = {
   render: () => { const ls = S.lecturas || [];
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Pide una lectura</span></div><div class="scroll pad">
     <div class="display rise" style="font-size:32px;margin-top:4px">¿Qué piensan <b>de ti</b>?</div>
-    <p class="lead rise d1">Elige una pregunta, grábala y comparte el link. Tus amigos responden con su voz, sin cuenta y sin que sepas quién fue.</p>
+    <p class="lead rise d1">Elige una pregunta, grábala y comparte el link. Tus amigos responden con su voz desde Botella. Escuchas cada voz primero y después ves quién fue: adivinar antes es parte de la gracia.</p>
     <button class="btn btn-a rise d2" data-act="lecNew" style="margin-top:16px">${icon('quote')} Pedir una lectura</button>
     ${ls.length ? `<div class="sec rise d3"><span class="eyebrow">Tus lecturas</span>${ls.map(l => `<button class="lrow" data-act="lecOpen" data-id="${l.id}"><span style="flex:1;min-width:0"><span class="t">${esc(l.question)}</span><span class="s">${l.open ? `Abierta · cierra en ${until(l.closes_at)}` : 'Cerrada'} · ${plural(l.answers, 'respuesta', 'respuestas')}</span></span>${l.fresh ? `<span class="cnt">${l.fresh}</span>` : icon('arrow', 's')}</button>`).join('')}</div>` : ''}
-    <div class="safe rise d3">${icon('shield')}<span><b>Anónimo, pero cuidado.</b> Cada respuesta pasa por un filtro antes de llegarte: los insultos, las amenazas y lo muy explícito no se entregan. Puedes borrar, reportar o bloquear a quien quieras sin saber quién es. Todas las respuestas son de personas reales.</span></div>
+    <div class="safe rise d3">${icon('shield')}<span><b>Con cuidado.</b> Cada respuesta pasa por un filtro antes de llegarte: los insultos, las amenazas y lo muy explícito no se entregan. Puedes borrar, reportar o bloquear cualquier respuesta.</span></div>
     <div style="height:24px"></div></div>`; },
   async after() { if (!P.st.lecFresh) { P.st.lecFresh = true; try { await loadLecturas(); if (P.curId === 'lecturas') rerender(); } catch (e) {} } },
   leave() { P.st.lecFresh = false; }
 };
 P.actions.lecNew = async () => {
   const s = await srv();
-  if (!s.lectura) return sheet(`${sheetHead('Todavía no está activa')}<p class="muted" style="font-size:14px;margin:0 0 12px">Las lecturas reciben voces de personas sin cuenta, y cada una pasa por un filtro en el servidor antes de llegarte. Ese servidor aún no está encendido.</p><p class="small" style="margin:0 0 16px">Quien administra Botella: en Vercel, agrega las variables <b>SUPABASE_SERVICE_ROLE_KEY</b> y <b>GROQ_API_KEY</b> y vuelve a desplegar. Los pasos están en el README.</p><button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
+  if (!s.lectura) return sheet(`${sheetHead('Las lecturas llegan pronto')}<p class="muted" style="font-size:14px;margin:0 0 16px">Estamos terminando el filtro que revisa cada respuesta antes de entregártela. Cuando esté listo, este botón te lleva directo.</p><button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
   S.lq = S.lq ?? 0; delete S.rec.lec; go('lecnew');
 };
 P.screens.lecnew = {
-  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Pedir una lectura<small>Paso ${S.rec.lec ? 2 : 1} de 2</small></span></div><div class="scroll pad">
+  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Pedir una lectura</span></div><div class="scroll pad">
     <div class="display" style="font-size:30px;margin-top:4px">Elige tu <b>pregunta</b></div>
     <div class="lqs" id="lqs">${LQ.map((q, i) => `<button class="lq${S.lq === i ? ' on' : ''}" data-act="lqPick" data-i="${i}">${q}</button>`).join('')}</div>
     <div class="sec"><span class="eyebrow">Grábala con tu voz</span><p class="small muted" style="margin:-4px 0 0">Es lo primero que van a escuchar tus amigos.</p>${recBox('lec', 'Lee la pregunta en voz alta, a tu manera.')}</div>
@@ -277,13 +285,13 @@ P.screens.lectura = {
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Tu lectura<small>${l.open ? `Abierta · cierra en ${until(l.closes_at)}` : 'Cerrada'}</small></span>${l.open ? `<button class="iconbtn glass" data-act="lecMenu" aria-label="Opciones">${icon('more')}</button>` : ''}</div><div class="scroll pad">
     <div class="paper rise" style="margin-top:6px"><span class="eyebrow">Tu pregunta</span><div class="q">${esc(l.question)}</div>${vn(l.voice, l.secs, { mine: true, peaks: l.peaks })}</div>
     ${l.open ? `<div class="sharebox rise d1">${isNew ? '<b>Tu link está listo.</b>' : ''}<span class="small muted">${isNew ? 'Compártelo por WhatsApp o en tus historias. Mientras más gente, más voces.' : 'Compártela otra vez para recibir más voces.'}</span><div class="code"><span>${esc(lecLink(l.slug).replace(/^https?:\/\//, ''))}</span><button class="btn btn-a btn-sm" data-act="lecCopy">${icon('copy', 's')} Copiar</button></div><button class="btn btn-a" data-act="lecShare">${icon('export')} Compartir mi lectura</button></div>` : ''}
-    <div class="sec rise d2"><span class="eyebrow">${as.length ? plural(as.length, 'voz anónima', 'voces anónimas') : 'Respuestas'}</span>
-      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s">Voz anónima · ${ago(a.at)}${a.heard ? '' : ' · nueva'}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
-        : `<p class="small muted">${l.open ? 'Todavía no llega ninguna. Te avisamos apenas alguien responda.' : 'Esta lectura cerró sin respuestas.'}</p>`}
+    <div class="sec rise d2"><span class="eyebrow">${as.length ? plural(as.length, 'voz', 'voces') : 'Respuestas'}</span>
+      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s"><b class="who">${a.heard ? esc(a.name || 'Sin nombre') : 'Escúchala para ver quién es'}</b> · ${ago(a.at)}${a.heard ? '' : ' · nueva'}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
+        : `<p class="small muted">${l.open ? 'Todavía no llega ninguna. Aparecen aquí apenas alguien responda.' : 'Esta lectura cerró sin respuestas.'}</p>`}
       ${l.pending ? `<p class="small muted" style="margin-top:10px">${icon('clock', 's')} ${plural(l.pending, 'respuesta espera', 'respuestas esperan')} la revisión del filtro.</p>` : ''}
       ${l.filtered ? `<p class="small muted" style="margin-top:10px">${icon('shield', 's')} El filtro frenó ${plural(l.filtered, 'respuesta que no cumplía', 'respuestas que no cumplían')} las normas. No te ${l.filtered === 1 ? 'llegó' : 'llegaron'}.</p>` : ''}</div>
     <div style="height:24px"></div></div>`; },
-  after(sec) { sec.addEventListener('click', e => { const row = e.target.closest('[data-play]')?.closest('[data-heard]'); if (!row) return; const a = (S.lecAns || []).find(x => x.id === row.dataset.heard); if (a && !a.heard) { a.heard = true; row.classList.remove('new'); rpc('lectura_heard', { p_answer: a.id }).then(() => { loadLecturas(); loadHome(); }).catch(() => {}); } }); },
+  after(sec) { sec.addEventListener('click', e => { const row = e.target.closest('[data-play]')?.closest('[data-heard]'); if (!row) return; const a = (S.lecAns || []).find(x => x.id === row.dataset.heard); if (a && !a.heard) { a.heard = true; row.classList.remove('new'); const w = row.querySelector('.who'); if (w) w.textContent = a.name || 'Sin nombre'; rpc('lectura_heard', { p_answer: a.id }).then(() => { loadLecturas(); loadHome(); }).catch(() => {}); } }); },
   leave() { P.st.lecNewId = null; }
 };
 P.actions.lecShare = el => share(el, lecMsg(S.lec));
@@ -292,7 +300,7 @@ P.actions.lecMenu = () => sheet(`${sheetHead('Tu lectura')}<button class="setrow
 P.actions.lecClose = async () => { closeSheet(); try { await rpc('lectura_close', { p_id: S.lec.id }); await loadLecturas(); S.lec = S.lecturas.find(l => l.id === S.lec.id); rerender(); toast('Cerraste tu lectura.'); } catch (e) { err(e); } };
 P.actions.ansMenu = el => { S.ansId = el.dataset.id; sheet(`${sheetHead('Esta respuesta')}
   <button class="setrow" data-act="ansDel">${icon('trash')}<span style="flex:1"><b>Borrar</b><span>Desaparece de tu lectura.</span></span></button>
-  <button class="setrow" data-act="ansReport">${icon('block')}<span style="flex:1"><b>Reportar y bloquear</b><span>Se borra, la revisamos y quien la mandó no podrá volver a responderte. Nunca sabrás quién fue, ni esa persona sabrá que la bloqueaste.</span></span></button>`); };
+  <button class="setrow" data-act="ansReport">${icon('block')}<span style="flex:1"><b>Reportar y bloquear</b><span>Se borra, la revisamos y esa persona no podrá volver a responderte. No se entera de que la bloqueaste.</span></span></button>`); };
 const ansDone = async (fn, msg) => { closeSheet(); try { await fn(); S.lecAns = (await rpc('lectura_inbox', { p_id: S.lec.id })) || []; await loadLecturas(); S.lec = S.lecturas.find(l => l.id === S.lec.id) || S.lec; rerender(); toast(msg); loadHome(); } catch (e) { err(e); } };
 P.actions.ansDel = () => ansDone(() => rpc('lectura_answer_delete', { p_answer: S.ansId }), 'Respuesta borrada.');
 P.actions.ansReport = () => ansDone(() => rpc('lectura_answer_report', { p_answer: S.ansId, p_reason: 'Respuesta de lectura reportada' }), 'Gracias por avisar. Esa persona ya no puede responderte.');
@@ -303,30 +311,33 @@ P.screens.lecpub = {
   render: () => { const l = S.lecPeek, ok = S.lecSent;
     if (!l) return `${sb_()}<div class="scroll pad" style="display:grid;place-items:center"><p class="muted">Abriendo la lectura…</p></div>`;
     if (ok) return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span></div><div style="flex:1"></div><div class="pad" style="padding-bottom:26px;background:linear-gradient(transparent,rgba(3,16,28,.94) 30%)">
-      <span class="eyebrow a rise">${ok.pending ? 'Tu voz está en revisión' : 'Tu voz llegó'}</span><div class="display rise d1" style="margin-top:8px">${esc(l.name)} no sabrá <b>quién fue</b>.</div>
-      <p class="lead rise d2">Ahora te toca a ti: lanza tu propia pregunta y escucha lo que tus amigos piensan de verdad.</p>
+      <span class="eyebrow a rise">${ok.pending ? 'Tu voz está en revisión' : 'Tu voz llegó'}</span><div class="display rise d1" style="margin-top:8px">${ok.pending ? `Tu voz va camino a <b>${esc(l.name)}</b>.` : `Tu voz ya le llegó a <b>${esc(l.name)}</b>.`}</div>
+      <p class="lead rise d2">Fue sin tu nombre. ¿Y a ti qué te dirían? Pide tu propia lectura.</p>
       <div class="foot rise d3" style="padding-bottom:0"><button class="btn btn-a" data-act="lecMine">${icon('quote')} Pedir mi propia lectura</button>${S.me ? `<button class="btn btn-ghost" data-act="leaveLink">Ir a mi orilla</button>` : `<button class="btn btn-ghost" data-act="leaveLink">Conocer Botella</button>`}</div></div>`;
     if (l.mine) return gone('Esta lectura es tuya', 'Compártela con tus amigos para recibir sus voces.', `<button class="btn btn-a" data-act="lecToMine">Ver mis respuestas</button>`);
     if (!l.open) return gone('Esta lectura ya cerró', `${l.name ? esc(l.name) + ' ya no recibe respuestas. ' : ''}Puedes pedir la tuya y ver qué te dicen.`, `<button class="btn btn-a" data-act="lecMine">${icon('quote')} Pedir mi propia lectura</button>`);
-    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span><span class="pill">${icon('lock', 's')} Anónimo</span></div><div style="height:6%;flex:none"></div>
+    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span><span class="pill">${icon('user', 's')} Con tu cuenta</span></div><div style="height:6%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 50px)">
       <span class="eyebrow a rise">${esc(l.name)} te pide una lectura</span>
       <div class="paper rise d1" style="margin-top:12px"><div class="q">${esc(l.question)}</div>${vn(l.voice, l.secs, { peaks: l.peaks })}</div>
-      <div class="sec" style="margin-top:20px"><span class="eyebrow">Respóndele con tu voz</span><p class="small muted" style="margin:-4px 0 0">Sin cuenta y sin nombre: ${esc(l.name)} escucha tu voz, pero no sabe quién eres.${l.answers ? ` Ya ${l.answers === 1 ? 'respondió 1 persona' : 'respondieron ' + l.answers + ' personas'}.` : ''}</p>${recBox('lp', 'Toca para grabar. Hasta 60 segundos.')}</div>
-      <button class="check" role="checkbox" aria-checked="${!!S.lpAdult}" data-act="lpAdult"><span class="box">${icon('check', 's')}</span><span>Tengo 18 años o más.</span></button>
-      <p class="small muted" style="margin:12px 0 0">${icon('shield', 's')} Di lo que piensas, con respeto. Un filtro revisa cada respuesta: los insultos, las amenazas y lo muy explícito no se entregan.</p><div style="height:10px"></div></div>
-    <div class="foot pad"><button class="btn btn-a${S.rec.lp ? '' : ' soft'}" data-needs="lp" data-act="lpSend">${icon('send')} Enviar mi respuesta</button></div>`; },
-  async after() { if (S.lecPeek) return; try { S.lecPeek = (await rpc('lectura_peek', { p_slug: S.link.l })) || { open: false, name: '' }; } catch (e) { S.lecPeek = { open: false, name: '' }; } if (P.curId === 'lecpub') rerender(); }
+      <div class="sec" style="margin-top:20px"><span class="eyebrow">Respóndele con tu voz</span><p class="small muted" style="margin:-4px 0 0">Respondes con tu cuenta de Botella. ${esc(l.name)} escucha tu voz primero y después ve tu nombre.${l.answers ? ` Ya ${l.answers === 1 ? 'respondió 1 persona' : 'respondieron ' + l.answers + ' personas'}.` : ''}</p>${recBox('lp', 'Toca para grabar. Una frase basta.')}</div>
+      <p class="small muted" style="margin:12px 0 0">${icon('shield', 's')} Di lo que piensas, con respeto. Un filtro revisa cada respuesta: los insultos, las amenazas y lo muy explícito no se entregan. Tu audio lo recibe solo ${esc(l.name)}, que puede borrarlo.</p><div style="height:10px"></div></div>
+    ${S.rec.lp ? `<div class="foot pad"><button class="btn btn-a" data-needs="lp" data-act="lpSend">${icon('send')} ${S.me ? 'Enviar mi respuesta' : 'Crear mi cuenta y enviar'}</button></div>` : ''}`; }, // el pie aparece al grabar: así el micrófono queda a la vista
+  async after() { if (S.after === 'lp' && S.me && S.rec.lp && !S.busy) return P.actions.lpSend(); if (S.lecPeek) return; try { S.lecPeek = (await rpc('lectura_peek', { p_slug: S.link.l })) || { open: false, name: '' }; } catch (e) { S.lecPeek = { open: false, name: '' }; } if (P.curId === 'lecpub') rerender(); }
 };
 P.actions.lpAdult = el => { S.lpAdult = !S.lpAdult; el.setAttribute('aria-checked', S.lpAdult); };
 P.actions.lpSend = async el => {
-  const r = S.rec.lp; if (!r) return needVoice('lp'); if (!S.lpAdult) return toast('Confirma que tienes 18 años o más.'); if (S.busy) return;
-  S.busy = true; el.classList.add('soft'); el.textContent = 'Enviando tu voz…';
+  const r = S.rec.lp; if (!r) return needVoice('lp');
+  // Las lecturas se responden con cuenta: tu voz te espera mientras la creas y sale sola al terminar.
+  if (!S.me) { S.after = 'lp'; if (!S.code) S.code = 'L:' + S.link.l; toast('Guardamos tu respuesta. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
+  if (S.busy) return;
+  S.busy = true; if (el) { el.classList.add('soft'); el.textContent = 'Enviando tu voz…'; }
   try {
-    const res = await fetch('/api/lectura', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ slug: S.link.l, device: deviceId(), adult: true, audio: await b64(r.blob), mime: r.blob.type || (r.ext === 'm4a' ? 'audio/mp4' : 'audio/webm'), secs: r.secs, peaks: r.peaks }) });
+    const tok = (await sb.auth.getSession()).data?.session?.access_token || '';
+    const res = await fetch('/api/lectura', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + tok }, body: JSON.stringify({ slug: S.link.l, device: deviceId(), adult: true, audio: await b64(r.blob), mime: r.blob.type || (r.ext === 'm4a' ? 'audio/mp4' : 'audio/webm'), secs: r.secs, peaks: r.peaks }) });
     const d = await res.json().catch(() => ({})); S.busy = false;
     if (!res.ok) { if (d.code === 'filtered' || d.code === 'empty') { delete S.rec.lp; rerender(); return sheet(`${sheetHead(d.code === 'empty' ? 'No se entendió tu voz' : 'Esta respuesta no se entregó')}<p class="muted" style="font-size:14px;margin:0 0 16px">${esc(d.message || '')}</p><button class="btn btn-a" data-act="closeSheet">Grabar otra</button>`); } rerender(); return toast(d.message || 'No se pudo enviar tu respuesta. Intenta otra vez.'); }
-    delete S.rec.lp; S.lecSent = d; hap([10, 30, 20]); rerender();
+    delete S.rec.lp; S.lecSent = d; S.after = null; hap([10, 30, 20]); rerender();
   } catch (e) { S.busy = false; rerender(); toast(navigator.onLine ? 'No se pudo enviar tu respuesta. Intenta otra vez.' : 'Sin conexión. Revisa tu internet e intenta otra vez.'); }
 };
 P.actions.lecMine = () => { S.link = null; S.lecPeek = null; S.lecSent = null; if (S.me) { P.hist = ['orilla']; go('lecturas'); } else { S.after = 'lectura'; P.actions.skipIntro(); } };
@@ -373,10 +384,10 @@ async function pushSync() {
   const j = sub.toJSON(); await rpc('push_subscribe', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth }); LS.set('push', true); return true;
 }
 async function pushOn() {
-  if (isIOS() && !standalone()) return sheet(`${sheetHead('Primero, Botella en tu inicio')}<p class="muted" style="font-size:14px;margin:0 0 16px">En iPhone los avisos llegan cuando Botella está en tu pantalla de inicio. En Safari, toca <b>Compartir</b> y luego <b>Agregar a inicio</b>. Ábrela desde ahí y activa los avisos.</p><button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
+  if (isIOS() && !standalone()) return sheet(`${sheetHead('Primero, Botella en tu inicio')}<p class="muted" style="font-size:14px;margin:0 0 16px">En iPhone los avisos llegan cuando Botella está en tu pantalla de inicio. En Safari, toca <b>Compartir</b> (el cuadrado con la flecha) y luego <b>Agregar a inicio</b>. Ábrela desde ahí y activa los avisos.</p><button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
   if (!pushOK()) return toast('Este navegador no permite avisos. Prueba con Chrome o Safari actualizados.');
-  const s = await srv(); if (!s.push) return toast('Los avisos todavía no están activos en el servidor.');
-  try { const p = await Notification.requestPermission(); if (p !== 'granted') return toast('Los avisos están bloqueados. Actívalos en los ajustes del navegador.'); await pushSync(); closeSheet(); toast('Listo. Te avisamos cuando te respondan y cuando llegue la marea.'); if (['bitacora', 'perfil'].includes(P.curId)) rerender(); }
+  const s = await srv(); if (!s.push) return toast('Los avisos todavía no están listos. Mientras tanto, lo nuevo te espera al abrir Botella.');
+  try { const p = await Notification.requestPermission(); if (p !== 'granted') return toast(isIOS() ? 'Los avisos están bloqueados para Botella. Actívalos en Ajustes, Notificaciones, Botella.' : 'Los avisos están bloqueados para Botella. Toca el candado junto a la dirección y permite Notificaciones.'); await pushSync(); closeSheet(); toast('Listo. Te avisamos cuando te respondan y cuando llegue la marea.'); if (['bitacora', 'perfil'].includes(P.curId)) rerender(); }
   catch (e) { console.error(e); toast('No pudimos activar los avisos. Intenta otra vez.'); }
 }
 P.actions.pushOn = pushOn;

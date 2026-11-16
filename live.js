@@ -21,7 +21,7 @@ function callPC(C) {
   pc.onconnectionstatechange = () => {
     if (CALL !== C) return; const st = pc.connectionState;
     if (st === 'connected' && C.state !== 'live') { C.state = 'live'; C.t0 = Date.now(); clearTimeout(C.to); hap([10, 40, 10]); C.iv = setInterval(() => { const el = $('#calltime'); if (el) el.textContent = callClock(); if (Date.now() - C.t0 >= MAXCALL * 1000) callEnd('La llamada llegó a 30 minutos. Pueden volver a llamarse.'); }, 1000); if (P.curId === 'call') rerender(); }
-    else if (st === 'failed') callEnd('No se pudo conectar la llamada. Prueben con otra red o con wifi.');
+    else if (st === 'failed') callEnd('No conectó. Con datos a veces pasa: prueba con wifi o déjale una nota de voz.');
   };
   return pc;
 }
@@ -45,11 +45,11 @@ function callEnd(msg, remote) {
   if (C.state === 'live') { const tk = LS.get('talked', []); if (!tk.includes(C.convo)) { tk.push(C.convo); LS.set('talked', tk.slice(-200)); } }
   if (C.state === 'live' && Date.now() - (C.t0 || 0) > 4000) setTimeout(() => { if (P.curId === 'chat' && S.convo?.id === C.convo && !(S.msgs[C.convo] || []).some(m => m.body && m.body.startsWith('#plan|'))) P.actions.planAsk(); }, 1400);
 }
-async function callMic() { try { return await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Botella necesita tu micrófono para la llamada. Actívalo en los ajustes del navegador.'); return null; } }
+async function callMic() { try { return await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); } catch (e) { micHelp(e); return null; } }
 P.actions.call = async () => {
   const c = convo(); if (!c || CALL) return; if (!(c.my_key && c.other_key)) return toast('La llamada se abre cuando los dos la piden.');
   if (c.sample) return demoCall(c);
-  if (!window.RTCPeerConnection) return toast('Este navegador no permite llamadas.');
+  if (!window.RTCPeerConnection) return toast('Aquí no se puede llamar. Abre Botella en Chrome o Safari.');
   recCancel(); stopPlayer();
   const stream = await callMic(); if (!stream) return;
   const C = CALL = { convo: c.id, name: c.alias, role: 'out', state: 'ringing', stream, q: [], mute: false }; P.hist = P.hist.filter(x => x !== 'moment'); go('call', { noPush: P.curId === 'moment' });
@@ -113,8 +113,8 @@ async function onConvo(row) {
   const prev = S.convos.find(x => x.id === row.id); const had = prev && prev.my_key && prev.other_key;
   await loadConvos().catch(() => {}); const c = S.convos.find(x => x.id === row.id); if (!c) return;
   if (S.convo && S.convo.id === c.id) S.convo = c;
-  if (!had && c.my_key && c.other_key) { if (P.curId === 'chat' && S.convo?.id === c.id) momentFor(c); else banner({ ic: orb(colorOf(c.id), 34), title: `${c.alias} también quiere hablar`, text: 'Ya pueden llamarse.', go: 'chat', v: c.id }); return; }
-  if (prev && !prev.revealed && c.revealed) banner({ ic: orb(colorOf(c.id), 34), title: `Ahora se conocen: ${c.alias}`, text: 'Los dos compartieron su nombre.', go: 'chat', v: c.id });
+  if (!had && c.my_key && c.other_key) { if (P.curId === 'chat' && S.convo?.id === c.id) momentFor(c); else banner({ ic: orb(colorOf(c.id), 34), title: `${c.alias} también pidió la llamada`, text: 'Llámense cuando quieran.', go: 'chat', v: c.id }); return; }
+  if (prev && !prev.revealed && c.revealed) banner({ ic: orb(colorOf(c.id), 34), title: `Ya saben sus nombres: ${c.alias}`, text: 'Los dos compartieron su nombre.', go: 'chat', v: c.id });
   if (P.curId === 'chat' && S.convo?.id === c.id && !(REC.mr && REC.id === 'chat')) rerender();
 }
 
@@ -124,7 +124,7 @@ async function enter(fresh) {
     const ver = await rpc('app_version').catch(() => 0);
     const me = await loadMe();
     if (!me) { P.hist = []; go('about', { fade: true }); return; }
-    S.outdated = !(ver >= 4);
+    S.outdated = !(ver >= 6);
     await Promise.all([refreshAll(), loadHome(), loadDuos()]); subscribe(); P.hist = []; P.st.shoreFresh = true;
     go('orilla', { fade: true });
     const first = S.firstRes; S.firstRes = null;
@@ -132,8 +132,8 @@ async function enter(fresh) {
     else if (S.link?.l) { P.hist = ['orilla']; go('lecpub'); }
     else if (S.link?.d) { P.hist = ['orilla']; go('duojoin'); }
     else if (S.after === 'lectura') { S.after = null; P.hist = ['orilla']; go('lecturas'); }
-    else if (first?.convo) { P.hist = ['orilla']; await openChat(first.convo, { noPush: true }); setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu respuesta llegó', text: 'Ya tienes tu primera conversación. Te contesta en un minuto.' }), 900); }
-    else if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu regalo de bienvenida', text: '3 normales, 2 de color, 1 que llega lejos, 1 marea destacada y 1 con lacre.', go: 'store' }), 1200);
+    else if (first?.convo) { P.hist = ['orilla']; await openChat(first.convo, { noPush: true }); setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu respuesta llegó', text: 'Te contesta en un minuto.' }), 900); }
+    else if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu regalo de bienvenida', text: '8 botellas para empezar. Tócalas.', go: 'store' }), 1200);
     if (S.pendingGo && !S.link) { const g = S.pendingGo; S.pendingGo = null; LS.set('seenAt', new Date().toISOString()); setTimeout(() => noticeGo(g), 300); }
     else if (!fresh) setTimeout(missed, 1500); else LS.set('seenAt', new Date().toISOString());
     pushSync().catch(() => {}); ping(4000);
@@ -141,8 +141,8 @@ async function enter(fresh) {
 }
 /* Si el servidor no tiene la última versión de supabase/schema.sql, se dice claro en vez de mostrar saldos en cero. */
 function outdatedSheet() {
-  sheet(`${sheetHead('Falta actualizar el servidor')}<p class="muted" style="font-size:14px;margin:0 0 12px">Esta versión de Botella necesita la última versión de la base de datos. Por eso pueden faltar botellas o el muelle.</p>
-    <p class="small" style="margin:0 0 16px">Quien administra la beta: en Supabase, abre <b>SQL Editor</b>, pega el archivo <b>supabase/schema.sql</b> completo y toca <b>Run</b>. No borra nada.</p><button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
+  sheet(`${sheetHead('Estamos actualizando Botella')}<p class="muted" style="font-size:14px;margin:0 0 16px">Por unos minutos pueden faltar botellas o el muelle. No perdiste nada: vuelve a entrar en un rato.</p>
+    <button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
 }
 function boot() {
   document.addEventListener('click', e => {

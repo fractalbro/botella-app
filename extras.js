@@ -5,12 +5,12 @@
 /* En la beta todo es gratis: se muestra el precio que tendrá después, tachado. */
 const STORE = {
   specials: [
-    { k: 'color', name: 'Botella de color', tag: 'tú eliges', desc: 'Elige a quién llega: por tema o por distrito.', price: '2.90', art: () => btSVG('color') , left: () => S.me?.color_left },
-    { k: 'far', name: 'Botella que llega lejos', tag: '10 orillas', desc: 'La escuchan 10 personas en vez de 3.', price: '5.90', art: () => btSVG('far'), left: () => S.me?.far_left },
-    { k: 'tide', name: 'Marea destacada', tag: '21:00', desc: 'Tu botella sale en la marea de la noche, arriba de todas.', price: '1.90', art: () => btSVG('free', null, true), left: () => S.me?.tide_left },
-    { k: 'who', name: 'Quién la abrió', tag: 'para siempre', desc: 'Mira desde qué distrito y a qué hora abrieron cada botella tuya.', price: '4.90', art: () => `<span class="iart">${icon('eye')}</span>`, own: () => S.me?.who_open }
+    { k: 'color', name: 'Botella de color', tag: 'tú eliges', desc: 'Elige a quién llega: a quienes les gusta un tema.', price: '2.90', art: () => btSVG('color') , left: () => S.me?.color_left },
+    { k: 'far', name: 'Botella que llega lejos', tag: '20 personas', desc: 'Llega a 20 personas en vez de 8.', price: '5.90', art: () => btSVG('far'), left: () => S.me?.far_left },
+    { k: 'tide', name: 'Botella dorada', tag: '21:00', desc: 'Sale primera en la marea de las 21:00, para todo Lima.', price: '1.90', art: () => btSVG('free', null, true), left: () => S.me?.tide_left },
+    { k: 'who', name: 'Quién la abrió', tag: 'para siempre', desc: 'Mira qué tema compartes con cada persona que abrió tu botella, y a qué hora.', price: '4.90', art: () => `<span class="iart">${icon('eye')}</span>`, own: () => S.me?.who_open }
   ],
-  gifts: [{ k: 'gift', name: 'Botella con lacre', tag: 'regalo', desc: 'Una botella dorada, sellada, que se queda en su conversación y le regala una botella.', price: '3.90', art: () => `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>`, left: () => S.me?.gifts_left }],
+  gifts: [{ k: 'gift', name: 'Botella con lacre', tag: 'regalo', desc: 'Un regalo para alguien con quien conversas: una botella sellada que se queda en el chat y le da una botella para lanzar.', price: '3.90', art: () => `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>`, left: () => S.me?.gifts_left }],
   looks: [
     { k: 'glass:none', g: null, name: 'Transparente', desc: 'El vidrio de siempre.', price: '' },
     { k: 'glass:verde', g: 'verde', name: 'Verde', desc: 'Tus botellas viajan en vidrio verde.', price: '4.90' },
@@ -28,7 +28,7 @@ const price = p => p ? `<s>S/ ${p}</s>` : '';
 async function claim(k) {
   const me = await rpc('beta_get', { p_item: k }); S.me = Array.isArray(me) ? me[0] : me; hap([8, 30, 8]);
   const all = [...STORE.specials, ...STORE.gifts, ...STORE.looks, ...STORE.packs]; const it = all.find(x => x.k === k);
-  toast(k === 'captain' ? 'Ya eres Capitán. Gratis por ahora.' : k === 'nocaptain' ? 'Dejaste el plan Capitán.' : k.startsWith('glass') ? `Listo: tus botellas viajan en vidrio ${it ? it.name.toLowerCase() : ''}.` : it?.qty ? `Llegaron ${it.qty} botellas a tu muelle.` : k === 'who' ? 'Listo: ya ves quién abre tus botellas.' : `Listo: ${it ? it.name.toLowerCase() : 'ya es tuya'}.`);
+  toast(k === 'captain' ? 'Ya eres Capitán. Gratis por ahora.' : k === 'nocaptain' ? 'Dejaste el plan Capitán.' : k.startsWith('glass') ? `Listo: tus botellas viajan en vidrio ${it ? it.name.toLowerCase() : ''}.` : it?.qty ? `Llegaron ${it.qty} botellas a tu muelle.` : k === 'who' ? 'Listo: ya ves qué tema compartes con quien abre tus botellas.' : it ? `Listo: ya tienes una ${it.name.toLowerCase()} en tu muelle.` : 'Listo: ya es tuya.');
   return S.me;
 }
 P.actions.get = async el => { if (el.classList.contains('soft')) return; el.classList.add('soft'); try { await claim(el.dataset.k); P.st.gotK = el.dataset.k; rerender(); } catch (e) { el.classList.remove('soft'); err(e); } };
@@ -38,14 +38,14 @@ const getBtn = (k, label = 'Gratis') => `<button class="btn btn-a btn-sm" data-a
 P.screens.store = {
   cls: 'storebg',
   render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Muelle</span>${meBtn()}</div>
-    <p class="lead" style="margin-top:2px">Lanzar, abrir, responder y llamar es gratis. Aquí consigues botellas que llegan más lejos, regalos y estilo.</p>
+    <p class="lead" style="margin-top:2px">El muelle es donde recoges tus botellas. Lanzar, escuchar, responder y llamar siempre es gratis.</p>
     <div class="beta rise">${icon('spark', 's')}<span><b>Por ahora, todo gratis.</b> Botella está empezando: pide lo que quieras sin pagar nada. El precio tachado es lo que costará más adelante.</span></div>
-    <div class="bal rise d1"><div><b>${m.bottles ?? 0}</b><span>Normales</span></div><div><b style="color:#FF8FC0">${m.color_left ?? 0}</b><span>De color</span></div><div><b style="color:#FFD68C">${m.far_left ?? 0}</b><span>Llegan lejos</span></div><div><b style="color:#FFD68C">${m.tide_left ?? 0}</b><span>Marea</span></div><div><b style="color:#F2C46D">${m.gifts_left ?? 0}</b><span>Lacre</span></div></div>
+    <div class="bal rise d1"><div><b>${m.bottles ?? 0}</b><span>Normales</span></div><div><b style="color:#FF8FC0">${m.color_left ?? 0}</b><span>De color</span></div><div><b style="color:#FFD68C">${m.far_left ?? 0}</b><span>Llegan lejos</span></div><div><b style="color:#FFD68C">${m.tide_left ?? 0}</b><span>Doradas</span></div><div><b style="color:#F2C46D">${m.gifts_left ?? 0}</b><span>Lacre</span></div></div>
     <div class="sec rise d2"><span class="eyebrow">Botellas especiales</span>${STORE.specials.map(it => itemHTML(it, it.own && it.own() ? '<span class="pill a">Activo</span>' : `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d2"><span class="eyebrow">Regalos</span>${STORE.gifts.map(it => itemHTML(it, `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d3"><span class="eyebrow">Tu vidrio</span><div class="looks">${STORE.looks.map(it => { const on = (m.glass || null) === it.g; return `<button class="look${on ? ' on' : ''}" data-act="get" data-k="${it.k}"><span class="bsv">${btSVG('free', it.g)}</span><b>${it.name}</b><span>${on ? 'Usando' : it.price ? `<s>S/ ${it.price}</s> Gratis` : 'Gratis'}</span></button>`; }).join('')}</div></div>
-    <div class="sec rise d3"><span class="eyebrow">Packs de botellas</span><div class="spacks">${STORE.packs.map(it => `<button class="spack${it.best ? ' best' : ''}" data-act="get" data-k="${it.k}">${it.best ? '<em>La más pedida</em>' : ''}<b class="num">${it.qty}</b><span class="pn">${it.name}</span><span>${it.desc}</span><span class="pp"><s>S/ ${it.price}</s> Gratis</span></button>`).join('')}</div></div>
-    <div class="captain rise d4"><span class="eyebrow a">Plan Capitán</span><div class="h2" style="font-size:26px">Más botellas y más rumbo, todos los días.</div>
+    <div class="sec rise d3"><span class="eyebrow">Packs de botellas</span><div class="spacks">${STORE.packs.map(it => `<button class="spack${it.best ? ' best' : ''}" data-act="get" data-k="${it.k}"><b class="num">${it.qty}</b><span class="pn">${it.name}</span><span>${it.desc}</span><span class="pp"><s>S/ ${it.price}</s> Gratis</span></button>`).join('')}</div></div>
+    <div class="captain rise d4"><span class="eyebrow a">Plan Capitán</span><div class="h2" style="font-size:26px">Más botellas cada día y salidas más grandes.</div>
       <ul>${STORE.perks.map(p => `<li>${icon('check', 's')}${p}</li>`).join('')}</ul>
       ${m.captain ? `<div class="pill a" style="justify-self:start">Eres Capitán</div><button class="btn btn-ghost btn-sm" data-act="get" data-k="nocaptain">Dejar el plan</button>` : `<span class="small muted"><s>S/ 19.90 al mes</s> · gratis por ahora</span><button class="btn btn-a" data-act="get" data-k="captain">Ser Capitán gratis</button>`}</div>
     <div class="sec"><span class="eyebrow">Siempre gratis</span><div class="frees"><div>${icon('bottle', 's')}<b>Una botella al día</b><span>y hasta 3 más por responder</span></div><div>${icon('eye', 's')}<b>Abrir sin límite</b><span>escucha y responde todas</span></div><div>${icon('phone', 's')}<b>Tu voz</b><span>notas de voz y llamadas</span></div><div>${icon('users', 's')}<b>En grupo</b><span>salidas de la comunidad</span></div></div></div>
@@ -66,14 +66,14 @@ P.screens.marea = {
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
       <div class="display rise" style="font-size:34px">${after ? 'La marea <b>llegó</b>.' : 'La marea <b>de anoche</b>.'}</div>
       <p class="lead rise d1">Cada noche a las 9 la marea trae botellas de todo Lima. Las doradas son destacadas: alguien quiso que llegaran primero.${after ? '' : ` La próxima llega en ${Math.max(1, 21 - limaHour())} h.`}</p>
-      ${list.length ? list.map((b, i) => `<button class="mrow rise d${Math.min(i + 1, 4)}" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · desde ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="pill">Tuya</span>' : b.taken === 'answered' ? '<span class="pill">Respondida</span>' : '<span class="pill a">Abrir</span>'}</button>`).join('')
+      ${list.length ? list.map((b, i) => `<button class="mrow rise d${Math.min(i + 1, 4)}" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="pill">Tuya</span>' : b.taken === 'answered' ? '<span class="pill">Respondida</span>' : '<span class="pill a">Abrir</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay botellas destacadas. Lanza una con la marea desde “Lanzar una botella”.</p>'}
       <button class="btn btn-glass" data-act="mareaLaunch" style="margin-top:16px">${icon('tide')} Que la mía salga en la marea</button>
       <div style="height:16px"></div></div>`; },
   async after() { if (!P.st.mareaFresh) { P.st.mareaFresh = true; try { await loadMarea(); if (P.curId === 'marea') rerender(); } catch (e) {} } },
   leave() { P.st.mareaFresh = false; }
 };
-P.actions.mareaLaunch = () => { S.featured = (S.me?.tide_left || 0) > 0; go('launch'); if (!S.featured) toast('No te queda marea destacada: pídela gratis en el muelle.'); };
+P.actions.mareaLaunch = () => { S.featured = (S.me?.tide_left || 0) > 0; go('launch'); if (!S.featured) toast('No te quedan doradas: pide una gratis en el muelle.'); };
 P.actions.mareaOpen = async el => {
   const b = S.marea.find(x => x.bottle === el.dataset.id); if (!b || b.mine) return;
   if (b.taken === 'answered') return toast('Ya respondiste esta botella. Está en tus conversaciones.');
@@ -90,12 +90,12 @@ const OUT_IDEAS = ['Caminata al atardecer', 'Preguntas frente al mar', 'Confesio
 const whenTxt = iso => { const d = new Date(iso), o = { timeZone: 'America/Lima' }; const day = d.toLocaleDateString('es-PE', { ...o, weekday: 'long', day: 'numeric', month: 'short' }); const t = d.toLocaleTimeString('es-PE', { ...o, hour: 'numeric', minute: '2-digit', hour12: true }); return day.charAt(0).toUpperCase() + day.slice(1) + ' · ' + t.replace(/\s?a\.?\s?m\.?/i, ' a. m.').replace(/\s?p\.?\s?m\.?/i, ' p. m.'); };
 P.screens.salidas = {
   anim(ctx, w, h, t) { const mx = sky(ctx, w, h, t, .3); waves(ctx, w, h, t, .3, mx, null, 4); [.3, .5, .7].forEach((x, i) => { ctx.fillStyle = `rgba(255,190,110,${.55 + Math.sin(t * 3 + i) * .25})`; ctx.shadowColor = '#FFB061'; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(w * x, h * .3 - 3, 3.4, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }); },
-  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Salidas en grupo<small>Gratis · cada uno paga lo suyo</small></span></div>
+  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Salidas en grupo<small>Apuntarte es gratis · cada uno paga lo suyo</small></span></div>
     <div style="height:12%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
-      <div class="display rise" style="font-size:34px">Noches de <b>orilla</b>.</div>
-      <p class="lead rise d1">Salidas que propone la gente que lanza botellas, casi siempre cerca del mar. Te apuntas gratis y van en grupo, a lugares públicos.</p>
-      ${S.outings.length ? S.outings.map((o, i) => `<button class="orow rise d${Math.min(i + 1, 4)}${o.boosted ? ' boost' : ''}" data-act="outing" data-id="${o.id}"><span class="oi">${icon('users')}</span><span style="flex:1;min-width:0"><span class="t">${esc(o.name)}</span><span class="s">${esc(whenTxt(o.starts_at))}</span><span class="s">${esc(o.place)}</span><span class="cap">${Array.from({ length: o.cap }, (_, k) => `<i class="${k < o.taken ? 'on' : ''}"></i>`).join('')}<small>${o.taken} de ${o.cap}</small></span></span>${o.mine ? '<span class="pill a">Tuya</span>' : o.joined ? '<span class="pill a">Vas</span>' : o.taken >= o.cap ? '<span class="pill">Llena</span>' : '<span class="pill">Ver</span>'}</button>`).join('')
+      <div class="display rise" style="font-size:34px">Salgamos <b>en grupo</b>.</div>
+      <p class="lead rise d1">Las propone gente de Botella. Apuntarte es gratis, van en grupo y siempre a lugares públicos.</p>
+      ${S.outings.length ? S.outings.map((o, i) => `<button class="orow rise d${Math.min(i + 1, 4)}${o.boosted ? ' boost' : ''}" data-act="outing" data-id="${o.id}"><span class="oi">${icon('users')}</span><span style="flex:1;min-width:0"><span class="t">${esc(o.name)}</span><span class="s">${esc(whenTxt(o.starts_at))}</span><span class="s">${esc(o.place)}${o.sample ? ' · de ejemplo' : ''}</span>${o.sample ? '' : `<span class="cap">${Array.from({ length: o.cap }, (_, k) => `<i class="${k < o.taken ? 'on' : ''}"></i>`).join('')}<small>${o.taken} de ${o.cap}</small></span>`}</span>${o.mine ? '<span class="pill">Tuya</span>' : o.joined ? '<span class="pill">Vas</span>' : o.taken >= o.cap ? '<span class="pill">Llena</span>' : '<span class="pill a">Ver</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay salidas. Propón la primera.</p>'}
       <div style="height:12px"></div></div>
     <div class="foot pad"><button class="btn btn-a" data-go="proponer">${icon('pin')} Proponer una salida</button></div>`,
@@ -104,15 +104,15 @@ P.screens.salidas = {
 };
 P.actions.outing = el => {
   const o = S.outings.find(x => x.id === el.dataset.id); if (!o) return;
-  sheet(`${sheetHead(esc(o.name))}<div class="odet"><p>${icon('cal', 's')} ${esc(whenTxt(o.starts_at))}</p><p>${icon('pin', 's')} ${esc(o.place)}</p><p>${icon('users', 's')} ${o.taken} de ${o.cap} · propone ${o.mine ? 'tú' : esc(o.host) + ' de ' + esc(o.host_place)}${o.sample ? ' (de ejemplo)' : ''}</p>${o.descr ? `<p class="muted">${esc(o.descr)}</p>` : ''}</div>
-    <p class="small muted" style="margin:4px 0 14px">Siempre en lugares públicos. Avísale a alguien de confianza a dónde vas.</p>
+  sheet(`${sheetHead(esc(o.name))}<div class="odet"><p>${icon('cal', 's')} ${esc(whenTxt(o.starts_at))}</p><p>${icon('pin', 's')} ${esc(o.place)}</p><p>${icon('users', 's')} ${o.sample ? '' : `${o.taken} de ${o.cap} · `}propone ${o.mine ? 'tú' : esc(someone(o.host_place))}${o.sample ? ' (de ejemplo)' : ''}</p>${o.descr ? `<p class="muted">${esc(o.descr)}</p>` : ''}</div>
+    <p class="small muted" style="margin:4px 0 14px">Siempre en lugares públicos. Cuéntale a alguien de confianza a dónde vas.</p>
     ${o.mine ? `${o.boosted ? '' : `<button class="btn btn-a" data-act="outBoost" data-id="${o.id}">${icon('spark')} Destacar mi salida <span class="small" style="opacity:.7;margin-left:4px"><s>S/ 2.90</s> gratis</span></button>`}<button class="btn btn-ghost" data-act="outCancel" data-id="${o.id}" style="margin-top:6px">Cancelar mi salida</button>`
       : o.joined ? `<button class="btn btn-ghost" data-act="outJoin" data-id="${o.id}" data-on="0">Ya no voy</button>` : `<button class="btn btn-a${o.taken >= o.cap ? ' soft' : ''}" data-act="outJoin" data-id="${o.id}" data-on="1">Me apunto</button>`}`);
 };
 const outDo = async (fn, msg) => { try { await fn(); closeSheet(); await loadOutings(); if (P.curId === 'salidas') rerender(); toast(msg); } catch (e) { err(e); } };
-P.actions.outJoin = el => outDo(() => rpc('outing_join', { p_id: el.dataset.id, p_on: el.dataset.on === '1' }), el.dataset.on === '1' ? 'Te apuntaste. Te esperamos.' : 'Listo, ya no vas.');
+P.actions.outJoin = el => outDo(() => rpc('outing_join', { p_id: el.dataset.id, p_on: el.dataset.on === '1' }), el.dataset.on === '1' ? 'Listo, vas. Cuéntale a alguien de confianza a dónde.' : 'Listo, ya no vas.');
 P.actions.outCancel = el => outDo(() => rpc('outing_cancel', { p_id: el.dataset.id }), 'Cancelaste tu salida.');
-P.actions.outBoost = el => outDo(() => rpc('outing_boost', { p_id: el.dataset.id }), 'Tu salida sale primero y la ven en distritos vecinos.');
+P.actions.outBoost = el => outDo(() => rpc('outing_boost', { p_id: el.dataset.id }), 'Tu salida ahora sale primera en la lista.');
 const nextDays = () => { const out = []; for (let i = 0; i < 10; i++) { const d = new Date(Date.now() + i * 864e5); const v = d.toLocaleDateString('en-CA', { timeZone: 'America/Lima' }); const l = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : d.toLocaleDateString('es-PE', { timeZone: 'America/Lima', weekday: 'short', day: 'numeric' }); out.push([v, l.charAt(0).toUpperCase() + l.slice(1)]); } return out; };
 P.screens.proponer = {
   render: () => { const F = P.st.out || (P.st.out = { name: '', place: PLACES[0][0], day: nextDays()[2][0], time: '18:00', cap: 8, descr: '' }); return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Proponer una salida</span></div><div class="scroll pad">
@@ -132,7 +132,7 @@ P.actions.outCap = el => { P.st.out.cap = +el.dataset.v; rerender(); };
 P.actions.outCreate = async el => {
   const F = P.st.out; if ((F.name || '').trim().length < 3) return toast('Ponle nombre a tu salida.');
   el.classList.add('soft');
-  try { await rpc('outing_create', { p_name: F.name.trim(), p_place: F.place, p_at: `${F.day}T${F.time}:00-05:00`, p_cap: F.cap, p_descr: F.descr }); P.st.out = null; await loadOutings(); P.hist = P.hist.filter(x => x !== 'salidas'); go('salidas', { back: true }); toast('Tu salida está publicada. Te avisamos cuando alguien se apunte.'); }
+  try { await rpc('outing_create', { p_name: F.name.trim(), p_place: F.place, p_at: `${F.day}T${F.time}:00-05:00`, p_cap: F.cap, p_descr: F.descr }); P.st.out = null; await loadOutings(); P.hist = P.hist.filter(x => x !== 'salidas'); go('salidas', { back: true }); toast('Tu salida está publicada. Aquí ves quién se va apuntando.'); }
   catch (e) { el.classList.remove('soft'); err(e); }
 };
 
@@ -140,7 +140,7 @@ P.actions.outCreate = async el => {
 P.actions.giftAsk = () => {
   const c = convo(); if (!c || c.closed) return; const n = S.me?.gifts_left || 0;
   sheet(`${sheetHead('Botella con lacre')}<div class="giftart"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span></div>
-    <p class="muted" style="font-size:14px;margin:0 0 14px;text-align:center">Una botella dorada, sellada, que se queda en su conversación. A ${c.revealed ? esc(c.alias) : 'esta persona'} le regala una botella para lanzar.</p>
+    <p class="muted" style="font-size:14px;margin:0 0 14px;text-align:center">Una botella sellada que se queda en esta conversación. A ${c.revealed ? esc(c.alias) : 'esta persona'} le regala una botella para lanzar.</p>
     ${n ? `<button class="btn btn-a" data-act="giftGo">${icon('gift')} Mandarla (te ${n === 1 ? 'queda 1' : 'quedan ' + n})</button>` : `<button class="btn btn-a" data-act="giftGet">${icon('bag')} Pedir una gratis en el muelle</button>`}<button class="btn btn-ghost" data-act="closeSheet" style="margin-top:6px">Ahora no</button>`);
 };
 P.actions.giftGet = async el => { el.classList.add('soft'); try { await claim('gift'); P.actions.giftAsk(); } catch (e) { el.classList.remove('soft'); err(e); } };
@@ -163,10 +163,10 @@ P.actions.planAsk = () => {
 P.actions.planPick = el => { P.st.plan[el.dataset.f] = +el.dataset.v; P.actions.planAsk(); };
 P.actions.planGo = async el => {
   const c = convo(), F = P.st.plan; el.classList.add('soft');
-  try { await rpc('send_plan', { p_convo: c.id, p_place: PLACES[F.place][0], p_when: `${PLAN_DAYS[F.day]}, ${PLAN_TIMES[F.time]}` }); closeSheet(); await Promise.all([loadMsgs(c.id), loadConvos()]); S.convo = S.convos.find(x => x.id === c.id) || c; rerender(); toast('Propusiste el plan. Te avisamos cuando responda.'); }
+  try { await rpc('send_plan', { p_convo: c.id, p_place: PLACES[F.place][0], p_when: `${PLAN_DAYS[F.day]}, ${PLAN_TIMES[F.time]}` }); closeSheet(); await Promise.all([loadMsgs(c.id), loadConvos()]); S.convo = S.convos.find(x => x.id === c.id) || c; rerender(); toast('Propusiste el plan. Su respuesta aparece en este chat.'); }
   catch (e) { el.classList.remove('soft'); err(e); }
 };
-P.actions.planOk = async el => { const c = convo(); el.classList.add('soft'); try { await rpc('accept_plan', { p_convo: c.id }); await loadMsgs(c.id); rerender(); toast('¡Plan hecho! Vayan a un lugar público y avísale a alguien de confianza.'); } catch (e) { el.classList.remove('soft'); err(e); } };
+P.actions.planOk = async el => { const c = convo(); el.classList.add('soft'); try { await rpc('accept_plan', { p_convo: c.id }); await loadMsgs(c.id); rerender(); toast('¡Plan hecho! Cuéntale a alguien de confianza dónde y a qué hora.'); } catch (e) { el.classList.remove('soft'); err(e); } };
 
 /* ================= LLAMADA DE EJEMPLO ================= */
 /* Con una persona de ejemplo, la llamada reproduce su saludo grabado: así se prueba todo el recorrido. */

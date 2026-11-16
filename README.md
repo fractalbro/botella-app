@@ -1,6 +1,6 @@
 # Botella · beta
 
-Lanza tu voz al mar: grabas una pregunta, llega a tres personas afines y quien quiere, te responde con su voz.
+Lanza tu voz al mar: grabas una pregunta, llega a ocho personas afines y quien quiere, te responde con su voz.
 
 PWA estática sin build: `index.html`, `app.js` (base, voz, dibujo del mar), `screens.js` (pantallas), `extras.js` (muelle, marea destacada, salidas, regalos, planes), `more.js` (primer día, constancia, pregunta de la marea, mapa de tu voz, botella para dos, lecturas, avisos push), `live.js` (llamadas, avisos en vivo, arranque), `styles.css` (estilo del prototipo) y `app.css`.
 Backend: Supabase (auth, Postgres con RLS, Storage para notas de voz, Realtime para avisos y señalización de llamadas) y funciones de Vercel en `api/` (avisos push y filtro de las lecturas).
@@ -45,6 +45,8 @@ Desde ahí, cada cambio a `supabase/schema.sql` se aplica solo. Sin el secreto, 
 - **Tu primer día**: escuchar, responder y lanzar. Al completarlo ganas una botella que llega lejos.
 - **La marea de las 21:00**: una pregunta del día para todos. Tu voz sale a las 21:00 y abre las voces de los demás. Las botellas sin abrir se van con la marea.
 - **Constancia**: cada día que usas tu voz suma. Vidrios y regalos se ganan con días seguidos, no se compran (`unlock_plan()` en el schema).
+- **Alcance**: cada botella llega a 8 personas afines; si en 6 horas nadie responde, llega a 4 más (una sola vez). La que llega lejos va a 20.
+- **Un tema en común, nunca el distrito**: antes del nombre se ve "Alguien que ama el cine". El distrito es privado: solo acerca botellas y sugiere lugares para un plan.
 - **Conversaciones por etapas**: Voces → Nombres → Llamada → Plan. La llamada se abre con 2 notas de voz de cada uno; el plan, después de hablar. Sin respuesta en 48 horas la conversación vuelve al mar.
 - **Botella para dos** (`?d=`) y **Pide una lectura** (`?l=`): links para compartir. Las lecturas se responden sin cuenta, solo mayores de 18, con filtro antes de entregar y el dueño puede borrar, reportar (bloquea ese celular) y cerrar. Duran 24 horas.
 - **Avisos push**: en iPhone solo funcionan con Botella agregada a la pantalla de inicio (iOS 16.4 o más).
