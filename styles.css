@@ -419,7 +419,7 @@ input{font:inherit;color:inherit}
 .paper .vn .vd{color:#7A6A50}
 .row{display:flex;gap:14px;align-items:center;padding-block:15px;border-top:1px solid var(--line);width:100%;text-align:left}
 .row .t{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:-.01em}
-.row .s{font-size:12.5px;color:var(--muted);margin-top:3px;display:block}
+.row .s:not(.i){font-size:12.5px;color:var(--muted);margin-top:3px;display:block}
 .shores{display:flex;gap:6px;margin-top:8px}
 .shores i{width:22px;height:4px;border-radius:2px;background:var(--line)}
 .shores i.on{background:var(--a);box-shadow:0 0 8px var(--a)}
