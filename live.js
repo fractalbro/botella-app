@@ -132,7 +132,7 @@ async function enter(fresh) {
     else if (S.link?.l) { P.hist = ['orilla']; go('lecpub'); }
     else if (S.link?.d) { P.hist = ['orilla']; go('duojoin'); }
     else if (S.after === 'lectura') { S.after = null; P.hist = ['orilla']; go('lecturas'); }
-    else if (first?.convo) { P.hist = ['orilla']; await openChat(first.convo, { noPush: true }); setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu respuesta llegó', text: 'Te contesta en un minuto.' }), 900); }
+    else if (first?.convo) { P.hist = ['orilla']; await openChat(first.convo, { noPush: true }); } // el chat ya muestra que la respuesta viene en camino
     else if (fresh) setTimeout(() => banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Tu regalo de bienvenida', text: '8 botellas para empezar. Tócalas.', go: 'store' }), 1200);
     if (S.pendingGo && !S.link) { const g = S.pendingGo; S.pendingGo = null; LS.set('seenAt', new Date().toISOString()); setTimeout(() => noticeGo(g), 300); }
     else if (!fresh) setTimeout(missed, 1500); else LS.set('seenAt', new Date().toISOString());
@@ -141,7 +141,7 @@ async function enter(fresh) {
 }
 /* Si el servidor no tiene la última versión de supabase/schema.sql, se dice claro en vez de mostrar saldos en cero. */
 function outdatedSheet() {
-  sheet(`${sheetHead('Estamos actualizando Botella')}<p class="muted" style="font-size:14px;margin:0 0 16px">Por unos minutos pueden faltar botellas o el muelle. No perdiste nada: vuelve a entrar en un rato.</p>
+  sheet(`${sheetHead('Estamos actualizando Botella')}<p class="muted" style="margin:0 0 16px">Por unos minutos pueden faltar botellas o el muelle. No perdiste nada: vuelve a entrar en un rato.</p>
     <button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
 }
 function boot() {

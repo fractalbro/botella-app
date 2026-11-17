@@ -1,0 +1,419 @@
+/* Botella · sistema de diseño v1. Se carga después de app.css y manda sobre él.
+   Gramática: cápsula con relleno = se toca · rectangulito chico = solo informa ·
+   turquesa sólido = LO principal de la vista (uno solo) · crema = solo lo que dice otra persona. */
+
+/* ---------- Tokens ---------- */
+:root{
+  /* Tipografía: 6 tamaños */
+  --t-cap:11px;                         /* etiqueta, eyebrow, pestañas, hora, insignia */
+  --t-sub:13px;                         /* texto secundario, chip, botón pequeño, toast */
+  --t-body:15px;                        /* texto, botón, título de fila de ajustes */
+  --t-head:17px;                        /* título de tarjeta/fila */
+  --t-title:clamp(22px,6.4vw,26px);     /* título de raíz, h2, pregunta en papel */
+  --t-display:clamp(30px,9.4vw,38px);   /* título héroe, cifras grandes */
+  /* exentos (ilustración): .wordmark, .splash .wm, .moment .mword, .streakbig b, .boot · inputs: 16px (iOS) */
+
+  /* Espaciado base 4 */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;
+  --pad:20px;
+
+  /* Radios */
+  --r-tag:6px;--r-sm:12px;--r-card:20px;--r-sheet:28px;--r-pill:999px;
+
+  /* Color: superficies */
+  --c-bg:#05121F;
+  --c-surface:rgba(244,239,231,.05);
+  --c-surface-sea:rgba(5,18,31,.86);
+  --c-elev:#12212F;
+  --c-line:rgba(244,239,231,.10);
+  --c-line-2:rgba(244,239,231,.22);
+  /* Color: texto */
+  --c-fg:#F4EFE7;--c-fg-2:#ADA6A2;--c-fg-3:#938C8A;
+  /* Color: semánticos */
+  --c-primary:#7FD8C9;--c-on-primary:#04121C;
+  --c-tonal:rgba(127,216,201,.16);--c-tonal-press:rgba(127,216,201,.26);
+  --c-secondary:rgba(244,239,231,.12);--c-secondary-press:rgba(244,239,231,.18);
+  --c-info:rgba(244,239,231,.07);
+  --c-success:#93DDA6;--c-success-bg:rgba(147,221,166,.13);
+  --c-warn:#FFD68C;--c-warn-bg:rgba(255,214,140,.12);
+  --c-flame:#FFB061;
+  --c-danger:#FF6B6F;
+  --c-paper:#F3E6C8;--c-paper-ink:#2A2016;
+  --c-scrim:rgba(2,8,14,.64);
+  /* Movimiento */
+  --d-fast:120ms;--d-base:200ms;--d-screen:320ms;--d-exit:240ms;
+  --e-out:cubic-bezier(.2,.8,.2,1);
+  --hl:var(--c-primary);
+}
+
+/* ---------- Márgenes y secciones ---------- */
+.pad{padding-left:max(var(--pad),env(safe-area-inset-left,0px));padding-right:max(var(--pad),env(safe-area-inset-right,0px))}
+.chips.row,.ideas,.hscroll,.ehs{margin-inline:calc(-1*var(--pad));padding-inline:var(--pad)}
+.sec{margin-top:var(--s8)} .sec>.eyebrow{margin-bottom:var(--s3)}
+
+/* ---------- Tipografía de jerarquía ---------- */
+.display{font-size:var(--t-display)} .h2,.paper .q,.tq .q{font-size:var(--t-title)} .h3{font-size:var(--t-head)}
+.lead,.coach p{font-size:var(--t-body)} .small,.transcript,.rec .hint,.nextl{font-size:var(--t-sub)}
+.eyebrow,.msg .when,.crow .cl1 time,.stg,.thread .day,.today small,.minipaper small,.bal span,.look span,.wd small,.float span small{font-size:var(--t-cap)}
+.eyebrow{color:var(--c-fg-2)}                 /* gris = encabezado de sección */
+.eyebrow.a{color:var(--c-primary)}            /* solo sobre un título display o dentro de tarjeta destacada */
+.stat2 b,.bal b,.spack b,.pack .qty,.pp b,.rec .time{font-size:var(--t-display)}
+.field input,.select select{font-size:16px}
+
+/* ---------- Botones: siempre cápsula y con relleno ---------- */
+.btn{height:52px;border-radius:var(--r-pill);font-size:var(--t-body);font-weight:600;gap:var(--s2);padding-inline:var(--s5);border:0;
+  transition:transform var(--d-fast),background var(--d-base),color var(--d-base)}
+.btn:active{transform:scale(.97)}
+/* Primario: turquesa sólido. UNO por vista. */
+.btn-a{background:var(--c-primary);color:var(--c-on-primary);box-shadow:none}
+.foot .btn-a{box-shadow:0 10px 28px -14px var(--c-primary)}
+/* Tonal */
+.btn-tonal{background:var(--c-tonal);color:var(--c-primary);border:0;box-shadow:none}
+.btn-tonal:active{background:var(--c-tonal-press)}
+/* Secundario: gris, sin borde */
+.btn-ghost,.btn-glass,.btn-light{background:var(--c-secondary);color:var(--c-fg);border:0;box-shadow:none}
+.btn-ghost:active,.btn-glass:active,.btn-light:active{background:var(--c-secondary-press)}
+/* Terciario: solo texto turquesa */
+.btn-text,.linkbtn,.top .btn-ghost.btn-sm{height:44px;width:auto;padding-inline:var(--s2);background:none;border:0;
+  color:var(--c-primary);font-size:var(--t-body);font-weight:600;text-decoration:none}
+.btn-text:active,.linkbtn:active{background:none;opacity:.7}
+/* Pequeño */
+.btn-sm,.scard .btn,.duoacts .btn,.code .btn,.sitem .pr .btn,.plancard .btn,.coach .btn{height:36px;padding:0 var(--s4);
+  font-size:var(--t-sub);border-radius:var(--r-pill);width:auto;flex:none;box-shadow:none}
+.btn-text.btn-sm{height:36px;font-size:var(--t-sub)}
+/* Estados */
+.btn-a.soft{opacity:1;background:var(--c-secondary);color:var(--c-fg-2);box-shadow:none}   /* falta grabar / cargando */
+.btn[disabled]{opacity:1;background:var(--c-secondary);color:var(--c-fg-3);border:0;box-shadow:none}
+/* Pastilla de acción dentro de una fila tocable */
+.act,button .pill.a{display:inline-flex;align-items:center;gap:var(--s1);height:32px;padding:0 14px;border-radius:var(--r-pill);
+  background:var(--c-tonal);color:var(--c-primary);font-size:var(--t-sub);font-weight:600;white-space:nowrap;flex:none}
+button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
+/* Enlace de cabecera "Escuchar →" = tonal pequeño */
+.shoreh .go{height:36px;border:0;background:var(--c-tonal);color:var(--c-primary);font-size:var(--t-sub);border-radius:var(--r-pill)}
+
+/* ---------- Chip seleccionable: solo borde; elegido = tinte + borde turquesa + ✓ ---------- */
+.chip{height:36px;padding:0 14px;border-radius:var(--r-pill);background:transparent;border:1px solid var(--c-line-2);
+  color:var(--c-fg-2);font-size:var(--t-sub);font-weight:500;gap:6px;transition:all var(--d-base)}
+.chip:active{transform:scale(.97)}
+.chip.on{background:var(--c-tonal);border-color:var(--c-primary);color:var(--c-fg)}
+.chip.on::before{content:"";width:9px;height:5px;margin:-3px 2px 0 0;border-left:2px solid var(--c-primary);
+  border-bottom:2px solid var(--c-primary);transform:rotate(-45deg);flex:none}
+.chip.genre{min-height:40px}
+/* Segmentado (no es chip): elegido = gris elevado, no crema */
+.seg button.on{background:var(--c-secondary-press);color:var(--c-fg)}
+.ideas .idea.on,.lq.on{border-color:var(--c-primary);background:var(--c-tonal)}
+
+/* ---------- Etiqueta informativa: rectángulo chico, sin borde, no se toca ---------- */
+.tag,.pill,.crow .cl2 em,.who i{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:var(--r-tag);
+  background:var(--c-info);color:var(--c-fg-2);font-size:var(--t-cap);font-weight:600;font-style:normal;letter-spacing:.02em;
+  line-height:1;white-space:nowrap;border:0;text-transform:none;flex:none;pointer-events:none}
+.tag .i,.pill .i,.who i .i{width:12px;height:12px}
+.tag.ok,.pill.a:not(button .pill){background:var(--c-success-bg);color:var(--c-success)}
+.tag.warn{background:var(--c-warn-bg);color:var(--c-warn)}
+.ptag,.pack .flag,.spack em,.hot{border-radius:var(--r-tag);font-size:var(--t-cap);background:var(--c-warn-bg);color:var(--c-warn)}
+
+/* ---------- Insignia de conteo ---------- */
+.cnt,.tabs .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--c-primary);color:var(--c-on-primary);font-size:var(--t-cap);font-weight:700;font-style:normal;line-height:1;margin-left:6px;flex:none}
+.tabs .badge{margin:0;top:2px;right:calc(50% - 22px)}
+.quick .tide b{display:flex;align-items:center;white-space:nowrap}
+
+/* ---------- Tarjeta: normal y destacada ---------- */
+.card,.today,.tq,.nextup,.empty-note,.scard,.mrow,.orow,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack,.spack,
+.look,.btype,.frees>div,.bal>div,.stat2,.lq,.keys,.ecard,.pcard,.fcard,.lookcard,.passrow,.seasonc,.whoteaser,.travel,.quick .tide{
+  border-radius:var(--r-card);border:1px solid var(--c-line);border-style:solid;background:var(--c-surface)}
+.screen.sea :is(.card,.today,.tq,.mrow,.orow,.travel,.quick .tide){background:var(--c-surface-sea)}
+:is(.card,.tq,.nextup,.empty-note,.sharebox,.invite,.captain,.plan){padding:var(--s4)}
+:is(.today,.mrow,.orow,.scard,.mapcard,.duorow){padding:var(--s3) 14px!important}
+.card-hl,.today.gold,.today.quest,.tq,.scard.on,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack.best,.spack.best,
+.look.on,.passrow.own,.ecard.owned,.pcard.owned,.lookcard.owned,.btype.on{
+  --hl:var(--c-primary);border-color:color-mix(in srgb,var(--hl) 45%,transparent)!important;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--hl) 12%,transparent),transparent 70%),var(--c-surface)}
+.today.gold,.tq,.duorow,.captain{--hl:var(--c-warn)}
+.btype.on{--hl:rgb(var(--bc))}
+.card-hl .eyebrow,.today .tx small{color:var(--hl)}
+
+/* ---------- Aviso en línea: explica, no se toca ---------- */
+.note,.samplenote,.safe,.beta,.tdone{display:flex;gap:10px;align-items:flex-start;padding:var(--s3) 14px;border-radius:var(--r-sm);
+  background:var(--c-info);border:0;font-size:var(--t-sub);line-height:1.45;color:var(--c-fg-2)}
+.samplenote{border:1px dashed var(--c-line-2)}
+.beta,.tdone{background:var(--c-warn-bg)} .beta .i,.tdone .i{color:var(--c-warn)}
+.note .i,.safe .i{color:var(--c-fg-2)}
+
+/* ---------- Fila de lista tocable ---------- */
+.row,.setrow,.lrow,.urow,.item,.place,.arow{min-height:56px;gap:var(--s3);padding-block:var(--s3);border-top:1px solid var(--c-line)}
+.setrow b,.urow .tx b,.item b,.scard .tx b,.mapcard b,.sitem .tx b{font-family:var(--sans);font-size:var(--t-body);font-weight:600}
+.row .t,.lrow .t,.mrow .t,.orow .t,.today b,.crow .cl1 b,.place b{font-size:var(--t-head)}
+.row .s:not(.i),.lrow .s:not(.i),.orow .s:not(.i),.arow .s:not(.i),.setrow span span,.urow .tx span,.item .tx span,
+.sitem .tx span,.scard .tx span,.mapcard span span,.today .tx>span{font-size:var(--t-sub);color:var(--c-fg-2)}
+:is(.row,.setrow,.lrow,.today,.mapcard,.travel)>.i:last-child{width:16px;height:16px;color:var(--c-fg-3);flex:none;margin-left:auto}
+.chev::after{content:"";width:7px;height:7px;margin:0 4px 0 auto;flex:none;border-right:1.5px solid var(--c-fg-3);
+  border-top:1.5px solid var(--c-fg-3);transform:rotate(45deg)}
+.reveal::after{border-color:var(--c-fg-3)}
+.setrow.danger b,.setrow.danger>.i:first-child{color:var(--c-danger)}   /* Bloquear / Reportar / Borrar */
+
+/* ---------- Toast: oscuro, abajo, sobre el pie ---------- */
+.toast{top:auto!important;bottom:var(--toast-b,96px);left:var(--s4);right:var(--s4);display:flex;align-items:center;gap:10px;
+  background:var(--c-elev);color:var(--c-fg);border:1px solid var(--c-line-2);border-radius:var(--r-sm);padding:var(--s3) 14px;
+  font-size:var(--t-sub);font-weight:500;line-height:1.35;box-shadow:0 18px 40px -12px rgba(0,0,0,.7);
+  animation:dsToast 3.2s var(--e-out) forwards;transition:bottom var(--d-base) var(--e-out);pointer-events:none}
+.toast::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c-primary);flex:none}
+.toast.err::before{background:var(--c-danger)}
+@keyframes dsToast{0%{opacity:0;transform:translateY(8px)}6%,92%{opacity:1;transform:none}100%{opacity:0;transform:translateY(4px)}}
+
+/* ---------- Barra de pestañas ---------- */
+.tabs{border-top:1px solid var(--c-line);background:rgba(5,18,31,.96);padding-top:6px}
+.tabs button{min-height:49px;gap:2px;font-size:var(--t-cap);font-weight:500;color:var(--c-fg-3)}
+.tabs button.on{color:var(--c-fg)} .tabs button.on .i{color:var(--c-primary)}
+.tabs button:active{transform:scale(.94)}
+
+/* ---------- Cabecera de Orilla: cápsula gris, color solo en el ícono ---------- */
+.streak,.mybottles{height:36px;padding:0 12px 0 10px;gap:6px;border:0;background:var(--c-secondary);color:var(--c-fg);white-space:nowrap}
+.streak.on{background:var(--c-secondary);border:0} .streak.on .i{color:var(--c-flame)}
+.mybottles span,.streak span{font-size:var(--t-sub);color:var(--c-fg-2);white-space:nowrap}
+@media (max-width:390px){.streak span{display:none}.top .wordmark{font-size:26px!important}}
+
+/* ---------- Hoja ---------- */
+.sheet{background:var(--c-elev);border-radius:var(--r-sheet) var(--r-sheet) 0 0}
+.sheet .h3{font-weight:600}
+
+/* ---------- Movimiento ---------- */
+.rise.d1{animation-delay:40ms}.rise.d2{animation-delay:80ms}.rise.d3{animation-delay:120ms}
+.rise.d4,.rise.d5{animation-delay:120ms}
+.paper{animation-duration:600ms;animation-delay:200ms}
+.chip,.act,.today,.mrow,.orow,.lrow,.setrow,.crow,.travel,.quick .tide{transition:transform var(--d-fast),background var(--d-base)}
+:is(.chip,.today,.mrow,.orow,.lrow,.crow,.travel,.quick .tide,.lq,.btype,.look):active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.toast{animation-duration:2.6s}}
+/* Pantalla de 320: el atajo puede ir en dos líneas, pero el número viaja pegado a la última palabra */
+@media (max-width:360px){.quick .tide b{display:block;white-space:normal;line-height:1.25}.quick .tide .cnt{margin-left:4px;vertical-align:1px}}
+/* En 320 la cabecera no cabe entera: queda el número (el aria-label dice "para lanzar") y la esfera del perfil no se sale */
+@media (max-width:360px){.mybottles span{display:none}.streak,.mybottles{margin-right:6px}}
+
+/* ===== fase 2 ===== */
+/* Orilla: estado de tu última botella como texto; "Más en Botella" como fila discreta con sus dos accesos */
+.statusline{display:flex;align-items:center;gap:8px;margin:10px 2px 0;font-size:var(--t-sub);color:var(--c-fg-2)}
+.statusline>span:first-of-type{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statusline b{color:var(--c-fg);font-weight:500} .statusline .i{color:var(--c-fg-2);flex:none}
+.statusline .shores{display:flex;gap:3px;flex:none} .statusline .shores i{width:4px;height:12px;border-radius:2px;background:var(--c-line-2)}
+.statusline .shores i.on{background:var(--c-primary)}
+.morerow{margin-top:6px;padding-top:6px;border-top:1px solid var(--c-line)}
+.morerow .eyebrow{display:block;margin:0 2px}
+.morerow>div{display:flex;gap:var(--s4);flex-wrap:nowrap}
+.mlink{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 2px;background:none;border:0;color:var(--c-primary);
+  font-size:var(--t-sub);font-weight:600;white-space:nowrap}
+.mlink:active{opacity:.7} .mlink .cnt{margin-left:0}
+@media (max-width:360px){.mlink .i{display:none}.morerow>div{gap:var(--s3)}}
+@media (max-height:700px){.shorebot .statusline .shores{display:none}.shorebot .statusline{margin-top:8px}.morerow{margin-top:4px;padding-top:4px}.mlink{height:32px}}
+/* Chat: un solo hueco fijo para el siguiente paso, entre el hilo y la barra de grabar */
+.nextstep{flex:none;padding-top:8px;padding-bottom:4px}
+.nextstep .scard{flex-wrap:nowrap;margin:0}
+.realnext .btn-text{display:inline;height:auto;padding:0;font-size:inherit;width:auto}
+.nextstep .scard .si{display:none}.nextstep .scard .tx{min-width:0}.nextstep .scard .tx b{font-size:var(--t-body);line-height:1.3}
+.nextstep .scard .tx span{line-height:1.35}
+/* Lanzar: deslizar es un gesto extra, sin caja; el botón es lo principal */
+.fling{border:0!important;background:none!important;min-height:64px;height:auto!important}
+.fling .ft{font-size:var(--t-cap)!important;color:var(--c-fg-2)}
+.rec .btn-text{margin-top:4px}
+/* Aviso con una hoja alta abierta: va dentro de la hoja, bajo su título, y empuja el contenido en vez de taparlo */
+.toast.insheet{position:sticky;top:0;bottom:auto!important;left:auto;right:auto;max-width:none;margin:0 0 var(--s3);z-index:2}
+/* Muelle: tus botellas en una línea de texto; precio tachado como texto junto a "Pedir" */
+.baltxt{margin:12px 2px 0;line-height:1.5} .baltxt b{color:var(--c-fg);font-weight:600}
+.pr-old{font-size:var(--t-cap);color:var(--c-fg-2);white-space:nowrap}
+/* Mis botellas: las que siguen en el mar, atenuadas; "Ver con quién conectó" como enlace */
+.row.drift .t,.row.drift .s{opacity:.72}
+.who-up.btn-text{color:var(--c-primary);display:inline-flex;align-items:center;gap:4px;height:32px;padding:0;margin-top:4px;font-size:var(--t-sub);border:0;background:none}
+/* Conversaciones: las que te toca responder, arriba y en blanco pleno */
+.crow.wait .cl1 b{color:var(--c-fg-2);font-weight:500}
+.crow.new .cdot{width:10px;height:10px}
+.row[data-act=mineGo]{flex-wrap:wrap;row-gap:var(--s2)} .row[data-act=mineGo]>span:first-child{flex:1 1 100%!important}
+.who-up.btn-text{white-space:nowrap}
+/* ---------- Pulido (fase 3): textos que no se parten raro y nada que choque en 320 px ---------- */
+/* Registro: la respuesta guardada se dice bajo el título, como una línea; no flota encima */
+.savedl{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:var(--t-sub);color:var(--c-fg-2)} .savedl .i{color:var(--c-primary);flex:none}
+/* Chat: la línea de conteo se parte pareja */
+.nextl{text-wrap:balance}
+/* Lecturas: "Escúchala para ver quién es" en su línea; "Nueva · hace 22 min" debajo */
+.arow.new .s .who{display:block;text-wrap:balance} .arow .s .m{display:block;font-weight:500;color:var(--c-fg-2);margin-top:2px}
+/* Precios: "S/ 4.90" nunca se parte */
+.spack s,.look s,.sitem s,.pr-old{white-space:nowrap}
+/* Conversaciones: el estado se lee entero (hasta dos líneas), sin puntos suspensivos */
+.crow .cl2>span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* Chat: si el texto del siguiente paso no cabe junto al botón, el botón baja (nunca una columna angosta) */
+.nextstep .scard{flex-wrap:wrap;row-gap:var(--s2)} .nextstep .scard .tx{flex:1 1 190px}
+/* Primer día: el rótulo "Tu primer día · 2 de 3" va en una línea */
+.today.quest small{white-space:nowrap}
+@media (max-width:360px){
+  /* primer día: el rótulo ya dice "2 de 3"; los círculos sobran en 320 px */
+  .shorebot .today.quest .qs{display:none}
+  /* filas con botella dibujada y tienda: menos ancho para el dibujo, más para el texto */
+  .mrow .bsv,.mrow.voice .bsv{width:34px} .mrow{gap:8px;padding-inline:12px!important} .mrow .act{padding:0 10px}
+  .orow .oi{display:none}
+  .sitem .art{width:44px} .sitem .art .gb,.sitem .art svg{width:42px}
+  /* "4 para lanzar": la cifra siempre con su frase */
+  .mybottles span{display:inline;font-size:var(--t-cap)} .mybottles{padding:0 9px 0 8px;gap:4px}
+  .streak span{display:none} .streak{padding:0 9px 0 8px}
+  /* cabecera de la orilla: la gota, "4 para lanzar" y tu perfil caben en 320 px */
+  .top:has(.mybottles){gap:6px} .streak,.mybottles{margin-right:0!important} .top .wordmark{font-size:23px!important}
+  #kinds{flex-wrap:nowrap;gap:6px} #kinds .chip{padding-inline:12px}
+}
+/* Pantallas bajas (iPhone SE): menos aire para que lo principal quepa sin desplazarse */
+@media (max-height:600px){
+  .sec{margin-top:18px}
+  .scroll>.display:first-child{margin-top:12px!important}
+  .rec .wave{height:26px} .rec .time{font-size:26px}
+  .openspace.up{height:13%!important} .openhint.sample{display:none}
+}
+/* ---------- Refinado (fase 4) ---------- */
+/* Páginas públicas (lectura y botella para dos) en pantallas bajas: el micrófono a la vista sin desplazar */
+@media (max-height:600px){
+  .screen.pub .pubgap{height:0!important}
+  .screen.pub .display{font-size:var(--t-title)}
+  .screen.pub .paper{margin-top:var(--s3)!important}
+  .screen.pub .sec{margin-top:var(--s4)!important} .screen.pub .sec>.eyebrow{margin-bottom:var(--s2)}
+}
+/* Los colores viejos apuntan a los tokens: un solo gris de línea, de superficie y de relleno secundario */
+:root{--line:var(--c-line);--glass:var(--c-surface);--glass2:var(--c-secondary);--muted:var(--c-fg-2);--dim:var(--c-fg-3)}
+
+/* Tamaños sueltos → al token más cercano */
+.top .title{font-size:var(--t-body)} .top .title small{font-size:var(--t-sub)} .top .title small.pre{font-size:var(--t-cap)}
+.vn .vd{font-size:var(--t-sub)}
+.float span{font-size:var(--t-cap);border-radius:var(--r-sm)}
+@media (max-width:360px){.float span{max-width:148px}}
+.shorebot .h2{font-size:var(--t-head)!important}
+.sheet>p:not(.small){font-size:var(--t-body)}
+.giftcard b,.plancard b{font-size:var(--t-body)} .giftcard span,.plancard span{font-size:var(--t-sub)} .plancard .eyebrow{font-size:var(--t-cap)}
+.giftcard,.plancard{border-radius:var(--r-card)}
+.rulesbox,.odet p,.lq{font-size:var(--t-body)} .check{font-size:var(--t-sub)} .rules li,.free li,.perks li{font-size:var(--t-sub)}
+.sitem .tx b em,.spack .pn,.look b,.btype em,.stat2 span,.sys,.banner b,.banner span{font-size:var(--t-sub)}
+.pr-old s,.pp s,.spack s,.btype span{font-size:var(--t-cap)}
+.tq .btn{font-size:var(--t-body);white-space:nowrap}
+@media (max-width:360px){.tq .btn{padding-inline:var(--s3)}.tq .btn .i{display:none}}
+/* Radios sueltos → al token más cercano */
+.paper{border-radius:var(--r-tag) var(--r-tag) var(--r-card) var(--r-card)}
+.minipaper{border-radius:var(--r-tag) var(--r-tag) var(--r-sm) var(--r-sm)}
+.ideas .idea,.mapbox,.coach,.banner{border-radius:var(--r-card)}
+.lq,.sys,.banner .bi{border-radius:var(--r-sm)}
+.check .box{border-radius:var(--r-tag)}
+.seg,.seg button{border-radius:var(--r-pill)}
+/* Colores sueltos → tokens */
+.coach{background:var(--c-elev);border-color:color-mix(in srgb,var(--c-primary) 40%,transparent)}
+.giftcard{background:linear-gradient(150deg,var(--c-warn-bg),transparent 70%),var(--c-surface);border-color:color-mix(in srgb,var(--c-warn) 35%,transparent)}
+.sheet{padding-bottom:max(var(--s6),env(safe-area-inset-bottom,0px))}
+
+/* Presionado: 120 ms, escala .97 y un tono más claro en todo lo que se toca */
+.btn-a:active{background:color-mix(in srgb,var(--c-primary) 86%,#fff)}
+.btn[disabled],.btn[disabled]:active,.btn-a.soft:active{transform:none;cursor:default}
+.btn[disabled] .i{opacity:.6}
+.chip{transition:transform var(--d-fast) var(--e-out),background-color var(--d-base),border-color var(--d-base),color var(--d-base)}
+.chip:active{background:var(--c-info)} .chip.on:active{background:var(--c-tonal-press)}
+.chip:disabled{opacity:.5;transform:none}
+.iconbtn{transition:transform var(--d-fast) var(--e-out),background-color var(--d-base)}
+.iconbtn:active{transform:scale(.94)} .iconbtn.glass:active{background:var(--c-secondary-press)}
+.streak,.mybottles,.seg button,.ideas .idea,.setrow,.urow,.arow,.item,.place,.row,.lq,.check .box{transition:transform var(--d-fast) var(--e-out),background-color var(--d-base),border-color var(--d-base)}
+:is(.streak,.mybottles,.seg button,.ideas .idea,.setrow,.urow,.arow,.item,.place,.row):active{transform:scale(.97)}
+:is(.streak,.mybottles):active{background:var(--c-secondary-press)}
+.shoreh:active .go,.act:active{background:var(--c-tonal-press)}
+.mlink:active,.who-up:active{opacity:.7}
+
+/* Movimiento: tres duraciones y una curva */
+.rise{animation-duration:var(--d-screen);animation-timing-function:var(--e-out)}
+.enter-fade{animation-duration:var(--d-screen);animation-timing-function:var(--e-out)}
+.exit-fade{animation-duration:var(--d-exit)}
+.sheet{animation:dsSheet var(--d-screen) var(--e-out)}
+@keyframes dsSheet{from{transform:translateY(100%)}to{transform:none}}
+.banner{animation:dsBanner var(--d-screen) var(--e-out) both}
+.banner.out{animation:dsBannerOut var(--d-exit) var(--e-out) forwards}
+@keyframes dsBanner{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes dsBannerOut{to{opacity:0;transform:translateY(-8px)}}
+.coach{animation:rise var(--d-screen) var(--e-out) both}
+.coachring{transition:left var(--d-screen) var(--e-out),top var(--d-screen) var(--e-out),width var(--d-screen) var(--e-out),height var(--d-screen) var(--e-out),border-radius var(--d-screen) var(--e-out);
+  animation:coachin var(--d-screen) var(--e-out) both,coachp 1.8s ease-in-out var(--d-screen) infinite}
+.coach .dots i{transition:width var(--d-base) var(--e-out)}
+.lq,.check .box{transition-duration:var(--d-base)}
+@keyframes dsToastFade{0%{opacity:0}8%,90%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .toast{animation-name:dsToastFade}
+  .sheet,.banner,.banner.out,.coach,.coachring{animation:none;transition:none}
+  :is(.btn,.chip,.iconbtn,.act,.row,.setrow,.lrow,.urow,.arow,.crow,.item,.place,.today,.mrow,.orow,.lq,.btype,.look,.streak,.mybottles,.seg button,.ideas .idea,.tabs button):active{transform:none}
+}
+
+/* Botella de ejemplo en pantallas bajas: el aviso termina antes del desvanecido del pie */
+@media (max-height:600px){
+  .openspace.up:has(+ .scroll .openhint.sample){height:10%!important}
+  .samplenote{margin-top:var(--s2);padding-block:var(--s2)}
+}
+
+/* ===== chat variantes ===== */
+/* Cuatro maneras de mostrar lo mismo, para elegir con Cesar. Se activan con ?chat=a|b|c|d (?chat=0 vuelve a la de siempre). */
+/* Compartido: las 4 etapas como barrita con nombres (C y D). Tocarla abre la explicación. */
+.sbar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%;background:none;border:0;padding:0;text-align:left;color:inherit}
+.sbar i{display:grid;gap:5px;font-style:normal;min-width:0}
+.sbar b{height:4px;border-radius:2px;background:var(--c-line-2)}
+.sbar em{font-style:normal;font-size:var(--t-cap);font-weight:600;color:var(--c-fg-3);display:flex;align-items:center;gap:3px;white-space:nowrap}
+.sbar em .i{width:11px;height:11px;flex:none}
+.sbar .done b{background:color-mix(in srgb,var(--c-primary) 50%,transparent)} .sbar .done em{color:var(--c-fg-2)} .sbar .done em .i{color:var(--c-primary)}
+.sbar .cur b{background:var(--c-primary)} .sbar .cur em{color:var(--c-fg)}
+.sbar .open em{color:var(--c-fg-2)} .sbar .lock b{background:var(--c-line)}
+
+/* A · Tranquila: nombre en una línea, las etapas en un renglón chico que se toca, lo que sigue junto al micrófono */
+.v-a .top{gap:10px}
+.v-a .tcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+.v-a .tcol .title{flex:none;max-width:100%;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-a .title small.pre{display:inline;font-size:inherit;letter-spacing:0;margin:0;color:inherit}
+.v-a .title small.pre::after{content:' '}
+.v-a .title .tag{vertical-align:2px;margin-right:2px}
+.stmini{display:inline-flex;align-items:center;gap:6px;height:24px;max-width:100%;padding:0;background:none;border:0;color:var(--c-fg-2);font-size:var(--t-sub)}
+.stmini .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stmini .i{width:12px;height:12px;flex:none;color:var(--c-fg-3)}
+.stmini .dots{display:flex;gap:3px;flex:none}
+.stmini .dots i{width:6px;height:6px;border-radius:50%;background:var(--c-line-2)}
+.stmini .dots i.done{background:var(--c-primary)} .stmini .dots i.cur{background:none;box-shadow:inset 0 0 0 1.5px var(--c-primary)}
+.stmini:active{opacity:.7}
+.v-a .thread{gap:16px}
+.v-a .thread .day{background:none;border:0;padding:0;color:var(--c-fg-3)}
+.v-a .cfoot{border-top:1px solid var(--c-line);padding-top:12px}
+.anext{grid-column:1/3;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35;text-wrap:pretty}
+.anext b{color:var(--c-fg);font-weight:600}
+.anext .btn{width:auto}
+
+/* B · Capítulos: sin barra arriba; cada etapa empieza como un capítulo dentro del hilo */
+.v-b .thread{gap:18px}
+.chap{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;padding-top:14px;border-top:1px solid var(--c-line)}
+.thread>.samplenote+.chap,.thread>.chap:first-child{border-top:0;padding-top:0}
+.chap .cn{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:var(--t-sub);font-weight:700;box-shadow:inset 0 0 0 1.5px var(--c-primary);color:var(--c-primary)}
+.chap .cn .i{width:13px;height:13px}
+.chap b{font-size:var(--t-body);font-weight:600;line-height:1.25}
+.chap>span:not(.cn){font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35}
+.chap.done .cn{box-shadow:none;background:var(--c-tonal)} .chap.done b{color:var(--c-fg-2);font-weight:500}
+.chap.done{grid-template-columns:auto auto 1fr} .chap.done .cn{grid-row:auto} .chap.done>span:not(.cn){color:var(--c-fg-3)}
+.chapact .scard{margin:0}
+.chapnext{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;width:100%;background:none;border:1px dashed var(--c-line-2);border-radius:var(--r-sm);padding:10px 12px;color:var(--c-fg-3);font-size:var(--t-sub);text-align:left}
+.chapnext{display:grid;grid-template-columns:1fr auto;gap:6px 10px}
+.chapnext .nw{color:var(--c-fg-2);line-height:1.35} .chapnext .nw b{color:var(--c-fg);font-weight:600}
+.chapnext .af{grid-column:1;display:flex;flex-wrap:wrap;gap:2px 10px} .chapnext .af>span{color:var(--c-fg-2);font-weight:600}
+.chapnext i{font-style:normal;white-space:nowrap} .chapnext i.open{color:var(--c-fg-2)}
+.chapnext>.i{grid-column:2;grid-row:1/3;align-self:center;width:14px;height:14px} .chapnext:active{opacity:.7}
+
+/* C · Panel de abajo: arriba solo el nombre; las etapas, lo que sigue y el micrófono juntos abajo */
+.v-c .cpanel{flex:none;background:var(--c-elev);border-radius:var(--r-card) var(--r-card) 0 0;border-top:1px solid var(--c-line);padding-top:14px;box-shadow:0 -14px 30px -20px rgba(0,0,0,.7)}
+.v-c .cpanel .cfoot{padding-top:10px}
+.cnow{display:flex;align-items:center;gap:12px;margin-top:12px}
+.cnow .tx{flex:1;min-width:0} .cnow b{display:block;font-size:var(--t-body);font-weight:600;line-height:1.3}
+.cnow .tx span{font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35} .cnow .btn{width:auto;flex:none}
+
+/* D · Ficha: arriba lo que los une (su pregunta en papel y el tema) con el avance; el hilo debajo, solo voces */
+.v-d .ficha{flex:none}
+.fbox{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:12px;border-radius:var(--r-card);background:var(--c-surface);border:1px solid var(--c-line)}
+.fq{background:var(--c-paper);color:var(--c-paper-ink);border-radius:var(--r-tag) var(--r-tag) var(--r-sm) var(--r-sm);padding:10px 12px}
+.fq small{display:block;font-size:var(--t-cap);letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:#65563F;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fq span{font-family:var(--display);font-size:var(--t-head);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fnow{display:flex;align-items:center;gap:10px;font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35}
+.fnow .tx{flex:1;min-width:0} .fnow b{color:var(--c-fg);font-weight:600} .fnow .btn{width:auto;flex:none}
+.fq.mine{background:var(--c-secondary);color:var(--c-fg)} .fq.mine small{color:var(--c-fg-2)}  /* crema solo si la pregunta es de la otra persona */
+.v-d .ficha{padding-bottom:10px}
+.v-d .thread .minipaper{display:none}
+@media (max-width:360px){.sbar em .i{display:none}.sbar{gap:3px}}
+@media (max-height:600px){
+  .fbox{gap:8px;padding:10px} .fq{padding:8px 10px} .fq span{-webkit-line-clamp:1}
+  .v-c .cpanel{padding-top:10px} .cnow{margin-top:8px}
+}
