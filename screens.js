@@ -168,24 +168,30 @@ P.screens.orilla = {
 };
 P.actions.toLecturas = () => go('lecturas');
 /* primera visita a la orilla: tres pistas cortas, una sola vez */
+/* después de registrarte, una guía corta: se ilumina un accionable principal, lo demás queda en penumbra */
 const TOUR = [
   ['.float', 'Estas botellas traen voces', 'Son de personas de Lima con gustos parecidos a los tuyos. Toca una para escucharla.'],
   ['.shorebot > .btn-a', 'Lanza la tuya', 'Graba una pregunta o algo que quieras contar. Llega a 8 personas y quien quiere, te responde.'],
+  ['.mybottles', 'Tus botellas para lanzar', 'Cada día recibes una gratis, y ganas otra cuando respondes a alguien.'],
   ['.tabs [data-go=convos]', 'Si alguien responde, conversan aquí', 'En privado y primero solo con notas de voz. El nombre se ve cuando los dos quieran.']
 ];
 function tourCheck() {
   // espera un momento: la orilla a veces solo se cruza de paso hacia el chat de ejemplo
-  if (P.tour == null) { if (!LS.get('tour', 0) && S.me && S.shore.length) P.timers.push(setTimeout(() => { if (P.curId === 'orilla' && P.tour == null && !LS.get('tour', 0)) { LS.set('tour', 1); P.tour = 0; tourCheck(); } }, 1200)); return; } const [sel, t, d] = TOUR[P.tour], tg = P.root.querySelector(sel); if (!tg) return;
-  P.root.querySelectorAll('.coach,.coachring').forEach(e => e.remove());
-  const pr = P.root.getBoundingClientRect(), r = tg.getBoundingClientRect(), last = P.tour === TOUR.length - 1;
-  const ring = document.createElement('div'); ring.className = 'coachring'; Object.assign(ring.style, { left: r.left - pr.left - 6 + 'px', top: r.top - pr.top - 6 + 'px', width: r.width + 12 + 'px', height: r.height + 12 + 'px' });
-  const c = document.createElement('div'); c.className = 'coach'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', t);
-  c.innerHTML = `<span class="eyebrow a">${P.tour + 1} de ${TOUR.length}</span><b>${t}</b><p>${d}</p><div class="row2">${last ? '' : '<button class="linkbtn" data-act="tourEnd">Saltar</button>'}<button class="btn btn-a btn-sm" data-act="${last ? 'tourEnd' : 'tourNext'}">${last ? 'Entendido' : 'Siguiente'}</button></div>`;
-  if (r.top + r.height / 2 > pr.top + pr.height / 2) c.style.bottom = pr.bottom - r.top + 16 + 'px'; else c.style.top = r.bottom - pr.top + 16 + 'px';
-  P.root.append(ring, c);
+  if (P.tour == null) { if (!LS.get('tour', 0) && S.me && S.shore.length) P.timers.push(setTimeout(() => { if (P.curId === 'orilla' && P.tour == null && !LS.get('tour', 0)) { LS.set('tour', 1); P.tour = 0; tourCheck(); } }, 1200)); return; }
+  const [sel, t, d] = TOUR[P.tour], tg = P.root.querySelector(sel); if (!tg) return;
+  const pr = P.root.getBoundingClientRect(), r = tg.getBoundingClientRect(), last = P.tour === TOUR.length - 1, pad = 6;
+  let block = P.root.querySelector('.coachblock'), ring = P.root.querySelector('.coachring'); P.root.querySelector('.coach')?.remove();
+  if (!block) { block = document.createElement('div'); block.className = 'coachblock'; P.root.append(block); }
+  if (!ring) { ring = document.createElement('div'); ring.className = 'coachring'; P.root.append(ring); }
+  const rad = Math.min(26, (r.height + pad * 2) / 2);
+  Object.assign(ring.style, { left: r.left - pr.left - pad + 'px', top: r.top - pr.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px', borderRadius: rad + 'px' });
+  const c = document.createElement('div'); c.className = 'coach'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-live', 'polite'); c.setAttribute('aria-label', t);
+  c.innerHTML = `<span class="dots" aria-label="Paso ${P.tour + 1} de ${TOUR.length}">${TOUR.map((_, k) => `<i class="${k === P.tour ? 'on' : ''}"></i>`).join('')}</span><b>${t}</b><p>${d}</p><div class="row2">${last ? '' : '<button class="linkbtn" data-act="tourEnd">Saltar</button>'}<button class="btn btn-a btn-sm" data-act="${last ? 'tourEnd' : 'tourNext'}">${last ? 'Entendido' : 'Siguiente'}</button></div>`;
+  if (r.top + r.height / 2 > pr.top + pr.height / 2) c.style.bottom = pr.bottom - r.top + pad + 14 + 'px'; else c.style.top = r.bottom - pr.top + pad + 14 + 'px';
+  P.root.append(c); c.querySelector('.btn')?.focus({ preventScroll: true });
 }
 P.actions.tourNext = () => { P.tour++; tourCheck(); };
-P.actions.tourEnd = () => { P.tour = null; P.root.querySelectorAll('.coach,.coachring').forEach(e => e.remove()); };
+P.actions.tourEnd = () => { P.tour = null; P.root.querySelectorAll('.coach,.coachring,.coachblock').forEach(e => e.remove()); };
 P.actions.openFirst = () => { const fl = [...P.root.querySelectorAll('.float')], el = fl.find(f => !f.classList.contains('seen')) || fl[0]; if (el) P.actions.openB(el); };
 P.actions.openB = el => { S.sel = S.shore.find(b => b.id === el.dataset.id); if (!S.sel) return; P.st.uncorked = S.sel.status === 'opened'; const r = el.querySelector('svg').getBoundingClientRect(), p = phoneEl().getBoundingClientRect(); P.st.flyR = { x: r.left - p.left, y: r.top - p.top, w: r.width, h: r.height }; P.st.flyAt = performance.now(); go('open'); };
 
