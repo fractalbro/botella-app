@@ -35,12 +35,13 @@ P.actions.get = async el => { if (el.classList.contains('soft')) return; el.clas
 P.actions.toStore = () => go('store', { fade: true });
 const itemHTML = (it, btn) => `<div class="sitem${P.st.gotK === it.k ? ' got' : ''}"><span class="art">${it.art()}</span><span class="tx"><b>${it.name}${it.tag ? ` <em>${it.tag}</em>` : ''}</b><span>${it.desc}</span></span><span class="pr">${btn}</span></div>`;
 const getBtn = (k, label = 'Pedir') => `<button class="btn btn-tonal btn-sm" data-act="get" data-k="${k}">${label}</button>`;
+// Lo que tienes, en una línea: las normales siempre; las especiales solo si te queda alguna.
+const balLine = m => { const n = (v, a, b) => v ? `<b>${v}</b> ${v === 1 ? a : b}` : ''; return 'Tienes ' + [`<b>${m.bottles ?? 0}</b> ${m.bottles === 1 ? 'normal' : 'normales'}`, n(m.color_left, 'de color', 'de color'), n(m.far_left, 'que llega lejos', 'que llegan lejos'), n(m.tide_left, 'dorada', 'doradas'), n(m.gifts_left, 'con lacre', 'con lacre')].filter(Boolean).join(' · '); };
 P.screens.store = {
   cls: 'storebg',
   render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Muelle</span>${meBtn()}</div>
-    <p class="lead" style="margin-top:2px">El muelle es la tienda de Botella. Lanzar, escuchar, responder y llamar siempre es gratis; aquí están los extras.</p>
-    <div class="beta rise">${icon('spark', 's')}<span><b>Hoy todo es gratis y sin tarjeta.</b> El precio tachado es lo que costará después.</span></div>
-    <p class="small muted baltxt rise d1">Tienes <b>${m.bottles ?? 0}</b> normales · <b>${m.color_left ?? 0}</b> de color · <b>${m.far_left ?? 0}</b> que llegan lejos · <b>${m.tide_left ?? 0}</b> doradas · <b>${m.gifts_left ?? 0}</b> con lacre</p>
+    <div class="beta rise">${icon('spark', 's')}<span><b>Gratis por ahora y sin tarjeta.</b> El precio tachado es lo que costará después; lanzar y responder, siempre gratis.</span></div>
+    <p class="small muted baltxt rise d1">${balLine(m)}</p>
     <div class="sec rise d2"><span class="eyebrow">Botellas especiales</span>${STORE.specials.map(it => itemHTML(it, it.own && it.own() ? '<span class="tag ok">Activo</span>' : `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d2"><span class="eyebrow">Regalos</span>${STORE.gifts.map(it => itemHTML(it, `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d3"><span class="eyebrow">Tu vidrio · el color de tus botellas</span><div class="looks">${STORE.looks.map(it => { const on = (m.glass || null) === it.g; return `<button class="look${on ? ' on' : ''}" data-act="get" data-k="${it.k}"><span class="bsv">${btSVG('free', it.g)}</span><b>${it.name}</b><span>${on ? 'Usando' : it.price ? `<s>S/ ${it.price}</s> Gratis` : 'Gratis'}</span></button>`; }).join('')}</div></div>
@@ -89,7 +90,7 @@ const OUT_IDEAS = ['Caminata al atardecer', 'Preguntas frente al mar', 'Confesio
 const whenTxt = iso => { const d = new Date(iso), o = { timeZone: 'America/Lima' }; const day = d.toLocaleDateString('es-PE', { ...o, weekday: 'long', day: 'numeric', month: 'short' }); const t = d.toLocaleTimeString('es-PE', { ...o, hour: 'numeric', minute: '2-digit', hour12: true }); return day.charAt(0).toUpperCase() + day.slice(1) + ' · ' + t.replace(/\s?a\.?\s?m\.?/i, ' a. m.').replace(/\s?p\.?\s?m\.?/i, ' p. m.'); };
 P.screens.salidas = {
   anim(ctx, w, h, t) { const mx = sky(ctx, w, h, t, .3); waves(ctx, w, h, t, .3, mx, null, 4); [.3, .5, .7].forEach((x, i) => { ctx.fillStyle = `rgba(255,190,110,${.55 + Math.sin(t * 3 + i) * .25})`; ctx.shadowColor = '#FFB061'; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(w * x, h * .3 - 3, 3.4, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }); },
-  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Salidas en grupo<small>Apuntarte es gratis · cada uno paga lo suyo</small></span></div>
+  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Salidas en grupo<small>Gratis · cada uno paga lo suyo</small></span></div>
     <div style="height:12%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
       <div class="h2 rise">Salgamos <b>en grupo</b>.</div>

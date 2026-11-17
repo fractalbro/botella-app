@@ -73,7 +73,7 @@ const phoneEl = () => document.querySelector('.phone');
 // Aviso pasajero: oscuro, justo encima del pie (o de la hoja abierta); nunca tapa los títulos.
 function toast(msg, kind) {
   document.querySelectorAll('.toast').forEach(t => t.remove());
-  const ph = phoneEl(), t = document.createElement('div');
+  const ph = phoneEl(), t = document.createElement('div'); t.dataset.at = Date.now();
   t.className = 'toast' + (kind ? ' ' + kind : ''); t.setAttribute('role', 'status'); t.textContent = msg;
   // Se ubica otra vez cuando la pantalla nueva termina de montarse (el aviso suele llegar justo al cambiar de pantalla).
   // Con una hoja abierta (aunque se abra después del aviso): encima de la hoja si cabe; si la hoja es alta, dentro, bajo su título, sin tapar sus opciones.
@@ -90,7 +90,10 @@ function banner({ ic = '', title, text = '', go: target = '', v = '' }) {
   const b = document.createElement('button'); b.className = 'banner'; b.setAttribute('role', 'status');
   if (target) { b.dataset.act = 'bannerGo'; b.dataset.go = target; b.dataset.v = v; }
   b.innerHTML = `<span class="bi">${ic}</span><span class="bt"><b>${esc(title)}</b>${text ? `<span>${esc(text)}</span>` : ''}</span><small>ahora</small>`;
-  phoneEl().appendChild(b); hap([10, 40, 10]);
+  // Baja justo bajo la cabecera de la pantalla: nunca tapa el título.
+  const ph = phoneEl(), place = () => { if (!b.isConnected) return; const scr = [...ph.querySelectorAll('.screen:not(.exiting)')].pop(), top = scr && scr.querySelector('.top'), pr = ph.getBoundingClientRect();
+    b.style.top = top ? Math.max(12, top.getBoundingClientRect().bottom - pr.top + 6) + 'px' : ''; };
+  ph.appendChild(b); place(); requestAnimationFrame(place); const iv = setInterval(place, 200); setTimeout(() => clearInterval(iv), 1600); hap([10, 40, 10]);
   const out = () => { if (!b.isConnected) return; b.classList.add('out'); setTimeout(() => b.remove(), 360); };
   setTimeout(out, 5200); b.addEventListener('click', () => setTimeout(out, 50));
 }
@@ -164,7 +167,7 @@ function loop(now) { if (!reduceMotion && !document.hidden) drawFrame(now); requ
 function go(id, { back = false, fade = false, noPush = false } = {}) {
   const def = P.screens[id]; if (!def) return;
   P.timers.forEach(t => { clearInterval(t); clearTimeout(t); }); P.timers = [];
-  if (P.curId !== id) { recCancel(); stopPlayer(); }
+  if (P.curId !== id) { recCancel(); stopPlayer(); document.querySelectorAll('.toast').forEach(t => { if (Date.now() - (+t.dataset.at || 0) > 400) t.remove(); }); } // un aviso viejo no sigue a la pantalla nueva
   const same = P.curId === id;
   if (!same) P.cur?.leave?.();
   if (!back && !noPush && P.curId && !same && !P.cur?.transient) P.hist.push(P.curId);

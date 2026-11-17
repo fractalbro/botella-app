@@ -64,7 +64,8 @@ async function sendFirst() {
 /* ================= ORILLA: TU DÍA ================= */
 function streakChip() { const n = S.home?.streak || 0; return `<button class="streak${S.home?.today ? ' on' : ''}" data-go="bitacora" aria-label="${n ? plural(n, 'día seguido', 'días seguidos') : 'Tu constancia'}. Ver tu bitácora">${icon('flame', 's')}${n ? `<b class="num">${n}</b>` : ''}<span>${n ? (n === 1 ? 'día' : 'días') : 'racha'}</span></button>`; } // nunca un cero que culpa
 function todayCard() {
-  const h = S.home; if (!h) return '';
+  const h = S.home; // sin datos del día, la tarjeta igual lleva a la pregunta de hoy: siempre se puede abrir desde la orilla
+  if (!h) return `<button class="today" data-go="marea"><span class="ti">${icon('tide')}</span><span class="tx"><small>Pregunta de hoy</small><b>Todos responden la misma</b><span>A las 21:00 la marea trae las voces.</span></span>${icon('arrow', 's')}</button>`;
   const q = h.quest;
   if (q && !q.done) {
     const st = [q.heard, q.answered, q.launched], n = st.filter(Boolean).length;
@@ -167,7 +168,7 @@ P.actions.tideSend = async el => {
   try {
     const path = await upload(r.blob, r.ext); await rpc('tide_answer', { p_voice: path, p_secs: r.secs, p_peaks: r.peaks });
     URLS.set(path, r.url); delete S.rec.tide; hap([10, 30, 20]); await Promise.all([loadMareaNow(), loadHome()]); S.busy = false; rerender();
-    toast(S.mareaNow?.today?.arrived ? 'Tu voz salió con la marea de hoy.' : 'Listo. A las 21:00 tu voz sale con la marea.'); loadBottles().catch(() => {}); askPush('tide'); ping();
+    loadBottles().catch(() => {}); askPush('tide'); ping();
   } catch (e) { S.busy = false; err(e); if (P.curId === 'marea') rerender(); }
 };
 P.actions.tideOpen = async el => {
@@ -206,7 +207,7 @@ P.actions.duoShare = el => share(el, duoMsg(S.duoWait || {}));
 P.actions.duoCopy = el => { try { navigator.clipboard?.writeText(duoLink(S.duoWait.token)).catch(() => {}); } catch (e) {} el.innerHTML = `${icon('check', 's')} Copiado`; toast('Link copiado. Mándaselo a quien quieras.'); };
 P.actions.duoAgain = el => { const d = (S.duos || []).find(x => x.token === el.dataset.id); if (d) share(el, duoMsg(d)); };
 P.actions.duoCancel = async el => { try { S.me.bottles = await rpc('duo_cancel', { p_token: el.dataset.id }); await loadDuos(); rerender(); toast('Cancelada. Te devolvemos tu botella.'); } catch (e) { err(e); } };
-const duosHTML = () => (S.duos || []).map(d => `<div class="row duorow rise"><span style="flex:1;min-width:0"><span class="eyebrow a">Para dos · esperando la otra voz</span><span class="t" style="font-weight:300">${esc(d.body || d.kind + ' de ' + fmt(d.secs))}</span><span class="s">Vence en ${until(d.expires_at)}</span><span class="duoacts"><button class="btn btn-tonal btn-sm" data-act="duoAgain" data-id="${d.token}">${icon('export', 's')} Invitar</button><button class="btn btn-text" data-act="duoCancel" data-id="${d.token}">Cancelar</button></span></span></div>`).join('');
+const duosHTML = () => (S.duos || []).map(d => `<div class="row duorow rise"><span style="flex:1;min-width:0"><span class="eyebrow a">Para dos · falta la otra voz</span><span class="t" style="font-weight:300">${esc(d.body || d.kind + ' de ' + fmt(d.secs))}</span><span class="s">Vence en ${until(d.expires_at)}</span><span class="duoacts"><button class="btn btn-tonal btn-sm" data-act="duoAgain" data-id="${d.token}">${icon('export', 's')} Invitar</button><button class="btn btn-text" data-act="duoCancel" data-id="${d.token}">Cancelar</button></span></span></div>`).join('');
 
 /* quien recibe el link */
 P.screens.duojoin = {
@@ -286,7 +287,7 @@ P.screens.lectura = {
     <div class="card rise" style="margin-top:6px"><span class="eyebrow">Tu pregunta</span><div class="h3" style="margin:4px 0 10px">${esc(l.question)}</div>${vn(l.voice, l.secs, { mine: true, peaks: l.peaks })}</div>
     ${l.open && !as.length ? `<div class="sharebox rise d1">${isNew ? '<b>Tu link está listo.</b>' : ''}<span class="small muted">${isNew ? 'Compártelo por WhatsApp o en tus historias. Mientras más gente, más voces.' : 'Compártela otra vez para recibir más voces.'}</span><div class="code"><span>${esc(lecLink(l.slug).replace(/^https?:\/\//, ''))}</span><button class="btn btn-tonal btn-sm" data-act="lecCopy">${icon('copy', 's')} Copiar</button></div><button class="btn btn-a" data-act="lecShare">${icon('export')} Compartir mi lectura</button></div>` : ''}
     <div class="sec rise d2"><span class="eyebrow">${as.length ? plural(as.length, 'voz', 'voces') : 'Respuestas'}</span>
-      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s"><b class="who">${a.heard ? esc(a.name || 'Sin nombre') : 'Escúchala para ver quién es'}</b> · ${ago(a.at)}${a.heard ? '' : ' · nueva'}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
+      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s">${a.heard ? `<b class="who">${esc(a.name || 'Sin nombre')}</b> · ${ago(a.at)}` : `<b class="who">Escúchala y verás quién es</b><span class="m">Nueva · ${ago(a.at)}</span>`}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
         : `<p class="small muted">${l.open ? 'Todavía no llega ninguna. Aparecen aquí apenas alguien responda.' : 'Esta lectura cerró sin respuestas.'}</p>`}
       ${l.pending ? `<p class="small muted" style="margin-top:10px">${icon('clock', 's')} ${plural(l.pending, 'respuesta espera', 'respuestas esperan')} la revisión del filtro.</p>` : ''}
       ${l.filtered ? `<p class="small muted" style="margin-top:10px">${icon('shield', 's')} El filtro frenó ${plural(l.filtered, 'respuesta que no cumplía', 'respuestas que no cumplían')} las normas. No te ${l.filtered === 1 ? 'llegó' : 'llegaron'}.</p>` : ''}</div>
@@ -330,7 +331,7 @@ P.actions.lpAdult = el => { S.lpAdult = !S.lpAdult; el.setAttribute('aria-checke
 P.actions.lpSend = async el => {
   const r = S.rec.lp; if (!r) return needVoice('lp');
   // Las lecturas se responden con cuenta: tu voz te espera mientras la creas y sale sola al terminar.
-  if (!S.me) { S.after = 'lp'; if (!S.code) S.code = 'L:' + S.link.l; toast('Guardamos tu respuesta. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
+  if (!S.me) { S.after = 'lp'; if (!S.code) S.code = 'L:' + S.link.l; return P.actions.skipIntro(); }
   if (S.busy) return;
   S.busy = true; if (el) { el.classList.add('soft'); el.textContent = 'Enviando tu voz…'; }
   try {
