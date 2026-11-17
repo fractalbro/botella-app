@@ -69,7 +69,7 @@ function todayCard() {
   if (q && !q.done) {
     const st = [q.heard, q.answered, q.launched], n = st.filter(Boolean).length;
     const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 20 personas.'];
-    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>`;
+    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>`;
   }
   const t = h.tide || {}, left = tideIn();
   const [k, a, b] = t.arrived ? ['Llegó la marea', t.count ? `${plural(t.count, 'voz respondió', 'voces respondieron')} la pregunta de hoy` : 'Mira lo que trajo el mar esta noche', t.answered ? 'Escúchalas ahora.' : 'Deja la tuya para escucharlas.']

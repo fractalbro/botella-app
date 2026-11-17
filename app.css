@@ -502,3 +502,20 @@ button .pill.a{background:var(--a);color:var(--a-ink);font-size:12.5px;padding:7
 @media (max-width:360px){.top .wordmark{font-size:25px!important}.mybottles{padding:0 10px 0 9px;gap:4px}.mybottles span{display:inline;font-size:11px}.streak span{display:none}.shoreh .go{height:30px;padding:0 10px;font-size:12px}}
 .coach .btn{width:auto;flex:none;padding:0 18px}.coach .linkbtn{flex:none}
 .screen>.coach{width:auto;max-width:488px;margin-inline:auto}.screen>.coachring{max-width:none;margin:0}
+/* pulido de espacios (17/11): tarjeta de la guía, contador y primer día */
+.coach{padding:18px 20px 16px;border-radius:22px}
+.coach .dots{margin:0 0 12px}
+.coach b{font-size:18px;line-height:1.25;margin:0 0 6px}
+.coach p{font-size:14.5px;line-height:1.45}
+.coach .row2{margin-top:16px;gap:18px}
+.coach .btn{height:42px;padding:0 20px;font-size:15px}
+.today small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mybottles span{white-space:nowrap}
+.realnext .btn{margin-top:4px}
+@media (max-width:360px){
+  .top .wordmark{font-size:24px!important}
+  .mybottles{gap:5px;padding:0 11px}
+  .mybottles .i{display:none}
+  .top .iconbtn{width:38px;height:38px}
+  .top{gap:6px}
+}
