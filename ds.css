@@ -1,0 +1,190 @@
+/* Botella · sistema de diseño v1. Se carga después de app.css y manda sobre él.
+   Gramática: cápsula con relleno = se toca · rectangulito chico = solo informa ·
+   turquesa sólido = LO principal de la vista (uno solo) · crema = solo lo que dice otra persona. */
+
+/* ---------- Tokens ---------- */
+:root{
+  /* Tipografía: 6 tamaños */
+  --t-cap:11px;                         /* etiqueta, eyebrow, pestañas, hora, insignia */
+  --t-sub:13px;                         /* texto secundario, chip, botón pequeño, toast */
+  --t-body:15px;                        /* texto, botón, título de fila de ajustes */
+  --t-head:17px;                        /* título de tarjeta/fila */
+  --t-title:clamp(22px,6.4vw,26px);     /* título de raíz, h2, pregunta en papel */
+  --t-display:clamp(30px,9.4vw,38px);   /* título héroe, cifras grandes */
+  /* exentos (ilustración): .wordmark, .splash .wm, .moment .mword, .streakbig b, .boot · inputs: 16px (iOS) */
+
+  /* Espaciado base 4 */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;
+  --pad:20px;
+
+  /* Radios */
+  --r-tag:6px;--r-sm:12px;--r-card:20px;--r-sheet:28px;--r-pill:999px;
+
+  /* Color: superficies */
+  --c-bg:#05121F;
+  --c-surface:rgba(244,239,231,.05);
+  --c-surface-sea:rgba(5,18,31,.86);
+  --c-elev:#12212F;
+  --c-line:rgba(244,239,231,.10);
+  --c-line-2:rgba(244,239,231,.22);
+  /* Color: texto */
+  --c-fg:#F4EFE7;--c-fg-2:#ADA6A2;--c-fg-3:#938C8A;
+  /* Color: semánticos */
+  --c-primary:#7FD8C9;--c-on-primary:#04121C;
+  --c-tonal:rgba(127,216,201,.16);--c-tonal-press:rgba(127,216,201,.26);
+  --c-secondary:rgba(244,239,231,.12);--c-secondary-press:rgba(244,239,231,.18);
+  --c-info:rgba(244,239,231,.07);
+  --c-success:#93DDA6;--c-success-bg:rgba(147,221,166,.13);
+  --c-warn:#FFD68C;--c-warn-bg:rgba(255,214,140,.12);
+  --c-flame:#FFB061;
+  --c-danger:#FF6B6F;
+  --c-paper:#F3E6C8;--c-paper-ink:#2A2016;
+  --c-scrim:rgba(2,8,14,.64);
+  /* Movimiento */
+  --d-fast:120ms;--d-base:200ms;--d-screen:320ms;--d-exit:240ms;
+  --e-out:cubic-bezier(.2,.8,.2,1);
+  --hl:var(--c-primary);
+}
+
+/* ---------- Márgenes y secciones ---------- */
+.pad{padding-left:max(var(--pad),env(safe-area-inset-left,0px));padding-right:max(var(--pad),env(safe-area-inset-right,0px))}
+.chips.row,.ideas,.hscroll,.ehs{margin-inline:calc(-1*var(--pad));padding-inline:var(--pad)}
+.sec{margin-top:var(--s8)} .sec>.eyebrow{margin-bottom:var(--s3)}
+
+/* ---------- Tipografía de jerarquía ---------- */
+.display{font-size:var(--t-display)} .h2,.paper .q,.tq .q{font-size:var(--t-title)} .h3{font-size:var(--t-head)}
+.lead,.coach p{font-size:var(--t-body)} .small,.transcript,.rec .hint,.nextl{font-size:var(--t-sub)}
+.eyebrow,.msg .when,.crow .cl1 time,.stg,.thread .day,.today small,.minipaper small,.bal span,.look span,.wd small,.float span small{font-size:var(--t-cap)}
+.eyebrow{color:var(--c-fg-2)}                 /* gris = encabezado de sección */
+.eyebrow.a{color:var(--c-primary)}            /* solo sobre un título display o dentro de tarjeta destacada */
+.stat2 b,.bal b,.spack b,.pack .qty,.pp b,.rec .time{font-size:var(--t-display)}
+.field input,.select select{font-size:16px}
+
+/* ---------- Botones: siempre cápsula y con relleno ---------- */
+.btn{height:52px;border-radius:var(--r-pill);font-size:var(--t-body);font-weight:600;gap:var(--s2);padding-inline:var(--s5);border:0;
+  transition:transform var(--d-fast),background var(--d-base),color var(--d-base)}
+.btn:active{transform:scale(.97)}
+/* Primario: turquesa sólido. UNO por vista. */
+.btn-a{background:var(--c-primary);color:var(--c-on-primary);box-shadow:none}
+.foot .btn-a{box-shadow:0 10px 28px -14px var(--c-primary)}
+/* Tonal */
+.btn-tonal{background:var(--c-tonal);color:var(--c-primary);border:0;box-shadow:none}
+.btn-tonal:active{background:var(--c-tonal-press)}
+/* Secundario: gris, sin borde */
+.btn-ghost,.btn-glass,.btn-light{background:var(--c-secondary);color:var(--c-fg);border:0;box-shadow:none}
+.btn-ghost:active,.btn-glass:active,.btn-light:active{background:var(--c-secondary-press)}
+/* Terciario: solo texto turquesa */
+.btn-text,.linkbtn,.top .btn-ghost.btn-sm{height:44px;width:auto;padding-inline:var(--s2);background:none;border:0;
+  color:var(--c-primary);font-size:var(--t-body);font-weight:600;text-decoration:none}
+.btn-text:active,.linkbtn:active{background:none;opacity:.7}
+/* Pequeño */
+.btn-sm,.scard .btn,.duoacts .btn,.code .btn,.sitem .pr .btn,.plancard .btn,.coach .btn{height:36px;padding:0 var(--s4);
+  font-size:var(--t-sub);border-radius:var(--r-pill);width:auto;flex:none;box-shadow:none}
+.btn-text.btn-sm{height:36px;font-size:var(--t-sub)}
+/* Estados */
+.btn-a.soft{opacity:1;background:var(--c-secondary);color:var(--c-fg-2);box-shadow:none}   /* falta grabar / cargando */
+.btn[disabled]{opacity:1;background:var(--c-secondary);color:var(--c-fg-3);border:0;box-shadow:none}
+/* Pastilla de acción dentro de una fila tocable */
+.act,button .pill.a{display:inline-flex;align-items:center;gap:var(--s1);height:32px;padding:0 14px;border-radius:var(--r-pill);
+  background:var(--c-tonal);color:var(--c-primary);font-size:var(--t-sub);font-weight:600;white-space:nowrap;flex:none}
+button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
+/* Enlace de cabecera "Escuchar →" = tonal pequeño */
+.shoreh .go{height:36px;border:0;background:var(--c-tonal);color:var(--c-primary);font-size:var(--t-sub);border-radius:var(--r-pill)}
+
+/* ---------- Chip seleccionable: solo borde; elegido = tinte + borde turquesa + ✓ ---------- */
+.chip{height:36px;padding:0 14px;border-radius:var(--r-pill);background:transparent;border:1px solid var(--c-line-2);
+  color:var(--c-fg-2);font-size:var(--t-sub);font-weight:500;gap:6px;transition:all var(--d-base)}
+.chip:active{transform:scale(.97)}
+.chip.on{background:var(--c-tonal);border-color:var(--c-primary);color:var(--c-fg)}
+.chip.on::before{content:"";width:9px;height:5px;margin:-3px 2px 0 0;border-left:2px solid var(--c-primary);
+  border-bottom:2px solid var(--c-primary);transform:rotate(-45deg);flex:none}
+.chip.genre{min-height:40px}
+/* Segmentado (no es chip): elegido = gris elevado, no crema */
+.seg button.on{background:var(--c-secondary-press);color:var(--c-fg)}
+.ideas .idea.on,.lq.on{border-color:var(--c-primary);background:var(--c-tonal)}
+
+/* ---------- Etiqueta informativa: rectángulo chico, sin borde, no se toca ---------- */
+.tag,.pill,.crow .cl2 em,.who i{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:var(--r-tag);
+  background:var(--c-info);color:var(--c-fg-2);font-size:var(--t-cap);font-weight:600;font-style:normal;letter-spacing:.02em;
+  line-height:1;white-space:nowrap;border:0;text-transform:none;flex:none;pointer-events:none}
+.tag .i,.pill .i,.who i .i{width:12px;height:12px}
+.tag.ok,.pill.a:not(button .pill){background:var(--c-success-bg);color:var(--c-success)}
+.tag.warn{background:var(--c-warn-bg);color:var(--c-warn)}
+.ptag,.pack .flag,.spack em,.hot{border-radius:var(--r-tag);font-size:var(--t-cap);background:var(--c-warn-bg);color:var(--c-warn)}
+
+/* ---------- Insignia de conteo ---------- */
+.cnt,.tabs .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--c-primary);color:var(--c-on-primary);font-size:var(--t-cap);font-weight:700;font-style:normal;line-height:1;margin-left:6px;flex:none}
+.tabs .badge{margin:0;top:2px;right:calc(50% - 22px)}
+.quick .tide b{display:flex;align-items:center;white-space:nowrap}
+
+/* ---------- Tarjeta: normal y destacada ---------- */
+.card,.today,.tq,.nextup,.empty-note,.scard,.mrow,.orow,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack,.spack,
+.look,.btype,.frees>div,.bal>div,.stat2,.lq,.keys,.ecard,.pcard,.fcard,.lookcard,.passrow,.seasonc,.whoteaser,.travel,.quick .tide{
+  border-radius:var(--r-card);border:1px solid var(--c-line);border-style:solid;background:var(--c-surface)}
+.screen.sea :is(.card,.today,.tq,.mrow,.orow,.travel,.quick .tide){background:var(--c-surface-sea)}
+:is(.card,.tq,.nextup,.empty-note,.sharebox,.invite,.captain,.plan){padding:var(--s4)}
+:is(.today,.mrow,.orow,.scard,.mapcard,.duorow){padding:var(--s3) 14px!important}
+.card-hl,.today.gold,.today.quest,.tq,.scard.on,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack.best,.spack.best,
+.look.on,.passrow.own,.ecard.owned,.pcard.owned,.lookcard.owned,.btype.on{
+  --hl:var(--c-primary);border-color:color-mix(in srgb,var(--hl) 45%,transparent)!important;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--hl) 12%,transparent),transparent 70%),var(--c-surface)}
+.today.gold,.tq,.duorow,.captain{--hl:var(--c-warn)}
+.btype.on{--hl:rgb(var(--bc))}
+.card-hl .eyebrow,.today .tx small{color:var(--hl)}
+
+/* ---------- Aviso en línea: explica, no se toca ---------- */
+.note,.samplenote,.safe,.beta,.tdone{display:flex;gap:10px;align-items:flex-start;padding:var(--s3) 14px;border-radius:var(--r-sm);
+  background:var(--c-info);border:0;font-size:var(--t-sub);line-height:1.45;color:var(--c-fg-2)}
+.samplenote{border:1px dashed var(--c-line-2)}
+.beta,.tdone{background:var(--c-warn-bg)} .beta .i,.tdone .i{color:var(--c-warn)}
+.note .i,.safe .i{color:var(--c-fg-2)}
+
+/* ---------- Fila de lista tocable ---------- */
+.row,.setrow,.lrow,.urow,.item,.place,.arow{min-height:56px;gap:var(--s3);padding-block:var(--s3);border-top:1px solid var(--c-line)}
+.setrow b,.urow .tx b,.item b,.scard .tx b,.mapcard b,.sitem .tx b{font-family:var(--sans);font-size:var(--t-body);font-weight:600}
+.row .t,.lrow .t,.mrow .t,.orow .t,.today b,.crow .cl1 b,.place b{font-size:var(--t-head)}
+.row .s:not(.i),.lrow .s:not(.i),.orow .s:not(.i),.arow .s:not(.i),.setrow span span,.urow .tx span,.item .tx span,
+.sitem .tx span,.scard .tx span,.mapcard span span,.today .tx>span{font-size:var(--t-sub);color:var(--c-fg-2)}
+:is(.row,.setrow,.lrow,.today,.mapcard,.travel)>.i:last-child{width:16px;height:16px;color:var(--c-fg-3);flex:none;margin-left:auto}
+.chev::after{content:"";width:7px;height:7px;margin:0 4px 0 auto;flex:none;border-right:1.5px solid var(--c-fg-3);
+  border-top:1.5px solid var(--c-fg-3);transform:rotate(45deg)}
+.reveal::after{border-color:var(--c-fg-3)}
+.setrow.danger b,.setrow.danger>.i:first-child{color:var(--c-danger)}   /* Bloquear / Reportar / Borrar */
+
+/* ---------- Toast: oscuro, abajo, sobre el pie ---------- */
+.toast{top:auto!important;bottom:var(--toast-b,96px);left:var(--s4);right:var(--s4);display:flex;align-items:center;gap:10px;
+  background:var(--c-elev);color:var(--c-fg);border:1px solid var(--c-line-2);border-radius:var(--r-sm);padding:var(--s3) 14px;
+  font-size:var(--t-sub);font-weight:500;line-height:1.35;box-shadow:0 18px 40px -12px rgba(0,0,0,.7);
+  animation:dsToast 3.2s var(--e-out) forwards;transition:bottom var(--d-base) var(--e-out);pointer-events:none}
+.toast::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c-primary);flex:none}
+.toast.err::before{background:var(--c-danger)}
+@keyframes dsToast{0%{opacity:0;transform:translateY(8px)}6%,92%{opacity:1;transform:none}100%{opacity:0;transform:translateY(4px)}}
+
+/* ---------- Barra de pestañas ---------- */
+.tabs{border-top:1px solid var(--c-line);background:rgba(5,18,31,.96);padding-top:6px}
+.tabs button{min-height:49px;gap:2px;font-size:var(--t-cap);font-weight:500;color:var(--c-fg-3)}
+.tabs button.on{color:var(--c-fg)} .tabs button.on .i{color:var(--c-primary)}
+.tabs button:active{transform:scale(.94)}
+
+/* ---------- Cabecera de Orilla: cápsula gris, color solo en el ícono ---------- */
+.streak,.mybottles{height:36px;padding:0 12px 0 10px;gap:6px;border:0;background:var(--c-secondary);color:var(--c-fg);white-space:nowrap}
+.streak.on{background:var(--c-secondary);border:0} .streak.on .i{color:var(--c-flame)}
+.mybottles span,.streak span{font-size:var(--t-sub);color:var(--c-fg-2);white-space:nowrap}
+@media (max-width:390px){.streak span{display:none}.top .wordmark{font-size:26px!important}}
+
+/* ---------- Hoja ---------- */
+.sheet{background:var(--c-elev);border-radius:var(--r-sheet) var(--r-sheet) 0 0}
+.sheet .h3{font-weight:600}
+
+/* ---------- Movimiento ---------- */
+.rise.d1{animation-delay:40ms}.rise.d2{animation-delay:80ms}.rise.d3{animation-delay:120ms}
+.rise.d4,.rise.d5{animation-delay:120ms}
+.paper{animation-duration:600ms;animation-delay:200ms}
+.chip,.act,.today,.mrow,.orow,.lrow,.setrow,.crow,.travel,.quick .tide{transition:transform var(--d-fast),background var(--d-base)}
+:is(.chip,.today,.mrow,.orow,.lrow,.crow,.travel,.quick .tide,.lq,.btype,.look):active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.toast{animation-duration:2.6s}}
+/* Pantalla de 320: el atajo puede ir en dos líneas, pero el número viaja pegado a la última palabra */
+@media (max-width:360px){.quick .tide b{display:block;white-space:normal;line-height:1.25}.quick .tide .cnt{margin-left:4px;vertical-align:1px}}
+/* En 320 la cabecera no cabe entera: queda el número (el aria-label dice "para lanzar") y la esfera del perfil no se sale */
+@media (max-width:360px){.mybottles span{display:none}.streak,.mybottles{margin-right:6px}}

@@ -141,7 +141,7 @@ async function enter(fresh) {
 }
 /* Si el servidor no tiene la última versión de supabase/schema.sql, se dice claro en vez de mostrar saldos en cero. */
 function outdatedSheet() {
-  sheet(`${sheetHead('Estamos actualizando Botella')}<p class="muted" style="font-size:14px;margin:0 0 16px">Por unos minutos pueden faltar botellas o el muelle. No perdiste nada: vuelve a entrar en un rato.</p>
+  sheet(`${sheetHead('Estamos actualizando Botella')}<p class="muted" style="margin:0 0 16px">Por unos minutos pueden faltar botellas o el muelle. No perdiste nada: vuelve a entrar en un rato.</p>
     <button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
 }
 function boot() {

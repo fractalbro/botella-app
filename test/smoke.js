@@ -14,7 +14,11 @@ const srv = http.createServer((q, r) => {
   const ctx = await b.newContext({ ...devices[process.env.DEVICE || 'iPhone 13'], permissions: ['microphone'], serviceWorkers: 'block' }); const p = await ctx.newPage(); const errs = [];
   await p.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   p.on('pageerror', e => errs.push('PAGE ' + e.message)); p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|fonts/.test(m.text())) errs.push('CON ' + m.text()); });
-  let n = 0; const shot = async name => { await p.waitForTimeout(700); await p.screenshot({ path: `${out}/${String(++n).padStart(2, '0')}-${name}.png` }); };
+  let n = 0; const prim = []; const PSEL = '.screen:not(.exiting) .btn-a:not(.soft):not([disabled]), .screen:not(.exiting) .sendb, .screen:not(.exiting) .rec .mic';
+  // Regla del sistema de diseño: como mucho un turquesa sólido visible por vista (con hoja abierta, cuenta la hoja). Se anota en primarios.txt.
+  const primaries = () => p.evaluate(sel => { const sh = document.querySelector('.sheet'); const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && getComputedStyle(e).visibility !== 'hidden'; };
+    const coach = document.querySelector('.coach'); if (coach) return 0; return [...document.querySelectorAll(sel)].filter(e => (!sh || sh.contains(e)) && vis(e)).length; }, PSEL).catch(() => -1);
+  const shot = async name => { await p.waitForTimeout(700); const id = `${String(++n).padStart(2, '0')}-${name}`; await p.screenshot({ path: `${out}/${id}.png` }); prim.push(`${await primaries()}\t${id}`); };
   const tap = async (sel, t) => { const l = t ? p.locator(sel, { hasText: t }) : p.locator(sel); await l.first().click({ timeout: 5000 }); };
   const step = async (name, fn) => { try { await fn(); } catch (e) { errs.push(`STEP ${name}: ${e.message.split('\n')[0]}`); await shot('FAIL-' + name); } };
   const record = async (ms = 2600) => { await tap('.screen:not(.exiting) .rec .mic'); await p.waitForTimeout(ms); await tap('.screen:not(.exiting) .rec .mic'); await p.waitForTimeout(400); };
@@ -79,5 +83,5 @@ const srv = http.createServer((q, r) => {
     try { const c2 = await b.newContext({ ...devices[process.env.DEVICE || 'iPhone 13'], permissions: ['microphone'], serviceWorkers: 'block' }); const q = await c2.newPage(); q.on('pageerror', e => errs.push(name + ' PAGE ' + e.message)); await q.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); await q.goto('http://localhost:4610' + url); await fn(q); await c2.close(); } catch (e) { errs.push(`STEP ${name}: ${e.message.split('\n')[0]}`); }
   }
   const desk = await b.newPage({ viewport: { width: 1280, height: 860 } }); await desk.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); await desk.goto('http://localhost:4610/'); await desk.waitForTimeout(1200); await desk.screenshot({ path: `${out}/${String(++n).padStart(2, '0')}-escritorio.png` });
-  console.log(errs.length ? errs.join('\n') : 'SIN ERRORES'); await b.close(); srv.close();
+  fs.writeFileSync(path.join(out, 'primarios.txt'), prim.join('\n') + '\n'); console.log(errs.length ? errs.join('\n') : 'SIN ERRORES'); await b.close(); srv.close();
 })();

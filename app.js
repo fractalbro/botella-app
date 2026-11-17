@@ -70,7 +70,17 @@ const unread = c => !c.last_mine && (!readMap[c.id] || new Date(c.last_at) > new
 
 /* ================= AVISOS ================= */
 const phoneEl = () => document.querySelector('.phone');
-function toast(msg) { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; phoneEl().appendChild(t); setTimeout(() => t.remove(), 3600); }
+// Aviso pasajero: oscuro, justo encima del pie (o de la hoja abierta); nunca tapa los títulos.
+function toast(msg, kind) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const ph = phoneEl(), t = document.createElement('div');
+  t.className = 'toast' + (kind ? ' ' + kind : ''); t.setAttribute('role', 'status'); t.textContent = msg;
+  // Se ubica otra vez cuando la pantalla nueva termina de montarse (el aviso suele llegar justo al cambiar de pantalla).
+  const place = () => { if (!t.isConnected) return; const scr = [...ph.querySelectorAll('.screen:not(.exiting)')].pop();
+    const anchor = document.getElementById('sheet') || (scr && scr.querySelector('.foot, .shorebot .btn-a, .tabs')); const pr = ph.getBoundingClientRect();
+    t.style.setProperty('--toast-b', (anchor ? Math.max(16, pr.bottom - anchor.getBoundingClientRect().top + 8) : 24) + 'px'); };
+  ph.appendChild(t); place(); requestAnimationFrame(place); setTimeout(place, 120); setTimeout(place, 420); setTimeout(() => t.remove(), 3300);
+}
 function banner({ ic = '', title, text = '', go: target = '', v = '' }) {
   document.querySelectorAll('.banner').forEach(b => b.remove());
   const b = document.createElement('button'); b.className = 'banner'; b.setAttribute('role', 'status');
@@ -90,7 +100,7 @@ function err(e, fallback) {
 function closeSheet() { document.getElementById('sheet')?.remove(); }
 P.actions.closeSheet = closeSheet;
 function sheet(html) { closeSheet(); const s = document.createElement('div'); s.className = 'sheet pad'; s.id = 'sheet'; s.innerHTML = `<div class="grab"></div>${html}`; (P.root || phoneEl()).appendChild(s); return s; }
-const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><span class="h3" style="flex:1;font-size:20px">${t}</span><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
+const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><span class="h3" style="flex:1">${t}</span><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
 
 /* ================= DIBUJO DEL MAR ================= */
 const STARS = (() => { const r = rng(7); return Array.from({ length: 80 }, () => [r(), r() * .55, r() * 1.4 + .3, r() * 6]); })();
@@ -239,7 +249,7 @@ function micHelp(e) {
   else if (n === 'NotReadableError' || n === 'AbortError') steps = 'Otra app está usando el micrófono, quizá una llamada. Ciérrala y vuelve a tocar.';
   else if (ios) steps = pwa ? 'Abre <b>Ajustes</b>, busca <b>Botella</b> o <b>Safari</b>, entra a <b>Micrófono</b> y elige <b>Permitir</b>. Luego vuelve aquí.' : 'Toca <b>aA</b> a la izquierda de la dirección, luego <b>Configuración del sitio web</b> y pon <b>Micrófono</b> en <b>Permitir</b>.';
   else steps = pwa ? 'Mantén presionado el ícono de Botella, toca <b>Información de la app</b>, luego <b>Permisos</b> y activa <b>Micrófono</b>.' : 'Toca el ícono a la izquierda de la dirección, luego <b>Permisos</b> y activa <b>Micrófono</b>.';
-  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="font-size:14px;margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
+  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
 }
 function recMime() { if (!window.MediaRecorder) return null; for (const m of ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm']) if (MediaRecorder.isTypeSupported(m)) return m; return ''; }
 async function recStart(max, onTick, onAuto) {
