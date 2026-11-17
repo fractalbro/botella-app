@@ -6,7 +6,7 @@ body{overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-
 input,textarea{-webkit-user-select:text;user-select:text}
 .stage,.phone{position:relative;width:100%;height:100%;overflow:hidden;background:var(--bg)}
 .sbs{height:max(14px,env(safe-area-inset-top,0px));flex:none}
-.screen>:not(canvas):not(.sheet){width:100%;max-width:520px;margin-inline:auto}
+.screen>:not(canvas):not(.sheet):not(.coach):not(.coachring):not(.coachblock){width:100%;max-width:520px;margin-inline:auto}
 .sheet,.toast,.banner{margin-inline:auto;max-width:520px}
 .sheet{max-width:560px}
 .toast{max-width:480px}
@@ -484,3 +484,38 @@ button .pill.a{background:var(--a);color:var(--a-ink);font-size:12.5px;padding:7
 .top .title small.pre{margin:0 0 1px;font-size:11px;letter-spacing:.04em}
 .top .title:has(small.pre){-webkit-line-clamp:3}
 .crow .cl1 b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* entender sola: titular tocable, contadores con palabras y pistas de la primera vez */
+.shoreh{display:flex;align-items:center;gap:10px;width:100%;padding:0;background:none;border:0;color:var(--fg);text-align:left;font:inherit;cursor:pointer}
+.shoreh .h2{flex:1;min-width:0}
+.shoreh .go{flex:none;display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 12px;border-radius:17px;border:1px solid rgba(127,216,201,.45);color:var(--a);font-size:13px;font-weight:600}
+.streak span{font-size:12px;color:var(--muted)}
+.coachblock{position:absolute;inset:0;z-index:39}
+.coachring{position:absolute;z-index:40;border-radius:22px;border:2px solid var(--a);box-shadow:0 0 0 200vmax rgba(2,8,14,.78),0 0 24px rgba(127,216,201,.55);pointer-events:none;transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1),height .45s cubic-bezier(.2,.8,.2,1),border-radius .45s;animation:coachin .4s ease both,coachp 1.8s ease-in-out .4s infinite}
+@keyframes coachin{from{box-shadow:0 0 0 200vmax rgba(2,8,14,0),0 0 0 rgba(127,216,201,0)}}
+.coach{position:absolute;z-index:41;left:16px;right:16px;padding:14px 16px 12px;border-radius:20px;background:#0E1B28;border:1px solid rgba(127,216,201,.4);box-shadow:0 18px 50px rgba(0,0,0,.6);animation:rise .3s ease both}
+.coach b{display:block;font-size:17px;font-weight:600;margin:4px 0 4px}
+.coach p{margin:0;font-size:14px;line-height:1.4;color:var(--muted)}
+.coach .row2{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:12px}
+@keyframes coachp{50%{box-shadow:0 0 0 200vmax rgba(2,8,14,.78),0 0 36px rgba(127,216,201,.85)}}
+.coach .dots{display:flex;gap:6px}.coach .dots i{width:6px;height:6px;border-radius:3px;background:rgba(244,239,231,.25);transition:width .3s}.coach .dots i.on{width:18px;background:var(--a)}
+@media (prefers-reduced-motion:reduce){.coachring,.coach{animation:none;transition:none}}
+@media (max-width:360px){.top .wordmark{font-size:25px!important}.mybottles{padding:0 10px 0 9px;gap:4px}.mybottles span{display:inline;font-size:11px}.streak span{display:none}.shoreh .go{height:30px;padding:0 10px;font-size:12px}}
+.coach .btn{width:auto;flex:none;padding:0 18px}.coach .linkbtn{flex:none}
+.screen>.coach{width:auto;max-width:488px;margin-inline:auto}.screen>.coachring{max-width:none;margin:0}
+/* pulido de espacios (17/11): tarjeta de la guía, contador y primer día */
+.coach{padding:18px 20px 16px;border-radius:22px}
+.coach .dots{margin:0 0 12px}
+.coach b{font-size:18px;line-height:1.25;margin:0 0 6px}
+.coach p{font-size:14.5px;line-height:1.45}
+.coach .row2{margin-top:16px;gap:18px}
+.coach .btn{height:42px;padding:0 20px;font-size:15px}
+.today small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mybottles span{white-space:nowrap}
+.realnext .btn{margin-top:4px}
+@media (max-width:360px){
+  .top .wordmark{font-size:24px!important}
+  .mybottles{gap:5px;padding:0 11px}
+  .mybottles .i{display:none}
+  .top .iconbtn{width:38px;height:38px}
+  .top{gap:6px}
+}

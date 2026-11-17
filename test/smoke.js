@@ -30,7 +30,7 @@ const srv = http.createServer((q, r) => {
     await shot('sobre-ti'); await p.fill('#nm', 'Ana'); await p.selectOption('#dist', 'Lince'); await tap('[data-act=adult] .box'); await tap('[data-act=aboutNext]');
     await shot('voz'); await record(); await tap('[data-act=voiceNext]');
     for (const t of ['Música', 'Cine', 'Libros']) await tap('#tops .chip', t); await tap('.chip', 'Conversaciones profundas'); await shot('temas'); await tap('[data-act=finish]'); await p.waitForTimeout(1400);
-    await shot('chat-primera'); await p.waitForTimeout(3200); await shot('chat-primera-respondio');
+    await shot('chat-primera'); await p.waitForTimeout(3200); await shot('chat-primera-respondio'); await p.locator('#thread').evaluate(e => e.scrollTo(0, 9999)); await shot('chat-primera-siguiente');
   });
   await step('etapas', async () => {
     await tap('.stg'); await p.waitForTimeout(400); await shot('etapas-info'); await tap('.sheet [data-act=closeSheet]');
@@ -40,14 +40,14 @@ const srv = http.createServer((q, r) => {
     await p.waitForSelector('.sheet [data-act=planGo]', { timeout: 20000 }); await shot('plan'); await tap('.sheet [data-act=planGo]'); await p.waitForTimeout(3000); await shot('plan-aceptado');
     await tap('[data-act=back]'); await p.waitForTimeout(600);
   });
-  await step('orilla', async () => { await shot('orilla-primer-dia'); await tap('.float'); await p.waitForTimeout(500); await hold('[data-hold=uncork]'); await p.waitForTimeout(1000); await shot('descorchada'); });
+  await step('orilla', async () => { await p.waitForTimeout(1200); await shot('orilla-tour-1'); await tap('[data-act=tourNext]'); await shot('orilla-tour-2'); await tap('[data-act=tourNext]'); await shot('orilla-tour-3'); await tap('[data-act=tourNext]'); await shot('orilla-tour-4'); await tap('[data-act=tourEnd]'); await shot('orilla-primer-dia'); await tap('.float'); await p.waitForTimeout(500); await hold('[data-hold=uncork]'); await p.waitForTimeout(1000); await shot('descorchada'); });
   await step('responder', async () => { await tap('[data-go=answer]'); await record(); await tap('[data-act=sendAns]'); await p.waitForTimeout(1500); await shot('chat-nuevo'); await tap('[data-act=back]'); await p.waitForTimeout(400); });
   await step('conversaciones', async () => { await tap('.tabs button', 'Conversaciones'); await p.waitForTimeout(500); await shot('conversaciones'); await tap('[data-act=chatGo][data-id=c-ale]'); await p.waitForTimeout(600); await shot('chat-ale-etapa-voces');
     await tap('[data-act=chatRec]'); await p.waitForTimeout(2200); await tap('[data-act=chatRecSend]'); await p.waitForTimeout(800); await shot('chat-ale-quiere-hablar');
     await tap('.scard [data-act=key]'); await p.waitForTimeout(3200); await tap('.btn-ghost', 'Más tarde'); await p.waitForTimeout(500); await shot('chat-llamar'); await tap('[data-act=chatMenu]'); await shot('chat-menu'); await tap('[data-act=reveal]'); await p.waitForTimeout(600); await shot('chat-revelado');
     await tap('[data-act=giftAsk]'); await p.waitForTimeout(400); await tap('[data-act=giftGo]'); await p.waitForTimeout(700); await shot('lacre-enviado'); });
   await step('dúo', async () => {
-    await tap('[data-act=back]'); await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('[data-act=duoT]'); await p.waitForTimeout(300); await shot('lanzar-duo'); await record(); await shot('lanzar-duo-lista');
+    await tap('[data-act=back]'); await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await shot('lanzar-simple'); await tap('[data-act=moreOpts]'); await tap('[data-act=duoT]'); await p.waitForTimeout(300); await shot('lanzar-duo'); await record(); await shot('lanzar-duo-lista');
     await tap('[data-act=duoStart]'); await p.waitForTimeout(900); await shot('duo-esperando'); await tap('[data-act=toMine]'); await p.waitForTimeout(700); await shot('mis-botellas-duo');
   });
   await step('lanzar', async () => {

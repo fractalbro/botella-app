@@ -62,14 +62,14 @@ async function sendFirst() {
 }
 
 /* ================= ORILLA: TU DÍA ================= */
-function streakChip() { const n = S.home?.streak || 0; return `<button class="streak${S.home?.today ? ' on' : ''}" data-go="bitacora" aria-label="${n ? plural(n, 'día seguido', 'días seguidos') : 'Tu constancia'}. Ver tu bitácora">${icon('flame', 's')}${n ? `<b class="num">${n}</b>` : ''}</button>`; } // nunca un cero que culpa
+function streakChip() { const n = S.home?.streak || 0; return `<button class="streak${S.home?.today ? ' on' : ''}" data-go="bitacora" aria-label="${n ? plural(n, 'día seguido', 'días seguidos') : 'Tu constancia'}. Ver tu bitácora">${icon('flame', 's')}${n ? `<b class="num">${n}</b>` : ''}<span>${n ? (n === 1 ? 'día' : 'días') : 'racha'}</span></button>`; } // nunca un cero que culpa
 function todayCard() {
   const h = S.home; if (!h) return '';
   const q = h.quest;
   if (q && !q.done) {
     const st = [q.heard, q.answered, q.launched], n = st.filter(Boolean).length;
     const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 20 personas.'];
-    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>`;
+    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>`;
   }
   const t = h.tide || {}, left = tideIn();
   const [k, a, b] = t.arrived ? ['Llegó la marea', t.count ? `${plural(t.count, 'voz respondió', 'voces respondieron')} la pregunta de hoy` : 'Mira lo que trajo el mar esta noche', t.answered ? 'Escúchalas ahora.' : 'Deja la tuya para escucharlas.']
@@ -143,13 +143,13 @@ P.screens.marea = {
   },
   render: () => { const d = S.mareaNow, t = d?.today || S.home?.tide || {}, L = d?.last, list = S.marea || [], left = tideIn(), vs = L?.voices || [];
     const lastName = t.arrived ? 'La marea de esta noche' : 'La marea de anoche';
-    return `${sb_()}<div class="top pad">${backBtn()}<span class="title">La marea<small>${t.arrived ? 'Llegó hoy a las 21:00' : left ? `Llega en ${left}` : 'Cada noche a las 21:00'}</small></span></div>
+    return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Pregunta de hoy<small>La marea · ${t.arrived ? 'las voces llegaron a las 21:00' : left ? `las voces llegan en ${left}` : 'cada noche a las 21:00'}</small></span></div>
     <div style="height:9%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
-      <div class="tq rise" id="tq"><span class="eyebrow a">Pregunta de hoy</span><div class="q">${esc(t.question || '')}</div>
+      <div class="tq rise" id="tq"><span class="eyebrow a">Hoy todos responden</span><div class="q">${esc(t.question || '')}</div>
         ${t.answered ? `<div class="tdone">${icon('check', 's')}<span>${t.arrived ? 'Tu voz ya viaja con la marea de hoy.' : `Tu voz espera la marea. Llega en ${left || 'un momento'}.`}</span></div>`
           : `${recBox('tide', 'Responde con tu voz. Una frase basta.')}<button class="btn btn-a${S.rec.tide ? '' : ' soft'}" data-needs="tide" data-act="tideSend">${icon('tide')} ${t.arrived ? 'Dejar mi voz en la marea' : 'Dejar mi voz para las 21:00'}</button>`}
-        <p class="small muted" style="margin:10px 0 0">${t.count ? `${plural(t.count, 'voz ya respondió', 'voces ya respondieron')} hoy. ` : ''}Todos responden la misma pregunta y a las 21:00 la marea suelta las voces.</p></div>
+        <p class="small muted" style="margin:10px 0 0">${t.count ? `${plural(t.count, 'voz ya respondió', 'voces ya respondieron')} hoy. ` : ''}Grabas tu respuesta ahora y a las 21:00 se abren las voces de todos para escucharlas.</p></div>
       ${L ? `<div class="sec rise d1"><span class="eyebrow">${lastName}</span><p class="small muted" style="margin:-4px 0 10px">${esc(L.question)}</p>
         ${vs.length ? vs.map(v => `<button class="mrow voice${L.unlocked || v.mine ? '' : ' locked'}" data-act="tideOpen" data-id="${v.bottle}"${v.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', v.glass)}</span><span style="flex:1;min-width:0"><span class="t">Una voz de ${esc(someone(v.place))}</span><span class="eyebrow">${fmt(v.secs)}</span></span>${v.mine ? '<span class="pill">Tuya</span>' : v.taken === 'answered' ? '<span class="pill">Respondida</span>' : L.unlocked ? '<span class="pill a">Abrir</span>' : `<span class="pill">${icon('lock', 's')}</span>`}</button>`).join('')
           : `<p class="small muted">${t.arrived ? 'Todavía nadie dejó su voz hoy. Que la tuya sea la primera.' : 'Anoche la marea llegó sin voces. Deja la tuya para la de hoy.'}</p>`}
