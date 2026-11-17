@@ -342,3 +342,78 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
   .openspace.up:has(+ .scroll .openhint.sample){height:10%!important}
   .samplenote{margin-top:var(--s2);padding-block:var(--s2)}
 }
+
+/* ===== chat variantes ===== */
+/* Cuatro maneras de mostrar lo mismo, para elegir con Cesar. Se activan con ?chat=a|b|c|d (?chat=0 vuelve a la de siempre). */
+/* Compartido: las 4 etapas como barrita con nombres (C y D). Tocarla abre la explicación. */
+.sbar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%;background:none;border:0;padding:0;text-align:left;color:inherit}
+.sbar i{display:grid;gap:5px;font-style:normal;min-width:0}
+.sbar b{height:4px;border-radius:2px;background:var(--c-line-2)}
+.sbar em{font-style:normal;font-size:var(--t-cap);font-weight:600;color:var(--c-fg-3);display:flex;align-items:center;gap:3px;white-space:nowrap}
+.sbar em .i{width:11px;height:11px;flex:none}
+.sbar .done b{background:color-mix(in srgb,var(--c-primary) 50%,transparent)} .sbar .done em{color:var(--c-fg-2)} .sbar .done em .i{color:var(--c-primary)}
+.sbar .cur b{background:var(--c-primary)} .sbar .cur em{color:var(--c-fg)}
+.sbar .open em{color:var(--c-fg-2)} .sbar .lock b{background:var(--c-line)}
+
+/* A · Tranquila: nombre en una línea, las etapas en un renglón chico que se toca, lo que sigue junto al micrófono */
+.v-a .top{gap:10px}
+.v-a .tcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+.v-a .tcol .title{flex:none;max-width:100%;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-a .title small.pre{display:inline;font-size:inherit;letter-spacing:0;margin:0;color:inherit}
+.v-a .title small.pre::after{content:' '}
+.v-a .title .tag{vertical-align:2px;margin-right:2px}
+.stmini{display:inline-flex;align-items:center;gap:6px;height:24px;max-width:100%;padding:0;background:none;border:0;color:var(--c-fg-2);font-size:var(--t-sub)}
+.stmini .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stmini .i{width:12px;height:12px;flex:none;color:var(--c-fg-3)}
+.stmini .dots{display:flex;gap:3px;flex:none}
+.stmini .dots i{width:6px;height:6px;border-radius:50%;background:var(--c-line-2)}
+.stmini .dots i.done{background:var(--c-primary)} .stmini .dots i.cur{background:none;box-shadow:inset 0 0 0 1.5px var(--c-primary)}
+.stmini:active{opacity:.7}
+.v-a .thread{gap:16px}
+.v-a .thread .day{background:none;border:0;padding:0;color:var(--c-fg-3)}
+.v-a .cfoot{border-top:1px solid var(--c-line);padding-top:12px}
+.anext{grid-column:1/3;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35;text-wrap:pretty}
+.anext b{color:var(--c-fg);font-weight:600}
+.anext .btn{width:auto}
+
+/* B · Capítulos: sin barra arriba; cada etapa empieza como un capítulo dentro del hilo */
+.v-b .thread{gap:18px}
+.chap{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;padding-top:14px;border-top:1px solid var(--c-line)}
+.thread>.samplenote+.chap,.thread>.chap:first-child{border-top:0;padding-top:0}
+.chap .cn{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:var(--t-sub);font-weight:700;box-shadow:inset 0 0 0 1.5px var(--c-primary);color:var(--c-primary)}
+.chap .cn .i{width:13px;height:13px}
+.chap b{font-size:var(--t-body);font-weight:600;line-height:1.25}
+.chap>span:not(.cn){font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35}
+.chap.done .cn{box-shadow:none;background:var(--c-tonal)} .chap.done b{color:var(--c-fg-2);font-weight:500}
+.chap.done{grid-template-columns:auto auto 1fr} .chap.done .cn{grid-row:auto} .chap.done>span:not(.cn){color:var(--c-fg-3)}
+.chapact .scard{margin:0}
+.chapnext{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;width:100%;background:none;border:1px dashed var(--c-line-2);border-radius:var(--r-sm);padding:10px 12px;color:var(--c-fg-3);font-size:var(--t-sub);text-align:left}
+.chapnext{display:grid;grid-template-columns:1fr auto;gap:6px 10px}
+.chapnext .nw{color:var(--c-fg-2);line-height:1.35} .chapnext .nw b{color:var(--c-fg);font-weight:600}
+.chapnext .af{grid-column:1;display:flex;flex-wrap:wrap;gap:2px 10px} .chapnext .af>span{color:var(--c-fg-2);font-weight:600}
+.chapnext i{font-style:normal;white-space:nowrap} .chapnext i.open{color:var(--c-fg-2)}
+.chapnext>.i{grid-column:2;grid-row:1/3;align-self:center;width:14px;height:14px} .chapnext:active{opacity:.7}
+
+/* C · Panel de abajo: arriba solo el nombre; las etapas, lo que sigue y el micrófono juntos abajo */
+.v-c .cpanel{flex:none;background:var(--c-elev);border-radius:var(--r-card) var(--r-card) 0 0;border-top:1px solid var(--c-line);padding-top:14px;box-shadow:0 -14px 30px -20px rgba(0,0,0,.7)}
+.v-c .cpanel .cfoot{padding-top:10px}
+.cnow{display:flex;align-items:center;gap:12px;margin-top:12px}
+.cnow .tx{flex:1;min-width:0} .cnow b{display:block;font-size:var(--t-body);font-weight:600;line-height:1.3}
+.cnow .tx span{font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35} .cnow .btn{width:auto;flex:none}
+
+/* D · Ficha: arriba lo que los une (su pregunta en papel y el tema) con el avance; el hilo debajo, solo voces */
+.v-d .ficha{flex:none}
+.fbox{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:12px;border-radius:var(--r-card);background:var(--c-surface);border:1px solid var(--c-line)}
+.fq{background:var(--c-paper);color:var(--c-paper-ink);border-radius:var(--r-tag) var(--r-tag) var(--r-sm) var(--r-sm);padding:10px 12px}
+.fq small{display:block;font-size:var(--t-cap);letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:#65563F;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fq span{font-family:var(--display);font-size:var(--t-head);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fnow{display:flex;align-items:center;gap:10px;font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35}
+.fnow .tx{flex:1;min-width:0} .fnow b{color:var(--c-fg);font-weight:600} .fnow .btn{width:auto;flex:none}
+.fq.mine{background:var(--c-secondary);color:var(--c-fg)} .fq.mine small{color:var(--c-fg-2)}  /* crema solo si la pregunta es de la otra persona */
+.v-d .ficha{padding-bottom:10px}
+.v-d .thread .minipaper{display:none}
+@media (max-width:360px){.sbar em .i{display:none}.sbar{gap:3px}}
+@media (max-height:600px){
+  .fbox{gap:8px;padding:10px} .fq{padding:8px 10px} .fq span{-webkit-line-clamp:1}
+  .v-c .cpanel{padding-top:10px} .cnow{margin-top:8px}
+}

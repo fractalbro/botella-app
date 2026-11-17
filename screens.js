@@ -436,9 +436,9 @@ function dayLabel(iso) {
   const l = d.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
   return l.charAt(0).toUpperCase() + l.slice(1);
 }
-function threadHTML(list) {
+function threadHTML(list, extra) {
   let last = '';
-  return list.map((m, i) => { const h = msgHTML(m, i); if (!h || !m.created_at) return h; const d = new Date(m.created_at).toDateString(); const sep = d !== last ? `<div class="day" role="separator">${dayLabel(m.created_at)}</div>` : ''; last = d; return sep + h; }).join('');
+  return list.map((m, i) => { const x = extra ? extra(m, i) : '', h = msgHTML(m, i); if (!h || !m.created_at) return h + x; const d = new Date(m.created_at).toDateString(); const sep = d !== last ? `<div class="day" role="separator">${dayLabel(m.created_at)}</div>` : ''; last = d; return sep + h + x; }).join('');
 }
 /* La conversación avanza por etapas: primero las voces, después los nombres, la llamada y, si les nace, un plan.
    Todas se ven desde el inicio; las que faltan muestran qué las abre. */
@@ -493,10 +493,11 @@ P.actions.stageInfo = () => {
     ${c.revealed || c.closed ? '' : `<button class="btn btn-glass" data-act="reveal" style="margin-top:10px">${icon('eye')} ${c.my_reveal ? 'Ocultar mi nombre' : 'Compartir mi nombre'}</button>`}`);
 };
 P.screens.chat = {
-  render: () => { const c = convo(); if (!c) return ''; const list = S.msgs[c.id] || [], g = stageOf(c), nl = c.closed ? '' : nextLine(c), sc = stageCard(c), div = /class="divider"/.test(sc);
+  // variantes en prueba (?chat=a|b|c|d); sin variante, la pantalla de siempre
+  get cls() { const v = chatV(); return v ? 'chat v-' + v : ''; },
+  render: () => { const c = convo(); if (!c) return ''; if (chatV()) return chatAlt(chatV(), c); const list = S.msgs[c.id] || [], g = stageOf(c), nl = c.closed ? '' : nextLine(c), sc = stageCard(c), div = /class="divider"/.test(sc);
     // un solo hueco fijo sobre la barra de grabar con lo que sigue (la etapa manda; si no hay, el nombre)
-    const slot = sc && !div ? sc : c.closed || c.cooled || c.revealed ? '' : c.other_reveal && !c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Ya compartió su nombre</b><span>Lo ves cuando compartas el tuyo. No hay apuro.</span></span><button class="btn btn-tonal btn-sm" data-act="reveal">Compartir el mío</button></div>`
-      : c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Compartiste tu nombre</b><span>Se ve cuando la otra persona también lo comparta.</span></span><button class="btn btn-text" data-act="reveal">Ocultar</button></div>` : '';
+    const slot = slotOf(c, sc, div);
     return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 40)}<span class="title">${/^Alguien que /.test(c.alias || '') ? `<small class="pre">Alguien que</small>${esc(c.alias.slice(12))}` : esc(c.alias)}<small>${c.sample ? 'de ejemplo · ' : ''}${c.duo ? 'botella para dos' : c.i_launched ? 'respondió tu botella' : 'respondiste su botella'}</small></span>${g.spoke && !c.closed ? `<button class="iconbtn glass" data-act="call" aria-label="Llamar">${icon('phone')}</button>` : ''}<button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
     ${c.closed ? '' : `<div class="pad stagebar">${stagesHTML(c)}${nl ? `<p class="nextl">${nl}</p>` : ''}</div>`}
     <div class="scroll pad" id="thread"><div class="thread">
@@ -511,8 +512,75 @@ P.screens.chat = {
   after(sec) { const s = sec.querySelector('#thread'); if (s) s.scrollTop = s.scrollHeight; watchPending(); },
   leave() { if (S.convo) markRead(S.convo.id); }
 };
+function slotOf(c, sc, div) {
+  return sc && !div ? sc : c.closed || c.cooled || c.revealed ? '' : c.other_reveal && !c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Ya compartió su nombre</b><span>Lo ves cuando compartas el tuyo. No hay apuro.</span></span><button class="btn btn-tonal btn-sm" data-act="reveal">Compartir el mío</button></div>`
+    : c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Compartiste tu nombre</b><span>Se ve cuando la otra persona también lo comparta.</span></span><button class="btn btn-text" data-act="reveal">Ocultar</button></div>` : '';
+}
+/* ===== Chat: 4 alternativas en prueba =====
+   ?chat=a|b|c|d elige una y queda guardada; ?chat=0 vuelve a la de siempre. Mismo contenido, otro orden. */
+const CHATV = (() => { try { const q = new URLSearchParams(location.search).get('chat'); if (q != null) LS.set('chatv', /^[abcd]$/.test(q) ? q : ''); } catch (e) {} return LS.get('chatv', ''); })();
+const chatV = () => CHATV;
+const nameHTML = c => /^Alguien que /.test(c.alias || '') ? `<small class="pre">Alguien que</small>${esc(c.alias.slice(12))}` : esc(c.alias);
+/* lo que toca ahora, en una frase y con su botón (si hay) */
+function stepNow(c) {
+  if (c.closed || c.cooled) return null;
+  const g = stageOf(c), who = c.revealed ? esc(c.alias) : 'la otra persona';
+  const cool = c.cool_at && new Date(c.cool_at) - Date.now() < 12 * 3600e3 ? ` Si nadie responde, se cierra en ${until(c.cool_at)}.` : '';
+  const rev = !c.revealed && c.other_reveal && !c.my_reveal;
+  const B = (act, t) => `<button class="btn btn-tonal btn-sm" data-act="${act}">${t}</button>`;
+  if (!g.voices) return { i: 0, t: 'Mándense 2 notas de voz cada uno', d: (c.sample ? `Llevas ${g.mine} de ${g.need}.` : `Tú ${g.mine} de ${g.need} · ${who} ${g.theirs} de ${g.need}.`) + (rev ? ' Ya compartió su nombre.' : '') + cool, b: rev ? B('reveal', 'Compartir el mío') : '' };
+  if (!g.callable) return { i: 2, t: c.other_key ? 'Pidió una llamada' : c.my_key ? 'Pediste la llamada' : '¿Hablan en vivo?', d: (c.my_key ? 'Se abre cuando también la pida.' : c.other_key ? 'Si te provoca, pídela tú. Si no, sigan con notas de voz.' : 'Se abre si los dos la piden.') + cool, b: c.my_key ? '' : B('key', 'Pedir llamada') };
+  if (!g.spoke) return { i: 2, t: 'Ya pueden llamarse', d: 'Los dos dijeron que sí.' + cool, b: B('call', 'Llamar') };
+  if (!g.plan) return { i: 3, t: '¿Se ven?', d: 'Propón un lugar público y un día.' + cool, b: B('planAsk', 'Armar un plan') };
+  return { i: 4, t: 'Ya hay un plan', d: 'Lugares públicos y avísale a alguien de confianza.', b: '' };
+}
+/* las 4 etapas como una barrita con nombres; tocarla abre la explicación */
+function stepsBar(c) {
+  const g = stageOf(c);
+  return `<button class="sbar" data-act="stageInfo" aria-label="Etapas: ${STAGES.map(([k, l]) => `${l} ${g.st[k] === 'done' ? 'listo' : g.st[k] === 'lock' ? 'cerrado' : 'disponible'}`).join(', ')}. Toca para ver cómo avanza.">${STAGES.map(([k, l]) => `<i class="${g.st[k]}"><b></b><em>${g.st[k] === 'lock' ? icon('lock', 's') : g.st[k] === 'done' ? icon('check', 's') : ''}${l}</em></i>`).join('')}</button>`;
+}
+function chatAlt(v, c) {
+  const list = S.msgs[c.id] || [], g = stageOf(c), now = stepNow(c), sc = stageCard(c), div = /class="divider"/.test(sc);
+  const typing = c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">${c.sample ? 'Llega una respuesta de ejemplo…' : 'Grabando una nota de voz…'}</span></div>` : '';
+  const sample = c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo: la otra voz es grabada y no escucha lo que dices.</span></div>` : '';
+  const real = c.sample && g.mine >= 1 && !typing && S.home?.quest && !S.home.quest.launched ? `<p class="small muted realnext" style="text-align:center">Ya sabes cómo funciona. <button class="btn btn-text" data-go="launch">Lanzar mi botella</button></p>` : '';
+  const callB = g.spoke && !c.closed ? `<button class="iconbtn glass" data-act="call" aria-label="Llamar">${icon('phone')}</button>` : '', menuB = `<button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button>`;
+  const role = c.duo ? 'botella para dos' : c.i_launched ? 'respondió tu botella' : 'respondiste su botella';
+  const foot = c.closed || c.cooled ? '' : `<div class="foot pad cfoot" id="cfoot">${chatFoot()}</div>`;
+  const wrap = inner => `<div class="scroll pad" id="thread"><div class="thread">${inner}</div></div>`;
+  const cur = now && now.i < 4 ? STAGES[now.i][1] : 'Todo listo';
+  if (v === 'a') { // A · Tranquila: cabecera de una línea, las etapas en un renglón que se toca, lo que sigue junto al micrófono
+    return `${sb_()}<div class="top pad">${backBtn()}<span class="tcol"><span class="title">${c.sample ? '<span class="tag">Ejemplo</span> ' : ''}${nameHTML(c)}</span>${c.closed ? '' : `<button class="stmini" data-act="stageInfo"><span class="dots">${STAGES.map(([k]) => `<i class="${g.st[k]}"></i>`).join('')}</span><span class="lb">${now && now.i < 4 ? `Paso ${now.i + 1} de 4: ${cur}` : cur}</span>${icon('arrow', 's')}</button>`}</span>${callB}${menuB}</div>
+    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${real}`)}${foot}`;
+  }
+  if (v === 'b') { // B · Capítulos: las etapas viven dentro del hilo, como capítulos
+    const need = g.need; let mi = 0, th = c.sample ? need : 0, at = -1, callAt = -1;
+    list.forEach((m, i) => { if (m.voice) { if (m.sender === uid()) mi++; else if (!c.sample) th++; } if (at < 0 && mi >= need && th >= need) at = i; if (callAt < 0 && m.body && /^#(call|plan)\|/.test(m.body)) callAt = i; });
+    if (g.voices && at < 0) at = list.length - 1;
+    const chap = (n, k, desc) => { const st = g.st[k]; return `<div class="chap ${st}" role="separator"><span class="cn">${st === 'done' ? icon('check', 's') : n}</span><b>${STAGES[n - 1][1]}</b>${desc && st !== 'done' ? `<span>${desc}</span>` : st === 'done' ? '<span>Listo</span>' : ''}</div>`; };
+    const vdesc = c.sample ? `Mándense 2 notas de voz cada uno. Llevas ${g.mine} de ${need}.` : `Mándense 2 notas de voz cada uno. Tú ${g.mine} de ${need}, ${c.revealed ? esc(c.alias) : 'la otra persona'} ${g.theirs} de ${need}.`;
+    const after = (m, i) => (i === at ? (c.revealed ? chap(2, 'nombre') : '') + chap(3, 'llamada', g.callable ? 'Llamada de voz: sin video y sin dar tu número.' : 'Se abre si los dos la piden. Sin video y sin dar tu número.') : '') + (g.spoke && i === callAt ? chap(4, 'plan', 'Si les nace, propongan un lugar público.') : '');
+    const left = STAGES.map(([k, l], n) => ({ k, l, n })).filter(({ n }) => (n === 1 && !(g.voices && c.revealed)) || (n === 2 && !g.voices) || (n === 3 && !g.spoke));
+    const slot = slotOf(c, sc, div);
+    const nextUp = c.closed || c.cooled ? '' : `<button class="chapnext" data-act="stageInfo">${now && !slot ? `<span class="nw"><b>Ahora · ${now.i < 4 ? `${now.i + 1} ${cur}` : cur}</b> ${now.i === 0 ? now.d : now.i < 4 && !slot ? now.t + '. ' + now.d : ''}</span>` : ''}${left.length ? `<span class="af"><span>Después</span>${left.map(({ k, l, n }) => `<i class="${g.st[k]}">${n + 1} ${l}</i>`).join('')}</span>` : ''}${icon('arrow', 's')}</button>`;
+    return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 36)}<span class="title">${nameHTML(c)}<small>${c.sample ? 'de ejemplo · ' : ''}${role}</small></span>${callB}${menuB}</div>
+    ${wrap(`${sample}${c.closed ? '' : chap(1, 'voz', vdesc)}${threadHTML(list, after)}${typing}${div ? sc : ''}${slot ? `<div class="chapact">${slot}</div>` : ''}${nextUp}${real}`)}${foot}`;
+  }
+  if (v === 'c') { // C · Panel de abajo: arriba solo el nombre; abajo, todo lo que se hace
+    return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 32)}<span class="title">${nameHTML(c)}${c.sample ? '<small>de ejemplo</small>' : ''}</span>${callB}${menuB}</div>
+    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${real}`)}
+    ${c.closed || c.cooled ? '' : `<div class="cpanel"><div class="pad">${stepsBar(c)}${now ? `<div class="cnow"><span class="tx"><b>${now.t}</b><span>${now.d}</span></span>${now.b}</div>` : ''}</div>${foot}</div>`}`;
+  }
+  // D · Ficha: arriba lo que comparten (su pregunta, el tema) y el avance; abajo, solo voz
+  const bm = list.find(m => m.body && m.body.startsWith('#bottle|')), [, kind, text] = bm ? bm.body.split('|') : [];
+  return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 36)}<span class="title">${nameHTML(c)}${c.sample ? '<small>de ejemplo</small>' : ''}</span>${callB}${menuB}</div>
+    ${c.closed ? '' : `<div class="ficha pad"><div class="fbox">${bm ? `<div class="fq${c.i_launched ? ' mine' : ''}"><small>${c.i_launched ? 'Tu botella' : 'Su botella'} · ${c.place ? `tema: ${esc(c.place.toLowerCase())}` : esc((kind || '').toLowerCase())}</small><span>${esc(text || 'Una nota de voz')}</span></div>` : ''}${stepsBar(c)}${now ? `<div class="fnow"><span class="tx"><b>${now.t}.</b> ${now.d}</span>${now.b}</div>` : ''}</div></div>`}
+    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${real}`)}${foot}`;
+}
 function chatFoot() {
   if (REC.mr && REC.id === 'chat') return `<button class="iconbtn glass" data-act="chatRecCancel" aria-label="Cancelar">${icon('close')}</button><div class="clive"><span class="num" id="ctime">0:00</span><span class="cwave" id="cwave"></span></div><button class="iconbtn sendb" data-act="chatRecSend" aria-label="Enviar nota de voz">${icon('send')}</button>`;
+  if (chatV() === 'a' && convo()) { const n = stepNow(convo()); if (n) return `<span class="anext"><span class="tx"><b>${n.t}.</b> ${n.d}</span>${n.b}</span><button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`; }
+  if (chatV() === 'c') return `${stageOf(convo() || {}).mine < 2 ? '<span class="small muted">Toca el micrófono para grabar</span>' : '<span></span><span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
   return `<span></span>${stageOf(convo() || {}).mine < 2 ? '<span class="small muted" style="text-align:center">Toca el micrófono para grabar</span>' : '<span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
 }
 P.actions.chatRec = async () => {
