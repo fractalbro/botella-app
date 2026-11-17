@@ -216,3 +216,14 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 .rec .btn-text{margin-top:4px}
 /* Aviso con una hoja alta abierta: va dentro de la hoja, bajo su título, y empuja el contenido en vez de taparlo */
 .toast.insheet{position:sticky;top:0;bottom:auto!important;left:auto;right:auto;max-width:none;margin:0 0 var(--s3);z-index:2}
+/* Muelle: tus botellas en una línea de texto; precio tachado como texto junto a "Pedir" */
+.baltxt{margin:12px 2px 0;line-height:1.5} .baltxt b{color:var(--c-fg);font-weight:600}
+.pr-old{font-size:var(--t-cap);color:var(--c-fg-2);white-space:nowrap}
+/* Mis botellas: las que siguen en el mar, atenuadas; "Ver con quién conectó" como enlace */
+.row.drift .t,.row.drift .s{opacity:.72}
+.who-up.btn-text{color:var(--c-primary);display:inline-flex;align-items:center;gap:4px;height:32px;padding:0;margin-top:4px;font-size:var(--t-sub);border:0;background:none}
+/* Conversaciones: las que te toca responder, arriba y en blanco pleno */
+.crow.wait .cl1 b{color:var(--c-fg-2);font-weight:500}
+.crow.new .cdot{width:10px;height:10px}
+.row[data-act=mineGo]{flex-wrap:wrap;row-gap:var(--s2)} .row[data-act=mineGo]>span:first-child{flex:1 1 100%!important}
+.who-up.btn-text{white-space:nowrap}

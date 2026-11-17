@@ -24,7 +24,7 @@ const STORE = {
   ],
   perks: ['3 botellas al día en vez de 1', 'Ves quién abrió tus botellas', 'Una botella que llega lejos cada lunes', 'Hasta 3 salidas activas y de hasta 12 personas']
 };
-const price = p => p ? `<s>S/ ${p}</s>` : '';
+const price = p => `<span class="pr-old">${p ? `<s>S/ ${p}</s> ` : ''}Gratis</span>`;
 async function claim(k) {
   const me = await rpc('beta_get', { p_item: k }); S.me = Array.isArray(me) ? me[0] : me; hap([8, 30, 8]);
   const all = [...STORE.specials, ...STORE.gifts, ...STORE.looks, ...STORE.packs]; const it = all.find(x => x.k === k);
@@ -34,13 +34,13 @@ async function claim(k) {
 P.actions.get = async el => { if (el.classList.contains('soft')) return; el.classList.add('soft'); try { await claim(el.dataset.k); P.st.gotK = el.dataset.k; rerender(); } catch (e) { el.classList.remove('soft'); err(e); } };
 P.actions.toStore = () => go('store', { fade: true });
 const itemHTML = (it, btn) => `<div class="sitem${P.st.gotK === it.k ? ' got' : ''}"><span class="art">${it.art()}</span><span class="tx"><b>${it.name}${it.tag ? ` <em>${it.tag}</em>` : ''}</b><span>${it.desc}</span></span><span class="pr">${btn}</span></div>`;
-const getBtn = (k, label = 'Gratis') => `<button class="btn btn-tonal btn-sm" data-act="get" data-k="${k}">${label}</button>`;
+const getBtn = (k, label = 'Pedir') => `<button class="btn btn-tonal btn-sm" data-act="get" data-k="${k}">${label}</button>`;
 P.screens.store = {
   cls: 'storebg',
   render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Muelle</span>${meBtn()}</div>
-    <p class="lead" style="margin-top:2px">El muelle es la tienda de Botella: botellas especiales y regalos. Lanzar, escuchar, responder y llamar siempre es gratis.</p>
-    <div class="beta rise">${icon('spark', 's')}<span><b>Hoy todo es gratis y no pedimos tarjeta.</b> Quienes llegan primero lo prueban todo sin pagar. El precio tachado es lo que costará más adelante.</span></div>
-    <div class="bal rise d1"><div><b>${m.bottles ?? 0}</b><span>Normales</span></div><div><b style="color:#FF8FC0">${m.color_left ?? 0}</b><span>De color</span></div><div><b style="color:#FFD68C">${m.far_left ?? 0}</b><span>Llegan lejos</span></div><div><b style="color:#FFD68C">${m.tide_left ?? 0}</b><span>Doradas</span></div><div><b style="color:#F2C46D">${m.gifts_left ?? 0}</b><span>Lacre</span></div></div>
+    <p class="lead" style="margin-top:2px">El muelle es la tienda de Botella. Lanzar, escuchar, responder y llamar siempre es gratis; aquí están los extras.</p>
+    <div class="beta rise">${icon('spark', 's')}<span><b>Hoy todo es gratis y sin tarjeta.</b> El precio tachado es lo que costará después.</span></div>
+    <p class="small muted baltxt rise d1">Tienes <b>${m.bottles ?? 0}</b> normales · <b>${m.color_left ?? 0}</b> de color · <b>${m.far_left ?? 0}</b> que llegan lejos · <b>${m.tide_left ?? 0}</b> doradas · <b>${m.gifts_left ?? 0}</b> con lacre</p>
     <div class="sec rise d2"><span class="eyebrow">Botellas especiales</span>${STORE.specials.map(it => itemHTML(it, it.own && it.own() ? '<span class="tag ok">Activo</span>' : `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d2"><span class="eyebrow">Regalos</span>${STORE.gifts.map(it => itemHTML(it, `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d3"><span class="eyebrow">Tu vidrio · el color de tus botellas</span><div class="looks">${STORE.looks.map(it => { const on = (m.glass || null) === it.g; return `<button class="look${on ? ' on' : ''}" data-act="get" data-k="${it.k}"><span class="bsv">${btSVG('free', it.g)}</span><b>${it.name}</b><span>${on ? 'Usando' : it.price ? `<s>S/ ${it.price}</s> Gratis` : 'Gratis'}</span></button>`; }).join('')}</div></div>
@@ -48,7 +48,6 @@ P.screens.store = {
     <div class="captain rise d4"><span class="eyebrow a">Plan Capitán</span><div class="h2">Más botellas cada día y salidas más grandes.</div>
       <ul>${STORE.perks.map(p => `<li>${icon('check', 's')}${p}</li>`).join('')}</ul>
       ${m.captain ? `<div class="tag ok" style="justify-self:start">Eres Capitán</div><button class="btn btn-ghost btn-sm" data-act="get" data-k="nocaptain">Dejar el plan</button>` : `<span class="small muted"><s>S/ 19.90 al mes</s> · gratis por ahora</span><button class="btn btn-a" data-act="get" data-k="captain">Ser Capitán gratis</button>`}</div>
-    <div class="sec"><span class="eyebrow">Siempre gratis</span><div class="frees"><div>${icon('bottle', 's')}<b>Una botella al día</b><span>y hasta 3 más por responder</span></div><div>${icon('eye', 's')}<b>Abrir sin límite</b><span>escucha y responde todas</span></div><div>${icon('phone', 's')}<b>Tu voz</b><span>notas de voz y llamadas</span></div><div>${icon('users', 's')}<b>En grupo</b><span>salidas de la comunidad</span></div></div></div>
     <div style="height:18px"></div></div>${tabsHTML('store')}`; },
   async after() { if (!P.st.storeFresh) { P.st.storeFresh = true; try { await loadMe(); if (P.curId === 'store') rerender(); } catch (e) {} } },
   leave() { P.st.storeFresh = false; P.st.gotK = null; }
