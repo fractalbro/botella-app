@@ -92,12 +92,12 @@ P.screens.salidas = {
   render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Salidas en grupo<small>Apuntarte es gratis · cada uno paga lo suyo</small></span></div>
     <div style="height:12%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
-      <div class="display rise">Salgamos <b>en grupo</b>.</div>
-      <p class="lead rise d1">Las propone gente de Botella. Apuntarte es gratis, van en grupo y siempre a lugares públicos.</p>
+      <div class="h2 rise">Salgamos <b>en grupo</b>.</div>
+      <p class="lead rise d1">Las propone gente de Botella. Siempre en grupo y en lugares públicos.</p>
       ${S.outings.length ? S.outings.map((o, i) => `<button class="orow rise d${Math.min(i + 1, 4)}${o.boosted ? ' boost' : ''}" data-act="outing" data-id="${o.id}"><span class="oi">${icon('users')}</span><span style="flex:1;min-width:0"><span class="t">${esc(o.name)}</span><span class="s">${esc(whenTxt(o.starts_at))}</span><span class="s">${esc(o.place)}${o.sample ? ' · de ejemplo' : ''}</span>${o.sample ? '' : `<span class="cap">${Array.from({ length: o.cap }, (_, k) => `<i class="${k < o.taken ? 'on' : ''}"></i>`).join('')}<small>${o.taken} de ${o.cap}</small></span>`}</span>${o.mine ? '<span class="tag">Tuya</span>' : o.joined ? '<span class="tag">Vas</span>' : o.taken >= o.cap ? '<span class="tag">Llena</span>' : '<span class="act">Ver</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay salidas. Propón la primera.</p>'}
       <div style="height:12px"></div></div>
-    <div class="foot pad"><button class="btn btn-a" data-go="proponer">${icon('pin')} Proponer una salida</button></div>`,
+    <div class="foot pad"><button class="btn ${S.outings.length ? 'btn-ghost' : 'btn-a'}" data-go="proponer">${icon('pin')} Proponer una salida</button></div>`,
   async after() { if (!P.st.outFresh) { P.st.outFresh = true; try { await loadOutings(); if (P.curId === 'salidas') rerender(); } catch (e) {} } },
   leave() { P.st.outFresh = false; }
 };

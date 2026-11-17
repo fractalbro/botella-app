@@ -247,10 +247,10 @@ P.screens.lecturas = {
   render: () => { const ls = S.lecturas || [];
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Pide una lectura</span></div><div class="scroll pad">
     <div class="display rise" style="margin-top:4px">¿Qué piensan <b>de ti</b>?</div>
-    <p class="lead rise d1">Elige una pregunta, grábala y comparte el link. Tus amigos responden con su voz desde Botella. Escuchas cada voz primero y después ves quién fue: adivinar antes es parte de la gracia.</p>
-    <button class="btn btn-a rise d2" data-act="lecNew" style="margin-top:16px">${icon('quote')} Pedir una lectura</button>
+    <p class="lead rise d1">Elige una pregunta, grábala y comparte el link. Tus amigos responden con su voz; primero escuchas y después ves quién fue.</p>
     ${ls.length ? `<div class="sec rise d3"><span class="eyebrow">Tus lecturas</span>${ls.map(l => `<button class="lrow" data-act="lecOpen" data-id="${l.id}"><span style="flex:1;min-width:0"><span class="t">${esc(l.question)}</span><span class="s">${l.open ? `Abierta · cierra en ${until(l.closes_at)}` : 'Cerrada'} · ${plural(l.answers, 'respuesta', 'respuestas')}</span></span>${l.fresh ? `<span class="cnt">${l.fresh}</span>` : icon('arrow', 's')}</button>`).join('')}</div>` : ''}
-    <div class="safe rise d3">${icon('shield')}<span><b>Con cuidado.</b> Cada respuesta pasa por un filtro antes de llegarte: los insultos, las amenazas y lo muy explícito no se entregan. Puedes borrar, reportar o bloquear cualquier respuesta.</span></div>
+    <button class="btn btn-a rise d2" data-act="lecNew" style="margin-top:16px">${icon('quote')} Pedir una lectura</button>
+    <div class="safe rise d3" style="margin-top:16px">${icon('shield')}<span><b>Con cuidado.</b> Un filtro frena insultos y amenazas antes de que te lleguen. Puedes borrar o reportar cualquier respuesta.</span></div>
     <div style="height:24px"></div></div>`; },
   async after() { if (!P.st.lecFresh) { P.st.lecFresh = true; try { await loadLecturas(); if (P.curId === 'lecturas') rerender(); } catch (e) {} } },
   leave() { P.st.lecFresh = false; }
@@ -283,13 +283,14 @@ P.actions.lecOpen = el => openLec(el.dataset.id);
 P.screens.lectura = {
   render: () => { const l = S.lec; if (!l) return ''; const as = S.lecAns || [], isNew = P.st.lecNewId === l.id;
     return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Tu lectura<small>${l.open ? `Abierta · cierra en ${until(l.closes_at)}` : 'Cerrada'}</small></span>${l.open ? `<button class="iconbtn glass" data-act="lecMenu" aria-label="Opciones">${icon('more')}</button>` : ''}</div><div class="scroll pad">
-    <div class="paper rise" style="margin-top:6px"><span class="eyebrow">Tu pregunta</span><div class="q">${esc(l.question)}</div>${vn(l.voice, l.secs, { mine: true, peaks: l.peaks })}</div>
-    ${l.open ? `<div class="sharebox rise d1">${isNew ? '<b>Tu link está listo.</b>' : ''}<span class="small muted">${isNew ? 'Compártelo por WhatsApp o en tus historias. Mientras más gente, más voces.' : 'Compártela otra vez para recibir más voces.'}</span><div class="code"><span>${esc(lecLink(l.slug).replace(/^https?:\/\//, ''))}</span><button class="btn btn-tonal btn-sm" data-act="lecCopy">${icon('copy', 's')} Copiar</button></div><button class="btn btn-a" data-act="lecShare">${icon('export')} Compartir mi lectura</button></div>` : ''}
+    <div class="card rise" style="margin-top:6px"><span class="eyebrow">Tu pregunta</span><div class="h3" style="margin:4px 0 10px">${esc(l.question)}</div>${vn(l.voice, l.secs, { mine: true, peaks: l.peaks })}</div>
+    ${l.open && !as.length ? `<div class="sharebox rise d1">${isNew ? '<b>Tu link está listo.</b>' : ''}<span class="small muted">${isNew ? 'Compártelo por WhatsApp o en tus historias. Mientras más gente, más voces.' : 'Compártela otra vez para recibir más voces.'}</span><div class="code"><span>${esc(lecLink(l.slug).replace(/^https?:\/\//, ''))}</span><button class="btn btn-tonal btn-sm" data-act="lecCopy">${icon('copy', 's')} Copiar</button></div><button class="btn btn-a" data-act="lecShare">${icon('export')} Compartir mi lectura</button></div>` : ''}
     <div class="sec rise d2"><span class="eyebrow">${as.length ? plural(as.length, 'voz', 'voces') : 'Respuestas'}</span>
       ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s"><b class="who">${a.heard ? esc(a.name || 'Sin nombre') : 'Escúchala para ver quién es'}</b> · ${ago(a.at)}${a.heard ? '' : ' · nueva'}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
         : `<p class="small muted">${l.open ? 'Todavía no llega ninguna. Aparecen aquí apenas alguien responda.' : 'Esta lectura cerró sin respuestas.'}</p>`}
       ${l.pending ? `<p class="small muted" style="margin-top:10px">${icon('clock', 's')} ${plural(l.pending, 'respuesta espera', 'respuestas esperan')} la revisión del filtro.</p>` : ''}
       ${l.filtered ? `<p class="small muted" style="margin-top:10px">${icon('shield', 's')} El filtro frenó ${plural(l.filtered, 'respuesta que no cumplía', 'respuestas que no cumplían')} las normas. No te ${l.filtered === 1 ? 'llegó' : 'llegaron'}.</p>` : ''}</div>
+    ${l.open && as.length ? `<button class="btn btn-tonal rise d2" data-act="lecShare" style="margin-top:16px">${icon('export')} Compartir otra vez</button>` : ''}
     <div style="height:24px"></div></div>`; },
   after(sec) { sec.addEventListener('click', e => { const row = e.target.closest('[data-play]')?.closest('[data-heard]'); if (!row) return; const a = (S.lecAns || []).find(x => x.id === row.dataset.heard); if (a && !a.heard) { a.heard = true; row.classList.remove('new'); const w = row.querySelector('.who'); if (w) w.textContent = a.name || 'Sin nombre'; rpc('lectura_heard', { p_answer: a.id }).then(() => { loadLecturas(); loadHome(); }).catch(() => {}); } }); },
   leave() { P.st.lecNewId = null; }
