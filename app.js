@@ -76,10 +76,14 @@ function toast(msg, kind) {
   const ph = phoneEl(), t = document.createElement('div');
   t.className = 'toast' + (kind ? ' ' + kind : ''); t.setAttribute('role', 'status'); t.textContent = msg;
   // Se ubica otra vez cuando la pantalla nueva termina de montarse (el aviso suele llegar justo al cambiar de pantalla).
-  const place = () => { if (!t.isConnected) return; const scr = [...ph.querySelectorAll('.screen:not(.exiting)')].pop();
-    const anchor = document.getElementById('sheet') || (scr && scr.querySelector('.foot, .shorebot .btn-a, .tabs')); const pr = ph.getBoundingClientRect();
+  // Con una hoja abierta (aunque se abra después del aviso): encima de la hoja si cabe; si la hoja es alta, dentro, bajo su título, sin tapar sus opciones.
+  const place = () => { if (!t.isConnected) return; const scr = [...ph.querySelectorAll('.screen:not(.exiting)')].pop(), sh = document.getElementById('sheet'), pr = ph.getBoundingClientRect();
+    if (sh) { if (t.parentNode === sh) return; const room = sh.getBoundingClientRect().top - pr.top;
+      if (room < (t.offsetHeight || 56) + 64) { t.classList.add('insheet'); sh.insertBefore(t, sh.children[2] || null); return; } }
+    else if (t.parentNode !== ph) { t.classList.remove('insheet'); ph.appendChild(t); }
+    const anchor = sh || (scr && scr.querySelector('.nextstep, .foot, .tabs'));
     t.style.setProperty('--toast-b', (anchor ? Math.max(16, pr.bottom - anchor.getBoundingClientRect().top + 8) : 24) + 'px'); };
-  ph.appendChild(t); place(); requestAnimationFrame(place); setTimeout(place, 120); setTimeout(place, 420); setTimeout(() => t.remove(), 3300);
+  ph.appendChild(t); place(); requestAnimationFrame(place); const iv = setInterval(place, 150); setTimeout(() => { clearInterval(iv); t.remove(); }, 3300);
 }
 function banner({ ic = '', title, text = '', go: target = '', v = '' }) {
   document.querySelectorAll('.banner').forEach(b => b.remove());
@@ -321,7 +325,7 @@ async function play(btn) {
 /* grabadora grande (registro, lanzar, responder) */
 function recBox(id, hint = 'Toca para grabar. Con 10 segundos basta.') {
   const r = S.rec[id];
-  if (r) return `<div class="rec" id="rec-${id}"><div class="eyebrow a">Tu nota de voz</div>${vn(r.url, r.secs, { mine: true, peaks: r.peaks })}<button class="btn-ghost btn btn-sm" data-act="rerec" data-id="${id}">Volver a grabar</button></div>`;
+  if (r) return `<div class="rec" id="rec-${id}"><div class="eyebrow a">Tu nota de voz</div>${vn(r.url, r.secs, { mine: true, peaks: r.peaks })}<button class="btn btn-text" data-act="rerec" data-id="${id}">Volver a grabar</button></div>`;
   return `<div class="rec" id="rec-${id}"><div class="time num">0:00</div><div class="wave"></div><button class="mic" data-act="recToggle" data-id="${id}" aria-label="Grabar">${icon('mic')}</button><div class="hint">${hint}</div></div>`;
 }
 P.actions.recToggle = async btn => {

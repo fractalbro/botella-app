@@ -188,3 +188,31 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 @media (max-width:360px){.quick .tide b{display:block;white-space:normal;line-height:1.25}.quick .tide .cnt{margin-left:4px;vertical-align:1px}}
 /* En 320 la cabecera no cabe entera: queda el número (el aria-label dice "para lanzar") y la esfera del perfil no se sale */
 @media (max-width:360px){.mybottles span{display:none}.streak,.mybottles{margin-right:6px}}
+
+/* ===== fase 2 ===== */
+/* Orilla: estado de tu última botella como texto; "Más en Botella" como fila discreta con sus dos accesos */
+.statusline{display:flex;align-items:center;gap:8px;margin:10px 2px 0;font-size:var(--t-sub);color:var(--c-fg-2)}
+.statusline>span:first-of-type{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statusline b{color:var(--c-fg);font-weight:500} .statusline .i{color:var(--c-fg-2);flex:none}
+.statusline .shores{display:flex;gap:3px;flex:none} .statusline .shores i{width:4px;height:12px;border-radius:2px;background:var(--c-line-2)}
+.statusline .shores i.on{background:var(--c-primary)}
+.morerow{margin-top:6px;padding-top:6px;border-top:1px solid var(--c-line)}
+.morerow .eyebrow{display:block;margin:0 2px}
+.morerow>div{display:flex;gap:var(--s4);flex-wrap:nowrap}
+.mlink{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 2px;background:none;border:0;color:var(--c-primary);
+  font-size:var(--t-sub);font-weight:600;white-space:nowrap}
+.mlink:active{opacity:.7} .mlink .cnt{margin-left:0}
+@media (max-width:360px){.mlink .i{display:none}.morerow>div{gap:var(--s3)}}
+@media (max-height:700px){.shorebot .statusline .shores{display:none}.shorebot .statusline{margin-top:8px}.morerow{margin-top:4px;padding-top:4px}.mlink{height:32px}}
+/* Chat: un solo hueco fijo para el siguiente paso, entre el hilo y la barra de grabar */
+.nextstep{flex:none;padding-top:8px;padding-bottom:4px}
+.nextstep .scard{flex-wrap:nowrap;margin:0}
+.realnext .btn-text{display:inline;height:auto;padding:0;font-size:inherit;width:auto}
+.nextstep .scard .si{display:none}.nextstep .scard .tx{min-width:0}.nextstep .scard .tx b{font-size:var(--t-body);line-height:1.3}
+.nextstep .scard .tx span{line-height:1.35}
+/* Lanzar: deslizar es un gesto extra, sin caja; el botón es lo principal */
+.fling{border:0!important;background:none!important;min-height:64px;height:auto!important}
+.fling .ft{font-size:var(--t-cap)!important;color:var(--c-fg-2)}
+.rec .btn-text{margin-top:4px}
+/* Aviso con una hoja alta abierta: va dentro de la hoja, bajo su título, y empuja el contenido en vez de taparlo */
+.toast.insheet{position:sticky;top:0;bottom:auto!important;left:auto;right:auto;max-width:none;margin:0 0 var(--s3);z-index:2}

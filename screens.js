@@ -142,36 +142,39 @@ P.actions.finish = async el => {
 function travelLine() {
   const b = (S.bottles || []).find(x => !x.held && !x.answers && Date.now() - new Date(x.created_at) < 2 * 864e5); if (!b) return '';
   const t = b.opened ? `La escucharon ${b.opened} de ${b.shores} ${b.shores === 1 ? 'persona' : 'personas'}` : `Va hacia ${b.shores} ${b.shores === 1 ? 'persona' : 'personas'}`;
-  return `<button class="travel" data-go="mine">${icon('bottle', 's')}<span><b>Tu última botella</b> · ${t}</span><span class="shores">${Array.from({ length: Math.min(b.shores, 12) }, (_, k) => `<i class="${k < b.opened ? 'on' : ''}"></i>`).join('')}</span></button>`;
+  return `<div class="statusline">${icon('bottle', 's')}<span><b>Tu última botella</b> · ${t}</span><span class="shores">${Array.from({ length: Math.min(b.shores, 12) }, (_, k) => `<i class="${k < b.opened ? 'on' : ''}"></i>`).join('')}</span></div>`;
 }
 const SPOTS = [[5, 6], [54, 24], [12, 56], [60, 66], [34, 84], [66, 0]]; // sin encimarse en un iPhone SE
 const countHTML = () => { const n = S.me?.bottles || 0; return `${icon('bottle', 's')}<b class="num">${n}</b><span>para lanzar</span>`; };
 const meBtn = () => `<button class="iconbtn glass" data-go="perfil" data-fade aria-label="Tu perfil">${orb('var(--a)', 26)}</button>`;
 P.screens.orilla = {
   anim: night(.42, false),
-  render: () => { const list = S.shore.slice(0, 6), n = S.shore.length, today = todayCard(); return `${sb_()}<div class="pad" style="flex:none">
+  render: () => { const list = S.shore.slice(0, 6), n = S.shore.length, today = todayCard(), fresh = S.shore.some(b => b.status !== 'opened'), q = S.home?.quest, askLaunch = q && !q.done && q.heard && q.answered; return `${sb_()}<div class="pad" style="flex:none">
       <div class="top"><span class="wordmark" style="font-size:30px;flex:1">Botella</span>${S.home ? streakChip() : ''}<button class="mybottles" data-go="store" data-fade aria-label="Tienes ${S.me?.bottles || 0} botellas para lanzar. Ver el muelle">${countHTML()}</button>${meBtn()}</div>
     </div>
     <div style="flex:1;position:relative">
       ${list.map((b, i) => { const lv = b.status === 'waiting' ? leaves(b.expires_at) : ''; return `<button class="float${b.status === 'opened' ? ' seen' : ''}${lv.startsWith('se va en') ? ' soon' : ''}" style="left:${SPOTS[i][0]}%;top:${SPOTS[i][1]}%" data-act="openB" data-id="${b.id}" aria-label="Abrir botella: ${esc(b.kind.toLowerCase())} de ${esc(someone(b.place))}${lv ? ', ' + lv : ''}">${btSVG(b.btype, b.glass, b.featured)}<span>${b.voice2 ? 'Para dos' : esc(b.kind)} · ${esc(b.place)}${lv ? `<small>${lv}</small>` : ''}</span></button>`; }).join('')}
     </div>
     <div class="pad shorebot" style="flex:none;padding-bottom:14px;background:linear-gradient(transparent,rgba(3,16,28,.9) 40%)">
-      ${n ? `<button class="shoreh" data-act="openFirst"><span class="h2">${n === 1 ? 'Una voz llegó' : n + ' voces llegaron'} a tu orilla</span><span class="go">Escuchar ${icon('arrow', 's')}</span></button>` : '<div class="h2">Tu orilla está en calma</div>'}
-      ${today ? '' : `<p class="small muted" style="margin:6px 0 12px">${n ? 'Cada botella trae la voz de una persona. Toca una para escucharla; si te nace, respóndele.' : 'Lanza la primera. Cuando alguien lance una, la marea la trae hasta aquí.'}</p>`}
-      ${today ? `<div style="margin:10px 0 10px">${today}</div>` : ''}
+      <div class="h2">${n ? (n === 1 ? 'Una voz llegó' : n + ' voces llegaron') + ' a tu orilla' : 'Tu orilla está en calma'}</div>
+      <p class="small muted" style="margin:4px 0 10px">${n ? 'Toca una botella para escucharla.' : 'Lanza la tuya. Cuando alguien lance una, la marea la trae hasta aquí.'}</p>
+      ${today ? `<div style="margin:0 0 10px">${today}</div>` : ''}
+      <button class="btn ${fresh && !askLaunch ? 'btn-tonal' : 'btn-a'}" data-go="launch">${icon('bottle')} Lanzar una botella</button>
       ${travelLine()}
-      <div class="quick">${today ? '' : `<button class="tide" data-go="marea">${icon('tide', 's')}<span><b>Pregunta de hoy</b>${mareaLine()}</span></button>`}<button class="tide" data-act="toLecturas">${icon('quote', 's')}<span><b>Qué piensan de ti${S.home?.lecturas ? `<em class="cnt" aria-label="${S.home.lecturas} respuestas nuevas">${S.home.lecturas}</em>` : ''}</b>tus amigos, con su voz</span></button><button class="tide" data-go="salidas">${icon('users', 's')}<span><b>Salidas en grupo</b>planes gratis</span></button></div>
-      <button class="btn btn-a" data-go="launch">${icon('bottle')} Lanzar una botella</button>
+      ${moreRow()}
     </div>${tabsHTML('orilla')}`; },
   async after() { tourCheck(); if (!P.st.shoreFresh) { P.st.shoreFresh = true; try { await Promise.all([loadMe(), loadShore(), loadHome()]); if (P.curId === 'orilla') rerender(); } catch (e) {} } },
   leave() { P.st.shoreFresh = false; P.tour = null; }
 };
-P.actions.toLecturas = () => go('lecturas');
+P.actions.toLecturas = () => { closeSheet(); go('lecturas'); };
+// Más en Botella: fila discreta bajo Lanzar, con sus dos accesos a la vista (también están en Perfil).
+const lecCnt = () => S.home?.lecturas ? `<em class="cnt" aria-label="${S.home.lecturas} respuestas nuevas">${S.home.lecturas}</em>` : '';
+const moreRow = () => `<div class="morerow"><span class="eyebrow">Más en Botella</span><div><button class="mlink" data-act="toLecturas">${icon('quote', 's')}<span>Qué piensan de ti</span>${lecCnt()}</button><button class="mlink" data-go="salidas">${icon('users', 's')}<span>Salidas en grupo</span></button></div></div>`;
 /* primera visita a la orilla: tres pistas cortas, una sola vez */
 /* después de registrarte, una guía corta: se ilumina un accionable principal, lo demás queda en penumbra */
 const TOUR = [
   ['.float', 'Estas botellas traen voces', 'Son de personas de Lima con gustos parecidos a los tuyos. Toca una para escucharla.'],
-  ['.shorebot > .btn-a', 'Lanza la tuya', 'Graba una pregunta o algo que quieras contar. Llega a 8 personas y quien quiere, te responde.'],
+  ['.shorebot > [data-go=launch]', 'Lanza la tuya', 'Graba una pregunta o algo que quieras contar. Llega a 8 personas y quien quiere, te responde.'],
   ['.mybottles', 'Tus botellas para lanzar', 'Cada día recibes una gratis, y ganas otra cuando respondes a alguien.'],
   ['.tabs [data-go=convos]', 'Si alguien responde, conversan aquí', 'En privado y primero solo con notas de voz. El nombre se ve cuando los dos quieran.']
 ];
@@ -257,23 +260,23 @@ P.actions.sendAns = async el => {
 P.screens.launch = {
   render: () => { const left = btLeft(S.btype); return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Lanzar una botella<small>${BT[S.btype].name}: ${left ? `te ${left === 1 ? 'queda 1' : 'quedan ' + left}` : 'no te quedan'}</small></span></div>
     <div class="scroll pad">
-      <div class="display rise" style="margin-top:4px">¿Qué quieres <b>lanzar</b> al mar?</div>
+      ${S.rec.launch ? `<div class="h2 rise" style="margin-top:4px">Lista para lanzar</div><p class="small muted" style="margin:6px 2px 0">${S.kind}${S.body ? ' · “' + esc(S.body) + '”' : ''}</p>` : `<div class="display rise" style="margin-top:4px">¿Qué quieres <b>lanzar</b> al mar?</div>
       <div class="chips rise d1" style="margin-top:16px" id="kinds">${Object.keys(KINDS).map(k => `<button class="chip${S.kind === k ? ' on' : ''}" data-act="kind" data-k="${k}">${k}</button>`).join('')}</div>
-      <div class="sec rise d2" style="margin-top:18px"><label class="field"><input id="bbody" maxlength="140" value="${esc(S.body)}" placeholder="De qué trata (opcional)" aria-label="Tu botella en una línea"></label>
-        <p class="small muted" style="margin:10px 2px 0">Toca una idea o escribe la tuya. Lo que cuenta es tu voz.</p><div class="ideas" id="ideas" style="margin-top:8px">${ideasHTML()}</div></div>
+      <div class="sec rise d2" style="margin-top:18px"><p class="small muted" style="margin:0 2px">Toca una idea si quieres. Lo que cuenta es tu voz.</p><div class="ideas" id="ideas" style="margin-top:8px">${ideasHTML()}</div></div>`}
       <div class="sec">${recBox('launch', 'Toca para grabarla. Con 10 segundos basta; tienes hasta 60.')}<p class="small muted" style="margin:8px 2px 0">${icon('lock', 's')} Llega a ${S.duoOn ? 12 : S.btype === 'far' ? 20 : 8} personas con cuenta. No ven tu nombre ni tu distrito.</p></div>
-      ${S.moreOpts || S.duoOn || S.btype !== 'free' || S.featured ? `      <div class="sec"><button class="setrow duot" role="switch" aria-checked="${!!S.duoOn}" data-act="duoT">${icon('duo')}<span style="flex:1"><b>Botella para dos</b><span>Tú grabas una mitad y alguien que tú elijas, la otra. Sale con las dos voces a 12 personas.</span></span><span class="sw"></span></button></div>
+      ${S.moreOpts || S.duoOn || S.btype !== 'free' || S.featured ? `      <div class="sec"><label class="field"><input id="bbody" maxlength="140" value="${esc(S.body)}" placeholder="De qué trata (opcional)" aria-label="Tu botella en una línea"></label></div>
+      <div class="sec" style="margin-top:16px"><button class="setrow duot" role="switch" aria-checked="${!!S.duoOn}" data-act="duoT">${icon('duo')}<span style="flex:1"><b>Botella para dos</b><span>Tú grabas una mitad y alguien que tú elijas, la otra. Sale con las dos voces a 12 personas.</span></span><span class="sw"></span></button></div>
       ${S.duoOn ? '' : `<div class="sec"><span class="eyebrow">Tipo de botella</span><div class="btypes" id="btypes">${btypesHTML()}</div>
         ${S.btype === 'color' ? `<label class="field select" style="margin-top:10px"><select id="btarget" aria-label="A quién llega">${targetOpts()}</select></label>` : ''}
         <p class="small muted" style="margin:8px 0 0">${BT[S.btype].desc}</p>
         <button class="setrow" role="switch" aria-checked="${S.featured}" data-act="featT" style="margin-top:10px">${icon('tide')}<span style="flex:1"><b>Que salga dorada, en la marea de las 21:00</b><span>${(S.me?.tide_left || 0) ? `Arriba de todas, para todo Lima. Te ${S.me.tide_left === 1 ? 'queda 1' : 'quedan ' + S.me.tide_left}.` : 'No te quedan. Pide una en el muelle.'}</span></span><span class="sw"></span></button></div>`}
-` : `<div class="sec"><button class="setrow" data-act="moreOpts">${icon('spark')}<span style="flex:1"><b>Más opciones</b><span>Botella para dos, elegir un tema o llegar más lejos.</span></span>${icon('arrow', 's')}</button></div>`}
+` : `<div class="sec"><button class="setrow" data-act="moreOpts">${icon('spark')}<span style="flex:1"><b>${launchKind()}</b><span>Cambiar: para dos, elegir tema, llegar más lejos o salir dorada.</span></span>${icon('arrow', 's')}</button></div>`}
       ${left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`}
     </div>
-    ${S.rec.launch && S.duoOn ? `<div class="foot pad"><button class="btn btn-a${S.me?.bottles ? '' : ' soft'}" data-act="duoStart">${icon('duo')} Guardar mi mitad e invitar</button></div>` : S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">Desliza la botella hacia arriba</span></div><button class="btn btn-a${left ? '' : ' soft'}" data-act="throw">${icon('send')} Lanzar al mar</button></div>` : ''}`; },
+    ${S.rec.launch && S.duoOn ? `<div class="foot pad"><button class="btn btn-a${S.me?.bottles ? '' : ' soft'}" data-act="duoStart">${icon('duo')} Guardar mi mitad e invitar</button></div>` : S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">También puedes deslizarla hacia arriba</span></div><button class="btn btn-a${left ? '' : ' soft'}" data-act="throw">${icon('send')} Lanzar al mar</button></div>` : ''}`; },
   after(sec) {
     const fb = sec.querySelector('#fb'); let y0 = null, dy = 0;
-    sec.querySelector('#bbody').addEventListener('input', e => { S.body = e.target.value; });
+    sec.querySelector('#bbody')?.addEventListener('input', e => { S.body = e.target.value; });
     sec.querySelector('#btarget')?.addEventListener('change', e => { S.target = e.target.value; });
     if (!fb) return;
     fb.addEventListener('pointerdown', e => { if (!S.rec.launch) { needVoice('launch'); return; } y0 = e.clientY; fb.setPointerCapture(e.pointerId); fb.style.transition = 'none'; });
@@ -283,9 +286,11 @@ P.screens.launch = {
   }
 };
 P.actions.recorded = id => { if (id === 'launch' && P.curId === 'launch') { go('launch', { noPush: true }); if (S.rec.launch) setTimeout(() => { const sc = P.root.querySelector('.scroll'); sc && sc.scrollTo({ top: sc.scrollHeight, behavior: 'smooth' }); }, 60); } };
+// qué botella sale ahora, en palabras (la fila plegada de opciones)
+const launchKind = () => (S.duoOn ? 'Botella para dos · 12 personas' : S.btype === 'color' ? 'Botella de color · llega a 8 personas por tema' : S.btype === 'far' ? 'Llega lejos · 20 personas' : 'Botella normal · llega a 8 personas') + (S.featured ? ' · dorada' : '');
 function ideasHTML() { return KINDS[S.kind].map((q, i) => `<button class="idea${S.idea === i ? ' on' : ''}" data-act="idea" data-i="${i}">${q}</button>`).join(''); }
 P.actions.kind = el => { S.kind = el.dataset.k; S.idea = -1; document.querySelectorAll('#kinds .chip').forEach(c => c.classList.toggle('on', c.dataset.k === S.kind)); $('#ideas').innerHTML = ideasHTML(); };
-P.actions.idea = el => { S.idea = +el.dataset.i; S.body = KINDS[S.kind][S.idea]; $('#bbody').value = S.body; $('#ideas').innerHTML = ideasHTML(); };
+P.actions.idea = el => { S.idea = +el.dataset.i; S.body = KINDS[S.kind][S.idea]; const f = $('#bbody'); if (f) f.value = S.body; $('#ideas').innerHTML = ideasHTML(); };
 const BT = {
   free: { name: 'Normal', sub: '8 personas', desc: 'Llega a 8 personas con gustos parecidos, y a 4 más si nadie responde en 6 horas.', col: '127,216,201' },
   color: { name: 'De color', sub: 'tú eliges el tema', desc: 'Llega a 8 personas a quienes les gusta el tema que elijas.', col: '255,112,169' },
@@ -459,10 +464,9 @@ function nextLine(c) {
   const g = stageOf(c), other = c.revealed ? esc(c.alias) : 'esta persona';
   if (c.cooled) return `${icon('clock', 's')} Pasaron 48 horas sin respuesta y esta conversación se cerró sola. Pasa seguido y no es culpa de nadie.`;
   const cool = c.cool_at && new Date(c.cool_at) - Date.now() < 12 * 3600e3 ? ` Si nadie responde, se cierra en ${until(c.cool_at)}.` : '';
-  if (!g.voices) return `<span class="vc">${Array.from({ length: g.need }, (_, k) => `<i class="${k < g.mine ? 'on' : ''}"></i>`).join('')}</span> Por ahora, notas de voz. Llevas ${g.mine} de ${g.need}${c.sample ? '' : ` y ${c.revealed ? esc(c.alias) : 'la otra persona'} ${g.theirs} de ${g.need}`}. Lo demás se abre paso a paso, solo si los dos quieren.${cool}`;
-  if (!g.callable) return `${icon('phone', 's')} ${c.my_key ? `Pediste la llamada. Falta que ${other} la pida.` : c.other_key ? `${c.revealed ? esc(c.alias) : 'Esta persona'} pidió la llamada. Se abre solo si tú también la pides.` : 'Ya pueden abrir la llamada: se abre si los dos la piden.'}${cool}`;
-  if (!g.spoke) return `${icon('phone', 's')} Ya pueden llamarse. Solo voz, sin video.`;
-  if (!g.plan) return `${icon('pin', 's')} ¿Se ven? Propongan un lugar público, si les nace.`;
+  if (!g.voices) return `<span class="vc">${Array.from({ length: g.need }, (_, k) => `<i class="${k < g.mine ? 'on' : ''}"></i>`).join('')}</span> Notas de voz: llevas ${g.mine} de ${g.need}${c.sample ? '' : ` · ${c.revealed ? esc(c.alias) : 'la otra persona'} ${g.theirs} de ${g.need}`}.${cool}`;
+  // en llamada y plan, la tarjeta de siguiente paso ya lo dice: aquí solo el aviso de que se enfría
+  if (!g.callable || !g.spoke || !g.plan) return cool ? `${icon('clock', 's')}${cool.trim()}` : '';
   return `${icon('check', 's')} Ya hay un plan. Lugares públicos y avísale a alguien de confianza.`;
 }
 /* la acción de la etapa actual, al final del hilo y pequeña: el chat va primero */
@@ -481,29 +485,33 @@ P.actions.stageInfo = () => {
   const row = (k, ic, t, d) => { const v = g.st[k]; return `<div class="setrow stinfo ${v}">${icon(v === 'done' ? 'check' : v === 'lock' ? 'lock' : ic)}<span style="flex:1"><b>${t}</b><span>${d}</span></span>${v === 'done' ? '<span class="tag ok">Listo</span>' : v === 'lock' ? '<span class="tag">Aún no</span>' : ''}</div>`; };
   sheet(`${sheetHead('Cómo avanza una conversación')}<p class="muted" style="margin:0 0 10px">Aquí primero se conocen por lo que dicen. Lo demás se abre a su ritmo.</p>
     ${row('voz', 'mic', '1. Notas de voz', `Mándense al menos 2 cada uno. Van ${g.mine} tuyas${c.sample ? '' : ` y ${g.theirs} suyas`}.`)}
-    ${row('nombre', 'eye', '2. Sus nombres', 'Cuando quieran. Se ven solo si los dos los comparten.')}
+    ${row('nombre', 'eye', '2. Sus nombres', c.other_reveal && !c.my_reveal ? 'Ya compartió el suyo. Lo ves cuando compartas el tuyo; no hay apuro.' : 'Cuando quieran. Se ven solo si los dos los comparten.')}
     ${row('llamada', 'phone', '3. Llamada de voz', 'Se abre con las 2 notas de cada uno y si los dos la piden. Sin video y sin dar tu número.')}
     ${row('plan', 'pin', '4. Un plan', 'Después de hablar, si les nace, propongan un lugar público.')}
     ${c.revealed || c.closed ? '' : `<button class="btn btn-glass" data-act="reveal" style="margin-top:10px">${icon('eye')} ${c.my_reveal ? 'Ocultar mi nombre' : 'Compartir mi nombre'}</button>`}`);
 };
 P.screens.chat = {
-  render: () => { const c = convo(); if (!c) return ''; const list = S.msgs[c.id] || [], g = stageOf(c); return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 40)}<span class="title">${/^Alguien que /.test(c.alias || '') ? `<small class="pre">Alguien que</small>${esc(c.alias.slice(12))}` : esc(c.alias)}<small>${c.sample ? 'de ejemplo · ' : ''}${c.duo ? 'botella para dos' : c.i_launched ? 'respondió tu botella' : 'respondiste su botella'}</small></span>${g.callable && !c.closed ? `<button class="iconbtn glass" data-act="call" aria-label="Llamar">${icon('phone')}</button>` : ''}<button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
-    ${c.closed ? '' : `<div class="pad stagebar">${stagesHTML(c)}<p class="nextl">${nextLine(c)}</p></div>`}
+  render: () => { const c = convo(); if (!c) return ''; const list = S.msgs[c.id] || [], g = stageOf(c), nl = c.closed ? '' : nextLine(c), sc = stageCard(c), div = /class="divider"/.test(sc);
+    // un solo hueco fijo sobre la barra de grabar con lo que sigue (la etapa manda; si no hay, el nombre)
+    const slot = sc && !div ? sc : c.closed || c.cooled || c.revealed ? '' : c.other_reveal && !c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Ya compartió su nombre</b><span>Lo ves cuando compartas el tuyo. No hay apuro.</span></span><button class="btn btn-tonal btn-sm" data-act="reveal">Compartir el mío</button></div>`
+      : c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Compartiste tu nombre</b><span>Se ve cuando la otra persona también lo comparta.</span></span><button class="btn btn-text" data-act="reveal">Ocultar</button></div>` : '';
+    return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 40)}<span class="title">${/^Alguien que /.test(c.alias || '') ? `<small class="pre">Alguien que</small>${esc(c.alias.slice(12))}` : esc(c.alias)}<small>${c.sample ? 'de ejemplo · ' : ''}${c.duo ? 'botella para dos' : c.i_launched ? 'respondió tu botella' : 'respondiste su botella'}</small></span>${g.spoke && !c.closed ? `<button class="iconbtn glass" data-act="call" aria-label="Llamar">${icon('phone')}</button>` : ''}<button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
+    ${c.closed ? '' : `<div class="pad stagebar">${stagesHTML(c)}${nl ? `<p class="nextl">${nl}</p>` : ''}</div>`}
     <div class="scroll pad" id="thread"><div class="thread">
       ${c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo: la otra voz es grabada y no escucha lo que dices. Así avanza una conversación real, paso a paso.</span></div>` : ''}
       ${threadHTML(list)}
       ${c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">${c.sample ? 'Llega una respuesta de ejemplo…' : 'Grabando una nota de voz…'}</span></div>` : ''}
-      ${!c.closed && !c.cooled && !c.revealed && (c.other_reveal || c.my_reveal) ? `<button class="reveal" data-act="chatMenu">${icon('eye', 's')}<span>${c.my_reveal ? 'Ya compartiste tu nombre. Se ve cuando la otra persona también lo comparta. Puedes ocultarlo.' : 'Ya compartió su nombre. Lo ves cuando tú compartas el tuyo; no hay apuro.'}</span></button>` : ''}
-      ${stageCard(c)}
-      ${c.sample && g.mine >= 1 && !(c.next_at && new Date(c.next_at) > Date.now()) && S.home?.quest && !S.home.quest.launched ? `<div class="scard realnext"><span class="si">${icon('bottle')}</span><span class="tx"><b>Ya sabes cómo funciona</b><span>Ahora lanza tu voz a 8 personas reales con tus mismos gustos.</span></span><button class="btn btn-tonal btn-sm" data-go="launch">Lanzar mi botella</button></div>` : ''}
+      ${div ? sc : ''}
+      ${c.sample && g.mine >= 1 && !(c.next_at && new Date(c.next_at) > Date.now()) && S.home?.quest && !S.home.quest.launched ? `<p class="small muted realnext" style="text-align:center">Ya sabes cómo funciona. <button class="btn btn-text" data-go="launch">Lanzar mi botella</button></p>` : ''}
     </div></div>
+    ${slot ? `<div class="pad nextstep">${slot}</div>` : ''}
     ${c.closed || c.cooled ? '' : `<div class="foot pad cfoot" id="cfoot">${chatFoot()}</div>`}`; },
   after(sec) { const s = sec.querySelector('#thread'); if (s) s.scrollTop = s.scrollHeight; watchPending(); },
   leave() { if (S.convo) markRead(S.convo.id); }
 };
 function chatFoot() {
   if (REC.mr && REC.id === 'chat') return `<button class="iconbtn glass" data-act="chatRecCancel" aria-label="Cancelar">${icon('close')}</button><div class="clive"><span class="num" id="ctime">0:00</span><span class="cwave" id="cwave"></span></div><button class="iconbtn sendb" data-act="chatRecSend" aria-label="Enviar nota de voz">${icon('send')}</button>`;
-  return `<button class="iconbtn glass giftb" data-act="giftAsk" aria-label="Mandar una botella con lacre">${icon('gift')}</button><span class="small muted" style="text-align:center">Toca el micrófono para grabar</span><button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
+  return `<span></span>${stageOf(convo() || {}).mine < 2 ? '<span class="small muted" style="text-align:center">Toca el micrófono para grabar</span>' : '<span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
 }
 P.actions.chatRec = async () => {
   if (REC.mr || CALL) return;
