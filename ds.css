@@ -263,3 +263,82 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
   .rec .wave{height:26px} .rec .time{font-size:26px}
   .openspace.up{height:13%!important} .openhint.sample{display:none}
 }
+/* ---------- Refinado (fase 4) ---------- */
+/* Páginas públicas (lectura y botella para dos) en pantallas bajas: el micrófono a la vista sin desplazar */
+@media (max-height:600px){
+  .screen.pub .pubgap{height:0!important}
+  .screen.pub .display{font-size:var(--t-title)}
+  .screen.pub .paper{margin-top:var(--s3)!important}
+  .screen.pub .sec{margin-top:var(--s4)!important} .screen.pub .sec>.eyebrow{margin-bottom:var(--s2)}
+}
+/* Los colores viejos apuntan a los tokens: un solo gris de línea, de superficie y de relleno secundario */
+:root{--line:var(--c-line);--glass:var(--c-surface);--glass2:var(--c-secondary);--muted:var(--c-fg-2);--dim:var(--c-fg-3)}
+
+/* Tamaños sueltos → al token más cercano */
+.top .title{font-size:var(--t-body)} .top .title small{font-size:var(--t-sub)} .top .title small.pre{font-size:var(--t-cap)}
+.vn .vd{font-size:var(--t-sub)}
+.float span{font-size:var(--t-cap);border-radius:var(--r-sm)}
+@media (max-width:360px){.float span{max-width:148px}}
+.shorebot .h2{font-size:var(--t-head)!important}
+.sheet>p:not(.small){font-size:var(--t-body)}
+.giftcard b,.plancard b{font-size:var(--t-body)} .giftcard span,.plancard span{font-size:var(--t-sub)} .plancard .eyebrow{font-size:var(--t-cap)}
+.giftcard,.plancard{border-radius:var(--r-card)}
+.rulesbox,.odet p,.lq{font-size:var(--t-body)} .check{font-size:var(--t-sub)} .rules li,.free li,.perks li{font-size:var(--t-sub)}
+.sitem .tx b em,.spack .pn,.look b,.btype em,.stat2 span,.sys,.banner b,.banner span{font-size:var(--t-sub)}
+.pr-old s,.pp s,.spack s,.btype span{font-size:var(--t-cap)}
+.tq .btn{font-size:var(--t-body);white-space:nowrap}
+@media (max-width:360px){.tq .btn{padding-inline:var(--s3)}.tq .btn .i{display:none}}
+/* Radios sueltos → al token más cercano */
+.paper{border-radius:var(--r-tag) var(--r-tag) var(--r-card) var(--r-card)}
+.minipaper{border-radius:var(--r-tag) var(--r-tag) var(--r-sm) var(--r-sm)}
+.ideas .idea,.mapbox,.coach,.banner{border-radius:var(--r-card)}
+.lq,.sys,.banner .bi{border-radius:var(--r-sm)}
+.check .box{border-radius:var(--r-tag)}
+.seg,.seg button{border-radius:var(--r-pill)}
+/* Colores sueltos → tokens */
+.coach{background:var(--c-elev);border-color:color-mix(in srgb,var(--c-primary) 40%,transparent)}
+.giftcard{background:linear-gradient(150deg,var(--c-warn-bg),transparent 70%),var(--c-surface);border-color:color-mix(in srgb,var(--c-warn) 35%,transparent)}
+.sheet{padding-bottom:max(var(--s6),env(safe-area-inset-bottom,0px))}
+
+/* Presionado: 120 ms, escala .97 y un tono más claro en todo lo que se toca */
+.btn-a:active{background:color-mix(in srgb,var(--c-primary) 86%,#fff)}
+.btn[disabled],.btn[disabled]:active,.btn-a.soft:active{transform:none;cursor:default}
+.btn[disabled] .i{opacity:.6}
+.chip{transition:transform var(--d-fast) var(--e-out),background-color var(--d-base),border-color var(--d-base),color var(--d-base)}
+.chip:active{background:var(--c-info)} .chip.on:active{background:var(--c-tonal-press)}
+.chip:disabled{opacity:.5;transform:none}
+.iconbtn{transition:transform var(--d-fast) var(--e-out),background-color var(--d-base)}
+.iconbtn:active{transform:scale(.94)} .iconbtn.glass:active{background:var(--c-secondary-press)}
+.streak,.mybottles,.seg button,.ideas .idea,.setrow,.urow,.arow,.item,.place,.row,.lq,.check .box{transition:transform var(--d-fast) var(--e-out),background-color var(--d-base),border-color var(--d-base)}
+:is(.streak,.mybottles,.seg button,.ideas .idea,.setrow,.urow,.arow,.item,.place,.row):active{transform:scale(.97)}
+:is(.streak,.mybottles):active{background:var(--c-secondary-press)}
+.shoreh:active .go,.act:active{background:var(--c-tonal-press)}
+.mlink:active,.who-up:active{opacity:.7}
+
+/* Movimiento: tres duraciones y una curva */
+.rise{animation-duration:var(--d-screen);animation-timing-function:var(--e-out)}
+.enter-fade{animation-duration:var(--d-screen);animation-timing-function:var(--e-out)}
+.exit-fade{animation-duration:var(--d-exit)}
+.sheet{animation:dsSheet var(--d-screen) var(--e-out)}
+@keyframes dsSheet{from{transform:translateY(100%)}to{transform:none}}
+.banner{animation:dsBanner var(--d-screen) var(--e-out) both}
+.banner.out{animation:dsBannerOut var(--d-exit) var(--e-out) forwards}
+@keyframes dsBanner{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes dsBannerOut{to{opacity:0;transform:translateY(-8px)}}
+.coach{animation:rise var(--d-screen) var(--e-out) both}
+.coachring{transition:left var(--d-screen) var(--e-out),top var(--d-screen) var(--e-out),width var(--d-screen) var(--e-out),height var(--d-screen) var(--e-out),border-radius var(--d-screen) var(--e-out);
+  animation:coachin var(--d-screen) var(--e-out) both,coachp 1.8s ease-in-out var(--d-screen) infinite}
+.coach .dots i{transition:width var(--d-base) var(--e-out)}
+.lq,.check .box{transition-duration:var(--d-base)}
+@keyframes dsToastFade{0%{opacity:0}8%,90%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .toast{animation-name:dsToastFade}
+  .sheet,.banner,.banner.out,.coach,.coachring{animation:none;transition:none}
+  :is(.btn,.chip,.iconbtn,.act,.row,.setrow,.lrow,.urow,.arow,.crow,.item,.place,.today,.mrow,.orow,.lq,.btype,.look,.streak,.mybottles,.seg button,.ideas .idea,.tabs button):active{transform:none}
+}
+
+/* Botella de ejemplo en pantallas bajas: el aviso termina antes del desvanecido del pie */
+@media (max-height:600px){
+  .openspace.up:has(+ .scroll .openhint.sample){height:10%!important}
+  .samplenote{margin-top:var(--s2);padding-block:var(--s2)}
+}

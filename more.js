@@ -211,12 +211,13 @@ const duosHTML = () => (S.duos || []).map(d => `<div class="row duorow rise"><sp
 
 /* quien recibe el link */
 P.screens.duojoin = {
+  cls: 'pub',
   anim: night(.2, false),
   render: () => { const d = S.duoPeek;
     if (!d) return `${sb_()}<div class="scroll pad" style="display:grid;place-items:center"><p class="muted">Buscando la botella…</p></div>`;
     if (d.status !== 'open') return gone('Esta botella para dos ya no está esperando', d.status === 'done' ? 'Alguien ya grabó la otra mitad y salió al mar.' : 'Venció o la cancelaron. Pide que te manden otra.');
     if (d.mine) return gone('Esta es tu mitad', 'La otra mitad la graba alguien más. Mándale el link a quien quieras.', `<button class="btn btn-a" data-act="duoMine">${icon('export')} Mandar el link</button>`);
-    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span></div><div style="height:8%;flex:none"></div>
+    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span></div><div class="pubgap" style="height:8%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 50px)">
       <span class="eyebrow a rise">Botella para dos</span><div class="display rise d1" style="margin-top:8px"><b>${esc(d.name)}</b> quiere lanzar una botella contigo.</div>
       <div class="paper rise d2" style="margin-top:16px"><span class="eyebrow">${esc(d.kind)} · su mitad${d.place ? ' · ' + esc(d.place) : ''}</span><div class="q">${esc(d.body || 'Escucha su voz.')}</div>${vn(d.voice, d.secs, { peaks: d.peaks })}</div>
@@ -309,6 +310,7 @@ P.actions.ansReport = () => ansDone(() => rpc('lectura_answer_report', { p_answe
 
 /* quien abre el link: sin cuenta */
 P.screens.lecpub = {
+  cls: 'pub',
   anim: night(.2, false),
   render: () => { const l = S.lecPeek, ok = S.lecSent;
     if (!l) return `${sb_()}<div class="scroll pad" style="display:grid;place-items:center"><p class="muted">Abriendo la lectura…</p></div>`;
@@ -318,7 +320,7 @@ P.screens.lecpub = {
       <div class="foot rise d3" style="padding-bottom:0"><button class="btn btn-a" data-act="lecMine">${icon('quote')} Pedir mi propia lectura</button>${S.me ? `<button class="btn btn-ghost" data-act="leaveLink">Ir a mi orilla</button>` : `<button class="btn btn-ghost" data-act="leaveLink">Conocer Botella</button>`}</div></div>`;
     if (l.mine) return gone('Esta lectura es tuya', 'Compártela con tus amigos para recibir sus voces.', `<button class="btn btn-a" data-act="lecToMine">Ver mis respuestas</button>`);
     if (!l.open) return gone('Esta lectura ya cerró', `${l.name ? esc(l.name) + ' ya no recibe respuestas. ' : ''}Puedes pedir la tuya y ver qué te dicen.`, `<button class="btn btn-a" data-act="lecMine">${icon('quote')} Pedir mi propia lectura</button>`);
-    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span><span class="tag">${icon('user', 's')} Con tu cuenta</span></div><div style="height:6%;flex:none"></div>
+    return `${sb_()}<div class="top pad"><span class="wordmark" style="font-size:26px;flex:1">Botella</span><span class="tag">${icon('user', 's')} Con tu cuenta</span></div><div class="pubgap" style="height:6%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 50px)">
       <span class="eyebrow a rise">${esc(l.name)} te pide una lectura</span>
       <div class="paper rise d1" style="margin-top:12px"><div class="q">${esc(l.question)}</div>${vn(l.voice, l.secs, { peaks: l.peaks })}</div>
