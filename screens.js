@@ -55,7 +55,7 @@ P.screens.account = {
   render: () => { const up = S.authMode === 'signup'; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">${up ? 'Crear cuenta' : 'Entrar'}</span></div>${up ? steps(2) : ''}<div class="scroll pad">
     <div class="display" style="margin-top:22px">${up ? 'Tu <b>correo</b>' : 'Hola de <b>nuevo</b>'}</div><p class="lead">${up ? 'Solo para entrar a tu cuenta. Nunca se muestra a nadie.' : 'Entra con tu correo y contraseña.'}</p>
     <form id="authf" data-form="auth">
-      <label class="field" style="margin-top:22px"><input id="em" type="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com" aria-label="Correo"></label>
+      <label class="field" style="margin-top:22px"><input id="em" name="email" type="email" inputmode="email" autocomplete="email" spellcheck="false" autocapitalize="off" placeholder="tu@correo.com" aria-label="Correo"></label>
       <label class="field" style="margin-top:10px"><input id="pw" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="${up ? 'Contraseña de 8 o más' : 'Contraseña'}" aria-label="Contraseña"></label>
       <button type="submit" hidden></button>
     </form>
@@ -109,7 +109,7 @@ P.actions.aboutNext = () => {
 P.screens.voice = {
   render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Crear cuenta</span>${S.rec.intro ? '' : '<button class="linkbtn" data-act="voiceLater">Después</button>'}</div>${steps(4)}<div class="scroll pad">
     <div class="display" style="margin-top:22px">En vez de foto, <b>tu voz</b>.</div><p class="lead">Di tu apodo y algo que te guste, como “Soy Dani y veo cine de terror”. Hoy no la escucha nadie: se abre con alguien solo cuando los dos compartan su nombre. Puedes cambiarla cuando quieras.</p>
-    <div class="sec">${recBox('intro', 'Toca para grabar. Con 5 segundos basta.')}</div></div>
+    <div class="sec">${recBox('intro', 'Toca para grabar. Con 10 segundos basta.')}</div></div>
     <div class="foot pad"><button class="btn btn-a${S.rec.intro ? '' : ' soft'}" data-needs="intro" data-act="voiceNext">Continuar</button></div>`
 };
 // La presentación no frena el registro: se pide de nuevo cuando compartes tu nombre.
@@ -188,7 +188,7 @@ P.screens.open = {
     ${P.st.uncorked ? `<div class="scroll pad"><div class="paper"><span class="eyebrow">${esc(b.kind)}${b.place ? ' de ' + esc(someone(b.place)) : ''}</span>${b.body ? `<div class="q">${esc(b.body)}</div>` : '<div class="q">Escucha su voz.</div>'}${vn(b.voice, b.voice_secs, { peaks: b.voice_peaks })}${b.voice2 ? `<span class="eyebrow" style="display:block;margin:14px 0 8px">Y la otra voz, de ${esc(someone(b.place2 || b.place))}</span>${vn(b.voice2, b.voice2_secs, { peaks: b.voice2_peaks })}` : ''}</div>
     ${b.sample ? sampleNote() : ''}<p class="small muted rise d3" style="margin-top:14px">${b.first ? 'Respóndele con tu voz. Tu respuesta sale cuando creas tu cuenta, y te contesta en un minuto.' : b.voice2 ? 'La lanzaron dos amigos. Si respondes, les llega a los dos.' : 'Si respondes, se abre una conversación privada entre los dos.'}</p></div>
     <div class="foot pad"><button class="btn btn-a" data-go="answer">${icon('mic')} Responder con mi voz</button>${b.first ? '<button class="btn btn-ghost" data-act="firstSkip">Ahora no, crear mi cuenta</button>' : '<button class="btn btn-ghost" data-act="toSea">Devolver al mar</button>'}</div>`
-    : `<div style="flex:1"></div><div class="pad" style="padding-bottom:12px"><span class="eyebrow a rise">${esc(b.kind)}${b.place ? ' de ' + esc(someone(b.place)) : ''}${b.sample ? ' · de ejemplo' : ''}</span><div class="display rise d1" style="font-size:34px;margin-top:8px">Alguien lanzó esto <b>al mar</b>.</div><p class="lead rise d2">${b.first ? 'Descórchala y escucha su voz. Sin fotos y sin perfil.' : 'Descórchala para escuchar su voz.'}</p></div>
+    : `<div style="flex:1"></div><div class="pad" style="padding-bottom:12px"><span class="eyebrow a rise">${esc(b.kind)}${b.place ? ' de ' + esc(someone(b.place)) : ''}${b.sample ? ' <span class="nw">· de ejemplo</span>' : ''}</span><div class="display rise d1" style="font-size:34px;margin-top:8px">Alguien lanzó esto <b>al mar</b>.</div><p class="lead rise d2">${b.first ? 'Descórchala y escucha su voz. Sin fotos y sin perfil.' : 'Descórchala para escuchar su voz.'}</p></div>
     <div class="foot pad">${holdBtn('uncork', `${icon('bottle')} Mantén para descorchar`, 900)}</div>`}`; },
   after() { setTimeout(() => { P.st.flyR = null; }, 700); }
 };
@@ -330,7 +330,7 @@ P.screens.mine = {
   render: () => `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Mis botellas</span>${meBtn()}</div>
     ${duosHTML()}${S.bottles.length ? mapCard() : ''}
     ${S.bottles.length ? S.bottles.map((b, i) => { const sub = b.held ? 'Espera la marea de las 21:00' : b.answers ? `Llegó a ${b.shores} ${b.shores === 1 ? 'persona' : 'personas'} · ${b.answers} ${b.answers === 1 ? 'respuesta' : 'respuestas'}` : b.shores ? `En el mar · llegó a ${b.shores} ${b.shores === 1 ? 'persona' : 'personas'}${b.opened ? ` · ${b.opened === 1 ? 'la abrió 1 persona' : 'la abrieron ' + b.opened}` : ''}` : 'Flotando · espera a que llegue gente nueva';
-      return `<div class="row rise d${Math.min(i, 4)}${b.answers ? '' : ' drift'}" ${b.answers ? `data-act="mineGo" data-id="${b.id}" role="button" tabindex="0"` : ''}><span style="flex:1;min-width:0">${b.duo ? '<span class="eyebrow a">Para dos</span>' : b.tide_day ? '<span class="eyebrow a">Pregunta de la marea</span>' : ''}<span class="t" style="font-weight:300;font-size:18px">${esc(b.body || b.kind + ' de ' + fmt(b.voice_secs))}</span><span class="s">${sub}</span>${openersHTML(b)}<span class="shores">${Array.from({ length: Math.max(3, Math.min(b.shores, 8)) }, (_, k) => `<i class="${k < b.opened ? 'on' : ''}"></i>`).join('')}</span>${vn(b.voice, b.voice_secs, { mine: true, peaks: b.voice_peaks })}${b.voice2 ? vn(b.voice2, b.voice2_secs, { mine: true, peaks: b.voice2_peaks }) : ''}${b.answers ? '' : `<span class="driftb">${bottleSVG()}</span>`}</span>${b.answers ? '<span class="pill a">Escuchar</span>' : ''}</div>`; }).join('')
+      return `<div class="row rise d${Math.min(i, 4)}${b.answers ? '' : ' drift'}" ${b.answers ? `data-act="mineGo" data-id="${b.id}"` : ''}><span style="flex:1;min-width:0">${b.duo ? '<span class="eyebrow a">Para dos</span>' : b.tide_day ? '<span class="eyebrow a">Pregunta de la marea</span>' : ''}<span class="t" style="font-weight:300;font-size:18px">${esc(b.body || b.kind + ' · ' + fmt(b.voice_secs))}</span><span class="s">${sub}</span>${openersHTML(b)}<span class="shores">${Array.from({ length: Math.max(3, Math.min(b.shores, 8)) }, (_, k) => `<i class="${k < b.opened ? 'on' : ''}"></i>`).join('')}</span>${vn(b.voice, b.voice_secs, { mine: true, peaks: b.voice_peaks })}${b.voice2 ? vn(b.voice2, b.voice2_secs, { mine: true, peaks: b.voice2_peaks }) : ''}${b.answers ? '' : `<span class="driftb">${bottleSVG()}</span>`}</span>${b.answers ? `<button class="pill a" data-act="mineGo" data-id="${b.id}" aria-label="Escuchar las respuestas">Escuchar</button>` : ''}</div>`; }).join('')
       : `<div class="empty rise"><span style="width:120px;display:block;margin:30px auto 10px">${bottleSVG()}</span><div class="h3" style="text-align:center">Todavía no lanzas ninguna</div><p class="small muted" style="text-align:center;margin:6px auto 18px;max-width:30ch">Graba una pregunta o algo que quieras contar, y lánzala.</p><button class="btn btn-a" data-go="launch">${icon('bottle')} Lanzar una botella</button></div>`}
   </div>${tabsHTML('mine')}`,
   async after() { if (!P.st.mineFresh) { P.st.mineFresh = true; try { await Promise.all([loadBottles(), loadDuos()]); if (P.curId === 'mine') rerender(); } catch (e) {} } },
@@ -380,6 +380,8 @@ async function openChat(cid, opts = {}) {
   } catch (e) { err(e); }
 }
 const convo = () => S.convo;
+// La hora va al final de cada racha: notas seguidas de la misma persona en 5 minutos comparten una sola.
+const endsRun = (m, i) => { const L = S.msgs[convo()?.id] || [], n = L[i + 1]; if (!n || n.sender !== m.sender || (n.body && n.body.startsWith('#'))) return true; return new Date(n.created_at) - new Date(m.created_at) > 5 * 6e4; };
 function msgHTML(m, i) {
   const me = m.sender === uid();
   if (m.body && m.body.startsWith('#bottle|')) { const [, kind, text] = m.body.split('|'), mb = convo().i_launched, duo = convo().duo; return `<div class="msg${mb ? ' me' : ''} rise"><div class="minipaper"><small>${mb ? 'Tu botella' : 'Su botella'}${duo ? ' para dos' : ''} · ${esc((kind || '').toLowerCase())}</small>${esc(text || 'Una nota de voz')}</div>${vn(m.voice, m.voice_secs, { mine: mb, peaks: m.voice_peaks })}<span class="when">${hm(m.created_at)}</span></div>`; }
@@ -390,7 +392,7 @@ function msgHTML(m, i) {
   if (m.body === '#planok|') return `<div class="sys">${icon('check', 's')} ${me ? 'Aceptaste el plan' : 'Aceptó el plan'} · cuéntale a alguien de confianza a dónde vas</div>`;
   if (m.body && m.body.startsWith('#call|')) return `<div class="sys">${icon('phone', 's')} ${me ? 'Llamaste' : 'Te llamó'} · ${hm(m.created_at)}</div>`;
   if (!m.voice) return '';
-  return `<div class="msg${me ? ' me' : ''}${i > S.msgs[convo().id].length - 4 ? ' rise' : ''}">${vn(m.voice, m.voice_secs, { mine: me, peaks: m.voice_peaks })}${m.failed ? `<button class="btn btn-ghost btn-sm" data-act="chatRetry" data-id="${m.id}" style="margin-top:6px">${icon('send', 's')} No salió · Reintentar</button>` : `<span class="when">${hm(m.created_at)}</span>`}</div>`;
+  return `<div class="msg${me ? ' me' : ''}${i > S.msgs[convo().id].length - 4 ? ' rise' : ''}">${vn(m.voice, m.voice_secs, { mine: me, peaks: m.voice_peaks })}${m.failed ? `<button class="btn btn-ghost btn-sm" data-act="chatRetry" data-id="${m.id}" style="margin-top:6px">${icon('send', 's')} No salió · Reintentar</button>` : (endsRun(m, i) ? `<span class="when">${hm(m.created_at)}</span>` : '')}</div>`;
 }
 /* Separadores de día, como en las apps de mensajes: una sola fecha por día y la hora en cada nota. */
 const hm = iso => new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -423,8 +425,8 @@ const STAGES = [['voz', 'Voces', 'mic'], ['nombre', 'Nombres', 'eye'], ['llamada
 function stagesHTML(c) {
   if (c.closed) return '';
   const g = stageOf(c);
-  return `<div class="stages" role="list" aria-label="Etapas de la conversación">${STAGES.map(([k, label, ic], i) => { const v = g.st[k];
-    return `${i ? `<span class="sln${v === 'lock' ? '' : ' on'}"></span>` : ''}<button class="stg ${v}" role="listitem" data-act="stageInfo" aria-label="${label}: ${v === 'done' ? 'listo' : v === 'lock' ? 'todavía cerrado' : 'disponible'}"><i>${icon(v === 'done' ? 'check' : v === 'lock' ? 'lock' : ic, 's')}</i><span>${label}</span></button>`; }).join('')}</div>`;
+  return `<div class="stages" role="group" aria-label="Etapas de la conversación">${STAGES.map(([k, label, ic], i) => { const v = g.st[k];
+    return `${i ? `<span class="sln${v === 'lock' ? '' : ' on'}"></span>` : ''}<button class="stg ${v}" data-act="stageInfo" aria-label="${label}: ${v === 'done' ? 'listo' : v === 'lock' ? 'todavía cerrado' : 'disponible'}"><i>${icon(v === 'done' ? 'check' : v === 'lock' ? 'lock' : ic, 's')}</i><span>${label}</span></button>`; }).join('')}</div>`;
 }
 /* una sola línea con lo que sigue */
 function nextLine(c) {
@@ -452,7 +454,7 @@ P.actions.stageInfo = () => {
   const c = convo(); if (!c) return; const g = stageOf(c);
   const row = (k, ic, t, d) => { const v = g.st[k]; return `<div class="setrow stinfo ${v}">${icon(v === 'done' ? 'check' : v === 'lock' ? 'lock' : ic)}<span style="flex:1"><b>${t}</b><span>${d}</span></span>${v === 'done' ? '<span class="pill a">Listo</span>' : v === 'lock' ? '<span class="pill">Aún no</span>' : ''}</div>`; };
   sheet(`${sheetHead('Cómo avanza una conversación')}<p class="muted" style="font-size:14px;margin:0 0 10px">Aquí primero se conocen por lo que dicen. Lo demás se abre a su ritmo.</p>
-    ${row('voz', 'mic', '1. Notas de voz', `Mándense al menos 2 cada uno. Van ${g.mine} tuyas${c.sample ? '' : ` y ${g.theirs} suyas`}.`)}
+    ${row('voz', 'mic', '1. Notas de voz', `Mándense al menos 2 cada uno. Llevas ${g.mine}${c.sample ? '' : `; la otra persona, ${g.theirs}`}.`)}
     ${row('nombre', 'eye', '2. Sus nombres', 'Cuando quieran. Se ven solo si los dos los comparten.')}
     ${row('llamada', 'phone', '3. Llamada de voz', 'Se abre con las 2 notas de cada uno y si los dos la piden. Sin video y sin dar tu número.')}
     ${row('plan', 'pin', '4. Un plan', 'Después de hablar, si les nace, propongan un lugar público.')}
@@ -593,7 +595,7 @@ P.actions.install = () => {
   sheet(`${sheetHead('Botella en tu inicio')}<p class="muted" style="font-size:14px;margin:0 0 16px">${ios ? 'En Safari, toca <b>Compartir</b> (el cuadrado con la flecha) y luego <b>Agregar a inicio</b>.' : 'En el menú del navegador (⋮), toca <b>Instalar app</b> o <b>Agregar a la pantalla principal</b>.'} Se abre como una app, a pantalla completa.</p><button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
 };
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); P.st.bip = e; });
-P.actions.rules = () => sheet(`${sheetHead('Normas y privacidad')}<div class="rulesbox">
+P.actions.rules = () => sheet(`${sheetHead('Normas y privacidad')}<div class="rulesbox" tabindex="0" role="region" aria-label="Normas y privacidad">
   <p><b>Solo mayores de 18.</b> Si alguien parece menor de edad, repórtalo.</p>
   <p><b>Respeto.</b> Coquetear está bien, como en la vida real. Nada de insultos, amenazas, odio ni contenido sexual explícito. Nada de pedir dinero, cuentas o datos personales. Si alguien no responde o dice que no, ahí queda.</p>
   <p><b>Primero tu voz, después tu nombre.</b> Aquí no hay fotos. Antes de saber tu nombre, solo se ve un tema que comparten contigo. Tu distrito nunca se muestra: solo sirve para que tus botellas lleguen cerca. Tu nombre y tu presentación se abren cuando los dos deciden compartirlos.</p>

@@ -122,7 +122,7 @@ function mapSVG(places) {
 }
 P.screens.mapa = {
   render: () => { const m = S.map, ps = m?.places || [];
-    return `${sb_()}<div class="top pad">${backBtn()}<span class="title">El mapa de tu voz</span></div><div class="scroll pad">
+    return `${sb_()}<div class="top pad">${backBtn()}<span class="title">El mapa de tu voz</span></div><div class="scroll pad" tabindex="0" aria-label="El mapa de tu voz">
     <div class="display rise" style="font-size:32px;margin-top:4px">${!m ? 'Buscando <b>tu voz</b>…' : ps.length ? `Tu voz conectó con <b>${plural(ps.length, 'tema', 'temas')}</b>.` : 'Tu voz todavía <b>no viaja</b>.'}</div>
     <div class="mapbox rise d1">${mapSVG(ps)}</div>
     ${m ? `<div class="stats rise d2"><div class="stat2"><b>${m.heard}</b><span>${m.heard === 1 ? 'persona la escuchó' : 'personas la escucharon'}</span></div><div class="stat2"><b>${m.answers}</b><span>${m.answers === 1 ? 'te respondió' : 'te respondieron'}</span></div><div class="stat2"><b>${m.bottles}</b><span>${m.bottles === 1 ? 'botella lanzada' : 'botellas lanzadas'}</span></div></div>` : ''}
@@ -155,7 +155,7 @@ P.screens.marea = {
           : `<p class="small muted">${t.arrived ? 'Todavía nadie dejó su voz hoy. Que la tuya sea la primera.' : 'Anoche la marea llegó sin voces. Deja la tuya para la de hoy.'}</p>`}
         ${vs.length && !L.unlocked ? `<p class="small" style="margin:10px 0 0;color:#FFD68C">Deja tu voz en la pregunta de hoy y se abren todas.</p>` : ''}</div>` : ''}
       <div class="sec rise d2"><span class="eyebrow">Botellas doradas</span><p class="small muted" style="margin:-4px 0 4px">Alguien quiso que llegaran primero a todo Lima.</p>
-      ${list.length ? list.map(b => `<button class="mrow" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="pill">Tuya</span>' : b.taken === 'answered' ? '<span class="pill">Respondida</span>' : '<span class="pill a">Abrir</span>'}</button>`).join('')
+      ${list.length ? list.map(b => `<button class="mrow" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · ${esc(b.place)}${b.sample ? ' <span class="nw">· de ejemplo</span>' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="pill">Tuya</span>' : b.taken === 'answered' ? '<span class="pill">Respondida</span>' : '<span class="pill a">Abrir</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay botellas doradas.</p>'}
       <button class="btn btn-glass" data-act="mareaLaunch" style="margin-top:14px">${icon('tide')} Lanzar una dorada</button></div>
       <div style="height:16px"></div></div>`; },
@@ -192,9 +192,9 @@ P.actions.duoStart = async el => {
   } catch (e) { S.busy = false; err(e); if (P.curId === 'launch') rerender(); }
 };
 P.screens.duowait = {
-  anim: (ctx, w, h, t) => { const mx = sky(ctx, w, h, t, .46); waves(ctx, w, h, t, .46, mx, (i, wv) => { if (i !== 1) return; const bx = w * .38 + Math.sin(t * .3) * 8, by = wv(bx); bottle(ctx, bx, by - 6, .9, -.3, 1); ctx.globalAlpha = .35 + Math.sin(t * 2) * .12; bottle(ctx, w * .64, wv(w * .64) - 6, .9, Math.PI + .3, .4, '255,214,140'); ctx.globalAlpha = 1; }); },
+  anim: (ctx, w, h, t) => { const mx = sky(ctx, w, h, t, .3); waves(ctx, w, h, t, .3, mx, (i, wv) => { if (i !== 1) return; const bx = w * .38 + Math.sin(t * .3) * 8, by = wv(bx); bottle(ctx, bx, by - 6, .9, -.3, 1); ctx.globalAlpha = .35 + Math.sin(t * 2) * .12; bottle(ctx, w * .64, wv(w * .64) - 6, .9, Math.PI + .3, .4, '255,214,140'); ctx.globalAlpha = 1; }); },
   render: () => { const d = S.duoWait || {}; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Botella para dos</span></div><div style="flex:1"></div>
-    <div class="pad" style="padding-bottom:22px;background:linear-gradient(transparent,rgba(3,16,28,.94) 30%)">
+    <div class="pad" style="padding-top:32px;padding-bottom:22px;background:linear-gradient(transparent,rgba(3,16,28,.94) 32px)">
       <span class="eyebrow a rise">Tu mitad está lista</span><div class="display rise d1" style="margin-top:8px">Falta <b>la otra voz</b>.</div>
       <p class="lead rise d2">Mándale este link a quien quieras. Escucha tu mitad, graba la suya y la botella sale con las dos voces a 12 personas.</p>
       <div class="code rise d3"><span>${esc(duoLink(d.token || '').replace(/^https?:\/\//, ''))}</span><button class="btn btn-a btn-sm" data-act="duoCopy">${icon('copy', 's')} Copiar</button></div>
@@ -206,7 +206,7 @@ P.actions.duoShare = el => share(el, duoMsg(S.duoWait || {}));
 P.actions.duoCopy = el => { try { navigator.clipboard?.writeText(duoLink(S.duoWait.token)).catch(() => {}); } catch (e) {} el.innerHTML = `${icon('check', 's')} Copiado`; toast('Link copiado. Mándaselo a quien quieras.'); };
 P.actions.duoAgain = el => { const d = (S.duos || []).find(x => x.token === el.dataset.id); if (d) share(el, duoMsg(d)); };
 P.actions.duoCancel = async el => { try { S.me.bottles = await rpc('duo_cancel', { p_token: el.dataset.id }); await loadDuos(); rerender(); toast('Cancelada. Te devolvemos tu botella.'); } catch (e) { err(e); } };
-const duosHTML = () => (S.duos || []).map(d => `<div class="row duorow rise"><span style="flex:1;min-width:0"><span class="eyebrow a">Para dos · esperando la otra voz</span><span class="t" style="font-weight:300;font-size:18px">${esc(d.body || d.kind + ' de ' + fmt(d.secs))}</span><span class="s">Vence en ${until(d.expires_at)}</span><span class="duoacts"><button class="btn btn-a btn-sm" data-act="duoAgain" data-id="${d.token}">${icon('export', 's')} Invitar</button><button class="btn btn-ghost btn-sm" data-act="duoCancel" data-id="${d.token}">Cancelar</button></span></span></div>`).join('');
+const duosHTML = () => (S.duos || []).map(d => `<div class="row duorow rise"><span style="flex:1;min-width:0"><span class="eyebrow a">Para dos · esperando la otra voz</span><span class="t" style="font-weight:300;font-size:18px">${esc(d.body || d.kind + ' · ' + fmt(d.secs))}</span><span class="s">Vence en ${until(d.expires_at)}</span><span class="duoacts"><button class="btn btn-a btn-sm" data-act="duoAgain" data-id="${d.token}">${icon('export', 's')} Invitar</button><button class="btn btn-ghost btn-sm" data-act="duoCancel" data-id="${d.token}">Cancelar</button></span></span></div>`).join('');
 
 /* quien recibe el link */
 P.screens.duojoin = {

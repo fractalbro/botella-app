@@ -2,7 +2,7 @@
 :root{
   --fg:#F4EFE7;
   --muted:#ADA6A2;
-  --dim:#7A7372;
+  --dim:#8C8584; /* 4.5:1 sobre el fondo: placeholders y textos tenues se leen */
   --line:rgba(244,239,231,.12);
   --glass:rgba(244,239,231,.055);
   --glass2:rgba(244,239,231,.1);
