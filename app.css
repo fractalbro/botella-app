@@ -525,3 +525,36 @@ input,textarea{caret-color:var(--a)}
   .btn-ghost:hover,.btn-glass:hover,.iconbtn.glass:hover,.chip:not(.on):hover,.tide:hover,.travel:hover,.setrow:hover,.lq:hover,.row[data-act]:hover{background-color:var(--glass2);border-color:rgba(244,239,231,.22)}
   .stg:hover{color:var(--fg)}
 }
+
+/* ================= 100 personas (22/11) ================= */
+/* La casilla de 18+ es un solo blanco grande; las normas, un enlace aparte */
+.check{min-height:48px;padding:10px 0;align-items:center}
+.check+.linkbtn{display:inline-flex;align-items:center;height:auto;min-height:44px;margin:2px 0 0 36px;font-size:14px;color:var(--fg);text-decoration:underline;text-underline-offset:3px}
+/* "Ahora te toca a ti": salida clara del chat hacia lanzar la propia pregunta */
+.nextyours{margin:18px 0 6px;padding:16px;border-radius:20px;border:1px solid color-mix(in srgb,var(--a) 40%,transparent);background:color-mix(in srgb,var(--a) 8%,transparent);display:grid;gap:6px;justify-items:start}
+.nextyours b{font-size:15px}
+.nextyours>span{font-size:13.5px;color:var(--muted);text-wrap:pretty}
+.nextyours .btn{margin-top:6px}
+.nextyours .linkbtn{height:36px}
+/* Pantallas angostas o letra grande: la barra de arriba no se sale */
+@media (max-width:330px){.mybottles span{display:none}.mybottles{padding:0 12px}.screen .top .wordmark{font-size:26px!important}}
+/* "Escuchar las respuestas" con área de toque cómoda */
+button.pill{min-height:32px;padding:6px 12px}
+.quick .tide b{text-wrap:balance}
+/* Lanzar: grabar es lo primero; lo avanzado queda plegado */
+details.more{margin-top:18px;border-top:1px solid var(--line)}
+details.more>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:48px;font-weight:600;font-size:14px;color:var(--fg)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::after{content:"";width:8px;height:8px;margin-left:auto;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .2s}
+details.more[open]>summary::after{transform:rotate(-135deg) translateY(-2px)}
+details.more>summary span{font-weight:400;font-size:12.5px;color:var(--muted)}
+details.more>summary:focus-visible{outline:2px solid var(--a);outline-offset:2px;border-radius:8px}
+/* Las notificaciones suben desde abajo, sobre la barra inferior: arriba tapaban "Volver" y las opciones */
+.banner{top:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 80px);animation-name:bannerUp}
+.banner.out{animation-name:bannerDown}
+@keyframes bannerUp{from{transform:translateY(60%);opacity:0}to{transform:none;opacity:1}}
+@keyframes bannerDown{to{transform:translateY(60%);opacity:0}}
+/* Presentación de voz: sin grabar, la salida visible es "Continuar sin grabar"; al grabar, aparece "Continuar" */
+.voicefoot .btn-a.soft{display:none}
+.voicefoot .btn-a:not(.soft)+.skipv{display:none}
+@media (max-width:380px){.shorebot .quick{grid-template-columns:1.35fr 1fr}}

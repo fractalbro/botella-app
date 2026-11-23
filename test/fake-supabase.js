@@ -37,7 +37,7 @@
     return b;
   }
   const rpcs = {
-    check_code: a => a.p_code === 'BOTELLA-01',
+    check_code: a => a.p_code === 'BOTELLA-01' || /^[LD]:/.test(a.p_code || ''),
     tide: () => db.profile ? { ...db.profile, id: ME } : { id: null, bottles: null },
     shore: () => db.shore.filter(d => d.status === 'waiting' || d.status === 'opened'),
     open_delivery: a => { db.shore.find(d => d.id === a.p_id).status = 'opened'; db.quest.heard = true; },

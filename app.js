@@ -211,7 +211,7 @@ const steps = n => `<div class="pad" style="flex:none"><div class="progress" rol
 
 function tabsHTML(active) {
   const badge = S.convos.filter(unread).length;
-  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['convos', 'Conversaciones', 'chat'], ['store', 'Muelle', 'bag']];
+  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['convos', 'Conversaciones', 'chat'], ['store', 'Tienda', 'bag']];
   return `<nav class="tabs" aria-label="Secciones">${items.map(([id, label, ic]) => `<button class="${id === active ? 'on' : ''}" data-go="${id}" data-fade ${id === active ? 'aria-current="page"' : ''}>${icon(ic)}${label}${id === 'convos' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('')}</nav>`;
 }
 
@@ -264,7 +264,7 @@ function micHelp(e) {
   else if (n === 'NotReadableError' || n === 'AbortError') steps = 'Otra app está usando el micrófono, quizá una llamada. Ciérrala y vuelve a tocar.';
   else if (ios) steps = pwa ? 'Abre <b>Ajustes</b>, busca <b>Botella</b> o <b>Safari</b>, entra a <b>Micrófono</b> y elige <b>Permitir</b>. Luego vuelve aquí.' : 'Toca <b>aA</b> a la izquierda de la dirección, luego <b>Configuración del sitio web</b> y pon <b>Micrófono</b> en <b>Permitir</b>.';
   else steps = pwa ? 'Mantén presionado el ícono de Botella, toca <b>Información de la app</b>, luego <b>Permisos</b> y activa <b>Micrófono</b>.' : 'Toca el ícono a la izquierda de la dirección, luego <b>Permisos</b> y activa <b>Micrófono</b>.';
-  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="font-size:14px;margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
+  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="font-size:14px;margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>${typeof P !== 'undefined' && P.curId === 'answer' && S.sel?.first && !S.me ? '<button class="btn btn-ghost" data-act="skipIntro" style="margin-top:8px">Crear mi cuenta primero</button>' : '<button class="btn btn-ghost" data-act="closeSheet" style="margin-top:8px">Ahora no</button>'}`);
 }
 function recMime() { if (!window.MediaRecorder) return null; for (const m of ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm']) if (MediaRecorder.isTypeSupported(m)) return m; return ''; }
 async function recStart(max, onTick, onAuto) {
