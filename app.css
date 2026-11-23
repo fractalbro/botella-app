@@ -484,3 +484,44 @@ button .pill.a{background:var(--a);color:var(--a-ink);font-size:12.5px;padding:7
 .top .title small.pre{margin:0 0 1px;font-size:11px;letter-spacing:.04em}
 .top .title:has(small.pre){-webkit-line-clamp:3}
 .crow .cl1 b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* ================= Revisión del equipo de diseño (22/11) ================= */
+/* Solo para lectores de pantalla */
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* Los avisos van sobre la barra de arriba, no sobre el título ni las etapas */
+.toast{top:max(8px,calc(env(safe-area-inset-top,0px) + 6px))}
+.banner{top:max(8px,calc(env(safe-area-inset-top,0px) + 6px))}
+/* Botón suave: se lee (no es un fantasma), pero se nota que falta algo */
+.btn.soft{opacity:1}
+.btn-a.soft{background:color-mix(in srgb,var(--a) 20%,#0B1A27);color:var(--fg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--a) 45%,transparent)}
+/* Contadores: esquina de la tarjeta, nunca debajo del texto */
+.quick .tide{position:relative}
+.quick .tide .cnt{position:absolute;top:-7px;right:-5px;margin:0;box-shadow:0 0 0 3px #05121F}
+/* "Tu última botella": se lee completa en dos líneas antes que cortada */
+.travel>span:first-of-type{white-space:normal;text-wrap:pretty;line-height:1.3}
+/* Rótulos: "· de ejemplo" no se parte, y los rótulos largos se equilibran */
+.nw{white-space:nowrap}
+.eyebrow{text-wrap:balance}
+/* Foco visible también en campos y selectores (sus controles internos no tienen anillo) */
+.field:focus-within,.select:focus-within{outline:2px solid var(--a);outline-offset:2px}
+a:focus-visible,select:focus-visible,[role=button]:focus-visible,.sheet:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.sheet:focus{outline:none}
+/* Superficies del navegador con la paleta de Botella */
+::selection{background:color-mix(in srgb,var(--a) 38%,transparent);color:var(--fg)}
+input,textarea{caret-color:var(--a)}
+/* Transiciones con propiedades explícitas (sin "all") */
+.keys .k,.check .box,.place .pin,.lq,.stg i{transition-property:background-color,border-color,color,box-shadow,transform,opacity}
+/* Toque mínimo de 32px para "Ver con quién conectó" */
+.who-up{min-height:32px;padding:6px 0}
+/* Etapas cerradas: el texto conserva su contraste; solo el ícono se apaga */
+.stinfo.lock{opacity:1}
+.stinfo.lock>.i{color:var(--dim)}
+.lead,p{text-wrap:pretty}
+.banner small{color:var(--muted)}
+/* Con mouse (escritorio): cada control responde al pasar por encima */
+@media (hover:hover) and (pointer:fine){
+  .btn,.chip,.iconbtn,.tide,.travel,.row[data-act],.setrow,.lq,.pill[data-act],.stg{transition-property:background-color,border-color,color,box-shadow,transform,opacity,filter;transition-duration:.18s}
+  .btn-a:hover{filter:brightness(1.07)}
+  .btn-ghost:hover,.btn-glass:hover,.iconbtn.glass:hover,.chip:not(.on):hover,.tide:hover,.travel:hover,.setrow:hover,.lq:hover,.row[data-act]:hover{background-color:var(--glass2);border-color:rgba(244,239,231,.22)}
+  .stg:hover{color:var(--fg)}
+}

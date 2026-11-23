@@ -70,10 +70,16 @@ const unread = c => !c.last_mine && (!readMap[c.id] || new Date(c.last_at) > new
 
 /* ================= AVISOS ================= */
 const phoneEl = () => document.querySelector('.phone');
-function toast(msg) { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; phoneEl().appendChild(t); setTimeout(() => t.remove(), 3600); }
+// Una sola región que el lector de pantalla escucha siempre: los avisos visibles van encima, sin rol propio.
+function say(msg) {
+  let r = document.getElementById('live');
+  if (!r) { r = document.createElement('div'); r.id = 'live'; r.className = 'sr'; r.setAttribute('aria-live', 'polite'); r.setAttribute('aria-atomic', 'true'); document.body.appendChild(r); }
+  r.textContent = ''; setTimeout(() => { r.textContent = msg; }, 60);
+}
+function toast(msg) { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('aria-hidden', 'true'); t.textContent = msg; phoneEl().appendChild(t); say(msg); setTimeout(() => t.remove(), 3600); }
 function banner({ ic = '', title, text = '', go: target = '', v = '' }) {
   document.querySelectorAll('.banner').forEach(b => b.remove());
-  const b = document.createElement('button'); b.className = 'banner'; b.setAttribute('role', 'status');
+  const b = document.createElement('button'); b.className = 'banner'; b.setAttribute('aria-label', text ? `${title}. ${text}` : title); say(text ? `${title}. ${text}` : title);
   if (target) { b.dataset.act = 'bannerGo'; b.dataset.go = target; b.dataset.v = v; }
   b.innerHTML = `<span class="bi">${ic}</span><span class="bt"><b>${esc(title)}</b>${text ? `<span>${esc(text)}</span>` : ''}</span><small>ahora</small>`;
   phoneEl().appendChild(b); hap([10, 40, 10]);
@@ -87,10 +93,29 @@ function err(e, fallback) {
   const mine = /[áéíóú¿¡ñ]|Ese |Esta |Te |Primero|Falta|Lanzaste|botella/.test(m) && !/row-level|violates|JWT|fetch|policy/i.test(m);
   toast(mine ? m : (fallback || 'No salió. Fue cosa nuestra: intenta otra vez en un momento.'));
 }
-function closeSheet() { document.getElementById('sheet')?.remove(); }
+// Las hojas son diálogos: se anuncian, toman el foco, lo de atrás queda inerte, Escape cierra y el foco vuelve a donde estaba.
+let sheetReturn = null;
+function closeSheet() {
+  const s = document.getElementById('sheet'); if (!s) return;
+  s.parentElement && [...s.parentElement.children].forEach(x => { if (x.dataset.sheetInert) { x.inert = false; delete x.dataset.sheetInert; } });
+  s.remove(); const r = sheetReturn; sheetReturn = null; if (r && r.isConnected) r.focus({ preventScroll: true });
+}
 P.actions.closeSheet = closeSheet;
-function sheet(html) { closeSheet(); const s = document.createElement('div'); s.className = 'sheet pad'; s.id = 'sheet'; s.innerHTML = `<div class="grab"></div>${html}`; (P.root || phoneEl()).appendChild(s); return s; }
-const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><span class="h3" style="flex:1;font-size:20px">${t}</span><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
+function sheet(html) {
+  const back = document.activeElement; closeSheet(); sheetReturn = back && back !== document.body ? back : null;
+  const s = document.createElement('div'); s.className = 'sheet pad'; s.id = 'sheet'; s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true'); s.tabIndex = -1;
+  s.innerHTML = `<div class="grab" aria-hidden="true"></div>${html}`;
+  const host = P.root || phoneEl(); host.appendChild(s);
+  const h = s.querySelector('.h3'); if (h) { h.id = 'sheet-t'; s.setAttribute('aria-labelledby', 'sheet-t'); }
+  [...host.children].forEach(x => { if (x !== s && !x.inert && !x.matches('.toast,.banner,canvas')) { x.inert = true; x.dataset.sheetInert = 1; } });
+  requestAnimationFrame(() => s.isConnected && s.focus({ preventScroll: true }));
+  return s;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('sheet')) { e.preventDefault(); closeSheet(); } });
+const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><h2 class="h3" style="flex:1;font-size:20px;margin:0">${t}</h2><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
+// Un botón "suave" se ve apagado pero sigue explicando qué falta al tocarlo: que el lector de pantalla también lo sepa.
+new MutationObserver(ms => { for (const m of ms) { const el = m.target; if (m.type === 'attributes' ? el.classList?.contains('btn') : false) el.setAttribute('aria-disabled', el.classList.contains('soft')); if (m.type === 'childList') m.addedNodes.forEach(n => n.querySelectorAll && n.querySelectorAll('.btn.soft').forEach(b => b.setAttribute('aria-disabled', 'true'))); } })
+  .observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
 
 /* ================= DIBUJO DEL MAR ================= */
 const STARS = (() => { const r = rng(7); return Array.from({ length: 80 }, () => [r(), r() * .55, r() * 1.4 + .3, r() * 6]); })();
@@ -182,7 +207,7 @@ addEventListener('popstate', () => { if (document.getElementById('sheet')) close
 function back() { let prev = P.hist.pop(); while (prev && prev === P.curId) prev = P.hist.pop(); go(prev || (S.me ? 'orilla' : 'splash'), { back: true }); }
 P.actions.back = back;
 const backBtn = () => `<button class="iconbtn glass" data-act="back" aria-label="Volver">${icon('back')}</button>`;
-const steps = n => `<div class="pad" style="flex:none"><div class="progress" aria-label="Paso ${n} de 6"><i style="width:${n / 6 * 100}%"></i></div></div>`;
+const steps = n => `<div class="pad" style="flex:none"><div class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="6" aria-valuenow="${n}" aria-label="Paso ${n} de 6"><i style="width:${n / 6 * 100}%"></i></div></div>`;
 
 function tabsHTML(active) {
   const badge = S.convos.filter(unread).length;
