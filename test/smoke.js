@@ -18,6 +18,7 @@ const srv = http.createServer((q, r) => {
   const tap = async (sel, t) => { const l = t ? p.locator(sel, { hasText: t }) : p.locator(sel); await l.first().click({ timeout: 5000 }); };
   const step = async (name, fn) => { try { await fn(); } catch (e) { errs.push(`STEP ${name}: ${e.message.split('\n')[0]}`); await shot('FAIL-' + name); } };
   const record = async (ms = 2600) => { await tap('.screen:not(.exiting) .rec .mic'); await p.waitForTimeout(ms); await tap('.screen:not(.exiting) .rec .mic'); await p.waitForTimeout(400); };
+  const more = async () => { if (!(await p.$('details.more[open]'))) await tap('details.more summary'); };
   const hold = async sel => { const bx = await p.locator(sel).first().boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(1200); await p.mouse.up(); };
 
   await p.goto('http://localhost:4610/?c=BOTELLA-01'); await p.waitForTimeout(1200); await shot('bienvenida');
@@ -47,18 +48,18 @@ const srv = http.createServer((q, r) => {
     await tap('.scard [data-act=key]'); await p.waitForTimeout(3200); await tap('.btn-ghost', 'Más tarde'); await p.waitForTimeout(500); await shot('chat-llamar'); await tap('[data-act=chatMenu]'); await shot('chat-menu'); await tap('[data-act=reveal]'); await p.waitForTimeout(600); await shot('chat-revelado');
     await tap('[data-act=giftAsk]'); await p.waitForTimeout(400); await tap('[data-act=giftGo]'); await p.waitForTimeout(700); await shot('lacre-enviado'); });
   await step('dúo', async () => {
-    await tap('[data-act=back]'); await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('[data-act=duoT]'); await p.waitForTimeout(300); await shot('lanzar-duo'); await record(); await shot('lanzar-duo-lista');
+    await tap('[data-act=back]'); await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await more(); await tap('[data-act=duoT]'); await p.waitForTimeout(300); await shot('lanzar-duo'); await record(); await shot('lanzar-duo-lista');
     await tap('[data-act=duoStart]'); await p.waitForTimeout(900); await shot('duo-esperando'); await tap('[data-act=toMine]'); await p.waitForTimeout(700); await shot('mis-botellas-duo');
   });
   await step('lanzar', async () => {
-    await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('.idea'); await tap('[data-act=btype][data-k=color]'); await p.selectOption('#btarget', 'topic:Cine'); await record(); await shot('lanzar-lista');
+    await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('.idea'); await more(); await tap('[data-act=btype][data-k=color]'); await p.selectOption('#btarget', 'topic:Cine'); await record(); await shot('lanzar-lista');
     await tap('[data-act=throw]'); await p.waitForTimeout(4000); await shot('lanzada'); await p.waitForTimeout(1600); await shot('avisos-pregunta'); await tap('.sheet [data-act=closeSheet]').catch(() => {}); await tap('[data-act=toMine]'); await p.waitForTimeout(600);
   });
   await step('marea-hoy', async () => { await tap('.tabs button', 'Orilla'); await p.waitForTimeout(800); await shot('orilla-tu-dia'); await tap('.today'); await p.waitForTimeout(900); await shot('marea-pregunta'); await record(); await tap('[data-act=tideSend]'); await p.waitForTimeout(1200); await shot('marea-respondida'); await p.locator('.screen:not(.exiting) .scroll').evaluate(e => e.scrollTo(0, 500)); await shot('marea-voces'); await tap('[data-act=back]'); await p.waitForTimeout(500); });
   await step('bitacora', async () => { await tap('.streak'); await p.waitForTimeout(800); await shot('bitacora'); await tap('[data-go=mapa]'); await p.waitForTimeout(800); await shot('mapa'); await tap('[data-act=back]'); await tap('[data-act=back]'); await p.waitForTimeout(500); });
   await step('lecturas', async () => { await tap('[data-act=toLecturas]'); await p.waitForTimeout(600); await shot('lecturas'); await tap('[data-act=lecNew]'); await p.waitForTimeout(500); await tap('.lq'); await record(); await shot('lectura-nueva'); await tap('[data-act=lecCreate]'); await p.waitForTimeout(1000); await shot('lectura-link'); await p.locator('.screen:not(.exiting) .scroll').evaluate(e => e.scrollTo(0, 900)); await shot('lectura-respuestas'); await tap('[data-act=ansMenu]'); await shot('lectura-opciones'); await tap('.sheet [data-act=closeSheet]'); await tap('[data-act=back]'); await p.waitForTimeout(500); await tap('[data-act=back]'); await p.waitForTimeout(500); });
   await step('muelle', async () => {
-    await tap('.tabs button', 'Muelle'); await p.waitForTimeout(700); await shot('muelle'); await tap('[data-act=get][data-k=color]'); await p.waitForTimeout(500);
+    await tap('.tabs button', 'Tienda'); await p.waitForTimeout(700); await shot('muelle'); await tap('[data-act=get][data-k=color]'); await p.waitForTimeout(500);
     await tap('[data-act=get][data-k=who]'); await p.waitForTimeout(500); await tap('.look', 'Ámbar'); await p.waitForTimeout(500);
     await p.locator('.screen:not(.exiting) .scroll').evaluate(e => e.scrollTo(0, 900)); await shot('muelle-2'); await tap('[data-act=get][data-k=captain]'); await p.waitForTimeout(500);
     await p.locator('.screen:not(.exiting) .scroll').evaluate(e => e.scrollTo(0, 9999)); await shot('muelle-3');

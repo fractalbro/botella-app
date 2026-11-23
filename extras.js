@@ -10,7 +10,7 @@ const STORE = {
     { k: 'tide', name: 'Botella dorada', tag: '21:00', desc: 'Sale primera en la marea de las 21:00, para todo Lima.', price: '1.90', art: () => btSVG('free', null, true), left: () => S.me?.tide_left },
     { k: 'who', name: 'Quién la abrió', tag: 'para siempre', desc: 'Mira qué tema compartes con cada persona que abrió tu botella, y a qué hora.', price: '4.90', art: () => `<span class="iart">${icon('eye')}</span>`, own: () => S.me?.who_open }
   ],
-  gifts: [{ k: 'gift', name: 'Botella con lacre', tag: 'regalo', desc: 'Un regalo para alguien con quien conversas: una botella sellada que se queda en el chat y le da una botella para lanzar.', price: '3.90', art: () => `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>`, left: () => S.me?.gifts_left }],
+  gifts: [{ k: 'gift', name: 'Botella sellada', tag: 'regalo', desc: 'Un regalo para alguien con quien conversas: una botella sellada que se queda en el chat y le da una botella para lanzar.', price: '3.90', art: () => `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>`, left: () => S.me?.gifts_left }],
   looks: [
     { k: 'glass:none', g: null, name: 'Transparente', desc: 'El vidrio de siempre.', price: '' },
     { k: 'glass:verde', g: 'verde', name: 'Verde', desc: 'Tus botellas viajan en vidrio verde.', price: '4.90' },
@@ -28,7 +28,7 @@ const price = p => p ? `<s>S/ ${p}</s>` : '';
 async function claim(k) {
   const me = await rpc('beta_get', { p_item: k }); S.me = Array.isArray(me) ? me[0] : me; hap([8, 30, 8]);
   const all = [...STORE.specials, ...STORE.gifts, ...STORE.looks, ...STORE.packs]; const it = all.find(x => x.k === k);
-  toast(k === 'captain' ? 'Ya eres Capitán. Gratis por ahora.' : k === 'nocaptain' ? 'Dejaste el plan Capitán.' : k.startsWith('glass') ? `Listo: tus botellas viajan en vidrio ${it ? it.name.toLowerCase() : ''}.` : it?.qty ? `Llegaron ${it.qty} botellas a tu muelle.` : k === 'who' ? 'Listo: ya ves qué tema compartes con quien abre tus botellas.' : it ? `Listo: ya tienes una ${it.name.toLowerCase()} en tu muelle.` : 'Listo: ya es tuya.');
+  toast(k === 'captain' ? 'Ya eres Capitán. Gratis por ahora.' : k === 'nocaptain' ? 'Dejaste el plan Capitán.' : k.startsWith('glass') ? `Listo: tus botellas viajan en vidrio ${it ? it.name.toLowerCase() : ''}.` : it?.qty ? `Ya tienes ${it.qty} botellas más.` : k === 'who' ? 'Listo: ya ves qué tema compartes con quien abre tus botellas.' : it ? `Listo: ya tienes una ${it.name.toLowerCase()}.` : 'Listo: ya es tuya.');
   return S.me;
 }
 P.actions.get = async el => { if (el.classList.contains('soft')) return; el.classList.add('soft'); try { await claim(el.dataset.k); P.st.gotK = el.dataset.k; rerender(); } catch (e) { el.classList.remove('soft'); err(e); } };
@@ -37,10 +37,10 @@ const itemHTML = (it, btn) => `<div class="sitem${P.st.gotK === it.k ? ' got' : 
 const getBtn = (k, label = 'Gratis') => `<button class="btn btn-a btn-sm" data-act="get" data-k="${k}">${label}</button>`;
 P.screens.store = {
   cls: 'storebg',
-  render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Muelle</span>${meBtn()}</div>
-    <p class="lead" style="margin-top:2px">El muelle es donde recoges tus botellas. Lanzar, escuchar, responder y llamar siempre es gratis.</p>
+  render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><h1 class="h2" style="flex:1;margin:0">Tienda</h1>${meBtn()}</div>
+    <p class="lead" style="margin-top:2px">Aquí recoges botellas especiales. Lanzar, escuchar, responder y llamar siempre es gratis.</p>
     <div class="beta rise">${icon('spark', 's')}<span><b>Por ahora, todo gratis.</b> Botella está empezando: pide lo que quieras sin pagar nada. El precio tachado es lo que costará más adelante.</span></div>
-    <div class="bal rise d1"><div><b>${m.bottles ?? 0}</b><span>Normales</span></div><div><b style="color:#FF8FC0">${m.color_left ?? 0}</b><span>De color</span></div><div><b style="color:#FFD68C">${m.far_left ?? 0}</b><span>Llegan lejos</span></div><div><b style="color:#FFD68C">${m.tide_left ?? 0}</b><span>Doradas</span></div><div><b style="color:#F2C46D">${m.gifts_left ?? 0}</b><span>Lacre</span></div></div>
+    <div class="bal rise d1"><div><b>${m.bottles ?? 0}</b><span>Normales</span></div><div><b style="color:#FF8FC0">${m.color_left ?? 0}</b><span>De color</span></div><div><b style="color:#FFD68C">${m.far_left ?? 0}</b><span>Llegan lejos</span></div><div><b style="color:#FFD68C">${m.tide_left ?? 0}</b><span>Doradas</span></div><div><b style="color:#F2C46D">${m.gifts_left ?? 0}</b><span>Regalos</span></div></div>
     <div class="sec rise d2"><span class="eyebrow">Botellas especiales</span>${STORE.specials.map(it => itemHTML(it, it.own && it.own() ? '<span class="pill a">Activo</span>' : `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d2"><span class="eyebrow">Regalos</span>${STORE.gifts.map(it => itemHTML(it, `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d3"><span class="eyebrow">Tu vidrio</span><div class="looks">${STORE.looks.map(it => { const on = (m.glass || null) === it.g; return `<button class="look${on ? ' on' : ''}" data-act="get" data-k="${it.k}"><span class="bsv">${btSVG('free', it.g)}</span><b>${it.name}</b><span>${on ? 'Usando' : it.price ? `<s>S/ ${it.price}</s> Gratis` : 'Gratis'}</span></button>`; }).join('')}</div></div>
@@ -73,7 +73,7 @@ P.screens.marea = {
   async after() { if (!P.st.mareaFresh) { P.st.mareaFresh = true; try { await loadMarea(); if (P.curId === 'marea') rerender(); } catch (e) {} } },
   leave() { P.st.mareaFresh = false; }
 };
-P.actions.mareaLaunch = () => { S.featured = (S.me?.tide_left || 0) > 0; go('launch'); if (!S.featured) toast('No te quedan doradas: pide una gratis en el muelle.'); };
+P.actions.mareaLaunch = () => { S.featured = (S.me?.tide_left || 0) > 0; go('launch'); if (!S.featured) toast('No te quedan doradas: pide una gratis en la tienda.'); };
 P.actions.mareaOpen = async el => {
   const b = S.marea.find(x => x.bottle === el.dataset.id); if (!b || b.mine) return;
   if (b.taken === 'answered') return toast('Ya respondiste esta botella. Está en tus conversaciones.');
@@ -139,14 +139,14 @@ P.actions.outCreate = async el => {
 /* ================= REGALO: BOTELLA CON LACRE ================= */
 P.actions.giftAsk = () => {
   const c = convo(); if (!c || c.closed) return; const n = S.me?.gifts_left || 0;
-  sheet(`${sheetHead('Botella con lacre')}<div class="giftart"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span></div>
+  sheet(`${sheetHead('Regalar una botella sellada')}<div class="giftart"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span></div>
     <p class="muted" style="font-size:14px;margin:0 0 14px;text-align:center">Una botella sellada que se queda en esta conversación. A ${c.revealed ? esc(c.alias) : 'esta persona'} le regala una botella para lanzar.</p>
-    ${n ? `<button class="btn btn-a" data-act="giftGo">${icon('gift')} Mandarla (te ${n === 1 ? 'queda 1' : 'quedan ' + n})</button>` : `<button class="btn btn-a" data-act="giftGet">${icon('bag')} Pedir una gratis en el muelle</button>`}<button class="btn btn-ghost" data-act="closeSheet" style="margin-top:6px">Ahora no</button>`);
+    ${n ? `<button class="btn btn-a" data-act="giftGo">${icon('gift')} Mandarla (te ${n === 1 ? 'queda 1' : 'quedan ' + n})</button>` : `<button class="btn btn-a" data-act="giftGet">${icon('bag')} Pedir una gratis en la tienda</button>`}<button class="btn btn-ghost" data-act="closeSheet" style="margin-top:6px">Ahora no</button>`);
 };
 P.actions.giftGet = async el => { el.classList.add('soft'); try { await claim('gift'); P.actions.giftAsk(); } catch (e) { el.classList.remove('soft'); err(e); } };
 P.actions.giftGo = async el => {
   const c = convo(); el.classList.add('soft');
-  try { const left = await rpc('send_gift', { p_convo: c.id }); S.me.gifts_left = left; closeSheet(); await loadMsgs(c.id); rerender(); hap([10, 30, 10, 30, 20]); toast('Tu botella con lacre llegó.'); }
+  try { const left = await rpc('send_gift', { p_convo: c.id }); S.me.gifts_left = left; closeSheet(); await loadMsgs(c.id); rerender(); hap([10, 30, 10, 30, 20]); toast('Tu regalo llegó.'); }
   catch (e) { el.classList.remove('soft'); err(e); }
 };
 

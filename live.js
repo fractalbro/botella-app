@@ -105,7 +105,7 @@ function onDelivery() {
     const before = S.shore.length; await loadShore().catch(() => {});
     if (S.shore.length > before && !['open', 'answer', 'launch', 'thrown', 'call'].includes(P.curId)) {
       if (P.curId === 'orilla') rerender();
-      else banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Una botella llegó a tu orilla', text: 'Toca para escucharla.', go: 'orilla' });
+      else banner({ ic: `<span style="width:34px;display:block">${bottleSVG()}</span>`, title: 'Te llegó una botella', text: 'Toca para escucharla.', go: 'orilla' });
     }
   }, 600);
 }
@@ -141,7 +141,7 @@ async function enter(fresh) {
 }
 /* Si el servidor no tiene la última versión de supabase/schema.sql, se dice claro en vez de mostrar saldos en cero. */
 function outdatedSheet() {
-  sheet(`${sheetHead('Estamos actualizando Botella')}<p class="muted" style="font-size:14px;margin:0 0 16px">Por unos minutos pueden faltar botellas o el muelle. No perdiste nada: vuelve a entrar en un rato.</p>
+  sheet(`${sheetHead('Estamos actualizando Botella')}<p class="muted" style="font-size:14px;margin:0 0 16px">Por unos minutos pueden faltar botellas o la tienda. No perdiste nada: vuelve a entrar en un rato.</p>
     <button class="btn btn-a" data-act="closeSheet">Entendido</button>`);
 }
 function boot() {
