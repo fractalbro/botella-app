@@ -494,7 +494,7 @@ P.actions.stageInfo = () => {
 };
 P.screens.chat = {
   // variantes en prueba (?chat=a|b|c|d); sin variante, la pantalla de siempre
-  get cls() { const v = chatV(); return v ? 'chat v-' + v : ''; },
+  get cls() { const v = chatV(); return v ? 'chat v-' + v + (v.length > 1 ? ' v-' + v[0] : '') : ''; },
   render: () => { const c = convo(); if (!c) return ''; if (chatV()) return chatAlt(chatV(), c); const list = S.msgs[c.id] || [], g = stageOf(c), nl = c.closed ? '' : nextLine(c), sc = stageCard(c), div = /class="divider"/.test(sc);
     // un solo hueco fijo sobre la barra de grabar con lo que sigue (la etapa manda; si no hay, el nombre)
     const slot = slotOf(c, sc, div);
@@ -517,8 +517,8 @@ function slotOf(c, sc, div) {
     : c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Compartiste tu nombre</b><span>Se ve cuando la otra persona también lo comparta.</span></span><button class="btn btn-text" data-act="reveal">Ocultar</button></div>` : '';
 }
 /* ===== Chat: 4 alternativas en prueba =====
-   ?chat=a|b|c|d elige una y queda guardada; ?chat=0 vuelve a la de siempre. Mismo contenido, otro orden. */
-const CHATV = (() => { try { const q = new URLSearchParams(location.search).get('chat'); if (q != null) LS.set('chatv', /^[abcd]$/.test(q) ? q : ''); } catch (e) {} return LS.get('chatv', ''); })();
+   ?chat=a|b|c|d elige una y queda guardada (d1|d2|d3: tres maneras de resolver la parte de abajo de D); ?chat=0 vuelve a la de siempre. Mismo contenido, otro orden. */
+const CHATV = (() => { try { const q = new URLSearchParams(location.search).get('chat'); if (q != null) LS.set('chatv', /^([abc]|d[123]?)$/.test(q) ? q : ''); } catch (e) {} return LS.get('chatv', ''); })();
 const chatV = () => CHATV;
 const nameHTML = c => /^Alguien que /.test(c.alias || '') ? `<small class="pre">Alguien que</small>${esc(c.alias.slice(12))}` : esc(c.alias);
 /* lo que toca ahora, en una frase y con su botón (si hay) */
@@ -571,15 +571,38 @@ function chatAlt(v, c) {
     ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${real}`)}
     ${c.closed || c.cooled ? '' : `<div class="cpanel"><div class="pad">${stepsBar(c)}${now ? `<div class="cnow"><span class="tx"><b>${now.t}</b><span>${now.d}</span></span>${now.b}</div>` : ''}</div>${foot}</div>`}`;
   }
-  // D · Ficha: arriba lo que comparten (su pregunta, el tema) y el avance; abajo, solo voz
-  const bm = list.find(m => m.body && m.body.startsWith('#bottle|')), [, kind, text] = bm ? bm.body.split('|') : [];
+  // D · Ficha: arriba lo que comparten (su pregunta, el tema) y el avance; abajo, solo voz.
+  // D2 y D3 bajan lo que sigue junto al micrófono, así la ficha queda con la pregunta y las etapas.
+  const bm = list.find(m => m.body && m.body.startsWith('#bottle|')), [, kind, text] = bm ? bm.body.split('|') : [], low = v === 'd2' || v === 'd3';
   return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 36)}<span class="title">${nameHTML(c)}${c.sample ? '<small>de ejemplo</small>' : ''}</span>${callB}${menuB}</div>
-    ${c.closed ? '' : `<div class="ficha pad"><div class="fbox">${bm ? `<div class="fq${c.i_launched ? ' mine' : ''}"><small>${c.i_launched ? 'Tu botella' : 'Su botella'} · ${c.place ? `tema: ${esc(c.place.toLowerCase())}` : esc((kind || '').toLowerCase())}</small><span>${esc(text || 'Una nota de voz')}</span></div>` : ''}${stepsBar(c)}${now ? `<div class="fnow"><span class="tx"><b>${now.t}.</b> ${now.d}</span>${now.b}</div>` : ''}</div></div>`}
-    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${real}`)}${foot}`;
+    ${c.closed ? '' : `<div class="ficha pad"><div class="fbox">${bm ? `<div class="fq${c.i_launched ? ' mine' : ''}"><small>${c.i_launched ? 'Tu botella' : 'Su botella'} · ${c.place ? `tema: ${esc(c.place.toLowerCase())}` : esc((kind || '').toLowerCase())}</small><span>${esc(text || 'Una nota de voz')}</span></div>` : ''}${stepsBar(c)}${now && !low ? `<div class="fnow"><span class="tx"><b>${now.t}.</b> ${now.d}</span>${now.b}</div>` : ''}</div></div>`}
+    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${v === 'd2' && dSides(c).some(o => o.go) ? '' : real}`)}${foot}`;
+}
+/* D1-D3: lo que va junto al micrófono */
+const D_ACT = { call: ['phone', 'Llamar'], key: ['phone', 'Pedir llamada'], planAsk: ['pin', 'Armar plan'], reveal: ['eye', 'Mi nombre'] };
+const dAct = now => { const a = now && (now.b.match(/data-act="(\w+)"/) || [])[1]; return a && D_ACT[a] ? { act: a, i: D_ACT[a][0], l: D_ACT[a][1] } : null; };
+/* D2: dos acciones a los lados del micrófono, nunca un lado vacío */
+function dSides(c) {
+  const g = stageOf(c), q = S.home?.quest, a = dAct(stepNow(c)), opts = [a && { ...a, now: 1 }, { act: 'stageInfo', i: 'spark', l: 'Cómo va' }, c.sample && g.mine >= 1 && q && !q.launched ? { go: 'launch', i: 'bottle', l: 'Mi botella' } : null, c.sample ? null : { act: 'giftAsk', i: 'gift', l: 'Lacre' }, { act: 'chatMenu', i: 'more', l: 'Más' }].filter(Boolean);
+  return opts[0].now ? [opts[0], opts.find((o, k) => k && o.act !== 'stageInfo')] : [opts[0], opts[1]];
+}
+function dFoot(v, c) {
+  const g = stageOf(c), now = stepNow(c), mic = `<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
+  if (v === 'd1') // barra de grabar a lo ancho, como un campo de mensaje: todo el ancho se toca
+    return `<div class="d1bar"><button class="d1tx" data-act="chatRec"><b>Toca para grabar tu nota</b><span>Solo voz: aquí no se escribe</span></button>${mic}</div>`;
+  if (v === 'd2') { // micrófono grande al centro; a los lados, lo que sigue y otra acción
+    const side = (o, k) => `<button class="d2side${o.now ? ' first' : ''}" ${o.go ? `data-go="${o.go}"` : `data-act="${o.act}"`}><span class="ic">${icon(o.i)}</span><span class="lb">${o.l}</span></button>`, [a, b] = dSides(c);
+    return `${side(a, 0)}<span class="d2mic">${mic}<span class="lb">${g.voices ? 'Grabar' : `Nota ${Math.min(g.mine + 1, g.need)} de ${g.need}`}</span></span>${side(b, 1)}`;
+  }
+  // d3: dos zonas, a la izquierda lo que sigue (icono + verbo), a la derecha el micrófono
+  const a = dAct(now), t = now ? now.t : '', d = now ? now.d.split('. ')[0].replace(/\.$/, '') : '';
+  const z = a ? { at: `data-act="${a.act}"`, i: a.i, b: a.l, s: t } : !g.voices ? { at: 'data-act="stageInfo"', i: 'spark', b: `Llevas ${g.mine} de ${g.need}`, s: 'notas de voz' } : { at: 'data-act="stageInfo"', i: now && now.i === 4 ? 'pin' : 'spark', b: t || 'Cómo va', s: d };
+  return `<button class="d3now${a ? ' act' : ''}" ${z.at}><span class="ic">${icon(z.i)}</span><span class="tx"><b>${z.b}</b>${z.s ? `<span>${z.s}</span>` : ''}</span></button>${mic}`;
 }
 function chatFoot() {
   if (REC.mr && REC.id === 'chat') return `<button class="iconbtn glass" data-act="chatRecCancel" aria-label="Cancelar">${icon('close')}</button><div class="clive"><span class="num" id="ctime">0:00</span><span class="cwave" id="cwave"></span></div><button class="iconbtn sendb" data-act="chatRecSend" aria-label="Enviar nota de voz">${icon('send')}</button>`;
   if (chatV() === 'a' && convo()) { const n = stepNow(convo()); if (n) return `<span class="anext"><span class="tx"><b>${n.t}.</b> ${n.d}</span>${n.b}</span><button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`; }
+  if (/^d\d$/.test(chatV()) && convo()) return dFoot(chatV(), convo());
   if (chatV() === 'c') return `${stageOf(convo() || {}).mine < 2 ? '<span class="small muted">Toca el micrófono para grabar</span>' : '<span></span><span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
   return `<span></span>${stageOf(convo() || {}).mine < 2 ? '<span class="small muted" style="text-align:center">Toca el micrófono para grabar</span>' : '<span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
 }
