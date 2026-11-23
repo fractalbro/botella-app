@@ -50,3 +50,7 @@ Desde ahí, cada cambio a `supabase/schema.sql` se aplica solo. Sin el secreto, 
 - **Conversaciones por etapas**: Voces → Nombres → Llamada → Plan. La llamada se abre con 2 notas de voz de cada uno; el plan, después de hablar. Sin respuesta en 48 horas la conversación vuelve al mar.
 - **Botella para dos** (`?d=`) y **Pide una lectura** (`?l=`): links para compartir. Las lecturas se responden sin cuenta, solo mayores de 18, con filtro antes de entregar y el dueño puede borrar, reportar (bloquea ese celular) y cerrar. Duran 24 horas.
 - **Avisos push**: en iPhone solo funcionan con Botella agregada a la pantalla de inicio (iOS 16.4 o más).
+
+## 100 personas simuladas
+Recorrido de 100 personas de Lima (edad, teléfono, tamaño de letra, red, micrófono, teclado o lector de pantalla, paciencia) contra el cliente falso:
+`node test/personas/sim.js . salida-personas 1 100 8` y luego `python3 test/personas/analiza.py salida-personas`. Son usuarios sintéticos: sirven para encontrar trabas, no reemplazan probar con gente real.
