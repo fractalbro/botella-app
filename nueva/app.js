@@ -62,15 +62,16 @@ function player(v, { mine = false, secs, peaks } = {}) {
   const [s, pk] = PK[v] || [secs || 8, peaks || fakePeaks(v.length)];
   return `<button class="player${mine ? ' mine' : ''}" data-v="${esc(v)}" data-s="${s}" aria-label="Escuchar nota de ${fmt(s)}"><span class="pb">${I.play}</span><span class="wave">${pk.map(p => `<i style="height:${Math.round(p * 100)}%"></i>`).join('')}</span><span class="t">${fmt(s)}</span></button>`;
 }
-function stopAudio() { audio.pause(); clearInterval(fakeT); if (curP) { curP.querySelector('.pb').innerHTML = I.play; $$('.wave i', curP).forEach(i => i.classList.remove('on')); curP.querySelector('.t').textContent = fmt(+curP.dataset.s); } curP = null; }
+function stopAudio() { audio.pause(); clearInterval(fakeT); fakeT = null; if (curP) { curP.querySelector('.pb').innerHTML = I.play; $$('.wave i', curP).forEach(i => i.classList.remove('on')); curP.querySelector('.t').textContent = fmt(+curP.dataset.s); } curP = null; }
 function paint(p, f) { const bars = $$('.wave i', p); const n = Math.round(f * bars.length); bars.forEach((b, i) => b.classList.toggle('on', i < n)); }
 document.addEventListener('click', e => {
   const p = e.target.closest('.player'); if (!p) return;
   if (curP === p) { stopAudio(); return; }
   stopAudio(); curP = p; p.querySelector('.pb').innerHTML = I.pause; const s = +p.dataset.s; const v = p.dataset.v;
   const src = v.startsWith('blob:') ? v : (PK[v] && !v.startsWith('answer') ? `v/${v}.mp3` : null);
-  if (src) { audio.src = src; audio.play().catch(() => {}); audio.ontimeupdate = () => { if (curP !== p) return; paint(p, audio.currentTime / (audio.duration || s)); p.querySelector('.t').textContent = fmt(audio.currentTime); }; audio.onended = () => curP === p && stopAudio(); }
-  else { let t = 0; fakeT = setInterval(() => { t += .1; paint(p, t / s); p.querySelector('.t').textContent = fmt(t); if (t >= s) stopAudio(); }, 100); }
+  const fake = () => { if (curP !== p || fakeT) return; let t = 0; fakeT = setInterval(() => { t += .1; paint(p, t / s); p.querySelector('.t').textContent = fmt(t); if (t >= s) stopAudio(); }, 100); };
+  if (src && !window.__noAudio) { audio.src = src; audio.play().catch(e => { if (e && e.name !== 'AbortError') fake(); }); audio.onerror = fake; audio.ontimeupdate = () => { if (curP !== p) return; paint(p, audio.currentTime / (audio.duration || s)); p.querySelector('.t').textContent = fmt(audio.currentTime); }; audio.onended = () => curP === p && stopAudio(); }
+  else fake();
 });
 
 // ---------- grabar: micrófono real si se puede; si no, una simulación ----------
@@ -366,7 +367,7 @@ R.perfil = () => ({ html: `
 
 // ---------- arranque ----------
 const start = () => { const h = location.hash.slice(1); go(R[h] ? h : (store.get('onb') ? 'mar' : 'bienvenida')); };
-if (window.Mar) start(); else { let started = false; const s = () => { if (!started) { started = true; start(); } }; addEventListener('mar-ready', s, { once: true }); setTimeout(s, 1500); }
+if (window.Mar) start(); else { let started = false; const s = () => { if (!started) { started = true; start(); } }; addEventListener('mar-ready', s, { once: true }); setTimeout(() => { if (!window.Mar) document.documentElement.classList.add("no3d"); s(); }, 2500); }
 addEventListener('hashchange', () => { const h = location.hash.slice(1); if (R[h] && h !== curName) go(h, { nohash: true }); });
 window.__go = go;
 }
