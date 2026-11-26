@@ -258,6 +258,15 @@ P.actions.sendAns = async el => {
 };
 
 /* ================= LANZAR ================= */
+// opciones de la botella (para dos, tipo, dorada) y aviso de botellas agotadas: compartidos con las variantes de lanzar.js
+function launchOptsHTML() { return S.moreOpts || S.duoOn || S.btype !== 'free' || S.featured ? `      <div class="sec"><label class="field"><input id="bbody" maxlength="140" value="${esc(S.body)}" placeholder="De qué trata (opcional)" aria-label="Tu botella en una línea"></label></div>
+      <div class="sec" style="margin-top:16px"><button class="setrow duot" role="switch" aria-checked="${!!S.duoOn}" data-act="duoT">${icon('duo')}<span style="flex:1"><b>Botella para dos</b><span>Tú grabas una mitad y alguien que tú elijas, la otra. Sale con las dos voces a 12 personas.</span></span><span class="sw"></span></button></div>
+      ${S.duoOn ? '' : `<div class="sec"><span class="eyebrow">Tipo de botella</span><div class="btypes" id="btypes">${btypesHTML()}</div>
+        ${S.btype === 'color' ? `<label class="field select" style="margin-top:10px"><select id="btarget" aria-label="A quién llega">${targetOpts()}</select></label>` : ''}
+        <p class="small muted" style="margin:8px 0 0">${BT[S.btype].desc}</p>
+        <button class="setrow" role="switch" aria-checked="${S.featured}" data-act="featT" style="margin-top:10px">${icon('tide')}<span style="flex:1"><b>Que salga dorada, en la marea de las 21:00</b><span>${(S.me?.tide_left || 0) ? `Arriba de todas, para todo Lima. Te ${S.me.tide_left === 1 ? 'queda 1' : 'quedan ' + S.me.tide_left}.` : 'No te quedan. Pide una en el muelle.'}</span></span><span class="sw"></span></button></div>`}
+` : `<div class="sec"><button class="setrow" data-act="moreOpts">${icon('spark')}<span style="flex:1"><b>${launchKind()}</b><span>Cambiar: para dos, elegir tema, llegar más lejos o salir dorada.</span></span>${icon('arrow', 's')}</button></div>`; }
+function launchEmptyHTML(left) { return left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`; }
 P.screens.launch = {
   render: () => { const left = btLeft(S.btype); return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Lanzar una botella<small>${BT[S.btype].name}: ${left ? `te ${left === 1 ? 'queda 1' : 'quedan ' + left}` : 'no te quedan'}</small></span></div>
     <div class="scroll pad">
@@ -265,14 +274,8 @@ P.screens.launch = {
       <div class="chips rise d1" style="margin-top:16px" id="kinds">${Object.keys(KINDS).map(k => `<button class="chip${S.kind === k ? ' on' : ''}" data-act="kind" data-k="${k}">${k}</button>`).join('')}</div>
       <div class="sec rise d2" style="margin-top:18px"><p class="small muted" style="margin:0 2px">Toca una idea si quieres. Lo que cuenta es tu voz.</p><div class="ideas" id="ideas" style="margin-top:8px">${ideasHTML()}</div></div>`}
       <div class="sec">${recBox('launch', 'Toca para grabarla. Con 10 segundos basta; tienes hasta 60.')}<p class="small muted" style="margin:8px 2px 0">${icon('lock', 's')} Llega a ${S.duoOn ? 12 : S.btype === 'far' ? 20 : 8} personas con cuenta. No ven tu nombre ni tu distrito.</p></div>
-      ${S.moreOpts || S.duoOn || S.btype !== 'free' || S.featured ? `      <div class="sec"><label class="field"><input id="bbody" maxlength="140" value="${esc(S.body)}" placeholder="De qué trata (opcional)" aria-label="Tu botella en una línea"></label></div>
-      <div class="sec" style="margin-top:16px"><button class="setrow duot" role="switch" aria-checked="${!!S.duoOn}" data-act="duoT">${icon('duo')}<span style="flex:1"><b>Botella para dos</b><span>Tú grabas una mitad y alguien que tú elijas, la otra. Sale con las dos voces a 12 personas.</span></span><span class="sw"></span></button></div>
-      ${S.duoOn ? '' : `<div class="sec"><span class="eyebrow">Tipo de botella</span><div class="btypes" id="btypes">${btypesHTML()}</div>
-        ${S.btype === 'color' ? `<label class="field select" style="margin-top:10px"><select id="btarget" aria-label="A quién llega">${targetOpts()}</select></label>` : ''}
-        <p class="small muted" style="margin:8px 0 0">${BT[S.btype].desc}</p>
-        <button class="setrow" role="switch" aria-checked="${S.featured}" data-act="featT" style="margin-top:10px">${icon('tide')}<span style="flex:1"><b>Que salga dorada, en la marea de las 21:00</b><span>${(S.me?.tide_left || 0) ? `Arriba de todas, para todo Lima. Te ${S.me.tide_left === 1 ? 'queda 1' : 'quedan ' + S.me.tide_left}.` : 'No te quedan. Pide una en el muelle.'}</span></span><span class="sw"></span></button></div>`}
-` : `<div class="sec"><button class="setrow" data-act="moreOpts">${icon('spark')}<span style="flex:1"><b>${launchKind()}</b><span>Cambiar: para dos, elegir tema, llegar más lejos o salir dorada.</span></span>${icon('arrow', 's')}</button></div>`}
-      ${left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`}
+      ${launchOptsHTML()}
+      ${launchEmptyHTML(left)}
     </div>
     ${S.rec.launch && S.duoOn ? `<div class="foot pad"><button class="btn btn-a${S.me?.bottles ? '' : ' soft'}" data-act="duoStart">${icon('duo')} Guardar mi mitad e invitar</button></div>` : S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">También puedes deslizarla hacia arriba</span></div><button class="btn btn-a${left ? '' : ' soft'}" data-act="throw">${icon('send')} Lanzar al mar</button></div>` : ''}`; },
   after(sec) {
