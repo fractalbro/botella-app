@@ -22,6 +22,8 @@ const srv = http.createServer((q, r) => {
   const tap = async (sel, t) => { const l = t ? p.locator(sel, { hasText: t }) : p.locator(sel); await l.first().click({ timeout: 5000 }); };
   const step = async (name, fn) => { try { await fn(); } catch (e) { errs.push(`STEP ${name}: ${e.message.split('\n')[0]}`); await shot('FAIL-' + name); } };
   const record = async (ms = 2600) => { await tap('.screen:not(.exiting) .rec .mic'); await p.waitForTimeout(ms); await tap('.screen:not(.exiting) .rec .mic'); await p.waitForTimeout(400); };
+  // lanzar: arrastrar la botella del botón que se desliza hasta el final
+  const slide = async () => { const k = await p.locator('#slk').boundingBox(), t = await p.locator('#slide').boundingBox(); await p.mouse.move(k.x + k.width / 2, k.y + k.height / 2); await p.mouse.down(); await p.mouse.move(t.x + t.width - 8, k.y + k.height / 2, { steps: 10 }); await p.mouse.up(); };
   const hold = async sel => { const bx = await p.locator(sel).first().boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(1200); await p.mouse.up(); };
 
   await p.goto('http://localhost:4610/?c=BOTELLA-01'); await p.waitForTimeout(1200); await shot('bienvenida');
@@ -55,8 +57,8 @@ const srv = http.createServer((q, r) => {
     await tap('[data-act=duoStart]'); await p.waitForTimeout(900); await shot('duo-esperando'); await tap('[data-act=toMine]'); await p.waitForTimeout(700); await shot('mis-botellas-duo');
   });
   await step('lanzar', async () => {
-    await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('.idea'); await tap('[data-act=btype][data-k=color]'); await p.selectOption('#btarget', 'topic:Cine'); await record(); await shot('lanzar-lista');
-    await tap('[data-act=throw]'); await p.waitForTimeout(4000); await shot('lanzada'); await p.waitForTimeout(1600); await shot('avisos-pregunta'); await tap('.sheet [data-act=closeSheet]').catch(() => {}); await tap('[data-act=toMine]'); await p.waitForTimeout(600);
+    await tap('.tabs button', 'Orilla'); await p.waitForTimeout(500); await tap('[data-go=launch]'); await tap('[data-act=ideasOpen]'); await tap('.sheet [data-act=lvIdea]'); await p.waitForTimeout(300); await tap('[data-act=btype][data-k=color]'); await p.selectOption('#btarget', 'topic:Cine'); await record(); await shot('lanzar-lista');
+    await slide(); await p.waitForTimeout(4000); await shot('lanzada'); await p.waitForTimeout(1600); await shot('avisos-pregunta'); await tap('.sheet [data-act=closeSheet]').catch(() => {}); await tap('[data-act=toMine]'); await p.waitForTimeout(600);
   });
   await step('marea-hoy', async () => { await tap('.tabs button', 'Orilla'); await p.waitForTimeout(800); await shot('orilla-tu-dia'); await tap('.today'); await p.waitForTimeout(900); await shot('marea-pregunta'); await record(); await tap('[data-act=tideSend]'); await p.waitForTimeout(1200); await shot('marea-respondida'); await p.locator('.screen:not(.exiting) .scroll').evaluate(e => e.scrollTo(0, 500)); await shot('marea-voces'); await tap('[data-act=back]'); await p.waitForTimeout(500); });
   await step('bitacora', async () => { await tap('.streak'); await p.waitForTimeout(800); await shot('bitacora'); await tap('[data-go=mapa]'); await p.waitForTimeout(800); await shot('mapa'); await tap('[data-act=back]'); await tap('[data-act=back]'); await p.waitForTimeout(500); });

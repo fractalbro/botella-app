@@ -267,34 +267,10 @@ function launchOptsHTML() { return S.moreOpts || S.duoOn || S.btype !== 'free' |
         <button class="setrow" role="switch" aria-checked="${S.featured}" data-act="featT" style="margin-top:10px">${icon('tide')}<span style="flex:1"><b>Que salga dorada, en la marea de las 21:00</b><span>${(S.me?.tide_left || 0) ? `Arriba de todas, para todo Lima. Te ${S.me.tide_left === 1 ? 'queda 1' : 'quedan ' + S.me.tide_left}.` : 'No te quedan. Pide una en el muelle.'}</span></span><span class="sw"></span></button></div>`}
 ` : `<div class="sec"><button class="setrow" data-act="moreOpts">${icon('spark')}<span style="flex:1"><b>${launchKind()}</b><span>Cambiar: para dos, elegir tema, llegar más lejos o salir dorada.</span></span>${icon('arrow', 's')}</button></div>`; }
 function launchEmptyHTML(left) { return left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`; }
-P.screens.launch = {
-  render: () => { const left = btLeft(S.btype); return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Lanzar una botella<small>${BT[S.btype].name}: ${left ? `te ${left === 1 ? 'queda 1' : 'quedan ' + left}` : 'no te quedan'}</small></span></div>
-    <div class="scroll pad">
-      ${S.rec.launch ? `<div class="h2 rise" style="margin-top:4px">Lista para lanzar</div><p class="small muted" style="margin:6px 2px 0">${S.kind}${S.body ? ' · “' + esc(S.body) + '”' : ''}</p>` : `<div class="display rise" style="margin-top:4px">¿Qué quieres <b>lanzar</b> al mar?</div>
-      <div class="chips rise d1" style="margin-top:16px" id="kinds">${Object.keys(KINDS).map(k => `<button class="chip${S.kind === k ? ' on' : ''}" data-act="kind" data-k="${k}">${k}</button>`).join('')}</div>
-      <div class="sec rise d2" style="margin-top:18px"><p class="small muted" style="margin:0 2px">Toca una idea si quieres. Lo que cuenta es tu voz.</p><div class="ideas" id="ideas" style="margin-top:8px">${ideasHTML()}</div></div>`}
-      <div class="sec">${recBox('launch', 'Toca para grabarla. Con 10 segundos basta; tienes hasta 60.')}<p class="small muted" style="margin:8px 2px 0">${icon('lock', 's')} Llega a ${S.duoOn ? 12 : S.btype === 'far' ? 20 : 8} personas con cuenta. No ven tu nombre ni tu distrito.</p></div>
-      ${launchOptsHTML()}
-      ${launchEmptyHTML(left)}
-    </div>
-    ${S.rec.launch && S.duoOn ? `<div class="foot pad"><button class="btn btn-a${S.me?.bottles ? '' : ' soft'}" data-act="duoStart">${icon('duo')} Guardar mi mitad e invitar</button></div>` : S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">También puedes deslizarla hacia arriba</span></div><button class="btn btn-a${left ? '' : ' soft'}" data-act="throw">${icon('send')} Lanzar al mar</button></div>` : ''}`; },
-  after(sec) {
-    const fb = sec.querySelector('#fb'); let y0 = null, dy = 0;
-    sec.querySelector('#bbody')?.addEventListener('input', e => { S.body = e.target.value; });
-    sec.querySelector('#btarget')?.addEventListener('change', e => { S.target = e.target.value; });
-    if (!fb) return;
-    fb.addEventListener('pointerdown', e => { if (!S.rec.launch) { needVoice('launch'); return; } y0 = e.clientY; fb.setPointerCapture(e.pointerId); fb.style.transition = 'none'; });
-    fb.addEventListener('pointermove', e => { if (y0 == null) return; dy = Math.min(0, e.clientY - y0); fb.style.transform = `translateY(${dy}px) rotate(${dy * .25}deg) scale(${1 - dy / 400})`; });
-    const end = () => { if (y0 == null) return; y0 = null; fb.style.transition = 'transform .35s cubic-bezier(.2,1.4,.3,1)'; if (dy < -70) { fb.style.transform = 'translateY(-400px) rotate(-60deg) scale(.4)'; setTimeout(() => P.actions.throw(), 220); } else fb.style.transform = ''; dy = 0; };
-    fb.addEventListener('pointerup', end); fb.addEventListener('pointercancel', end);
-  }
-};
+// La pantalla de lanzar vive en lanzar.js.
 P.actions.recorded = id => { if (id === 'launch' && P.curId === 'launch') { go('launch', { noPush: true }); if (S.rec.launch) setTimeout(() => { const sc = P.root.querySelector('.scroll'); sc && sc.scrollTo({ top: sc.scrollHeight, behavior: 'smooth' }); }, 60); } };
 // qué botella sale ahora, en palabras (la fila plegada de opciones)
 const launchKind = () => (S.duoOn ? 'Botella para dos · 12 personas' : S.btype === 'color' ? 'Botella de color · llega a 8 personas por tema' : S.btype === 'far' ? 'Llega lejos · 20 personas' : 'Botella normal · llega a 8 personas') + (S.featured ? ' · dorada' : '');
-function ideasHTML() { return KINDS[S.kind].map((q, i) => `<button class="idea${S.idea === i ? ' on' : ''}" data-act="idea" data-i="${i}">${q}</button>`).join(''); }
-P.actions.kind = el => { S.kind = el.dataset.k; S.idea = -1; document.querySelectorAll('#kinds .chip').forEach(c => c.classList.toggle('on', c.dataset.k === S.kind)); $('#ideas').innerHTML = ideasHTML(); };
-P.actions.idea = el => { S.idea = +el.dataset.i; S.body = KINDS[S.kind][S.idea]; const f = $('#bbody'); if (f) f.value = S.body; $('#ideas').innerHTML = ideasHTML(); };
 const BT = {
   free: { name: 'Normal', sub: '8 personas', desc: 'Llega a 8 personas con gustos parecidos, y a 4 más si nadie responde en 6 horas.', col: '127,216,201' },
   color: { name: 'De color', sub: 'tú eliges el tema', desc: 'Llega a 8 personas a quienes les gusta el tema que elijas.', col: '255,112,169' },
