@@ -31,6 +31,7 @@ svg{display:block}
 
 /* ---------- pantallas ---------- */
 .scr{position:absolute;inset:0;display:flex;flex-direction:column;padding:calc(var(--safe-t) + 18px) var(--pad) calc(var(--safe-b) + 24px);overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scr>*{flex-shrink:0}
 .scr::-webkit-scrollbar{display:none}
 .scr.tabbed{padding-bottom:calc(var(--safe-b) + 108px)}
 .scr.enter{animation:enter .32s var(--in) both}
@@ -104,20 +105,23 @@ svg{display:block}
 .mine .pb{background:var(--fg);color:var(--bg)}
 
 /* ---------- mar (inicio) ---------- */
-.shore{position:relative;height:clamp(210px,36vh,320px);margin:8px calc(-1*var(--pad)) 0}
-.shore::after{content:"";position:absolute;inset:auto 0 0;height:46%;background:linear-gradient(180deg,rgba(23,62,92,0) 0%,rgba(23,62,92,.35) 60%,rgba(10,34,56,.5));border-top:1px solid rgba(127,216,201,.08);pointer-events:none;mask:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent)}
+.shore{position:relative;flex:1 0 auto;min-height:clamp(210px,36vh,320px);margin:8px calc(-1*var(--pad)) 0}
+.shore::after{content:"";position:absolute;inset:auto 0 0;height:40%;background:linear-gradient(180deg,rgba(23,62,92,0) 0%,rgba(23,62,92,.35) 60%,rgba(10,34,56,.5));border-top:1px solid rgba(127,216,201,.08);pointer-events:none;mask:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent)}
 .float{position:absolute;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:1}
-.float .bt{width:128px;animation:bob 4.2s ease-in-out infinite}
-.float:nth-of-type(2) .bt{animation-delay:-1.6s;width:104px}
+.float .bt{width:clamp(118px,15vh,150px);animation:bob 4.2s ease-in-out infinite}
+.float:nth-of-type(2) .bt{animation-delay:-1.6s;width:clamp(92px,11vh,112px)}
 .float:nth-of-type(3) .bt{animation-delay:-2.8s;width:90px}
 .float span{font-size:var(--t1);color:var(--fg-2);padding:5px 10px;border-radius:999px;background:rgba(5,18,31,.6);backdrop-filter:blur(6px)}
 .float:active .bt{transform:scale(.94)}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-14deg)}50%{transform:translateY(-8px) rotate(-10deg)}}
-.moon{position:absolute;right:9%;top:2px;width:30px;height:30px;border-radius:50%;background:#EAF6F2;box-shadow:0 0 60px 18px rgba(234,246,242,.16)}
-.stars{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 20%,#fff8 50%,transparent),radial-gradient(1px 1px at 30% 8%,#fff6 50%,transparent),radial-gradient(1px 1px at 72% 30%,#fff5 50%,transparent),radial-gradient(1px 1px at 88% 12%,#fff7 50%,transparent),radial-gradient(1px 1px at 55% 22%,#fff4 50%,transparent),radial-gradient(1px 1px at 8% 45%,#fff4 50%,transparent)}
+.shore::before{content:"";position:absolute;right:calc(9% - 14px);bottom:0;width:44px;height:40%;background:linear-gradient(180deg,rgba(234,246,242,.2),rgba(234,246,242,.05) 55%,transparent);filter:blur(9px);mask:repeating-linear-gradient(180deg,#000 0 3px,rgba(0,0,0,.35) 6px 9px);pointer-events:none;animation:glint 6s ease-in-out infinite}
+@keyframes glint{50%{opacity:.55}}
+.moon{position:absolute;right:9%;top:clamp(2px,8%,90px);width:30px;height:30px;border-radius:50%;background:#EAF6F2;box-shadow:0 0 60px 18px rgba(234,246,242,.16)}
+.stars{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 20%,#fff8 50%,transparent),radial-gradient(1px 1px at 30% 8%,#fff6 50%,transparent),radial-gradient(1px 1px at 72% 30%,#fff5 50%,transparent),radial-gradient(1px 1px at 88% 12%,#fff7 50%,transparent),radial-gradient(1px 1px at 55% 22%,#fff4 50%,transparent),radial-gradient(1px 1px at 8% 45%,#fff4 50%,transparent),radial-gradient(1px 1px at 40% 38%,#fff5 50%,transparent),radial-gradient(1.5px 1.5px at 64% 6%,#fff7 50%,transparent),radial-gradient(1px 1px at 20% 52%,#fff3 50%,transparent),radial-gradient(1px 1px at 80% 46%,#fff4 50%,transparent),radial-gradient(1px 1px at 46% 14%,#fff5 50%,transparent),radial-gradient(1px 1px at 94% 34%,#fff3 50%,transparent);mask:linear-gradient(#000 50%,transparent 62%)}
 
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:14px;min-height:64px;padding:12px 0;border-bottom:1px solid var(--line);text-align:left;width:100%}
+.item.waiting{border:1px solid rgba(127,216,201,.18);border-radius:18px;padding:14px 16px;background:rgba(127,216,201,.05)}
 .item:last-child{border-bottom:0}
 .item .tx{flex:1}
 .item .tx b{display:block;font-weight:500;font-size:var(--t2)}
@@ -200,7 +204,7 @@ svg{display:block}
 .ficha .q{font-size:var(--t2);color:var(--paper);margin:0 0 12px;line-height:1.35}
 .ficha .lbls{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--fg-3)}
 .ficha .lbls b{color:var(--fg);font-weight:500}
-.thread{flex:1;display:flex;flex-direction:column;gap:10px;padding:6px 0 18px}
+.thread{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;padding:6px 0 18px}
 .msg{max-width:84%;border-radius:22px;padding:10px 14px 10px 10px}
 .msg.them{background:var(--paper);color:var(--ink);align-self:flex-start;border-bottom-left-radius:8px}
 .msg.me{background:rgba(244,239,231,.08);align-self:flex-end;border-bottom-right-radius:8px}
@@ -254,5 +258,13 @@ svg{display:block}
 .center{text-align:center}
 .mt-a{margin-top:auto}.mt1{margin-top:8px}.mt2{margin-top:16px}.mt3{margin-top:24px}.mt4{margin-top:36px}.mb2{margin-bottom:16px}.mb3{margin-bottom:24px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (max-height:600px){.mic{width:108px;height:108px}.shore{height:180px}:root{--pad:20px}}
+/* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
+@media (min-height:760px){
+  .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
+  .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:not(:empty){flex:0 0 auto}
+  .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.top+*{margin-top:auto}
+  .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>:last-child{margin-bottom:auto}
+  .mic{width:clamp(128px,15vh,156px);height:clamp(128px,15vh,156px)}
+}
+@media (max-height:600px){.mic{width:108px;height:108px}.shore{min-height:180px}:root{--pad:20px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}

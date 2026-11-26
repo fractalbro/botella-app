@@ -251,12 +251,12 @@ R.olvide = () => ({ html: `
   bind(el) { $('#f', el).onsubmit = e => { e.preventDefault(); go('entrar'); toast('Listo. Revisa tu correo.'); }; } });
 
 // Mar: lo que te llegó, tu botella y la pregunta de hoy. Nada más.
-R.mar = () => { const n = S.shore.length; const pos = [[4, 14], [50, 44], [28, 4]]; return { cls: 'tabbed', html: `
+R.mar = () => { const n = S.shore.length; const pos = [[6, 6], [52, 30], [30, 17]]; return { cls: 'tabbed', html: `
   <div class="top"><span class="wm">botella</span><button class="avatar" data-go="perfil" aria-label="Tu perfil">${esc((S.name || 'T')[0].toUpperCase())}</button></div>
   <h1 class="title mt2">${n ? `${n === 1 ? 'Llegó una botella' : `Llegaron ${n} botellas`}` : 'El mar está tranquilo'}</h1>
   <p class="sub mt1">${n ? 'Toca una para abrirla.' : 'Lanza la tuya mientras tanto.'}</p>
   <div class="shore"><div class="stars"></div><div class="moon"></div>
-    ${S.shore.map((id, i) => `<button class="float" style="left:${pos[i][0]}%;top:${pos[i][1]}%" data-go="abrir" data-p='{"id":"${id}"}' aria-label="Abrir botella de ${esc(B[id].tag)}">${bottleSVG(B[id].c)}<span>${esc(B[id].tag)}</span></button>`).join('')}
+    ${S.shore.map((id, i) => `<button class="float" style="left:${pos[i][0]}%;bottom:${pos[i][1]}%" data-go="abrir" data-p='{"id":"${id}"}' aria-label="Abrir botella de ${esc(B[id].tag)}">${bottleSVG(B[id].c)}<span>${esc(B[id].tag)}</span></button>`).join('')}
   </div>
   <div class="list mt2">
     ${S.mine ? `<button class="item" id="mine"><span class="ic">${I.bottle}</span><span class="tx"><b>Tu ${esc(S.mine.kind.toLowerCase())} sobre ${esc(S.mine.tema.toLowerCase())}</b><small>${S.mine.heard ? `${S.mine.heard} de 8 ya la oyeron` : 'En camino a 8 personas'}</small></span><span class="reach sm">${Array.from({ length: 8 }, (_, i) => `<i class="${i < S.mine.heard ? 'heard' : 'on'}"></i>`).join('')}</span></button>` : ''}
@@ -325,7 +325,8 @@ R.charlas = () => { const ids = Object.keys(S.convs); return { cls: 'tabbed', ht
     <button class="item" data-go="chat" data-p='{"id":"${id}"}'><i class="orb" style="background:${b.c};width:12px;height:12px"></i>
     <span class="tx"><b>${c.stage >= 1 && b.name ? esc(b.name) : `Alguien que ama ${esc(b.theme)}`}</b><small>${last.f === 'them' ? 'Te respondió' : 'Esperando su voz'}</small></span>
     <span style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span class="when">${esc(c.when)}</span>${c.unread ? '<i class="unread"></i>' : stepsHTML(c.stage, 'mini')}</span></button>`; }).join('')}</div>`
-  : `<p class="sub">Cuando respondas una botella, la conversación aparece aquí.</p>`}` }; };
+  : `<p class="sub">Cuando respondas una botella, la conversación aparece aquí.</p>`}
+  ${S.shore.length ? `<div class="grow"></div><button class="item waiting" data-go="mar"><span class="ic">${I.bottle}</span><span class="tx"><b>${S.shore.length === 1 ? 'Una botella te espera' : `${S.shore.length} botellas te esperan`}</b><small>Cada una puede ser tu próxima conversación</small></span>${I.chev}</button>` : ''}` }; };
 
 // Chat: la ficha arriba (pregunta y pasos), las voces al medio, el siguiente paso y el micrófono abajo.
 const STEP = ['Voces', 'Nombres', 'Llamada', 'Plan'];
@@ -372,7 +373,7 @@ R.llamada = ({ id = 'leo' }) => { const b = B[id]; return { cls: 'call clear', h
     $('#h', el).onclick = () => { clearInterval(iv); audio.pause(); const c = S.convs[id]; c.stage = 2; c.msgs.push({ f: 'sys', t: `Llamada · ${fmt(Math.max(t, 1))}` }); save(); go('chat', { id }); }; } }; };
 
 // Perfil: lo que no es del día a día vive aquí.
-R.perfil = () => ({ html: `
+R.perfil = () => ({ cls: 'pin', html: `
   <div class="top"><button class="ib edge" data-go="mar" aria-label="Atrás">${I.back}</button><span></span><span style="width:44px"></span></div>
   <h1 class="title mt1">${esc(S.name || 'Tú')}</h1><p class="sub mt1">${S.temas.map(esc).join(' · ')}</p>
   <div class="stat"><div><b>4</b><span>días seguidos</span></div><div><b>${S.left}</b><span>botellas para lanzar hoy</span></div></div>
