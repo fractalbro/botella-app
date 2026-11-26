@@ -1,0 +1,71 @@
+/* Botella nueva · 5 direcciones visuales sobre la misma identidad (noche, papel crema, turquesa, Geist).
+   1 Marea quieta (base, app.css) · 2 Papel y tinta · 3 Vidrio nocturno · 4 Faro · 5 Bitácora
+   Se elige con ?estilo=N o en Perfil → Estilo visual. Mientras Cesar elige, conviven aquí. */
+
+/* ---------- 2 · Papel y tinta: editorial. Titulares grandes y finos, sin tarjetas, líneas de imprenta ---------- */
+[data-dir="2"] .title{font-weight:300;font-size:clamp(32px,9.2vw,40px);letter-spacing:-.045em;line-height:1.02}
+[data-dir="2"] .sub{font-size:16px}
+[data-dir="2"] .eyebrow{font-weight:300;font-size:22px;letter-spacing:-.02em;margin-top:40px;padding-bottom:10px;border-bottom:1px solid var(--line-2)}
+[data-dir="2"] :is(.out,.next,.half,.stat>*,.item.waiting,.gold,.capt,.tiles .tile,.idea){background:transparent;box-shadow:none;border-radius:0;border-top:1px solid var(--line-2);padding-left:0;padding-right:0}
+[data-dir="2"] .stat{gap:24px}
+[data-dir="2"] .stat b{font-size:48px;font-weight:300;letter-spacing:-.05em}
+[data-dir="2"] .ic{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);border-radius:50%}
+[data-dir="2"] .paper{border-radius:6px;background:var(--paper) repeating-linear-gradient(180deg,transparent 0 27px,rgba(42,32,22,.06) 27px 28px)}
+[data-dir="2"] .paper .q{font-weight:400;font-size:clamp(26px,7.6vw,32px);letter-spacing:-.035em}
+[data-dir="2"] .btn-2{background:transparent;box-shadow:inset 0 0 0 1px var(--fg-3)}
+[data-dir="2"] .chip{border-radius:6px}
+[data-dir="2"] .streak b{font-size:120px;font-weight:200}
+[data-dir="2"] .tiles .tile b{font-size:40px;font-weight:300}
+
+/* ---------- 3 · Vidrio nocturno: el mismo vidrio de la botella 3D en toda la interfaz ---------- */
+[data-dir="3"] .scr:not(.clear){background:radial-gradient(120% 55% at 50% 115%,rgba(23,62,92,.6),transparent 62%),radial-gradient(70% 38% at 88% -6%,rgba(234,246,242,.09),transparent 62%),var(--bg)}
+[data-dir="3"] :is(.out,.next,.half,.stat>*,.item.waiting,.tiles .tile,.idea,.list:has(.item .ic)){background:linear-gradient(180deg,rgba(244,239,231,.085),rgba(244,239,231,.03));box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 1px rgba(244,239,231,.06),0 20px 40px -24px rgba(2,10,20,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:24px}
+[data-dir="3"] .list:has(.item .ic){padding:2px 16px}
+[data-dir="3"] .list:has(.item .ic) .item{border-color:rgba(244,239,231,.06)}
+[data-dir="3"] .ic{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.03));box-shadow:inset 0 1px 0 rgba(255,255,255,.15);border-radius:50%}
+[data-dir="3"] .btn-a{background:linear-gradient(180deg,#A3EADF,#6FCDBD);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(4,18,28,.15),0 12px 30px -12px rgba(127,216,201,.6)}
+[data-dir="3"] .btn-2{background:linear-gradient(180deg,rgba(244,239,231,.1),rgba(244,239,231,.04));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(244,239,231,.08)}
+[data-dir="3"] .mic{background:radial-gradient(circle at 50% 30%,#B4F0E6,#6FCDBD 70%);box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 20px 50px -14px rgba(127,216,201,.6)}
+[data-dir="3"] .paper{box-shadow:0 30px 60px -30px rgba(2,10,20,.8),0 0 0 1px rgba(255,255,255,.5) inset}
+[data-dir="3"] .tabs{background:linear-gradient(to top,rgba(5,18,31,.92) 55%,rgba(5,18,31,0))}
+
+/* ---------- 4 · Faro: la luz cálida del faro entra por la esquina; turquesa solo para actuar ---------- */
+[data-dir="4"]{--fg:#F8EFE0;--fg-2:rgba(248,239,224,.68);--fg-3:rgba(248,239,224,.58);--line:rgba(255,231,176,.1);--line-2:rgba(255,231,176,.2);--s1:rgba(255,231,176,.06)}
+[data-dir="4"] .scr:not(.clear){background:radial-gradient(85% 50% at 108% -8%,rgba(255,206,140,.16),transparent 66%),radial-gradient(60% 30% at -10% 105%,rgba(255,176,97,.06),transparent 70%),var(--bg)}
+[data-dir="4"] :is(.out,.next,.half,.stat>*,.item.waiting,.tiles .tile,.idea){background:var(--s1);box-shadow:inset 0 1px 0 rgba(255,231,176,.1)}
+[data-dir="4"] .ic{background:rgba(255,231,176,.08)}
+[data-dir="4"] .ic svg{stroke:var(--warm)}
+[data-dir="4"] .title{font-weight:400}
+[data-dir="4"] .paper{box-shadow:0 0 0 1px rgba(255,231,176,.35),0 30px 80px -24px rgba(255,190,110,.28)}
+[data-dir="4"] .stat b,[data-dir="4"] .streak b{color:var(--warm)}
+[data-dir="4"] .moon{background:#FFF1D6;box-shadow:0 0 70px 22px rgba(255,214,150,.2)}
+[data-dir="4"] .eyebrow{color:var(--warm);font-weight:400}
+
+/* ---------- 5 · Bitácora: instrumento de navegación. Líneas finas, números de bitácora, esquinas exactas ---------- */
+[data-dir="5"]{--r-s:4px;--r-m:8px;--mono:"Geist Mono",ui-monospace,monospace}
+[data-dir="5"] .scr:not(.clear){background:radial-gradient(rgba(244,239,231,.05) 1px,transparent 1.2px) 0 0/24px 24px,var(--bg)}
+[data-dir="5"] :is(.out,.next,.half,.stat>*,.item.waiting,.tiles .tile,.idea,.gold,.capt){background:rgba(5,18,31,.7);box-shadow:inset 0 0 0 1px var(--line-2);border-radius:var(--r-m)}
+[data-dir="5"] :is(.stat b,.streak b,.tiles .tile b,.player .t,.timer,.when,.cap,.reach~.cap,.out .cap,.price){font-family:var(--mono);letter-spacing:0}
+[data-dir="5"] .stat b{font-size:30px;font-weight:400}
+[data-dir="5"] .streak b{font-family:var(--mono);font-weight:300;font-size:96px;letter-spacing:-.04em}
+[data-dir="5"] .eyebrow{font-family:var(--mono);font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-2);display:flex;align-items:center;gap:10px}
+[data-dir="5"] .eyebrow::after{content:"";flex:1;height:1px;background:var(--line-2)}
+[data-dir="5"] .btn{border-radius:10px}
+[data-dir="5"] .chip,[data-dir="5"] .seg,[data-dir="5"] .seg button{border-radius:6px}
+[data-dir="5"] .ic{border-radius:var(--r-s);background:transparent;box-shadow:inset 0 0 0 1px var(--line-2)}
+[data-dir="5"] .paper{border-radius:var(--r-m)}
+[data-dir="5"] .avatar{border-radius:8px}
+[data-dir="5"] .title{letter-spacing:-.035em}
+
+/* refuerzos para que cada dirección se distinga a simple vista */
+[data-dir="2"]{--bg:#081622}
+[data-dir="2"] .lec:nth-child(odd),[data-dir="2"] .paper:nth-child(odd){transform:rotate(-.8deg)}
+[data-dir="2"] .lec:nth-child(even),[data-dir="2"] .paper:nth-child(even){transform:rotate(.6deg)}
+[data-dir="2"] .item .tx b{font-weight:400;font-size:17px}
+[data-dir="3"] .scr:not(.clear){background:radial-gradient(130% 60% at 50% 118%,rgba(40,98,140,.65),transparent 62%),radial-gradient(80% 42% at 90% -8%,rgba(234,246,242,.14),transparent 62%),linear-gradient(180deg,#071829,#05121F 40%)}
+[data-dir="4"] .scr:not(.clear){background:conic-gradient(from 200deg at 105% -4%,transparent 0deg,rgba(255,214,150,.16) 14deg,rgba(255,214,150,.05) 28deg,transparent 40deg),radial-gradient(70% 40% at 105% -6%,rgba(255,206,140,.22),transparent 66%),#0A1420}
+[data-dir="4"] .title{color:#FFF3DF}
+[data-dir="4"] .btn-a{box-shadow:0 10px 30px -12px rgba(127,216,201,.5)}
+[data-dir="4"] .chip[aria-pressed=true],[data-dir="4"] .seg button[aria-pressed=true]{background:var(--warm);color:#2A2016}
+[data-dir="5"] .scr:not(.clear){background:radial-gradient(rgba(244,239,231,.09) 1px,transparent 1.3px) 0 0/22px 22px,var(--bg)}
+[data-dir="5"] .title{font-weight:400}

@@ -108,7 +108,11 @@ function slider(el, label, done) {
 // ---------- hojas y avisos ----------
 function sheet(html, bind) {
   sheetRoot.innerHTML = `<div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
-  const close = () => { const s = $('.sheet', sheetRoot), c = $('.scrim', sheetRoot); if (!s) return; s.classList.add('out'); c.classList.add('out'); setTimeout(() => sheetRoot.innerHTML = '', 200); };
+  let close = () => { const s = $('.sheet', sheetRoot), c = $('.scrim', sheetRoot); if (!s) return; s.classList.add('out'); c.classList.add('out'); setTimeout(() => sheetRoot.innerHTML = '', 200); };
+  const prev = document.activeElement, sh = $('.sheet', sheetRoot); sh.tabIndex = -1;
+  const key = e => { if (e.key === 'Escape') { close(); } else if (e.key === 'Tab') { const f = $$('button,input,select,a[href]', sh); if (!f.length) return; const a = f[0], z = f[f.length - 1]; if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } } };
+  document.addEventListener('keydown', key); const shut = close; close = () => { document.removeEventListener('keydown', key); shut(); if (prev && prev.focus) prev.focus(); };
+  setTimeout(() => ($('button,input', sh) || sh).focus(), 30);
   $('.scrim', sheetRoot).onclick = close; $$('[data-close]', sheetRoot).forEach(b => b.onclick = close);
   bind && bind($('.sheet', sheetRoot), close);
 }
@@ -393,7 +397,7 @@ Object.assign(I, {
 });
 const back = (to = 'perfil', cap = '') => `<div class="top"><button class="ib edge" data-go="${to}" aria-label="Atrás">${I.back}</button><span class="cap">${cap}</span><span style="width:44px"></span></div>`;
 const row = (ic, t, s, attr) => `<button class="item" ${attr}><span class="ic">${I[ic]}</span><span class="tx"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</span>${I.chev}</button>`;
-const free = p => `<span class="price">${p ? `<s>S/ ${p}</s>` : ''}Gratis</span>`;
+const free = () => '';
 const n_ = (n, a, b) => `${n} ${n === 1 ? a : b}`;
 
 // Perfil: el índice de todo lo que no es Mar ni Conversaciones.
@@ -418,6 +422,8 @@ R.perfil = () => ({ cls: 'pin', html: `
     ${row('dock', 'Muelle', 'Botellas especiales, gratis en la beta', 'data-go="muelle"')}
     ${row('tide', 'La marea de las 21:00', 'Botellas doradas de todo Lima', 'data-go="marea"')}
   </div>
+  <p class="eyebrow">Estilo visual (prueba)</p>
+  <div class="seg mt1" id="dir">${['Marea', 'Papel', 'Vidrio', 'Faro', 'Bitácora'].map((t, i) => `<button aria-pressed="${(document.documentElement.dataset.dir || '1') === String(i + 1)}" data-d="${i + 1}">${t}</button>`).join('')}</div>
   <p class="eyebrow">Cuenta</p>
   <div class="list">
     ${row('tag', 'Tus temas', S.temas.join(', '), 'data-a="temas"')}
@@ -425,7 +431,8 @@ R.perfil = () => ({ cls: 'pin', html: `
     ${row('key', 'Cambiar contraseña', '', 'data-a="pw"')}
     ${row('out', 'Cerrar sesión', '', 'data-a="out"')}
   </div>`,
-  bind(el) { $$('[data-a]', el).forEach(b => b.onclick = () => ({
+  bind(el) { $$('#dir button', el).forEach(b => b.onclick = () => { const d = b.dataset.d; if (d === '1') delete document.documentElement.dataset.dir; else document.documentElement.dataset.dir = d; store.set('estilo', d); try { localStorage.setItem('bn.estilo', d); } catch (e) {} $$('#dir button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+    $$('[data-a]', el).forEach(b => b.onclick = () => ({
     inv: () => sheet(`<h2 class="title">Invita a alguien</h2><p class="sub">Cuando entre, los dos reciben una botella extra.</p><div class="inp mt2" style="display:flex;align-items:center;color:var(--fg-2);font-size:14px">botella-app.vercel.app/?c=TU-CODIGO</div><div class="row-btns mt2"><button class="btn btn-a" id="cp">Copiar enlace</button></div>`, (s, close) => $('#cp', s).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); close(); toast('Enlace copiado'); }),
     rules: () => sheet(`<h2 class="title">Normas de la casa</h2><div class="list mt2 mb3">${['Coquetear está bien. Lo explícito, no.', 'Sin insultos ni amenazas.', 'Tu distrito nunca se muestra.', 'Puedes reportar o bloquear desde cualquier conversación.'].map(t => `<p class="item" style="margin:0;min-height:52px">${t}</p>`).join('')}</div><button class="btn btn-2" data-close>Entendido</button>`),
     pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => { store.set('onb', 0); go('bienvenida'); }
