@@ -24,7 +24,7 @@ const STORE = {
   ],
   perks: ['3 botellas al día en vez de 1', 'Ves quién abrió tus botellas', 'Una botella que llega lejos cada lunes', 'Hasta 3 salidas activas y de hasta 12 personas']
 };
-const price = p => p ? `<s>S/ ${p}</s>` : '';
+const price = p => `<span class="pr-old">${p ? `<s>S/ ${p}</s> ` : ''}Gratis</span>`;
 async function claim(k) {
   const me = await rpc('beta_get', { p_item: k }); S.me = Array.isArray(me) ? me[0] : me; hap([8, 30, 8]);
   const all = [...STORE.specials, ...STORE.gifts, ...STORE.looks, ...STORE.packs]; const it = all.find(x => x.k === k);
@@ -34,21 +34,21 @@ async function claim(k) {
 P.actions.get = async el => { if (el.classList.contains('soft')) return; el.classList.add('soft'); try { await claim(el.dataset.k); P.st.gotK = el.dataset.k; rerender(); } catch (e) { el.classList.remove('soft'); err(e); } };
 P.actions.toStore = () => go('store', { fade: true });
 const itemHTML = (it, btn) => `<div class="sitem${P.st.gotK === it.k ? ' got' : ''}"><span class="art">${it.art()}</span><span class="tx"><b>${it.name}${it.tag ? ` <em>${it.tag}</em>` : ''}</b><span>${it.desc}</span></span><span class="pr">${btn}</span></div>`;
-const getBtn = (k, label = 'Gratis') => `<button class="btn btn-a btn-sm" data-act="get" data-k="${k}">${label}</button>`;
+const getBtn = (k, label = 'Pedir') => `<button class="btn btn-tonal btn-sm" data-act="get" data-k="${k}">${label}</button>`;
+// Lo que tienes, en una línea: las normales siempre; las especiales solo si te queda alguna.
+const balLine = m => { const n = (v, a, b) => v ? `<b>${v}</b> ${v === 1 ? a : b}` : ''; return 'Tienes ' + [`<b>${m.bottles ?? 0}</b> ${m.bottles === 1 ? 'normal' : 'normales'}`, n(m.color_left, 'de color', 'de color'), n(m.far_left, 'que llega lejos', 'que llegan lejos'), n(m.tide_left, 'dorada', 'doradas'), n(m.gifts_left, 'con lacre', 'con lacre')].filter(Boolean).join(' · '); };
 P.screens.store = {
   cls: 'storebg',
   render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Muelle</span>${meBtn()}</div>
-    <p class="lead" style="margin-top:2px">El muelle es donde recoges tus botellas. Lanzar, escuchar, responder y llamar siempre es gratis.</p>
-    <div class="beta rise">${icon('spark', 's')}<span><b>Por ahora, todo gratis.</b> Botella está empezando: pide lo que quieras sin pagar nada. El precio tachado es lo que costará más adelante.</span></div>
-    <div class="bal rise d1"><div><b>${m.bottles ?? 0}</b><span>Normales</span></div><div><b style="color:#FF8FC0">${m.color_left ?? 0}</b><span>De color</span></div><div><b style="color:#FFD68C">${m.far_left ?? 0}</b><span>Llegan lejos</span></div><div><b style="color:#FFD68C">${m.tide_left ?? 0}</b><span>Doradas</span></div><div><b style="color:#F2C46D">${m.gifts_left ?? 0}</b><span>Lacre</span></div></div>
-    <div class="sec rise d2"><span class="eyebrow">Botellas especiales</span>${STORE.specials.map(it => itemHTML(it, it.own && it.own() ? '<span class="pill a">Activo</span>' : `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
+    <div class="beta rise">${icon('spark', 's')}<span><b>Gratis por ahora y sin tarjeta.</b> El precio tachado es lo que costará después; lanzar y responder, siempre gratis.</span></div>
+    <p class="small muted baltxt rise d1">${balLine(m)}</p>
+    <div class="sec rise d2"><span class="eyebrow">Botellas especiales</span>${STORE.specials.map(it => itemHTML(it, it.own && it.own() ? '<span class="tag ok">Activo</span>' : `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d2"><span class="eyebrow">Regalos</span>${STORE.gifts.map(it => itemHTML(it, `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
-    <div class="sec rise d3"><span class="eyebrow">Tu vidrio</span><div class="looks">${STORE.looks.map(it => { const on = (m.glass || null) === it.g; return `<button class="look${on ? ' on' : ''}" data-act="get" data-k="${it.k}"><span class="bsv">${btSVG('free', it.g)}</span><b>${it.name}</b><span>${on ? 'Usando' : it.price ? `<s>S/ ${it.price}</s> Gratis` : 'Gratis'}</span></button>`; }).join('')}</div></div>
+    <div class="sec rise d3"><span class="eyebrow">Tu vidrio · el color de tus botellas</span><div class="looks">${STORE.looks.map(it => { const on = (m.glass || null) === it.g; return `<button class="look${on ? ' on' : ''}" data-act="get" data-k="${it.k}"><span class="bsv">${btSVG('free', it.g)}</span><b>${it.name}</b><span>${on ? 'Usando' : it.price ? `<s>S/ ${it.price}</s> Gratis` : 'Gratis'}</span></button>`; }).join('')}</div></div>
     <div class="sec rise d3"><span class="eyebrow">Packs de botellas</span><div class="spacks">${STORE.packs.map(it => `<button class="spack${it.best ? ' best' : ''}" data-act="get" data-k="${it.k}"><b class="num">${it.qty}</b><span class="pn">${it.name}</span><span>${it.desc}</span><span class="pp"><s>S/ ${it.price}</s> Gratis</span></button>`).join('')}</div></div>
-    <div class="captain rise d4"><span class="eyebrow a">Plan Capitán</span><div class="h2" style="font-size:26px">Más botellas cada día y salidas más grandes.</div>
+    <div class="captain rise d4"><span class="eyebrow a">Plan Capitán</span><div class="h2">Más botellas cada día y salidas más grandes.</div>
       <ul>${STORE.perks.map(p => `<li>${icon('check', 's')}${p}</li>`).join('')}</ul>
-      ${m.captain ? `<div class="pill a" style="justify-self:start">Eres Capitán</div><button class="btn btn-ghost btn-sm" data-act="get" data-k="nocaptain">Dejar el plan</button>` : `<span class="small muted"><s>S/ 19.90 al mes</s> · gratis por ahora</span><button class="btn btn-a" data-act="get" data-k="captain">Ser Capitán gratis</button>`}</div>
-    <div class="sec"><span class="eyebrow">Siempre gratis</span><div class="frees"><div>${icon('bottle', 's')}<b>Una botella al día</b><span>y hasta 3 más por responder</span></div><div>${icon('eye', 's')}<b>Abrir sin límite</b><span>escucha y responde todas</span></div><div>${icon('phone', 's')}<b>Tu voz</b><span>notas de voz y llamadas</span></div><div>${icon('users', 's')}<b>En grupo</b><span>salidas de la comunidad</span></div></div></div>
+      ${m.captain ? `<div class="tag ok" style="justify-self:start">Eres Capitán</div><button class="btn btn-ghost btn-sm" data-act="get" data-k="nocaptain">Dejar el plan</button>` : `<span class="small muted"><s>S/ 19.90 al mes</s> · gratis por ahora</span><button class="btn btn-a" data-act="get" data-k="captain">Ser Capitán gratis</button>`}</div>
     <div style="height:18px"></div></div>${tabsHTML('store')}`; },
   async after() { if (!P.st.storeFresh) { P.st.storeFresh = true; try { await loadMe(); if (P.curId === 'store') rerender(); } catch (e) {} } },
   leave() { P.st.storeFresh = false; P.st.gotK = null; }
@@ -64,9 +64,9 @@ P.screens.marea = {
   render: () => { const after = limaHour() >= 21, list = S.marea; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">La marea<small>${after ? 'Llegó hoy a las 21:00' : 'Cada noche a las 21:00'}</small></span></div>
     <div style="height:15%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
-      <div class="display rise" style="font-size:34px">${after ? 'La marea <b>llegó</b>.' : 'La marea <b>de anoche</b>.'}</div>
+      <div class="display rise">${after ? 'La marea <b>llegó</b>.' : 'La marea <b>de anoche</b>.'}</div>
       <p class="lead rise d1">Cada noche a las 9 la marea trae botellas de todo Lima. Las doradas son destacadas: alguien quiso que llegaran primero.${after ? '' : ` La próxima llega en ${Math.max(1, 21 - limaHour())} h.`}</p>
-      ${list.length ? list.map((b, i) => `<button class="mrow rise d${Math.min(i + 1, 4)}" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="pill">Tuya</span>' : b.taken === 'answered' ? '<span class="pill">Respondida</span>' : '<span class="pill a">Abrir</span>'}</button>`).join('')
+      ${list.length ? list.map((b, i) => `<button class="mrow rise d${Math.min(i + 1, 4)}" data-act="mareaOpen" data-id="${b.bottle}"${b.mine ? ' disabled' : ''}><span class="bsv">${btSVG('free', b.glass, true)}</span><span style="flex:1;min-width:0"><span class="eyebrow">${esc(b.kind)} · ${esc(b.place)}${b.sample ? ' · de ejemplo' : ''}</span><span class="t">${esc(b.body || 'Una nota de voz de ' + fmt(b.voice_secs))}</span></span>${b.mine ? '<span class="tag">Tuya</span>' : b.taken === 'answered' ? '<span class="tag">Respondida</span>' : '<span class="act">Abrir</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay botellas destacadas. Lanza una con la marea desde “Lanzar una botella”.</p>'}
       <button class="btn btn-glass" data-act="mareaLaunch" style="margin-top:16px">${icon('tide')} Que la mía salga en la marea</button>
       <div style="height:16px"></div></div>`; },
@@ -90,15 +90,15 @@ const OUT_IDEAS = ['Caminata al atardecer', 'Preguntas frente al mar', 'Confesio
 const whenTxt = iso => { const d = new Date(iso), o = { timeZone: 'America/Lima' }; const day = d.toLocaleDateString('es-PE', { ...o, weekday: 'long', day: 'numeric', month: 'short' }); const t = d.toLocaleTimeString('es-PE', { ...o, hour: 'numeric', minute: '2-digit', hour12: true }); return day.charAt(0).toUpperCase() + day.slice(1) + ' · ' + t.replace(/\s?a\.?\s?m\.?/i, ' a. m.').replace(/\s?p\.?\s?m\.?/i, ' p. m.'); };
 P.screens.salidas = {
   anim(ctx, w, h, t) { const mx = sky(ctx, w, h, t, .3); waves(ctx, w, h, t, .3, mx, null, 4); [.3, .5, .7].forEach((x, i) => { ctx.fillStyle = `rgba(255,190,110,${.55 + Math.sin(t * 3 + i) * .25})`; ctx.shadowColor = '#FFB061'; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(w * x, h * .3 - 3, 3.4, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }); },
-  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Salidas en grupo<small>Apuntarte es gratis · cada uno paga lo suyo</small></span></div>
+  render: () => `${sb_()}<div class="top pad">${backBtn()}<span class="title">Salidas en grupo<small>Gratis · cada uno paga lo suyo</small></span></div>
     <div style="height:12%;flex:none"></div>
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
-      <div class="display rise" style="font-size:34px">Salgamos <b>en grupo</b>.</div>
-      <p class="lead rise d1">Las propone gente de Botella. Apuntarte es gratis, van en grupo y siempre a lugares públicos.</p>
-      ${S.outings.length ? S.outings.map((o, i) => `<button class="orow rise d${Math.min(i + 1, 4)}${o.boosted ? ' boost' : ''}" data-act="outing" data-id="${o.id}"><span class="oi">${icon('users')}</span><span style="flex:1;min-width:0"><span class="t">${esc(o.name)}</span><span class="s">${esc(whenTxt(o.starts_at))}</span><span class="s">${esc(o.place)}${o.sample ? ' · de ejemplo' : ''}</span>${o.sample ? '' : `<span class="cap">${Array.from({ length: o.cap }, (_, k) => `<i class="${k < o.taken ? 'on' : ''}"></i>`).join('')}<small>${o.taken} de ${o.cap}</small></span>`}</span>${o.mine ? '<span class="pill">Tuya</span>' : o.joined ? '<span class="pill">Vas</span>' : o.taken >= o.cap ? '<span class="pill">Llena</span>' : '<span class="pill a">Ver</span>'}</button>`).join('')
+      <div class="h2 rise">Salgamos <b>en grupo</b>.</div>
+      <p class="lead rise d1">Las propone gente de Botella. Siempre en grupo y en lugares públicos.</p>
+      ${S.outings.length ? S.outings.map((o, i) => `<button class="orow rise d${Math.min(i + 1, 4)}${o.boosted ? ' boost' : ''}" data-act="outing" data-id="${o.id}"><span class="oi">${icon('users')}</span><span style="flex:1;min-width:0"><span class="t">${esc(o.name)}</span><span class="s">${esc(whenTxt(o.starts_at))}</span><span class="s">${esc(o.place)}${o.sample ? ' · de ejemplo' : ''}</span>${o.sample ? '' : `<span class="cap">${Array.from({ length: o.cap }, (_, k) => `<i class="${k < o.taken ? 'on' : ''}"></i>`).join('')}<small>${o.taken} de ${o.cap}</small></span>`}</span>${o.mine ? '<span class="tag">Tuya</span>' : o.joined ? '<span class="tag">Vas</span>' : o.taken >= o.cap ? '<span class="tag">Llena</span>' : '<span class="act">Ver</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay salidas. Propón la primera.</p>'}
       <div style="height:12px"></div></div>
-    <div class="foot pad"><button class="btn btn-a" data-go="proponer">${icon('pin')} Proponer una salida</button></div>`,
+    <div class="foot pad"><button class="btn ${S.outings.length ? 'btn-ghost' : 'btn-a'}" data-go="proponer">${icon('pin')} Proponer una salida</button></div>`,
   async after() { if (!P.st.outFresh) { P.st.outFresh = true; try { await loadOutings(); if (P.curId === 'salidas') rerender(); } catch (e) {} } },
   leave() { P.st.outFresh = false; }
 };
@@ -116,7 +116,7 @@ P.actions.outBoost = el => outDo(() => rpc('outing_boost', { p_id: el.dataset.id
 const nextDays = () => { const out = []; for (let i = 0; i < 10; i++) { const d = new Date(Date.now() + i * 864e5); const v = d.toLocaleDateString('en-CA', { timeZone: 'America/Lima' }); const l = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : d.toLocaleDateString('es-PE', { timeZone: 'America/Lima', weekday: 'short', day: 'numeric' }); out.push([v, l.charAt(0).toUpperCase() + l.slice(1)]); } return out; };
 P.screens.proponer = {
   render: () => { const F = P.st.out || (P.st.out = { name: '', place: PLACES[0][0], day: nextDays()[2][0], time: '18:00', cap: 8, descr: '' }); return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Proponer una salida</span></div><div class="scroll pad">
-    <div class="display" style="font-size:32px;margin-top:6px">¿Qué <b>hacemos</b>?</div>
+    <div class="display" style="margin-top:6px">¿Qué <b>hacemos</b>?</div>
     <label class="field" style="margin-top:16px"><input id="oname" maxlength="60" value="${esc(F.name)}" placeholder="Ponle nombre a tu salida" aria-label="Nombre de la salida"></label>
     <div class="ideas" style="margin-top:10px">${OUT_IDEAS.map(i => `<button class="idea${F.name === i ? ' on' : ''}" data-act="outIdea" data-v="${i}">${i}</button>`).join('')}</div>
     <div class="sec"><span class="eyebrow">Dónde</span><label class="field select" style="margin-top:10px"><select id="oplace" aria-label="Lugar">${PLACES.map(([p, d]) => `<option value="${esc(p)}"${F.place === p ? ' selected' : ''}>${esc(p)} · ${esc(d.split(' · ')[0])}</option>`).join('')}</select></label></div>
@@ -140,7 +140,7 @@ P.actions.outCreate = async el => {
 P.actions.giftAsk = () => {
   const c = convo(); if (!c || c.closed) return; const n = S.me?.gifts_left || 0;
   sheet(`${sheetHead('Botella con lacre')}<div class="giftart"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span></div>
-    <p class="muted" style="font-size:14px;margin:0 0 14px;text-align:center">Una botella sellada que se queda en esta conversación. A ${c.revealed ? esc(c.alias) : 'esta persona'} le regala una botella para lanzar.</p>
+    <p class="muted" style="margin:0 0 14px;text-align:center">Una botella sellada que se queda en esta conversación. A ${c.revealed ? esc(c.alias) : 'esta persona'} le regala una botella para lanzar.</p>
     ${n ? `<button class="btn btn-a" data-act="giftGo">${icon('gift')} Mandarla (te ${n === 1 ? 'queda 1' : 'quedan ' + n})</button>` : `<button class="btn btn-a" data-act="giftGet">${icon('bag')} Pedir una gratis en el muelle</button>`}<button class="btn btn-ghost" data-act="closeSheet" style="margin-top:6px">Ahora no</button>`);
 };
 P.actions.giftGet = async el => { el.classList.add('soft'); try { await claim('gift'); P.actions.giftAsk(); } catch (e) { el.classList.remove('soft'); err(e); } };
@@ -154,7 +154,7 @@ P.actions.giftGo = async el => {
 const PLAN_DAYS = ['Hoy', 'Mañana', 'Este sábado', 'Este domingo'], PLAN_TIMES = ['en la mañana', 'en la tarde', 'al atardecer', 'en la noche'];
 P.actions.planAsk = () => {
   const c = convo(); if (!c || c.closed) return; const F = P.st.plan || (P.st.plan = { place: 0, day: 2, time: 2 });
-  sheet(`${sheetHead('Armar un plan')}<p class="muted" style="font-size:14px;margin:0 0 10px">Propón un lugar público y un día. ${c.revealed ? esc(c.alias) : 'La otra persona'} lo acepta si le va.</p>
+  sheet(`${sheetHead('Armar un plan')}<p class="muted" style="margin:0 0 10px">Propón un lugar público y un día. ${c.revealed ? esc(c.alias) : 'La otra persona'} lo acepta si le va.</p>
     <div class="planpick">${PLACES.slice(0, 4).map(([p, d], i) => `<button class="setrow${F.place === i ? ' on' : ''}" data-act="planPick" data-f="place" data-v="${i}">${icon('pin')}<span style="flex:1"><b>${esc(p)}</b><span>${esc(d)}</span></span>${F.place === i ? icon('check', 's') : ''}</button>`).join('')}</div>
     <div class="chips" style="margin-top:12px">${PLAN_DAYS.map((d, i) => `<button class="chip${F.day === i ? ' on' : ''}" data-act="planPick" data-f="day" data-v="${i}">${d}</button>`).join('')}</div>
     <div class="chips" style="margin-top:8px">${PLAN_TIMES.map((d, i) => `<button class="chip${F.time === i ? ' on' : ''}" data-act="planPick" data-f="time" data-v="${i}">${d}</button>`).join('')}</div>

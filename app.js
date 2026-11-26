@@ -70,13 +70,30 @@ const unread = c => !c.last_mine && (!readMap[c.id] || new Date(c.last_at) > new
 
 /* ================= AVISOS ================= */
 const phoneEl = () => document.querySelector('.phone');
-function toast(msg) { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; phoneEl().appendChild(t); setTimeout(() => t.remove(), 3600); }
+// Aviso pasajero: oscuro, justo encima del pie (o de la hoja abierta); nunca tapa los títulos.
+function toast(msg, kind) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const ph = phoneEl(), t = document.createElement('div'); t.dataset.at = Date.now();
+  t.className = 'toast' + (kind ? ' ' + kind : ''); t.setAttribute('role', 'status'); t.textContent = msg;
+  // Se ubica otra vez cuando la pantalla nueva termina de montarse (el aviso suele llegar justo al cambiar de pantalla).
+  // Con una hoja abierta (aunque se abra después del aviso): encima de la hoja si cabe; si la hoja es alta, dentro, bajo su título, sin tapar sus opciones.
+  const place = () => { if (!t.isConnected) return; const scr = [...ph.querySelectorAll('.screen:not(.exiting)')].pop(), sh = document.getElementById('sheet'), pr = ph.getBoundingClientRect();
+    if (sh) { if (t.parentNode === sh) return; const room = sh.getBoundingClientRect().top - pr.top;
+      if (room < (t.offsetHeight || 56) + 64) { t.classList.add('insheet'); sh.insertBefore(t, sh.children[2] || null); return; } }
+    else if (t.parentNode !== ph) { t.classList.remove('insheet'); ph.appendChild(t); }
+    const anchor = sh || (scr && scr.querySelector('.nextstep, .foot, .tabs'));
+    t.style.setProperty('--toast-b', (anchor ? Math.max(16, pr.bottom - anchor.getBoundingClientRect().top + 8) : 24) + 'px'); };
+  ph.appendChild(t); place(); requestAnimationFrame(place); const iv = setInterval(place, 150); setTimeout(() => { clearInterval(iv); t.remove(); }, 3300);
+}
 function banner({ ic = '', title, text = '', go: target = '', v = '' }) {
   document.querySelectorAll('.banner').forEach(b => b.remove());
   const b = document.createElement('button'); b.className = 'banner'; b.setAttribute('role', 'status');
   if (target) { b.dataset.act = 'bannerGo'; b.dataset.go = target; b.dataset.v = v; }
   b.innerHTML = `<span class="bi">${ic}</span><span class="bt"><b>${esc(title)}</b>${text ? `<span>${esc(text)}</span>` : ''}</span><small>ahora</small>`;
-  phoneEl().appendChild(b); hap([10, 40, 10]);
+  // Baja justo bajo la cabecera de la pantalla: nunca tapa el título.
+  const ph = phoneEl(), place = () => { if (!b.isConnected) return; const scr = [...ph.querySelectorAll('.screen:not(.exiting)')].pop(), top = scr && scr.querySelector('.top'), pr = ph.getBoundingClientRect();
+    b.style.top = top ? Math.max(12, top.getBoundingClientRect().bottom - pr.top + 6) + 'px' : ''; };
+  ph.appendChild(b); place(); requestAnimationFrame(place); const iv = setInterval(place, 200); setTimeout(() => clearInterval(iv), 1600); hap([10, 40, 10]);
   const out = () => { if (!b.isConnected) return; b.classList.add('out'); setTimeout(() => b.remove(), 360); };
   setTimeout(out, 5200); b.addEventListener('click', () => setTimeout(out, 50));
 }
@@ -90,7 +107,7 @@ function err(e, fallback) {
 function closeSheet() { document.getElementById('sheet')?.remove(); }
 P.actions.closeSheet = closeSheet;
 function sheet(html) { closeSheet(); const s = document.createElement('div'); s.className = 'sheet pad'; s.id = 'sheet'; s.innerHTML = `<div class="grab"></div>${html}`; (P.root || phoneEl()).appendChild(s); return s; }
-const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><span class="h3" style="flex:1;font-size:20px">${t}</span><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
+const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><span class="h3" style="flex:1">${t}</span><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
 
 /* ================= DIBUJO DEL MAR ================= */
 const STARS = (() => { const r = rng(7); return Array.from({ length: 80 }, () => [r(), r() * .55, r() * 1.4 + .3, r() * 6]); })();
@@ -150,7 +167,7 @@ function loop(now) { if (!reduceMotion && !document.hidden) drawFrame(now); requ
 function go(id, { back = false, fade = false, noPush = false } = {}) {
   const def = P.screens[id]; if (!def) return;
   P.timers.forEach(t => { clearInterval(t); clearTimeout(t); }); P.timers = [];
-  if (P.curId !== id) { recCancel(); stopPlayer(); }
+  if (P.curId !== id) { recCancel(); stopPlayer(); document.querySelectorAll('.toast').forEach(t => { if (Date.now() - (+t.dataset.at || 0) > 400) t.remove(); }); } // un aviso viejo no sigue a la pantalla nueva
   const same = P.curId === id;
   if (!same) P.cur?.leave?.();
   if (!back && !noPush && P.curId && !same && !P.cur?.transient) P.hist.push(P.curId);
@@ -239,7 +256,7 @@ function micHelp(e) {
   else if (n === 'NotReadableError' || n === 'AbortError') steps = 'Otra app está usando el micrófono, quizá una llamada. Ciérrala y vuelve a tocar.';
   else if (ios) steps = pwa ? 'Abre <b>Ajustes</b>, busca <b>Botella</b> o <b>Safari</b>, entra a <b>Micrófono</b> y elige <b>Permitir</b>. Luego vuelve aquí.' : 'Toca <b>aA</b> a la izquierda de la dirección, luego <b>Configuración del sitio web</b> y pon <b>Micrófono</b> en <b>Permitir</b>.';
   else steps = pwa ? 'Mantén presionado el ícono de Botella, toca <b>Información de la app</b>, luego <b>Permisos</b> y activa <b>Micrófono</b>.' : 'Toca el ícono a la izquierda de la dirección, luego <b>Permisos</b> y activa <b>Micrófono</b>.';
-  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="font-size:14px;margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
+  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
 }
 function recMime() { if (!window.MediaRecorder) return null; for (const m of ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm']) if (MediaRecorder.isTypeSupported(m)) return m; return ''; }
 async function recStart(max, onTick, onAuto) {
@@ -311,7 +328,7 @@ async function play(btn) {
 /* grabadora grande (registro, lanzar, responder) */
 function recBox(id, hint = 'Toca para grabar. Con 10 segundos basta.') {
   const r = S.rec[id];
-  if (r) return `<div class="rec" id="rec-${id}"><div class="eyebrow a">Tu nota de voz</div>${vn(r.url, r.secs, { mine: true, peaks: r.peaks })}<button class="btn-ghost btn btn-sm" data-act="rerec" data-id="${id}">Volver a grabar</button></div>`;
+  if (r) return `<div class="rec" id="rec-${id}"><div class="eyebrow a">Tu nota de voz</div>${vn(r.url, r.secs, { mine: true, peaks: r.peaks })}<button class="btn btn-text" data-act="rerec" data-id="${id}">Volver a grabar</button></div>`;
   return `<div class="rec" id="rec-${id}"><div class="time num">0:00</div><div class="wave"></div><button class="mic" data-act="recToggle" data-id="${id}" aria-label="Grabar">${icon('mic')}</button><div class="hint">${hint}</div></div>`;
 }
 P.actions.recToggle = async btn => {
