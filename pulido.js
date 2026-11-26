@@ -70,3 +70,6 @@ go = function (id, opts) {
 
 // Pantallas donde el texto cruza la luna: la luna baja de brillo para que se lea.
 ['perfil', 'lecpub', 'duojoin', 'answer'].forEach(id => { if (P.screens[id]) P.screens[id].moon = .35; });
+
+// Último toque: la guía de la orilla no aparece encima de un dedo en movimiento.
+document.addEventListener('pointerdown', () => { P.lastTouch = performance.now(); }, true);

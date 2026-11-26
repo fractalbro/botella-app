@@ -181,7 +181,8 @@ const TOUR = [
 ];
 function tourCheck() {
   // espera un momento: la orilla a veces solo se cruza de paso hacia el chat de ejemplo
-  if (P.tour == null) { if (!LS.get('tour', 0) && S.me && S.shore.length) P.timers.push(setTimeout(() => { if (P.curId === 'orilla' && P.tour == null && !LS.get('tour', 0)) { LS.set('tour', 1); P.tour = 0; tourCheck(); } }, 1200)); return; }
+  // La guía espera a que la persona deje de tocar: si aparece justo cuando toca, se come ese toque.
+  if (P.tour == null) { if (!LS.get('tour', 0) && S.me && S.shore.length) { const tryStart = () => { if (P.curId !== 'orilla' || P.tour != null || LS.get('tour', 0)) return; const idle = performance.now() - (P.lastTouch || 0); if (idle < 1500) { P.timers.push(setTimeout(tryStart, 1600 - idle)); return; } LS.set('tour', 1); P.tour = 0; tourCheck(); }; P.timers.push(setTimeout(tryStart, 700)); } return; }
   const [sel, t, d] = TOUR[P.tour], tg = P.root.querySelector(sel); if (!tg) return;
   const pr = P.root.getBoundingClientRect(), r = tg.getBoundingClientRect(), last = P.tour === TOUR.length - 1, pad = 6;
   let block = P.root.querySelector('.coachblock'), ring = P.root.querySelector('.coachring'); P.root.querySelector('.coach')?.remove();

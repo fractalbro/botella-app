@@ -91,3 +91,17 @@
 
 /* Con una hoja abierta, el aviso de arriba se aparta para no taparle el título */
 .phone:has(#sheet) .banner:not(.out){opacity:0;pointer-events:none;transition:opacity 120ms}
+
+/* ---------- Ajustes tras la prueba con 100 personas ---------- */
+/* La barrita de etapas se ve igual, pero se atina con el dedo (44 px de alto para tocar) */
+.sbar{position:relative}
+.sbar::after{content:"";position:absolute;left:0;right:0;top:-12px;bottom:-12px}
+/* Lo que se repite para enseñar, se detiene tras dos vueltas */
+.sl-arrows{animation-iteration-count:2!important}
+.slide:not(.drag):not(.done) .sl-k{animation-iteration-count:2}
+.coachring{animation-iteration-count:1,2}
+/* Mantener presionado también lanza: la estela se llena mientras sostienes */
+.slide.holding .sl-t{opacity:0!important}
+.slide .sl-help{position:absolute;inset:0;display:grid;place-items:center;padding-left:calc(var(--sl-k) + 8px);font-size:var(--t-sub);font-weight:600;color:var(--c-primary);opacity:0;transition:opacity 160ms;pointer-events:none}
+.slide.help .sl-help{opacity:1} .slide.help .sl-t,.slide.help .sl-arrows,.slide.holding .sl-arrows{opacity:0!important}
+.slide .sl-help{padding-right:12px;text-align:center}
