@@ -171,11 +171,13 @@ export function warm(renderer, scene, camera) {
   return p.catch(() => {});
 }
 // ---------- nitidez que se ajusta sola para sostener 60 cuadros ----------
-export function autoRes(renderer, composer, { budget = 1.4e6, min = .5 } = {}) {
-  const cap = () => Math.min(devicePixelRatio || 1, 2); let pr = 1, ema = 16.7, n = 0, w = 0, h = 0;
+// Cesar quiere nitidez completa: nunca baja de 80% de la densidad de la pantalla. Lo que se ahorra sale del brillo (bloom) a media resolución.
+export function autoRes(renderer, composer, { budget = 8e6, min = null } = {}) {
+  const cap = () => Math.min(devicePixelRatio || 1, 2); let pr = 1, ema = 16.7, n = 0, w = 0, h = 0; if (min == null) min = cap() * .8;
+  composer?.passes?.forEach(ps => { if (ps.isUnrealBloomPass || ps.constructor?.name === 'UnrealBloomPass' || ps.nMips) { const o = ps.setSize.bind(ps); ps.setSize = (W, H) => o(Math.max(2, W / 2), Math.max(2, H / 2)); } });
   const apply = () => { renderer.setPixelRatio(pr); composer?.setPixelRatio?.(pr); if (w) { renderer.setSize(w, h, false); composer?.setSize(w, h); } };
   return {
-    size(W, H) { w = W; h = H; pr = Math.min(cap(), Math.sqrt(budget / Math.max(1, w * h))); apply(); },
+    size(W, H) { w = W; h = H; pr = Math.max(min, Math.min(cap(), Math.sqrt(budget / Math.max(1, w * h)))); apply(); },
     tick(dt) { if (!dt || dt > 250) return; ema += (dt - ema) * .08; if (++n < 40) return; n = 0;
       if (ema > 19 && pr > min) { pr = Math.max(min, pr * .85); apply(); } else if (ema < 14 && pr < Math.min(cap(), Math.sqrt(budget / Math.max(1, w * h)))) { pr = Math.min(cap(), pr * 1.08); apply(); } },
     get pr() { return pr; }

@@ -18,14 +18,14 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 export function create(canvas, env) {
   // env: { reduce, cur() → { id, st, slide, since(key), col } }
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', alpha: false });
-  renderer.transmissionResolutionScale = .5; // el vidrio redibuja la escena: a media resolución no se nota
+  renderer.transmissionResolutionScale = 1; // vidrio a resolución completa (Cesar prefiere nitidez)
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1;
   const scene = new THREE.Scene(); scene.background = new THREE.Color(C.bg); scene.fog = new THREE.Fog('#0B2436', 40, 260);
   const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.5;
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 2000);
   const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(128, 128), 0.45, 0.4, 0.9); composer.addPass(bloom); composer.addPass(new OutputPass());
-  const ar = autoRes(renderer, composer, { budget: 1.1e6, min: .5 }); let lastNow = 0;
+  const ar = autoRes(renderer, composer); let lastNow = 0;
 
   // ---- cielo, luna, mar ----
   const sk = sky(scene, { hz: '#173E5C', stars: 900 });
