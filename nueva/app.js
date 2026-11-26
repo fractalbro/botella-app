@@ -374,7 +374,7 @@ R.llamada = ({ id = 'leo' }) => { const b = B[id]; return { cls: 'call clear', h
     $('#h', el).onclick = () => { clearInterval(iv); audio.pause(); const c = S.convs[id]; c.stage = 2; c.msgs.push({ f: 'sys', t: `Llamada · ${fmt(Math.max(t, 1))}` }); save(); go('chat', { id }); }; } }; };
 
 // ================= LO DEMÁS: vive en tu perfil, una pantalla por cosa =================
-const X = Object.assign({ color: 0, far: 0, tide: 0, gift: 0, glass: 'Transparente', captain: false, streak: 4 }, store.get('x', {}));
+const X = Object.assign({ color: 0, far: 0, tide: 0, gift: 0, glass: 'Claro', captain: false, streak: 4 }, store.get('x', {}));
 S.sent = store.get('sent', [
   { kind: 'Pregunta', tema: 'Cine', idea: '¿Qué película verías mil veces?', heard: 8, ans: 2, when: 'Ayer' },
   { kind: 'Confesión', tema: 'Música', idea: '', heard: 5, ans: 0, when: 'Lunes' }
@@ -400,74 +400,70 @@ const row = (ic, t, s, attr) => `<button class="item" ${attr}><span class="ic">$
 const free = () => '';
 const n_ = (n, a, b) => `${n} ${n === 1 ? a : b}`;
 
-// Perfil: el índice de todo lo que no es Mar ni Conversaciones.
+// Perfil: el índice de todo. Agrupado en bloques de 3 (Miller), lo raro va dentro de "Cuenta".
+const tile = (ic, t, attr) => `<button class="tile3" ${attr}><span class="ic">${I[ic]}</span><b>${t}</b></button>`;
+const dirSeg = () => `<div class="seg" id="dir">${['Marea', 'Papel', 'Vidrio', 'Faro', 'Bitácora'].map((t, i) => `<button aria-pressed="${(document.documentElement.dataset.dir || '1') === String(i + 1)}" data-d="${i + 1}">${t}</button>`).join('')}</div>`;
+const bindDir = r => $$('#dir button', r).forEach(b => b.onclick = () => { const d = b.dataset.d; if (d === '1') delete document.documentElement.dataset.dir; else document.documentElement.dataset.dir = d; try { localStorage.setItem('bn.estilo', d); } catch (e) {} $$('#dir button', r).forEach(x => x.setAttribute('aria-pressed', x === b)); });
 R.perfil = () => ({ cls: 'pin', html: `
   ${back('mar')}
-  <h1 class="title mt1">${esc(S.name || 'Tú')}</h1><p class="sub mt1">${S.temas.map(esc).join(' · ')}</p>
+  <div class="me-head mt1"><span class="avatar big" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span><span><h1 class="title">${esc(S.name || 'Tú')}</h1><span class="sub">${S.temas.map(esc).join(' · ')}</span></span></div>
   <div class="stat"><button data-go="bitacora"><b>${X.streak}</b><span>días seguidos</span></button><button data-go="muelle"><b>${S.left}</b><span>botellas para lanzar</span></button></div>
   <p class="eyebrow">Tu voz</p>
-  <div class="list">
-    ${row('bottle', 'Mis botellas', n_(S.sent.length, 'lanzada', 'lanzadas'), 'data-go="botellas"')}
-    ${row('map', 'El mapa de tu voz', 'Con quién conectó', 'data-go="mapa"')}
-    ${row('quote', '¿Qué piensan de ti?', 'Tus amigos responden con su voz', 'data-go="lecturas"')}
-  </div>
+  <div class="grid3">${tile('bottle', 'Mis botellas', 'data-go="botellas"')}${tile('map', 'Tu mapa', 'data-go="mapa"')}${tile('quote', 'Qué piensan de ti', 'data-go="lecturas"')}</div>
   <p class="eyebrow">Con más gente</p>
-  <div class="list">
-    ${row('two', 'Botella para dos', 'Lánzala con un amigo', 'data-go="dos"')}
-    ${row('people', 'Salidas en grupo', 'Planes en lugares públicos', 'data-go="salidas"')}
-    ${row('gift', 'Invitar a alguien', 'Los dos reciben una botella', 'data-a="inv"')}
-  </div>
-  <p class="eyebrow">Muelle</p>
-  <div class="list">
+  <div class="grid3">${tile('two', 'Botella para dos', 'data-go="dos"')}${tile('people', 'Salidas', 'data-go="salidas"')}${tile('gift', 'Invitar', 'data-a="inv"')}</div>
+  <div class="list mt3">
     ${row('dock', 'Muelle', 'Botellas especiales, gratis en la beta', 'data-go="muelle"')}
     ${row('tide', 'La marea de las 21:00', 'Botellas doradas de todo Lima', 'data-go="marea"')}
-  </div>
-  <p class="eyebrow">Estilo visual (prueba)</p>
-  <div class="seg mt1" id="dir">${['Marea', 'Papel', 'Vidrio', 'Faro', 'Bitácora'].map((t, i) => `<button aria-pressed="${(document.documentElement.dataset.dir || '1') === String(i + 1)}" data-d="${i + 1}">${t}</button>`).join('')}</div>
-  <p class="eyebrow">Cuenta</p>
-  <div class="list">
-    ${row('tag', 'Tus temas', S.temas.join(', '), 'data-a="temas"')}
-    ${row('rules', 'Normas de la casa', '', 'data-a="rules"')}
-    ${row('key', 'Cambiar contraseña', '', 'data-a="pw"')}
-    ${row('out', 'Cerrar sesión', '', 'data-a="out"')}
+    ${row('key', 'Cuenta', 'Tus temas, normas, contraseña y estilo', 'data-a="cuenta"')}
   </div>`,
-  bind(el) { $$('#dir button', el).forEach(b => b.onclick = () => { const d = b.dataset.d; if (d === '1') delete document.documentElement.dataset.dir; else document.documentElement.dataset.dir = d; store.set('estilo', d); try { localStorage.setItem('bn.estilo', d); } catch (e) {} $$('#dir button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
-    $$('[data-a]', el).forEach(b => b.onclick = () => ({
-    inv: () => sheet(`<h2 class="title">Invita a alguien</h2><p class="sub">Cuando entre, los dos reciben una botella extra.</p><div class="inp mt2" style="display:flex;align-items:center;color:var(--fg-2);font-size:14px">botella-app.vercel.app/?c=TU-CODIGO</div><div class="row-btns mt2"><button class="btn btn-a" id="cp">Copiar enlace</button></div>`, (s, close) => $('#cp', s).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); close(); toast('Enlace copiado'); }),
-    rules: () => sheet(`<h2 class="title">Normas de la casa</h2><div class="list mt2 mb3">${['Coquetear está bien. Lo explícito, no.', 'Sin insultos ni amenazas.', 'Tu distrito nunca se muestra.', 'Puedes reportar o bloquear desde cualquier conversación.'].map(t => `<p class="item" style="margin:0;min-height:52px">${t}</p>`).join('')}</div><button class="btn btn-2" data-close>Entendido</button>`),
-    pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => { store.set('onb', 0); go('bienvenida'); }
-  }[b.dataset.a]())); } });
+  bind(el) {
+    const acts = {
+      inv: () => sheet(`<h2 class="title">Invita a alguien</h2><p class="sub">Cuando entre, los dos reciben una botella extra.</p><div class="inp mt2" style="display:flex;align-items:center;color:var(--fg-2);font-size:14px">botella-app.vercel.app/?c=TU-CODIGO</div><div class="row-btns mt2"><button class="btn btn-a" id="cp">Copiar enlace</button></div>`, (s, close) => $('#cp', s).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); close(); toast('Enlace copiado'); }),
+      rules: () => sheet(`<h2 class="title">Normas de la casa</h2><div class="list mt2 mb3">${['Coquetear está bien. Lo explícito, no.', 'Sin insultos ni amenazas.', 'Tu distrito nunca se muestra.', 'Puedes reportar o bloquear desde cualquier conversación.'].map(t => `<p class="item" style="margin:0;min-height:52px">${t}</p>`).join('')}</div><button class="btn btn-2" data-close>Entendido</button>`),
+      cuenta: () => sheet(`<h2 class="title">Cuenta</h2><div class="list mt2">${row('tag', 'Tus temas', S.temas.join(', '), 'data-a="temas"')}${row('rules', 'Normas de la casa', '', 'data-a="rules"')}${row('key', 'Cambiar contraseña', '', 'data-a="pw"')}${row('out', 'Cerrar sesión', '', 'data-a="out"')}</div><p class="cap mt3 mb2" style="margin-bottom:8px">Estilo visual (prueba)</p>${dirSeg()}`, (s, close) => { bindDir(s); $$('[data-a]', s).forEach(b => b.onclick = () => { const k = b.dataset.a; if (k === 'rules') return acts.rules(); close(); setTimeout(acts[k], 210); }); }),
+      pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => { store.set('onb', 0); go('bienvenida'); }
+    };
+    $$('[data-a]', el).forEach(b => b.onclick = () => acts[b.dataset.a]());
+  } });
 
-// Muelle: en la beta todo es gratis; el precio de después se ve tachado.
+// Muelle: una cosa a la vez. Especiales · Más botellas · Capitán.
 const SPECIAL = [
-  ['color', 'De color', 'Llega solo a quienes aman un tema que eliges', '2.90', '#FF70A9'],
-  ['far', 'Que llega lejos', 'A 20 personas en vez de 8', '5.90', '#8E8CFF'],
-  ['tide', 'Dorada', 'Sale primera en la marea de las 21:00', '1.90', '#FFC24B'],
-  ['gift', 'Con lacre', 'Un regalo para alguien con quien conversas', '3.90', '#FFB061']
+  ['color', 'De color', 'Llega solo a quienes aman un tema que eliges', '#FF70A9'],
+  ['far', 'Que llega lejos', 'A 20 personas en vez de 8', '#8E8CFF'],
+  ['tide', 'Dorada', 'Sale primera en la marea de las 21:00', '#FFC24B'],
+  ['gift', 'Con lacre', 'Un regalo para alguien con quien conversas', '#FFB061']
 ];
-const GLASS = [['Transparente', '#CFE9F2', ''], ['Verde', '#7FD8A0', '4.90'], ['Ámbar', '#FFB061', '4.90'], ['Esmerilado', '#B9C6D3', '4.90']];
-const PACKS = [[3, 'Para un día con mucho que decir', '4.90'], [10, 'Para toda la semana', '12.90'], [30, '25 más 5 de regalo', '29.90']];
+const GLASS = [['Claro', '#CFE9F2'], ['Verde', '#7FD8A0'], ['Ámbar', '#FFB061'], ['Esmerilado', '#B9C6D3']];
+const PACKS = [[3, 'Para un día con mucho que decir'], [10, 'Para toda la semana'], [30, '25 más 5 de regalo']];
+let muelleTab = 0;
+const MUELLE = [
+  () => `<div class="grid2">${SPECIAL.map(([k, t, d, c]) => `<button class="spc" data-k="${k}"><span class="art">${bottleSVG(c)}</span><b>${t}</b><small>${d}</small><span class="foot">${X[k] ? `<em class="have">Tienes ${X[k]}</em>` : '<span></span>'}<span class="chip sm">Pedir</span></span></button>`).join('')}</div>`,
+  () => `<div class="tiles">${PACKS.map(([q, d]) => `<button class="tile" data-pack="${q}"><b>${q}</b><span>${d}</span></button>`).join('')}</div>
+    <p class="eyebrow">El vidrio de tus botellas</p>
+    <div class="tiles">${GLASS.map(([g, c]) => `<button class="tile glass" data-g="${g}" aria-pressed="${X.glass === g}"><span class="art">${bottleSVG(c)}</span><span>${g}</span></button>`).join('')}</div>`,
+  () => `<div class="capt">
+    <h2 class="title" style="font-size:22px">Más botellas cada día y salidas más grandes.</h2>
+    <ul>${['3 botellas extra al día', 'Ves qué tema compartes con quien abre tus botellas', 'Una que llega lejos cada lunes', 'Salidas de hasta 12 personas'].map(t => `<li>${I.check}${t}</li>`).join('')}</ul>
+    ${X.captain ? `<button class="btn btn-2" id="capt">Eres Capitán · dejar el plan</button>` : `<p class="cap mb2"><s>S/ 19.90 al mes</s> · gratis por ahora</p><button class="btn btn-a" id="capt">Ser Capitán gratis</button>`}</div>`
+];
 R.muelle = () => ({ cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">Muelle</h1>
-  <p class="sub mt1">En la beta todo es gratis. Lanzar y responder, siempre.</p>
-  <p class="eyebrow">Botellas especiales</p>
-  <div class="list">${SPECIAL.map(([k, t, d, p, c]) => `<div class="item"><span class="art">${bottleSVG(c)}</span><span class="tx"><b>${t}${X[k] ? ` <em class="have">Tienes ${X[k]}</em>` : ''}</b><small>${d}</small></span><span class="get">${free(p)}<button class="chip sm" data-k="${k}">Pedir</button></span></div>`).join('')}</div>
-  <p class="eyebrow">Más botellas normales</p>
-  <div class="tiles">${PACKS.map(([q, d, p]) => `<button class="tile" data-pack="${q}"><b>${q}</b><span>${d}</span>${free(p)}</button>`).join('')}</div>
-  <p class="eyebrow">Tu vidrio</p>
-  <div class="tiles">${GLASS.map(([g, c, p]) => `<button class="tile glass" data-g="${g}" aria-pressed="${X.glass === g}"><span class="art">${bottleSVG(c)}</span><span>${g}</span>${X.glass === g ? '<span class="price">Usando</span>' : free(p)}</button>`).join('')}</div>
-  <div class="capt mt3">
-    <p class="eyebrow a" style="margin:0 0 6px">Plan Capitán</p>
-    <h2 class="title" style="font-size:22px">Más botellas cada día y salidas más grandes.</h2>
-    <ul>${['3 botellas extra al día', 'Ves qué tema compartes con quien abre tus botellas', 'Una que llega lejos cada lunes', 'Salidas de hasta 12 personas'].map(t => `<li>${I.check}${t}</li>`).join('')}</ul>
-    ${X.captain ? `<button class="btn btn-2" id="capt">Eres Capitán · dejar el plan</button>` : `<p class="cap mb2"><s>S/ 19.90 al mes</s> · gratis por ahora</p><button class="btn btn-a" id="capt">Ser Capitán gratis</button>`}
-  </div>`,
+  <p class="sub mt1">Todo es gratis mientras dure la beta.</p>
+  <div class="seg mt3" id="mt">${['Especiales', 'Más botellas', 'Capitán'].map((t, i) => `<button aria-pressed="${i === muelleTab}">${t}</button>`).join('')}</div>
+  <div id="mp" class="mt3"></div>`,
   bind(el) {
-    $$('[data-k]', el).forEach(b => b.onclick = () => { X[b.dataset.k]++; saveX(); const t = SPECIAL.find(s => s[0] === b.dataset.k)[1]; go('muelle', { nohash: true }); toast(`Listo. Tienes una botella ${t.toLowerCase()}.`); });
-    $$('[data-pack]', el).forEach(b => b.onclick = () => { S.left += +b.dataset.pack; saveX(); go('muelle', { nohash: true }); toast(`Llegaron ${b.dataset.pack} botellas a tu muelle.`); });
-    $$('[data-g]', el).forEach(b => b.onclick = () => { X.glass = b.dataset.g; saveX(); go('muelle', { nohash: true }); toast(`Tus botellas viajan en vidrio ${X.glass.toLowerCase()}.`); });
-    $('#capt', el).onclick = () => { X.captain = !X.captain; if (X.captain) S.left += 3; saveX(); go('muelle', { nohash: true }); toast(X.captain ? 'Ya eres Capitán. Gratis por ahora.' : 'Dejaste el plan Capitán.'); };
+    const paint = () => { $('#mp', el).innerHTML = MUELLE[muelleTab](); wire(); };
+    const again = msg => { saveX(); paint(); toast(msg); };
+    const wire = () => {
+      $$('[data-k]', el).forEach(b => b.onclick = () => { X[b.dataset.k]++; again(`Listo. Tienes una botella ${SPECIAL.find(s => s[0] === b.dataset.k)[1].toLowerCase()}.`); });
+      $$('[data-pack]', el).forEach(b => b.onclick = () => { S.left += +b.dataset.pack; again(`Llegaron ${b.dataset.pack} botellas a tu muelle.`); });
+      $$('[data-g]', el).forEach(b => b.onclick = () => { X.glass = b.dataset.g; again(`Tus botellas viajan en vidrio ${X.glass.toLowerCase()}.`); });
+      const c = $('#capt', el); c && (c.onclick = () => { X.captain = !X.captain; if (X.captain) S.left += 3; again(X.captain ? 'Ya eres Capitán. Gratis por ahora.' : 'Dejaste el plan Capitán.'); });
+    };
+    $$('#mt button', el).forEach((b, i) => b.onclick = () => { muelleTab = i; $$('#mt button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); paint(); });
+    paint();
   } });
 
 // Mis botellas: a cuántas llegó cada una y quién respondió.

@@ -237,7 +237,8 @@ svg{display:block}
 .hang svg{width:28px;height:28px;fill:#fff;transform:rotate(135deg)}
 
 /* ---------- perfil ---------- */
-.stat{display:flex;gap:10px;margin:18px 0 26px}
+.stat{display:flex;gap:10px;margin:20px 0 0;align-items:stretch}
+.stat>*{display:flex;flex-direction:column;justify-content:flex-start}
 .stat>*{flex:1;padding:18px;border-radius:var(--r-m);background:var(--s1);text-align:left;transition:transform .12s var(--in)}
 .stat>button:active{transform:scale(.97)}
 .stat b{display:block;font-size:26px;font-weight:500;letter-spacing:-.03em}
@@ -310,6 +311,25 @@ svg{display:block}
 .who-is{display:block;margin-top:10px;font-size:var(--t3);color:var(--ink);animation:enter .4s var(--in) both}
 .half{padding:18px;border-radius:var(--r-m);background:var(--s1);display:grid;gap:8px}.half .cap{margin:0}
 .half.wait{min-height:96px}
+
+
+/* perfil y muelle recompuestos (design · Layout Composer) */
+.me-head{display:flex;align-items:center;gap:16px}
+.me-head .sub{display:block;margin-top:4px}
+.avatar.big{width:60px;height:60px;font-size:24px;flex:none}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.tile3{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:18px;min-height:104px;padding:14px;border-radius:var(--r-m);background:var(--s1);text-align:left;transition:transform .12s var(--in)}
+.tile3:active{transform:scale(.97)}
+.tile3 b{font-weight:500;font-size:14px;line-height:1.25}
+.tile3 .ic{width:36px;height:36px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.spc{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:16px;border-radius:var(--r-m);background:var(--s1);text-align:left;transition:transform .12s var(--in)}
+.spc:active{transform:scale(.97)}
+.spc .art .bt{width:84px;transform:rotate(-14deg);margin:2px 0 8px}
+.spc b{font-weight:500}
+.spc small{color:var(--fg-2);font-size:13px;line-height:1.35;flex:1}
+.spc .foot{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px}
+.spc .have{margin:0}
 
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
