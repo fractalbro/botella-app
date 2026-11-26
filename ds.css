@@ -370,3 +370,13 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
   .chat .ficha{padding-bottom:6px}
   .fbox{gap:8px;padding:10px} .fq{padding:8px 10px} .fq span{-webkit-line-clamp:1}
 }
+
+/* Recuperar y cambiar contraseña */
+.forgotl{margin-top:var(--s2);margin-left:calc(var(--s2) * -1)}
+.pwf{padding-right:6px}
+.pweye{flex:none;width:40px;height:40px;border-radius:20px;border:0;background:none;color:var(--dim);display:grid;place-items:center}
+.pweye.on{color:var(--c-primary)}
+.pweye:active{opacity:.7}
+.mail{overflow-wrap:anywhere}
+.forgotnote{display:flex;gap:10px;align-items:flex-start;margin-top:var(--s6);padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--glass);font-size:var(--t-sub);color:var(--dim)}
+.forgotnote svg{flex:none;margin-top:2px}

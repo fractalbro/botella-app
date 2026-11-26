@@ -2,6 +2,8 @@
 'use strict';
 const { createClient } = window.supabase;
 const CFG = window.BOTELLA || {};
+// Al volver del correo para cambiar la contraseña, Supabase trae el aviso en la URL (#type=recovery o #error_code=otp_expired). Se lee antes de que el cliente lo borre.
+const AUTH_URL = location.hash + '&' + location.search;
 const sb = createClient(CFG.url || 'https://x.supabase.co', CFG.key || 'x', { auth: { persistSession: true, autoRefreshToken: true } });
 
 /* ================= BASE ================= */

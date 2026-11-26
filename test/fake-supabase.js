@@ -96,9 +96,9 @@
   window.supabase = {
     createClient: () => ({
       auth: {
-        getSession: () => ok({ session: db.session }), onAuthStateChange() {}, signOut: () => ok(null), resetPasswordForEmail: () => ok(null), updateUser: () => ok(null),
+        getSession: () => { if (/type=recovery/.test(location.hash)) db.session = { user: { id: ME, email: 'ana@correo.com' } }; return ok({ session: db.session }); }, onAuthStateChange() {}, signOut: () => ok(null), resetPasswordForEmail: () => ok(null), updateUser: () => ok(null),
         signUp: () => { db.session = { user: { id: ME } }; return ok({ session: db.session, user: { id: ME, identities: [1] } }); },
-        signInWithPassword: () => { db.session = { user: { id: ME } }; return ok({ session: db.session }); }
+        signInWithPassword: () => { db.session = { user: { id: ME, email: 'ana@correo.com' } }; return ok({ session: db.session }); }
       },
       from: q, rpc: (n, a) => ok(rpcs[n](a || {})),
       storage: { from: () => ({ createSignedUrls: ps => ok(ps.map(p => ({ path: p, signedUrl: AUDIO }))), upload: () => ok({}), remove: () => ok({}), list: () => ok([]) }) },

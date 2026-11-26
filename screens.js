@@ -60,7 +60,7 @@ P.screens.account = {
       <label class="field" style="margin-top:10px"><input id="pw" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="${up ? 'Contraseña de 8 o más' : 'Contraseña'}" aria-label="Contraseña"></label>
       <button type="submit" hidden></button>
     </form>
-    ${up ? '' : '<button class="btn btn-text" data-act="forgot" style="margin-top:10px">Olvidé mi contraseña</button>'}</div>
+    ${up ? '' : '<button class="btn btn-text forgotl" data-act="forgot">¿Olvidaste tu contraseña?</button>'}</div>
     <div class="foot pad"><button class="btn btn-a" data-act="authGo">${up ? 'Crear mi cuenta' : 'Entrar'}</button><button class="btn btn-ghost" data-act="authSwap">${up ? 'Ya tengo cuenta' : 'Es mi primera vez: crear cuenta'}</button></div>`; }
 };
 P.actions.authSwap = () => { if (S.authMode === 'login') { S.authMode = 'signup'; go(S.code ? 'account' : 'code', { noPush: S.code ? true : false }); } else { S.authMode = 'login'; go('account', { noPush: true }); } };
@@ -84,11 +84,79 @@ P.actions.authGo = async el => {
     S.busy = false; await enter();
   } catch (e) { S.busy = false; err(e, /already|registered/i.test(e.message || '') ? 'Ese correo ya tiene cuenta. Entra con tu contraseña.' : undefined); if (P.curId === 'account') rerender(); }
 };
-P.actions.forgot = async () => {
-  const email = $('#em').value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Escribe tu correo arriba y vuelve a tocar aquí.');
+/* ================= OLVIDÉ MI CONTRASEÑA ================= */
+// 1) olvide: pides el enlace. 2) llega el correo. 3) nuevaclave: eliges la nueva y entras. También vale si el enlace venció.
+const pwField = (id, ph, ac) => `<label class="field pwf" style="margin-top:10px"><input id="${id}" type="password" autocomplete="${ac}" placeholder="${ph}" aria-label="${ph}"><button type="button" class="pweye" data-act="pwEye" data-for="${id}" aria-label="Mostrar contraseña" aria-pressed="false">${icon('eye', 's')}</button></label>`;
+P.actions.pwEye = el => { const i = document.getElementById(el.dataset.for); if (!i) return; const show = i.type === 'password'; i.type = show ? 'text' : 'password'; el.setAttribute('aria-pressed', show); el.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña'); el.classList.toggle('on', show); };
+P.actions.forgot = () => { const e = $('#em')?.value.trim(); if (e) S.forgotEmail = e; S.forgotSent = false; go('olvide'); };
+P.screens.olvide = {
+  render: () => { const em = S.forgotEmail || ''; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Recuperar tu cuenta</span></div><div class="scroll pad">${S.forgotSent ? `
+    <div class="display" style="margin-top:22px">Revisa tu <b>correo</b></div>
+    <p class="lead">Te mandamos un enlace a <b class="mail">${esc(em)}</b>. Ábrelo en este mismo teléfono y eliges tu contraseña nueva. Tus botellas y conversaciones siguen donde las dejaste.</p>
+    <div class="forgotnote">${icon('clock', 's')}<span>Suele llegar en un minuto. Si no aparece, búscalo en spam o promociones: viene de Botella.</span></div>` : `
+    <div class="display" style="margin-top:22px">¿Se te fue la <b>contraseña</b>?</div>
+    <p class="lead">Pasa en las mejores familias. Escribe el correo con el que entras y te mandamos un enlace para crear una nueva.</p>
+    <form id="forgotf" data-form="forgot"><label class="field" style="margin-top:22px"><input id="fem" type="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com" aria-label="Correo" value="${esc(em)}"></label><button type="submit" hidden></button></form>
+    <p class="small muted" style="margin:10px 2px 0">${icon('lock', 's')} Tu correo nunca se muestra a nadie.</p>`}</div>
+    <div class="foot pad">${S.forgotSent ? `<button class="btn btn-ghost" data-act="forgotSend"${forgotWait() ? ' disabled' : ''}>${forgotWait() ? `Puedes pedir otro en ${forgotWait()} s` : 'Mandármelo otra vez'}</button><button class="btn btn-text" data-act="forgotOther">Escribí mal mi correo</button>` : `<button class="btn btn-a" data-act="forgotSend">Mandarme el enlace</button><button class="btn btn-ghost" data-act="back">Ya me acordé</button>`}</div>`; }
+};
+const forgotWait = () => Math.max(0, Math.ceil(((S.forgotAt || 0) + 60000 - Date.now()) / 1000));
+const forgotTick = () => { clearInterval(S.forgotTimer); S.forgotTimer = setInterval(() => { if (P.curId !== 'olvide' || !S.forgotSent) return clearInterval(S.forgotTimer); const b = document.querySelector('.screen:not(.exiting) [data-act=forgotSend]'); const w = forgotWait(); if (b) { b.disabled = !!w; b.textContent = w ? `Puedes pedir otro en ${w} s` : 'Mandármelo otra vez'; } if (!w) clearInterval(S.forgotTimer); }, 1000); };
+const sendReset = async email => {
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/' });
-  if (error) return err(error, 'No pudimos enviar el correo. Intenta en unos minutos.');
-  toast('Te enviamos un correo para crear una contraseña nueva. Si no lo ves, mira en spam.');
+  if (error) throw /rate|limit|security purposes|seconds/i.test(error.message) ? { message: 'Ya te mandamos un enlace hace poco. Espera un par de minutos y vuelve a intentar.' } : error;
+  S.forgotEmail = email; S.forgotAt = Date.now();
+};
+P.actions.forgotSend = async el => {
+  const email = S.forgotSent ? S.forgotEmail : ($('#fem')?.value || '').trim();
+  if (!/^\S+@\S+\.\S+$/.test(email)) return toast('A ese correo le falta algo. Revísalo.');
+  if (S.busy || forgotWait() && S.forgotSent) return; S.busy = true; const t = el.textContent; el.classList.add('soft', 'busy'); el.textContent = 'Mandando…';
+  try { await sendReset(email); S.busy = false; if (S.forgotSent) toast('Listo, te mandamos otro enlace.'); S.forgotSent = true; rerender(); forgotTick(); }
+  catch (e) { S.busy = false; el.classList.remove('soft', 'busy'); el.textContent = t; err(e, 'No pudimos mandar el correo. Intenta otra vez en unos minutos.'); }
+};
+P.actions.forgotOther = () => { S.forgotSent = false; S.forgotAt = 0; rerender(); setTimeout(() => $('#fem')?.focus(), 50); };
+
+P.screens.nuevaclave = {
+  render: () => S.recoverErr ? `${sb_()}<div class="top pad"><span style="width:44px"></span><span class="title">Recuperar tu cuenta</span></div><div class="scroll pad">
+    <div class="display" style="margin-top:22px">Este enlace ya <b>se usó</b></div>
+    <p class="lead">Por seguridad, cada enlace sirve una sola vez y dura una hora. Te mandamos otro en un toque.</p></div>
+    <div class="foot pad"><button class="btn btn-a" data-act="recoverAgain">Pedir otro enlace</button><button class="btn btn-ghost" data-act="toLogin">Entrar con mi contraseña</button></div>`
+  : `${sb_()}<div class="top pad"><span style="width:44px"></span><span class="title">Recuperar tu cuenta</span></div><div class="scroll pad">
+    <div class="display" style="margin-top:22px">Tu contraseña <b>nueva</b></div>
+    <p class="lead">Elige una que recuerdes tú y nadie más adivine. Con 8 caracteres o más ya está.</p>
+    <form id="npwf" data-form="newpass">${pwField('npw', 'Contraseña nueva', 'new-password')}<button type="submit" hidden></button></form>
+    <p class="small muted" style="margin:10px 2px 0">${icon('check', 's')} Al guardarla entras directo, con todo como lo dejaste.</p></div>
+    <div class="foot pad"><button class="btn btn-a" data-act="newPass">Guardar y entrar</button></div>`
+};
+P.actions.recoverAgain = () => { S.recoverErr = false; S.forgotSent = false; S.authMode = 'login'; P.hist = ['splash']; go('olvide'); };
+P.actions.newPass = async el => {
+  const p = $('#npw').value; if (p.length < 8) return toast('La contraseña necesita 8 caracteres o más.');
+  if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Guardando…';
+  try {
+    const { error } = await sb.auth.updateUser({ password: p });
+    if (error) throw /different|same/i.test(error.message) ? { message: 'Esa es tu contraseña de antes. Elige una distinta.' } : /weak|short|characters/i.test(error.message) ? { message: 'Esa contraseña es muy fácil de adivinar. Prueba con otra.' } : /session|expired|JWT/i.test(error.message) ? { message: 'Este enlace ya venció. Te mandamos otro en un toque.' } : error;
+    S.busy = false; S.recovery = false; toast('Listo, ya tienes contraseña nueva.'); P.hist = []; enter();
+  } catch (e) { S.busy = false; el.classList.remove('soft', 'busy'); el.textContent = 'Guardar y entrar'; err(e, 'No pudimos guardarla. Intenta otra vez en un momento.'); if (/venció/.test(e.message || '')) { S.recoverErr = true; rerender(); } }
+};
+
+/* Cambiar la contraseña desde el perfil, sabiendo la actual. Si no la recuerdas, te mandamos el enlace a tu correo. */
+P.actions.changePass = () => sheet(`${sheetHead('Cambiar contraseña')}<p class="muted" style="margin:0 0 6px">Primero la de ahora, para confirmar que eres tú. Luego la nueva, de 8 caracteres o más.</p>
+  <form id="cpwf" data-form="changepass">${pwField('cpw', 'Contraseña actual', 'current-password')}${pwField('cpn', 'Contraseña nueva', 'new-password')}<button type="submit" hidden></button></form>
+  <button class="btn btn-a" data-act="changePassGo" style="margin-top:14px">Guardar contraseña nueva</button>
+  <button class="btn btn-text" data-act="changePassMail" style="margin-top:4px">No recuerdo la actual</button>`);
+P.actions.changePassGo = async el => {
+  const cur = $('#cpw').value, nw = $('#cpn').value, email = S.session?.user?.email;
+  if (!cur) return toast('Escribe tu contraseña actual.'); if (nw.length < 8) return toast('La nueva necesita 8 caracteres o más.'); if (nw === cur) return toast('La nueva tiene que ser distinta a la de ahora.');
+  if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Guardando…';
+  try {
+    if (email) { const r = await sb.auth.signInWithPassword({ email, password: cur }); if (r.error) throw /Invalid login/i.test(r.error.message) ? { message: 'Esa no es tu contraseña actual. Revísala o toca "No recuerdo la actual".' } : r.error; if (r.data?.session) S.session = r.data.session; }
+    const { error } = await sb.auth.updateUser({ password: nw }); if (error) throw /weak|short|characters/i.test(error.message) ? { message: 'Esa contraseña es muy fácil de adivinar. Prueba con otra.' } : error;
+    S.busy = false; closeSheet(); toast('Listo, tu contraseña nueva ya funciona.');
+  } catch (e) { S.busy = false; el.classList.remove('soft', 'busy'); el.textContent = 'Guardar contraseña nueva'; err(e, 'No pudimos cambiarla. Intenta otra vez en un momento.'); }
+};
+P.actions.changePassMail = async el => {
+  const email = S.session?.user?.email; if (!email) return toast('No encontramos tu correo. Cierra sesión y usa "¿Olvidaste tu contraseña?".');
+  el.classList.add('soft'); try { await sendReset(email); closeSheet(); toast(`Te mandamos un enlace a ${email}. Ábrelo en este teléfono.`); } catch (e) { el.classList.remove('soft'); err(e, 'No pudimos mandar el correo. Intenta otra vez en unos minutos.'); }
 };
 
 P.screens.about = {
@@ -616,6 +684,7 @@ P.screens.perfil = {
       <div class="sec rise d3"><span class="eyebrow">Tu seguridad</span>
         <button class="setrow" role="switch" aria-checked="${!!m.paused}" data-act="pauseT">${icon('pausei')}<span style="flex:1"><b>Modo pausa</b><span>No te llegan botellas nuevas. Tus conversaciones siguen.</span></span><span class="sw"></span></button>
         <button class="setrow" data-act="rules">${icon('shield')}<span style="flex:1"><b>Normas y privacidad</b><span>Cómo cuidamos la comunidad y tus datos.</span></span>${icon('arrow', 's')}</button>
+        <button class="setrow" data-act="changePass">${icon('lock')}<span style="flex:1"><b>Cambiar contraseña</b><span>Si quieres una nueva o crees que alguien la sabe.</span></span>${icon('arrow', 's')}</button>
         <button class="setrow" data-act="logout">${icon('out')}<span style="flex:1"><b>Cerrar sesión</b></span></button>
         <button class="setrow" data-act="deleteAsk">${icon('trash')}<span style="flex:1"><b>Borrar mi cuenta</b><span>Se borra todo: tu perfil, tus botellas y tus conversaciones.</span></span></button>
       </div>
