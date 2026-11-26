@@ -70,7 +70,7 @@ function todayCard() {
   if (q && !q.done) {
     const st = [q.heard, q.answered, q.launched], n = st.filter(Boolean).length;
     const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 20 personas.'];
-    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>`;
+    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>${tideMini(h)}`;
   }
   const t = h.tide || {}, left = tideIn();
   const [k, a, b] = t.arrived ? ['Llegó la marea', t.count ? `${plural(t.count, 'voz respondió', 'voces respondieron')} la pregunta de hoy` : 'Mira lo que trajo el mar esta noche', t.answered ? 'Escúchalas ahora.' : 'Deja la tuya para escucharlas.']
@@ -78,6 +78,8 @@ function todayCard() {
       : ['Pregunta de hoy', t.question || '', `Deja tu voz antes de las 21:00${left ? ` · faltan ${left}` : ''}.`];
   return `<button class="today${t.arrived ? ' gold' : ''}" data-go="marea"><span class="ti">${icon('tide')}</span><span class="tx"><small>${k}</small><b>${esc(a)}</b><span>${b}</span></span>${icon('arrow', 's')}</button>`;
 }
+// La pregunta de hoy también el primer día: una fila corta bajo el recorrido, para que se encuentre desde el inicio.
+function tideMini(h) { const t = h.tide || {}; if (t.answered) return ''; return `<button class="today mini" data-go="marea"><span class="ti">${icon('tide')}</span><span class="tx"><small>Pregunta de hoy</small><b>${esc(t.question || 'Todos responden la misma')}</b></span>${icon('arrow', 's')}</button>`; }
 P.actions.questGo = () => { const q = S.home?.quest || {}; if (q.heard && q.answered) return go('launch'); const f = P.root.querySelector('.float'); if (f) { toast(q.heard ? 'Abre una botella y respóndele con tu voz.' : 'Toca una botella para escucharla.'); f.classList.remove('nudge'); void f.offsetWidth; f.classList.add('nudge'); } else toast('Tu orilla está en calma. Lanza tu primera botella.'); };
 
 /* ================= BITÁCORA: CONSTANCIA Y DESBLOQUEOS ================= */
@@ -164,7 +166,7 @@ P.screens.marea = {
   leave() { P.st.mareaFresh = false; }
 };
 P.actions.tideSend = async el => {
-  const r = S.rec.tide; if (!r) return needVoice('tide'); if (S.busy) return; S.busy = true; el.classList.add('soft'); el.textContent = 'Enviando…';
+  const r = S.rec.tide; if (!r) return needVoice('tide'); if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Enviando…';
   try {
     const path = await upload(r.blob, r.ext); await rpc('tide_answer', { p_voice: path, p_secs: r.secs, p_peaks: r.peaks });
     URLS.set(path, r.url); delete S.rec.tide; hap([10, 30, 20]); await Promise.all([loadMareaNow(), loadHome()]); S.busy = false; rerender();
@@ -184,7 +186,7 @@ P.actions.duoT = el => { S.duoOn = !S.duoOn; if (S.duoOn) { S.btype = 'free'; S.
 P.actions.duoStart = async el => {
   const r = S.rec.launch; if (!r) return needVoice('launch'); if (S.busy) return;
   if (!(S.me?.bottles > 0)) return toast('Te quedaste sin botellas normales. Responde una que te llegó y ganas otra.');
-  S.busy = true; el.classList.add('soft'); el.textContent = 'Preparando…';
+  S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Preparando…';
   try {
     const path = await upload(r.blob, r.ext);
     const d = await rpc('duo_start', { p_kind: S.kind, p_body: S.body.trim() || null, p_voice: path, p_secs: r.secs, p_peaks: r.peaks });
@@ -231,8 +233,8 @@ P.actions.leaveLink = () => { S.link = null; S.after = null; P.hist = []; if (S.
 P.actions.duoMine = () => { S.duoWait = { token: S.link.d, kind: S.duoPeek.kind, body: S.duoPeek.body || '' }; S.link = null; P.hist = ['orilla']; go('duowait'); };
 P.actions.duoJoin = async el => {
   const r = S.rec.duo2; if (!r) return needVoice('duo2');
-  if (!S.me) { S.after = 'duo'; toast('Guardamos tu mitad. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
-  if (S.busy) return; S.busy = true; el.classList.add('soft'); el.textContent = 'Lanzando…';
+  if (!S.me) { S.after = 'duo'; if (!S.code) S.code = 'D:' + S.link.d; toast('Guardamos tu mitad. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
+  if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Lanzando…';
   try {
     const path = await upload(r.blob, r.ext); const d = await rpc('duo_join', { p_token: S.link.d, p_voice: path, p_secs: r.secs, p_peaks: r.peaks });
     URLS.set(path, r.url); delete S.rec.duo2; S.busy = false; S.link = null; S.after = null; S.duoPeek = null;
@@ -272,7 +274,7 @@ P.screens.lecnew = {
 };
 P.actions.lqPick = el => { S.lq = +el.dataset.i; document.querySelectorAll('#lqs .lq').forEach(b => b.classList.toggle('on', b === el)); };
 P.actions.lecCreate = async el => {
-  const r = S.rec.lec; if (!r) return needVoice('lec'); if (S.busy) return; S.busy = true; el.classList.add('soft'); el.textContent = 'Creando tu link…';
+  const r = S.rec.lec; if (!r) return needVoice('lec'); if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Creando tu link…';
   try {
     const path = await upload(r.blob, r.ext); const d = await rpc('lectura_create', { p_question: LQ[S.lq], p_voice: path, p_secs: r.secs, p_peaks: r.peaks });
     URLS.set(path, r.url); delete S.rec.lec; S.busy = false; await loadLecturas(); P.hist = P.hist.filter(x => x !== 'lecnew'); P.st.lecNewId = d.id; await openLec(d.id, { noPush: true }); loadHome(); askPush('lectura');
@@ -288,7 +290,7 @@ P.screens.lectura = {
     <div class="card rise" style="margin-top:6px"><span class="eyebrow">Tu pregunta</span><div class="h3" style="margin:4px 0 10px">${esc(l.question)}</div>${vn(l.voice, l.secs, { mine: true, peaks: l.peaks })}</div>
     ${l.open && !as.length ? `<div class="sharebox rise d1">${isNew ? '<b>Tu link está listo.</b>' : ''}<span class="small muted">${isNew ? 'Compártelo por WhatsApp o en tus historias. Mientras más gente, más voces.' : 'Compártela otra vez para recibir más voces.'}</span><div class="code"><span>${esc(lecLink(l.slug).replace(/^https?:\/\//, ''))}</span><button class="btn btn-tonal btn-sm" data-act="lecCopy">${icon('copy', 's')} Copiar</button></div><button class="btn btn-a" data-act="lecShare">${icon('export')} Compartir mi lectura</button></div>` : ''}
     <div class="sec rise d2"><span class="eyebrow">${as.length ? plural(as.length, 'voz', 'voces') : 'Respuestas'}</span>
-      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s">${a.heard ? `<b class="who">${esc(a.name || 'Sin nombre')}</b> · ${ago(a.at)}` : `<b class="who">Escúchala y verás quién es</b><span class="m">Nueva · ${ago(a.at)}</span>`}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
+      ${as.length ? as.map((a, i) => `<div class="arow${a.heard ? '' : ' new'}" data-heard="${a.id}">${orb(colorOf(a.id), 38)}<span style="flex:1;min-width:0"><span class="s">${a.heard ? `<b class="who">${esc(a.name || 'Sin nombre')}</b> · ${ago(a.at)}` : `<b class="who">Voz nueva</b><span class="m">Escúchala y verás quién es · ${ago(a.at)}</span>`}</span>${vn(a.voice, a.secs, { peaks: a.peaks })}</span><button class="iconbtn" data-act="ansMenu" data-id="${a.id}" aria-label="Opciones de esta respuesta">${icon('more')}</button></div>`).join('')
         : `<p class="small muted">${l.open ? 'Todavía no llega ninguna. Aparecen aquí apenas alguien responda.' : 'Esta lectura cerró sin respuestas.'}</p>`}
       ${l.pending ? `<p class="small muted" style="margin-top:10px">${icon('clock', 's')} ${plural(l.pending, 'respuesta espera', 'respuestas esperan')} la revisión del filtro.</p>` : ''}
       ${l.filtered ? `<p class="small muted" style="margin-top:10px">${icon('shield', 's')} El filtro frenó ${plural(l.filtered, 'respuesta que no cumplía', 'respuestas que no cumplían')} las normas. No te ${l.filtered === 1 ? 'llegó' : 'llegaron'}.</p>` : ''}</div>
@@ -335,7 +337,7 @@ P.actions.lpSend = async el => {
   // Las lecturas se responden con cuenta: tu voz te espera mientras la creas y sale sola al terminar.
   if (!S.me) { S.after = 'lp'; if (!S.code) S.code = 'L:' + S.link.l; return P.actions.skipIntro(); }
   if (S.busy) return;
-  S.busy = true; if (el) { el.classList.add('soft'); el.textContent = 'Enviando tu voz…'; }
+  S.busy = true; if (el) { el.classList.add('soft', 'busy'); el.textContent = 'Enviando tu voz…'; }
   try {
     const tok = (await sb.auth.getSession()).data?.session?.access_token || '';
     const res = await fetch('/api/lectura', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + tok }, body: JSON.stringify({ slug: S.link.l, device: deviceId(), adult: true, audio: await b64(r.blob), mime: r.blob.type || (r.ext === 'm4a' ? 'audio/mp4' : 'audio/webm'), secs: r.secs, peaks: r.peaks }) });

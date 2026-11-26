@@ -1,0 +1,144 @@
+/* ================= Pulido 26/11: movimiento y detalles =================
+   Va al final para poder quitarlo entero si algo no convence.
+   Curvas: entrar rápido y frenar suave; salir arrancando suave y más rápido que al entrar. */
+:root{
+  --e-out:cubic-bezier(.16,1,.3,1);      /* entrar */
+  --e-in:cubic-bezier(.7,0,.84,0);       /* salir */
+  --e-move:cubic-bezier(.65,0,.35,1);    /* moverse de un lugar a otro */
+  --d-exit:180ms;--t-exit:180ms;         /* cerrar dura la mitad que abrir */
+}
+
+/* ---------- Hojas: el fondo se oscurece en su lugar y tocar afuera cierra ---------- */
+.sheet{box-shadow:0 -24px 60px rgba(0,0,0,.55)!important;animation:psSheetIn 300ms var(--e-out) both}
+.sheet.still{animation:none}
+.sheet.out{animation:psSheetOut 160ms var(--e-in) forwards;pointer-events:none}
+.sheet.drag{animation:none;transition:none}
+.sheet.back{transition:transform 260ms cubic-bezier(.2,1.2,.4,1)}
+.scrim{position:absolute;inset:0;z-index:4;background:var(--c-scrim);animation:psFade 240ms var(--e-out) both;max-width:none!important;margin:0!important;width:auto!important}
+.scrim.still{animation:none}
+.scrim.out{animation:psFadeOut 160ms var(--e-in) forwards;pointer-events:none}
+/* el agarre se ve tocable y es más fácil de atinar */
+.sheet .grab{position:relative;cursor:grab;touch-action:none}
+.sheet .grab::after{content:"";position:absolute;left:-40px;right:-40px;top:-14px;bottom:-12px}
+@keyframes psSheetIn{from{transform:translateY(100%)}to{transform:none}}
+@keyframes psSheetOut{from{transform:var(--sh-y,none)}to{transform:translateY(100%)}}
+@keyframes psFade{from{opacity:0}}
+@keyframes psFadeOut{to{opacity:0}}
+
+/* ---------- Aviso de abajo: entra en 220 ms y se va en 160 ms ---------- */
+.toast{animation-name:psToast}
+@keyframes psToast{0%{opacity:0;transform:translateY(8px)}7%,95%{opacity:1;transform:none}100%{opacity:0;transform:translateY(4px)}}
+/* Aviso de arriba: se va más rápido de lo que llega, y se puede empujar hacia arriba */
+.banner.out{animation:psBannerOut 160ms var(--e-in) forwards}
+.banner.drag{animation:none;transition:none}
+@keyframes psBannerOut{from{transform:var(--bn-y,none)}to{opacity:0;transform:translateY(-24px)}}
+
+/* ---------- Al bajar en una pantalla, el contenido se esfuma bajo la cabecera en vez de cortarse ---------- */
+.screen.scrolled .scroll:not(.thread){-webkit-mask-image:linear-gradient(transparent,#000 22px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(transparent,#000 22px,#000 calc(100% - 28px),transparent)}
+
+/* ---------- Micrófono: responde al dedo y cambia de color sin saltos ---------- */
+.rec .mic{transition:transform var(--d-fast) var(--e-out),background-color var(--d-base) var(--e-out),box-shadow var(--d-base) var(--e-out),color var(--d-base)}
+.rec .mic:active{transform:scale(.94)}
+/* la nota recién grabada aparece con un gesto corto: se nota que quedó guardada */
+.rec.fresh>.vn,.rec.fresh>.eyebrow{animation:psRecIn 320ms var(--e-out) both}
+.rec.fresh>.btn{animation:psFade 320ms 120ms var(--e-out) both}
+@keyframes psRecIn{from{opacity:0;transform:scale(.94) translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Botones que esperan al servidor: un círculo que gira, no un botón apagado ---------- */
+.btn.busy{opacity:1!important;cursor:progress}
+.btn.busy::before{content:"";width:16px;height:16px;flex:none;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:psSpin .7s linear infinite}
+@keyframes psSpin{to{transform:rotate(1turn)}}
+
+/* ---------- Etapas del chat: cuando avanzan, la barrita se llena y la etapa nueva se ilumina ---------- */
+.sbar.adv .cur b{transform-origin:left;animation:psFill 700ms 250ms var(--e-out) both}
+.sbar.adv .cur em{animation:psGlow 1.2s 450ms ease-out both}
+.sbar.adv .done:has(+.cur) b{animation:psDoneB 400ms var(--e-out) both}
+@keyframes psFill{from{transform:scaleX(0)}to{transform:none}}
+@keyframes psGlow{0%{color:var(--c-fg-2)}35%{color:var(--c-primary);text-shadow:0 0 12px rgba(127,216,201,.6)}100%{color:var(--c-fg)}}
+@keyframes psDoneB{from{background:var(--c-primary)}}
+
+/* ---------- Barra de pasos del registro: avanza desde donde estaba ---------- */
+.progress i{transition:width 420ms var(--e-out)}
+
+/* ---------- Botón que se desliza ---------- */
+.slide:not(.drag):not(.done) .sl-k{animation-iteration-count:3}  /* enseña el gesto 3 veces y descansa */
+.slide.drag .sl-k{box-shadow:0 10px 24px -6px rgba(0,0,0,.7)}
+.slide .sl-k svg{transition:transform var(--d-fast) var(--e-out)}
+.slide.drag .sl-k svg{transform:scale(1.08)}                       /* la botella se "levanta" al tomarla */
+.slide.ready .sl-fill{opacity:1;box-shadow:0 0 24px -2px var(--c-primary)}
+.slide .sl-t{transition:opacity 120ms}
+.slide .sl-go{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;font-size:var(--t-body);color:var(--c-on-primary);opacity:0;transition:opacity 140ms;pointer-events:none}
+.slide.ready .sl-go,.slide.done .sl-go{opacity:1}
+.slide.done .sl-k{transition:none!important;opacity:1}
+
+
+/* ---------- Espacios ---------- */
+.sec>.small+.rec:has(>.vn){margin-top:var(--s3)}              /* "Grábala con tu voz": aire antes de la nota */
+/* Pantallas bajas (iPhone SE): la grabadora entra entera, con su pista, sin tener que bajar */
+@media (max-height:600px){
+  .rec:not(.lv-big .rec) .mic{width:68px;height:68px}
+  .rec:not(.lv-big .rec) .mic .i{width:26px;height:26px}
+  .rec:not(.lv-big .rec):not(.live) .wave:empty{height:0;margin-block:-4px}
+}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .sheet,.sheet.out,.scrim,.scrim.out,.banner.out,.rec.fresh>*,.sbar.adv *{animation:none!important}
+  .rec .mic:active{transform:none}
+  .btn.busy::before{animation:none;border-right-color:currentColor;opacity:.5}
+  .progress i{transition:none}
+}
+
+/* Con una hoja abierta, el aviso de arriba se aparta para no taparle el título */
+.phone:has(#sheet) .banner:not(.out){opacity:0;pointer-events:none;transition:opacity 120ms}
+
+/* ---------- Ajustes tras la prueba con 100 personas ---------- */
+/* La barrita de etapas se ve igual, pero se atina con el dedo (44 px de alto para tocar) */
+.sbar{position:relative}
+.sbar::after{content:"";position:absolute;left:0;right:0;top:-12px;bottom:-12px}
+/* Lo que se repite para enseñar, se detiene tras dos vueltas */
+.sl-arrows{animation-iteration-count:2!important}
+.slide:not(.drag):not(.done) .sl-k{animation-iteration-count:2}
+.coachring{animation-iteration-count:1,2}
+/* Mantener presionado también lanza: la estela se llena mientras sostienes */
+.slide.holding .sl-t{opacity:0!important}
+.slide .sl-help{position:absolute;inset:0;display:grid;place-items:center;padding-left:calc(var(--sl-k) + 8px);font-size:var(--t-sub);font-weight:600;color:var(--c-primary);opacity:0;transition:opacity 160ms;pointer-events:none}
+.slide.help .sl-help{opacity:1} .slide.help .sl-t,.slide.help .sl-arrows,.slide.holding .sl-arrows{opacity:0!important}
+.slide .sl-help{padding-right:12px;text-align:center}
+
+/* ---------- Invitación a llamarse (momentos.js) ---------- */
+.callinv{display:flex;gap:12px;align-items:flex-start;margin:18px 0 6px;padding:14px;border-radius:var(--r-card);background:linear-gradient(150deg,var(--c-tonal),transparent 70%),var(--c-surface);border:1px solid color-mix(in srgb,var(--c-primary) 35%,transparent)}
+.callinv .ci-ic{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--c-tonal);color:var(--c-primary)}
+.callinv .ci-ic .i{width:19px;height:19px}
+.callinv .ci-tx{flex:1;min-width:0}
+.callinv b{display:block;font-size:var(--t-body);font-weight:600;color:var(--c-fg)}
+.callinv p{margin:3px 0 10px;font-size:var(--t-sub);line-height:1.4;color:var(--c-fg-2)}
+.callinv .ci-b{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.callinv .ci-b .btn-tonal{width:auto;height:40px;padding-inline:16px}
+.callinv .ci-b .btn-text{color:var(--c-fg-2);font-weight:500;padding-inline:4px}
+/* Primera respuesta: su voz aparece junto al texto */
+.firstreply .frvn{display:flex;justify-content:center;margin-top:18px;animation:rise var(--t-rise) 1.15s var(--e-out) both}
+@media (prefers-reduced-motion:reduce){.firstreply .frvn{animation:none}}
+@media (max-height:600px){.firstreply .mword{font-size:42px!important}}
+
+/* ---------- 26/11 · mejoras de la prueba con 100 personas ---------- */
+/* casilla de normas: todo el renglón es el blanco, mínimo 48 px */
+.check.big{min-height:48px;align-items:center;padding:6px 0}
+.check.big .box{width:28px;height:28px}
+.rulesl{margin-top:2px;padding-left:0;justify-content:flex-start;min-height:44px}
+.nocode{margin-top:14px;min-height:44px}
+/* pregunta de hoy, fila corta bajo el recorrido del primer día */
+.today.mini{margin-top:8px;padding-block:10px}
+.today.mini .tx b{font-size:var(--t-sub);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.faltan{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;padding:12px 14px;border-radius:var(--r-card,14px);background:rgba(127,216,201,.08);color:var(--fg);font-size:var(--t-sub)}
+.faltan svg{flex:none;margin-top:2px;color:var(--a)}
+/* Lanzar en el centro de la barra: aro turquesa (no relleno, para no competir con el botón principal de cada vista) */
+.tabs .tlaunch{color:var(--c-fg-2)}
+.tabs .tlaunch .tl-ring{display:grid;place-items:center;width:34px;height:26px;border-radius:13px;border:1.5px solid var(--c-primary);color:var(--c-primary);margin-bottom:1px}
+.tabs .tlaunch .tl-ring svg{width:16px;height:16px}
+@media (max-width:360px){.tabs button{font-size:9.5px;letter-spacing:-.1px}}
+.selpair{display:grid;grid-template-columns:1.5fr 1fr;gap:10px}
+.faltan{margin:0 0 4px}
+.sheet .faltan + .btn{margin:6px 0 12px!important}
+/* en pantallas bajas (iPhone SE) la fila de la pregunta de hoy no cabe sin tapar las botellas: queda en la tarjeta del día siguiente */
+@media (max-height:600px){.today.mini{display:none}}

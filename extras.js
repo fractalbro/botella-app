@@ -40,7 +40,7 @@ const balLine = m => { const n = (v, a, b) => v ? `<b>${v}</b> ${v === 1 ? a : b
 P.screens.store = {
   cls: 'storebg',
   render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Muelle</span>${meBtn()}</div>
-    <div class="beta rise">${icon('spark', 's')}<span><b>Gratis por ahora y sin tarjeta.</b> El precio tachado es lo que costará después; lanzar y responder, siempre gratis.</span></div>
+    <div class="beta rise">${icon('spark', 's')}<span><b>Hoy todo es gratis, sin tarjeta.</b> Lanzar y responder serán siempre gratis.</span></div>
     <p class="small muted baltxt rise d1">${balLine(m)}</p>
     <div class="sec rise d2"><span class="eyebrow">Botellas especiales</span>${STORE.specials.map(it => itemHTML(it, it.own && it.own() ? '<span class="tag ok">Activo</span>' : `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
     <div class="sec rise d2"><span class="eyebrow">Regalos</span>${STORE.gifts.map(it => itemHTML(it, `${price(it.price)}${getBtn(it.k)}`)).join('')}</div>
@@ -95,7 +95,7 @@ P.screens.salidas = {
     <div class="scroll pad" style="background:linear-gradient(transparent,var(--bg) 60px)">
       <div class="h2 rise">Salgamos <b>en grupo</b>.</div>
       <p class="lead rise d1">Las propone gente de Botella. Siempre en grupo y en lugares públicos.</p>
-      ${S.outings.length ? S.outings.map((o, i) => `<button class="orow rise d${Math.min(i + 1, 4)}${o.boosted ? ' boost' : ''}" data-act="outing" data-id="${o.id}"><span class="oi">${icon('users')}</span><span style="flex:1;min-width:0"><span class="t">${esc(o.name)}</span><span class="s">${esc(whenTxt(o.starts_at))}</span><span class="s">${esc(o.place)}${o.sample ? ' · de ejemplo' : ''}</span>${o.sample ? '' : `<span class="cap">${Array.from({ length: o.cap }, (_, k) => `<i class="${k < o.taken ? 'on' : ''}"></i>`).join('')}<small>${o.taken} de ${o.cap}</small></span>`}</span>${o.mine ? '<span class="tag">Tuya</span>' : o.joined ? '<span class="tag">Vas</span>' : o.taken >= o.cap ? '<span class="tag">Llena</span>' : '<span class="act">Ver</span>'}</button>`).join('')
+      ${S.outings.length ? S.outings.map((o, i) => `<button class="orow rise d${Math.min(i + 1, 4)}${o.boosted ? ' boost' : ''}" data-act="outing" data-id="${o.id}"><span class="oi">${icon('users')}</span><span style="flex:1;min-width:0"><span class="t">${esc(o.name)}</span><span class="s">${esc(whenTxt(o.starts_at))}</span><span class="s">${esc(o.place)}${o.sample ? ' · de ejemplo' : ''}</span>${o.sample ? '' : `<span class="cap">${Array.from({ length: o.cap }, (_, k) => `<i class="${k < o.taken ? 'on' : ''}"></i>`).join('')}<small>${o.taken} de ${o.cap}</small></span>`}</span>${o.mine ? '<span class="tag">Tuya</span>' : o.joined ? '<span class="tag">Vas</span>' : o.taken >= o.cap ? '<span class="tag">Llena</span>' : '<span class="act">Unirme</span>'}</button>`).join('')
         : '<p class="small muted">Todavía no hay salidas. Propón la primera.</p>'}
       <div style="height:12px"></div></div>
     <div class="foot pad"><button class="btn ${S.outings.length ? 'btn-ghost' : 'btn-a'}" data-go="proponer">${icon('pin')} Proponer una salida</button></div>`,

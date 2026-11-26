@@ -104,9 +104,22 @@ function err(e, fallback) {
   const mine = /[áéíóú¿¡ñ]|Ese |Esta |Te |Primero|Falta|Lanzaste|botella/.test(m) && !/row-level|violates|JWT|fetch|policy/i.test(m);
   toast(mine ? m : (fallback || 'No salió. Fue cosa nuestra: intenta otra vez en un momento.'));
 }
-function closeSheet() { document.getElementById('sheet')?.remove(); }
+// La hoja sale más rápido de lo que entra (160 ms) y el fondo oscuro se desvanece, no se desliza con ella.
+function closeSheet(instant) {
+  const s = document.getElementById('sheet'); if (!s) return; s.removeAttribute('id');
+  const sc = s.previousElementSibling?.classList.contains('scrim') ? s.previousElementSibling : null;
+  if (instant === true || reduceMotion) { s.remove(); sc?.remove(); return; }
+  s.classList.add('out'); sc?.classList.add('out'); setTimeout(() => { s.remove(); sc?.remove(); }, 170);
+}
 P.actions.closeSheet = closeSheet;
-function sheet(html) { closeSheet(); const s = document.createElement('div'); s.className = 'sheet pad'; s.id = 'sheet'; s.innerHTML = `<div class="grab"></div>${html}`; (P.root || phoneEl()).appendChild(s); return s; }
+function sheet(html) {
+  const had = document.getElementById('sheet'); closeSheet(true);
+  const host = P.root || phoneEl(), sc = document.createElement('div'); sc.className = 'scrim' + (had ? ' still' : ''); sc.setAttribute('aria-hidden', 'true');
+  // Tocar afuera cierra la hoja (antes el toque pasaba a los botones de atrás).
+  sc.addEventListener('click', () => closeSheet());
+  const s = document.createElement('div'); s.className = 'sheet pad' + (had ? ' still' : ''); s.id = 'sheet'; s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true');
+  s.innerHTML = `<div class="grab"></div>${html}`; host.appendChild(sc); host.appendChild(s); window.bindSheetDrag?.(s); return s;
+}
 const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><span class="h3" style="flex:1">${t}</span><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
 
 /* ================= DIBUJO DEL MAR ================= */
@@ -117,7 +130,9 @@ function sky(ctx, w, h, t, horizon) {
   for (const [x, y, s, p] of STARS) { if (y * h > horizon * h - 10) continue; ctx.fillStyle = 'rgba(230,245,255,' + (.35 + Math.sin(t * 1.5 + p) * .25) + ')'; ctx.fillRect(x * w, y * h, s, s); }
   const mx = w * .78, my = h * .14, mr = Math.min(w, h) * .06;
   const mg = ctx.createRadialGradient(mx, my, mr * .5, mx, my, mr * 5); mg.addColorStop(0, 'rgba(220,245,240,.22)'); mg.addColorStop(1, 'rgba(220,245,240,0)');
-  ctx.fillStyle = mg; ctx.fillRect(0, 0, w, h * horizon + 40); ctx.fillStyle = '#EAF6F2'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.fill();
+  ctx.fillStyle = mg; ctx.fillRect(0, 0, w, h * horizon + 40);
+  // En pantallas donde el texto pasa por encima de la luna, la luna baja de brillo para que se lea.
+  ctx.globalAlpha = P.cur?.moon ?? 1; ctx.fillStyle = '#EAF6F2'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
   return mx;
 }
 function waves(ctx, w, h, t, horizon, mx, onLayer, n = 6) {
@@ -203,8 +218,9 @@ const steps = n => `<div class="pad" style="flex:none"><div class="progress" ari
 
 function tabsHTML(active) {
   const badge = S.convos.filter(unread).length;
-  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['convos', 'Conversaciones', 'chat'], ['store', 'Muelle', 'bag']];
-  return `<nav class="tabs" aria-label="Secciones">${items.map(([id, label, ic]) => `<button class="${id === active ? 'on' : ''}" data-go="${id}" data-fade ${id === active ? 'aria-current="page"' : ''}>${icon(ic)}${label}${id === 'convos' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('')}</nav>`;
+  // Lanzar va al centro, a mano desde cualquier sección (antes solo estaba en la orilla)
+  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['launch', 'Lanzar', 'plus'], ['convos', 'Conversaciones', 'chat'], ['store', 'Muelle', 'bag']];
+  return `<nav class="tabs" aria-label="Secciones">${items.map(([id, label, ic]) => id === 'launch' ? `<button class="tlaunch" data-go="launch" aria-label="Lanzar una botella nueva"><span class="tl-ring">${icon('bottle')}</span>${label}</button>` : `<button class="${id === active ? 'on' : ''}" data-go="${id}" data-fade ${id === active ? 'aria-current="page"' : ''}>${icon(ic)}${label}${id === 'convos' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('')}</nav>`;
 }
 
 /* mantener presionado */
@@ -256,8 +272,13 @@ function micHelp(e) {
   else if (n === 'NotReadableError' || n === 'AbortError') steps = 'Otra app está usando el micrófono, quizá una llamada. Ciérrala y vuelve a tocar.';
   else if (ios) steps = pwa ? 'Abre <b>Ajustes</b>, busca <b>Botella</b> o <b>Safari</b>, entra a <b>Micrófono</b> y elige <b>Permitir</b>. Luego vuelve aquí.' : 'Toca <b>aA</b> a la izquierda de la dirección, luego <b>Configuración del sitio web</b> y pon <b>Micrófono</b> en <b>Permitir</b>.';
   else steps = pwa ? 'Mantén presionado el ícono de Botella, toca <b>Información de la app</b>, luego <b>Permisos</b> y activa <b>Micrófono</b>.' : 'Toca el ícono a la izquierda de la dirección, luego <b>Permisos</b> y activa <b>Micrófono</b>.';
-  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
+  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>${S.me ? '' : `<button class="btn btn-text" data-act="micLater">${P.curId === 'voice' ? 'Seguir sin grabar' : 'Crear mi cuenta primero y grabar después'}</button>`}`);
 }
+// Sin micrófono también se entra: la cuenta primero, la voz cuando se pueda.
+P.actions.micLater = () => { closeSheet(); if (P.curId === 'voice') return P.actions.voiceLater(); S.first = null; P.actions.skipIntro(); };
+// Sin señal: se dice al toque y se promete lo que sí pasa (la voz grabada no se pierde: queda con "Reintentar").
+addEventListener('offline', () => toast('Sin señal. Lo que grabes queda guardado y lo envías cuando vuelva.'));
+addEventListener('online', () => toast('Volvió la señal.'));
 function recMime() { if (!window.MediaRecorder) return null; for (const m of ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm']) if (MediaRecorder.isTypeSupported(m)) return m; return ''; }
 async function recStart(max, onTick, onAuto) {
   const mime = recMime(); if (mime === null) { toast('Aquí no se puede grabar. Si abriste el link desde Instagram o WhatsApp, toca ⋯ y elige “Abrir en el navegador”.'); return false; }
@@ -333,7 +354,7 @@ function recBox(id, hint = 'Toca para grabar. Con 10 segundos basta.') {
 }
 P.actions.recToggle = async btn => {
   const id = btn.dataset.id, box = document.getElementById('rec-' + id); if (!box) return;
-  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) S.rec[id] = r; if (box.isConnected) box.outerHTML = recBox(id); refreshNeeds(); if (r) P.actions.recorded?.(id); if (r && (id === 'lp' || id === 'duo2')) rerender(); return; }
+  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) S.rec[id] = r; if (box.isConnected) { box.outerHTML = recBox(id); if (r) { document.getElementById('rec-' + id)?.classList.add('fresh'); hap([6, 20, 10]); } } refreshNeeds(); if (r) P.actions.recorded?.(id); if (r && (id === 'lp' || id === 'duo2')) rerender(); return; }
   if (REC.mr) return;
   const wave = box.querySelector('.wave'), time = box.querySelector('.time'), hint = box.querySelector('.hint');
   const ok = await recStart(MAXV, (t, s) => {
