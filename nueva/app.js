@@ -116,7 +116,7 @@ function sheet(html, bind) {
   $('.scrim', sheetRoot).onclick = close; $$('[data-close]', sheetRoot).forEach(b => b.onclick = close);
   bind && bind($('.sheet', sheetRoot), close);
 }
-let tt; function toast(t, c = '#7FD8C9') { $$('.toast').forEach(x => x.remove()); const d = document.createElement('div'); d.className = 'toast'; d.innerHTML = `<i class="orb" style="background:${c}"></i>${esc(t)}`; document.body.append(d); clearTimeout(tt); tt = setTimeout(() => { d.classList.add('out'); setTimeout(() => d.remove(), 220); }, 2600); }
+let tt; function toast(t, c = '#7FD8C9', undo) { $$('.toast').forEach(x => x.remove()); const d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.innerHTML = `<i class="orb" style="background:${c}"></i>${esc(t)}${undo ? '<button class="undo">Deshacer</button>' : ''}`; document.body.append(d); const bye = () => { d.classList.add('out'); setTimeout(() => d.remove(), 220); }; if (undo) $('.undo', d).onclick = () => { clearTimeout(tt); bye(); undo(); }; clearTimeout(tt); tt = setTimeout(bye, undo ? 5000 : 2600); }
 
 // ---------- navegación ----------
 const R = {}; let cur = null, curName = '';
@@ -139,6 +139,18 @@ $$('.tab', tabs).forEach(t => t.onclick = () => go(t.dataset.go));
 
 // ================= PANTALLAS =================
 
+// Formularios: errores claros, en español y junto al campo (sin las burbujas del navegador).
+function check(form) {
+  form.noValidate = true; let ok = true; $$('.ferr', form).forEach(x => x.remove()); $$('[aria-invalid]', form).forEach(x => x.removeAttribute('aria-invalid'));
+  $$('input', form).forEach(i => { let m = '';
+    if (i.type === 'checkbox') { if (i.required && !i.checked) m = 'Botella es solo para mayores de 18.'; }
+    else if (i.required && !i.value.trim()) m = i.type === 'email' ? 'Escribe tu correo.' : i.type === 'password' ? 'Escribe tu contraseña.' : 'Escribe tu nombre.';
+    else if (i.type === 'email' && !/^\S+@\S+\.\S+$/.test(i.value)) m = 'Revisa tu correo: falta algo, como la @ o el punto.';
+    else if (i.minLength > 0 && i.value.length < i.minLength) m = `Usa al menos ${i.minLength} caracteres.`;
+    if (m) { ok = false; i.setAttribute('aria-invalid', 'true'); const e = document.createElement('p'); e.className = 'ferr'; e.textContent = m; (i.closest('label') || i).after(e); }
+  });
+  const first = $('[aria-invalid]', form); first && first.focus(); return ok;
+}
 // Bienvenida: una frase, un botón.
 R.bienvenida = () => ({ cls: 'clear', mar: 'hero', html: `
   <div class="top"><span class="wm">botella</span></div>
@@ -171,7 +183,7 @@ R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: '
       $('#stage', el).innerHTML = `<article class="paper in"><p class="who"><i class="orb" style="background:${b.c}"></i>Alguien que ama ${esc(b.theme)}</p><p class="q">${esc(b.q)}</p>${player(b.v)}</article>
         <div class="row-btns mt2"><button class="btn btn-a" id="reply">${I.mic}Responder con mi voz</button><button class="btn btn-q" id="pass">Devolverla al mar</button></div>`;
       $('#reply', el).onclick = () => go('grabar', { id, first });
-      $('#pass', el).onclick = () => { S.shore = S.shore.filter(x => x !== id); save(); first ? go('cuenta') : (go('mar'), toast('Volvió al mar. Le llegará a otra persona.')); };
+      $('#pass', el).onclick = () => { const before = [...S.shore]; S.shore = S.shore.filter(x => x !== id); save(); first ? go('cuenta') : (go('mar'), toast('Volvió al mar. Le llegará a otra persona.', '#7FD8C9', () => { S.shore = before; save(); go('mar'); })); };
       if (first) setTimeout(() => $('.player', el) && $('.player', el).click(), 500);
     }
   } }; };
@@ -223,7 +235,7 @@ R.cuenta = () => ({ html: `
     <label class="cap" style="display:flex;gap:10px;align-items:center;margin:6px 4px 0"><input type="checkbox" required style="width:20px;height:20px;accent-color:#7FD8C9"> Tengo 18 años o más</label>
   </form>
   <button class="btn btn-a mt3" form="f">Seguir</button>`,
-  bind(el) { $('#f', el).onsubmit = e => { e.preventDefault(); S.name = new FormData(e.target).get('n').trim(); save(); go('temas'); }; } });
+  bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; S.name = new FormData(e.target).get('n').trim(); save(); go('temas'); }; } });
 
 // Temas: lo único que se muestra de ti antes del nombre.
 R.temas = ({ edit = false } = {}) => { const T = TEMAS; return { html: `
@@ -246,17 +258,17 @@ R.entrar = () => ({ html: `
   <label class="field"><span>Contraseña</span><input class="inp" type="password" required autocomplete="current-password"></label></form>
   <button class="btn btn-q" style="width:auto;align-self:flex-start;padding:0 4px" data-go="olvide">Olvidé mi contraseña</button>
   <div class="grow"></div><button class="btn btn-a" form="f">Entrar</button>`,
-  bind(el) { $('#f', el).onsubmit = e => { e.preventDefault(); store.set('onb', 1); go('mar'); }; } });
+  bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; store.set('onb', 1); go('mar'); }; } });
 R.olvide = () => ({ html: `
   <div class="top"><button class="ib edge" data-go="entrar" aria-label="Atrás">${I.back}</button><span></span><span style="width:44px"></span></div>
   <h1 class="title mt2">¿Olvidaste tu contraseña?</h1><p class="sub mt1 mb3">Te mandamos un enlace para crear otra.</p>
   <form id="f"><label class="field"><span>Correo</span><input class="inp" type="email" required autocomplete="email"></label></form>
   <div class="grow"></div><button class="btn btn-a" form="f">Enviar enlace</button>`,
-  bind(el) { $('#f', el).onsubmit = e => { e.preventDefault(); go('entrar'); toast('Listo. Revisa tu correo.'); }; } });
+  bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; go('entrar'); toast('Listo. Revisa tu correo.'); }; } });
 
 // Mar: lo que te llegó, tu botella y la pregunta de hoy. Nada más.
 R.mar = () => { const n = S.shore.length; const pos = [[6, 6], [52, 30], [30, 17]]; return { cls: 'tabbed', html: `
-  <div class="top"><span class="wm">botella</span><button class="avatar" data-go="perfil" aria-label="Tu perfil">${esc((S.name || 'T')[0].toUpperCase())}</button></div>
+  <div class="top"><span class="wm">botella</span><button class="me-pill" data-go="perfil"><span class="avatar" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span>Tú</button></div>
   <h1 class="title mt2">${n ? `${n === 1 ? 'Llegó una botella' : `Llegaron ${n} botellas`}` : 'El mar está tranquilo'}</h1>
   <p class="sub mt1">${n ? 'Toca una para abrirla.' : 'Lanza la tuya mientras tanto.'}</p>
   <div class="shore"><div class="stars"></div><div class="moon"></div>
@@ -320,7 +332,7 @@ R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: '
 // Conversaciones.
 const stepsHTML = (st, cls = '') => `<span class="steps ${cls}">${[0, 1, 2, 3].map(i => `<i class="${i <= st ? 'on' : ''}"></i>`).join('')}</span>`;
 R.charlas = () => { const ids = Object.keys(S.convs); return { cls: 'tabbed', html: `
-  <div class="top"><span class="wm">botella</span><button class="avatar" data-go="perfil" aria-label="Tu perfil">${esc((S.name || 'T')[0].toUpperCase())}</button></div>
+  <div class="top"><span class="wm">botella</span><button class="me-pill" data-go="perfil"><span class="avatar" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span>Tú</button></div>
   <h1 class="title mt2 mb2">Conversaciones</h1>
   ${ids.length ? `<div class="list">${ids.map(id => { const c = S.convs[id], b = B[id]; const last = c.msgs[c.msgs.length - 1]; return `
     <button class="item" data-go="chat" data-p='{"id":"${id}"}'><i class="orb" style="background:${b.c};width:12px;height:12px"></i>
@@ -345,7 +357,7 @@ R.chat = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id]; c.unread = fals
       st.innerHTML = `${stepsHTML(c.stage)}<div class="lbls">${STEP.map((s, i) => i === c.stage ? `<b>${s}</b>` : `<span>${s}</span>`).join('')}</div>`;
       const k = counts(), need = Math.max(0, 2 - k.them) + Math.max(0, 2 - k.me);
       const N = [
-        need ? [`Nombres en ${need} ${need === 1 ? 'nota' : 'notas'} más`, null] : [`${I.eye}Compartir mi nombre`, askName],
+        need ? [need === 1 ? '1 nota más para ver nombres' : `${need} notas más para ver nombres`, null] : [`${I.eye}Compartir mi nombre`, askName],
         [`${I.phone}Pedir una llamada`, askCall], [`${I.plan}Proponer un plan`, askPlan], [`${I.check}Plan listo`, null]][c.stage];
       next.innerHTML = N[0]; next.disabled = !N[1]; next.onclick = N[1];
       requestAnimationFrame(() => el.scrollTop = el.scrollHeight);
@@ -409,7 +421,7 @@ R.perfil = () => ({ cls: 'pin', html: `
   <div class="me-head mt1"><span class="avatar big" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span><span><h1 class="title">${esc(S.name || 'Tú')}</h1><span class="sub">${S.temas.map(esc).join(' · ')}</span></span></div>
   <div class="stat"><button data-go="bitacora"><b>${X.streak}</b><span>días seguidos</span></button><button data-go="muelle"><b>${S.left}</b><span>botellas para lanzar</span></button></div>
   <p class="eyebrow">Tu voz</p>
-  <div class="grid3">${tile('bottle', 'Mis botellas', 'data-go="botellas"')}${tile('map', 'Tu mapa', 'data-go="mapa"')}${tile('quote', 'Qué piensan de ti', 'data-go="lecturas"')}</div>
+  <div class="grid3">${tile('bottle', 'Mis botellas', 'data-go="botellas"')}${tile('map', 'Mapa de tu voz', 'data-go="mapa"')}${tile('quote', 'Qué piensan de ti', 'data-go="lecturas"')}</div>
   <p class="eyebrow">Con más gente</p>
   <div class="grid3">${tile('two', 'Botella para dos', 'data-go="dos"')}${tile('people', 'Salidas', 'data-go="salidas"')}${tile('gift', 'Invitar', 'data-a="inv"')}</div>
   <div class="list mt3">
@@ -422,7 +434,7 @@ R.perfil = () => ({ cls: 'pin', html: `
       inv: () => sheet(`<h2 class="title">Invita a alguien</h2><p class="sub">Cuando entre, los dos reciben una botella extra.</p><div class="inp mt2" style="display:flex;align-items:center;color:var(--fg-2);font-size:14px">botella-app.vercel.app/?c=TU-CODIGO</div><div class="row-btns mt2"><button class="btn btn-a" id="cp">Copiar enlace</button></div>`, (s, close) => $('#cp', s).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); close(); toast('Enlace copiado'); }),
       rules: () => sheet(`<h2 class="title">Normas de la casa</h2><div class="list mt2 mb3">${['Coquetear está bien. Lo explícito, no.', 'Sin insultos ni amenazas.', 'Tu distrito nunca se muestra.', 'Puedes reportar o bloquear desde cualquier conversación.'].map(t => `<p class="item" style="margin:0;min-height:52px">${t}</p>`).join('')}</div><button class="btn btn-2" data-close>Entendido</button>`),
       cuenta: () => sheet(`<h2 class="title">Cuenta</h2><div class="list mt2">${row('tag', 'Tus temas', S.temas.join(', '), 'data-a="temas"')}${row('rules', 'Normas de la casa', '', 'data-a="rules"')}${row('key', 'Cambiar contraseña', '', 'data-a="pw"')}${row('out', 'Cerrar sesión', '', 'data-a="out"')}</div><p class="cap mt3 mb2" style="margin-bottom:8px">Estilo visual (prueba)</p>${dirSeg()}`, (s, close) => { bindDir(s); $$('[data-a]', s).forEach(b => b.onclick = () => { const k = b.dataset.a; if (k === 'rules') return acts.rules(); close(); setTimeout(acts[k], 210); }); }),
-      pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => { store.set('onb', 0); go('bienvenida'); }
+      pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => sheet(`<h2 class="title">¿Cerrar sesión?</h2><p class="sub">Tus botellas y conversaciones te esperan cuando vuelvas a entrar.</p><div class="row-btns mt3"><button class="btn btn-2" id="bye">Cerrar sesión</button><button class="btn btn-q" data-close>Seguir aquí</button></div>`, (sh, close) => $('#bye', sh).onclick = () => { close(); store.set('onb', 0); go('bienvenida'); })
     };
     $$('[data-a]', el).forEach(b => b.onclick = () => acts[b.dataset.a]());
   } });

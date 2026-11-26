@@ -331,6 +331,12 @@ svg{display:block}
 .spc .foot{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px}
 .spc .have{margin:0}
 
+/* usabilidad (ux-heuristics) */
+.me-pill{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 4px;border-radius:999px;background:var(--s1);font-size:var(--t2);font-weight:500}
+.me-pill .avatar{width:36px;height:36px}
+.toast .undo{margin-left:6px;padding:6px 4px 6px 10px;color:var(--a);font-weight:500;border-left:1px solid var(--line-2)}
+.ferr{color:#FFB3B5;font-size:var(--t1);margin:-6px 4px 12px}
+.inp[aria-invalid]{box-shadow:inset 0 0 0 1.5px var(--danger)}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
