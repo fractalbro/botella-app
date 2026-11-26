@@ -16,9 +16,9 @@ Object.assign(GLASS, {
 });
 const UNLOCKS = [
   { days: 2, kind: 'color', name: 'Una botella de color' }, { days: 3, kind: 'glass', item: 'coral', name: 'Vidrio coral' },
-  { days: 5, kind: 'gift', name: 'Una botella con lacre' }, { days: 7, kind: 'glass', item: 'violeta', name: 'Vidrio violeta' },
+  { days: 5, kind: 'gift', name: 'Una botella de regalo' }, { days: 7, kind: 'glass', item: 'violeta', name: 'Vidrio violeta' },
   { days: 10, kind: 'far', name: 'Una botella que llega lejos' }, { days: 14, kind: 'glass', item: 'aurora', name: 'Vidrio aurora' },
-  { days: 21, kind: 'gift', name: 'Dos botellas con lacre' }, { days: 30, kind: 'glass', item: 'luna', name: 'Vidrio de luna' }
+  { days: 21, kind: 'gift', name: 'Dos botellas de regalo' }, { days: 30, kind: 'glass', item: 'luna', name: 'Vidrio de luna' }
 ];
 const FIRST = { id: 'first', first: true, bottle: '5a5ab000-0000-4000-8000-000000000004', status: 'waiting', kind: 'Pregunta', body: '¿Qué canción te devuelve a tus 15 años?', voice: 'seed/ivan-say.mp3', voice_secs: 14, voice_peaks: null, place: 'Música', sample: true, btype: 'free', arrived: new Date().toISOString() };
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;

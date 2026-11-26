@@ -10,7 +10,7 @@ const STORE = {
     { k: 'tide', name: 'Botella dorada', tag: '21:00', desc: 'Sale primera en la marea de las 21:00, para todo Lima.', price: '1.90', art: () => btSVG('free', null, true), left: () => S.me?.tide_left },
     { k: 'who', name: 'Quién la abrió', tag: 'para siempre', desc: 'Mira qué tema compartes con cada persona que abrió tu botella, y a qué hora.', price: '4.90', art: () => `<span class="iart">${icon('eye')}</span>`, own: () => S.me?.who_open }
   ],
-  gifts: [{ k: 'gift', name: 'Botella con lacre', tag: 'regalo', desc: 'Un regalo para alguien con quien conversas: una botella sellada que se queda en el chat y le da una botella para lanzar.', price: '3.90', art: () => `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>`, left: () => S.me?.gifts_left }],
+  gifts: [{ k: 'gift', name: 'Botella de regalo', tag: 'regalo', desc: 'Un regalo para alguien con quien conversas: una botella sellada que se queda en el chat y le da una botella para lanzar.', price: '3.90', art: () => `<span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span>`, left: () => S.me?.gifts_left }],
   looks: [
     { k: 'glass:none', g: null, name: 'Transparente', desc: 'El vidrio de siempre.', price: '' },
     { k: 'glass:verde', g: 'verde', name: 'Verde', desc: 'Tus botellas viajan en vidrio verde.', price: '4.90' },
@@ -36,7 +36,7 @@ P.actions.toStore = () => go('store', { fade: true });
 const itemHTML = (it, btn) => `<div class="sitem${P.st.gotK === it.k ? ' got' : ''}"><span class="art">${it.art()}</span><span class="tx"><b>${it.name}${it.tag ? ` <em>${it.tag}</em>` : ''}</b><span>${it.desc}</span></span><span class="pr">${btn}</span></div>`;
 const getBtn = (k, label = 'Pedir') => `<button class="btn btn-tonal btn-sm" data-act="get" data-k="${k}">${label}</button>`;
 // Lo que tienes, en una línea: las normales siempre; las especiales solo si te queda alguna.
-const balLine = m => { const n = (v, a, b) => v ? `<b>${v}</b> ${v === 1 ? a : b}` : ''; return 'Tienes ' + [`<b>${m.bottles ?? 0}</b> ${m.bottles === 1 ? 'normal' : 'normales'}`, n(m.color_left, 'de color', 'de color'), n(m.far_left, 'que llega lejos', 'que llegan lejos'), n(m.tide_left, 'dorada', 'doradas'), n(m.gifts_left, 'con lacre', 'con lacre')].filter(Boolean).join(' · '); };
+const balLine = m => { const n = (v, a, b) => v ? `<b>${v}</b> ${v === 1 ? a : b}` : ''; return 'Tienes ' + [`<b>${m.bottles ?? 0}</b> ${m.bottles === 1 ? 'normal' : 'normales'}`, n(m.color_left, 'de color', 'de color'), n(m.far_left, 'que llega lejos', 'que llegan lejos'), n(m.tide_left, 'dorada', 'doradas'), n(m.gifts_left, 'de regalo', 'de regalo')].filter(Boolean).join(' · '); };
 P.screens.store = {
   cls: 'storebg',
   render: () => { const m = S.me || {}; return `${sb_()}<div class="scroll pad"><div class="top"><span class="h2" style="flex:1">Muelle</span>${meBtn()}</div>
@@ -136,17 +136,17 @@ P.actions.outCreate = async el => {
   catch (e) { el.classList.remove('soft'); err(e); }
 };
 
-/* ================= REGALO: BOTELLA CON LACRE ================= */
+/* ================= REGALO: BOTELLA DE REGALO ================= */
 P.actions.giftAsk = () => {
   const c = convo(); if (!c || c.closed) return; const n = S.me?.gifts_left || 0;
-  sheet(`${sheetHead('Botella con lacre')}<div class="giftart"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span></div>
+  sheet(`${sheetHead('Botella de regalo')}<div class="giftart"><span class="gb">${bottleSVG('rgba(255,214,140,.98)', 'rgba(255,200,110,.34)')}<i class="seal"></i></span></div>
     <p class="muted" style="margin:0 0 14px;text-align:center">Una botella sellada que se queda en esta conversación. A ${c.revealed ? esc(c.alias) : 'esta persona'} le regala una botella para lanzar.</p>
     ${n ? `<button class="btn btn-a" data-act="giftGo">${icon('gift')} Mandarla (te ${n === 1 ? 'queda 1' : 'quedan ' + n})</button>` : `<button class="btn btn-a" data-act="giftGet">${icon('bag')} Pedir una gratis en el muelle</button>`}<button class="btn btn-ghost" data-act="closeSheet" style="margin-top:6px">Ahora no</button>`);
 };
 P.actions.giftGet = async el => { el.classList.add('soft'); try { await claim('gift'); P.actions.giftAsk(); } catch (e) { el.classList.remove('soft'); err(e); } };
 P.actions.giftGo = async el => {
   const c = convo(); el.classList.add('soft');
-  try { const left = await rpc('send_gift', { p_convo: c.id }); S.me.gifts_left = left; closeSheet(); await loadMsgs(c.id); rerender(); hap([10, 30, 10, 30, 20]); toast('Tu botella con lacre llegó.'); }
+  try { const left = await rpc('send_gift', { p_convo: c.id }); S.me.gifts_left = left; closeSheet(); await loadMsgs(c.id); rerender(); hap([10, 30, 10, 30, 20]); toast('Tu botella de regalo llegó.'); }
   catch (e) { el.classList.remove('soft'); err(e); }
 };
 

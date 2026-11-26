@@ -50,7 +50,7 @@ alter table public.profiles enable row level security;
 -- Botellas especiales de regalo para la beta: de color (eliges a quién llega) y que llega lejos (10 orillas).
 alter table public.profiles add column if not exists color_left int not null default 2;
 alter table public.profiles add column if not exists far_left int not null default 1;
--- Del muelle (gratis en la beta): marea destacada, lacre, quién la abrió, vidrio y plan Capitán. Las personas de ejemplo llevan is_sample.
+-- Del muelle (gratis en la beta): marea destacada, botella de regalo, quién la abrió, vidrio y plan Capitán. Las personas de ejemplo llevan is_sample.
 alter table public.profiles add column if not exists tide_left int not null default 1;
 alter table public.profiles add column if not exists gifts_left int not null default 1;
 alter table public.profiles add column if not exists who_open boolean not null default false;
@@ -766,13 +766,13 @@ create or replace function public.convo_other(p_convo uuid) returns uuid languag
   select case when a = auth.uid() then b else a end from convos where id = p_convo and auth.uid() in (a, b) and not closed and not blocked(a, b);
 $$;
 
--- Botella con lacre: queda dorada en la conversación y le regala una botella normal a la otra persona.
+-- Botella de regalo: queda dorada en la conversación y le regala una botella normal a la otra persona.
 create or replace function public.send_gift(p_convo uuid) returns int language plpgsql security definer set search_path = public as $$
 declare other uuid := convo_other(p_convo); me profiles;
 begin
   if other is null then raise exception 'Esta conversación ya terminó.'; end if;
   select * into me from profiles where id = auth.uid() for update;
-  if me.gifts_left < 1 then raise exception 'Te quedaste sin botellas con lacre. Pide otra en el muelle.'; end if;
+  if me.gifts_left < 1 then raise exception 'Te quedaste sin botellas de regalo. Pide otra en el muelle.'; end if;
   update profiles set gifts_left = gifts_left - 1 where id = me.id returning * into me;
   update profiles set bottles = least(bottles + 1, 60) where id = other and not is_sample;
   insert into messages(convo_id, sender, body) values (p_convo, me.id, '#gift|');
@@ -886,9 +886,9 @@ grant execute on function public.outing_boost(uuid) to authenticated;
 -- ========== CONSTANCIA: DÍAS SEGUIDOS Y DESBLOQUEOS ==========
 -- Un día cuenta si usaste tu voz: lanzar, responder, la pregunta de la marea o una nota en una conversación.
 create or replace function public.unlock_plan() returns table (days int, kind text, item text, label text) language sql immutable as $$
-  values (2, 'color', '1', 'una botella de color'), (3, 'glass', 'coral', 'el vidrio coral'), (5, 'gift', '1', 'una botella con lacre'),
+  values (2, 'color', '1', 'una botella de color'), (3, 'glass', 'coral', 'el vidrio coral'), (5, 'gift', '1', 'una botella de regalo'),
          (7, 'glass', 'violeta', 'el vidrio violeta'), (10, 'far', '1', 'una botella que llega lejos'), (14, 'glass', 'aurora', 'el vidrio aurora'),
-         (21, 'gift', '2', 'dos botellas con lacre'), (30, 'glass', 'luna', 'el vidrio de luna');
+         (21, 'gift', '2', 'dos botellas de regalo'), (30, 'glass', 'luna', 'el vidrio de luna');
 $$;
 create or replace function public.bump_streak(p_id uuid) returns void language plpgsql security definer set search_path = public as $$
 declare me profiles; d date := lima_today(); n int; u record;
@@ -930,7 +930,7 @@ begin
     first := new.sender = c.b and not exists (select 1 from messages m where m.convo_id = c.id and m.sender = c.b and m.id <> new.id and m.voice is not null);
     perform notify(rcpt, 'msg', case when first then 'Respondieron tu botella' else who end,
       case when first then who || ' te contestó con su voz.' else 'Te mandó una nota de voz.' end, 'chat', c.id::text, new.created_at);
-  elsif new.body like '#gift|%' then perform notify(rcpt, 'msg', who || ' te mandó una botella con lacre', 'Te regaló una botella para lanzar.', 'chat', c.id::text, new.created_at);
+  elsif new.body like '#gift|%' then perform notify(rcpt, 'msg', who || ' te mandó una botella de regalo', 'Te regaló una botella para lanzar.', 'chat', c.id::text, new.created_at);
   elsif new.body like '#plan|%' then perform notify(rcpt, 'msg', who || ' te propone un plan', split_part(new.body, '|', 2) || ' · ' || split_part(new.body, '|', 3), 'chat', c.id::text, new.created_at);
   elsif new.body like '#planok|%' then perform notify(rcpt, 'msg', who || ' aceptó tu plan', 'Lugares públicos y avísale a alguien de confianza.', 'chat', c.id::text, new.created_at);
   elsif new.body like '#call|%' then perform notify(rcpt, 'call', who || ' te está llamando', 'Abre Botella para contestar.', 'chat', c.id::text, new.created_at);
