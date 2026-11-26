@@ -67,7 +67,7 @@ P.actions.authGo = async el => {
   const email = $('#em').value.trim(), pass = $('#pw').value, up = S.authMode === 'signup';
   if (!/^\S+@\S+\.\S+$/.test(email)) return toast('A ese correo le falta algo. Revísalo.');
   if (pass.length < 8) return toast('La contraseña necesita 8 caracteres o más.');
-  if (S.busy) return; S.busy = true; el.classList.add('soft'); el.textContent = up ? 'Creando tu cuenta…' : 'Entrando…';
+  if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = up ? 'Creando tu cuenta…' : 'Entrando…';
   try {
     if (up) {
       const { data, error } = await sb.auth.signUp({ email, password: pass }); if (error) throw error;
@@ -129,7 +129,7 @@ P.actions.topic = el => { togIn(S.draft.topics, el.dataset.v, el); const b = $('
 P.actions.seek = el => togIn(S.draft.seeks, el.dataset.v, el);
 P.actions.finish = async el => {
   const D = S.draft; if (D.topics.length < 3) return toast('Elige al menos tres temas.');
-  if (S.busy) return; S.busy = true; el.classList.add('soft'); el.textContent = 'Preparando tu orilla…';
+  if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Preparando tu orilla…';
   try {
     const r = S.rec.intro || {}, path = r.blob ? await upload(r.blob, r.ext) : null;
     const { error } = await sb.from('profiles').insert({ id: uid(), name: D.name, district: D.district, topics: D.topics, seeks: D.seeks, intro_voice: path, intro_secs: r.secs, intro_peaks: r.peaks, code_used: S.code || LS.get('code', '') });
@@ -181,7 +181,8 @@ const TOUR = [
 ];
 function tourCheck() {
   // espera un momento: la orilla a veces solo se cruza de paso hacia el chat de ejemplo
-  if (P.tour == null) { if (!LS.get('tour', 0) && S.me && S.shore.length) P.timers.push(setTimeout(() => { if (P.curId === 'orilla' && P.tour == null && !LS.get('tour', 0)) { LS.set('tour', 1); P.tour = 0; tourCheck(); } }, 1200)); return; }
+  // La guía espera a que la persona deje de tocar: si aparece justo cuando toca, se come ese toque.
+  if (P.tour == null) { if (!LS.get('tour', 0) && S.me && S.shore.length) { const tryStart = () => { if (P.curId !== 'orilla' || P.tour != null || LS.get('tour', 0)) return; const idle = performance.now() - (P.lastTouch || 0); if (idle < 1500) { P.timers.push(setTimeout(tryStart, 1600 - idle)); return; } LS.set('tour', 1); P.tour = 0; tourCheck(); }; P.timers.push(setTimeout(tryStart, 700)); } return; }
   const [sel, t, d] = TOUR[P.tour], tg = P.root.querySelector(sel); if (!tg) return;
   const pr = P.root.getBoundingClientRect(), r = tg.getBoundingClientRect(), last = P.tour === TOUR.length - 1, pad = 6;
   let block = P.root.querySelector('.coachblock'), ring = P.root.querySelector('.coachring'); P.root.querySelector('.coach')?.remove();
@@ -246,7 +247,7 @@ P.screens.answer = {
 P.actions.sendAns = async el => {
   const b = S.sel, r = S.rec.ans; if (!r) return needVoice('ans'); if (!b || S.busy) return;
   if (b.first) { S.first = b; return P.actions.skipIntro(); }
-  S.busy = true; el.classList.add('soft'); el.innerHTML = 'Enviando…';
+  S.busy = true; el.classList.add('soft', 'busy'); el.innerHTML = 'Enviando…';
   try {
     const path = await upload(r.blob, r.ext);
     const [res] = await rpc('answer_delivery', { p_id: b.id, p_voice: path, p_secs: r.secs, p_peaks: r.peaks });
@@ -607,7 +608,7 @@ P.actions.pauseT = async el => {
 };
 P.actions.reIntro = () => { delete S.rec.reintro; sheet(`${sheetHead('Tu presentación')}<p class="muted" style="margin:0">Tu apodo y algo que te guste, en unos 15 segundos.</p>${recBox('reintro', 'Toca para grabar.')}<button class="btn btn-a soft" data-needs="reintro" data-act="reIntroSave">Guardar</button>`); };
 P.actions.reIntroSave = async el => {
-  const r = S.rec.reintro; if (!r) return needVoice('reintro'); el.classList.add('soft'); el.textContent = 'Guardando…';
+  const r = S.rec.reintro; if (!r) return needVoice('reintro'); el.classList.add('soft', 'busy'); el.textContent = 'Guardando…';
   try { const path = await upload(r.blob, r.ext); const { error } = await sb.from('profiles').update({ intro_voice: path, intro_secs: r.secs, intro_peaks: r.peaks }).eq('id', uid()); if (error) throw error; URLS.set(path, r.url); Object.assign(S.me, { intro_voice: path, intro_secs: r.secs, intro_peaks: r.peaks }); delete S.rec.reintro; closeSheet(); rerender(); toast('Listo, guardamos tu nueva presentación.'); }
   catch (e) { el.classList.remove('soft'); el.textContent = 'Guardar'; err(e); }
 };
@@ -630,7 +631,7 @@ P.actions.rules = () => sheet(`${sheetHead('Normas y privacidad')}<div class="ru
 P.actions.logout = async () => { await sb.auth.signOut().catch(() => {}); location.replace('/'); };
 P.actions.deleteAsk = () => sheet(`${sheetHead('¿Borrar tu cuenta?')}<p class="muted" style="margin:0 0 16px">Se borran tu perfil, tus botellas, tus notas de voz y tus conversaciones. No se puede deshacer.</p><button class="btn btn-a" data-act="deleteGo">Borrar todo</button><button class="btn btn-ghost" data-act="closeSheet" style="margin-top:6px">Cancelar</button>`);
 P.actions.deleteGo = async el => {
-  el.classList.add('soft'); el.textContent = 'Borrando…';
+  el.classList.add('soft', 'busy'); el.textContent = 'Borrando…';
   try { const { data: fs } = await sb.storage.from('voice').list(uid(), { limit: 1000 }); if (fs && fs.length) await sb.storage.from('voice').remove(fs.map(f => uid() + '/' + f.name)); await rpc('delete_me'); await sb.auth.signOut(); localStorage.clear(); location.replace('/'); }
   catch (e) { el.classList.remove('soft'); el.textContent = 'Borrar todo'; err(e); }
 };
