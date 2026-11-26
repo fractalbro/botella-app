@@ -444,7 +444,7 @@ const SPECIAL = [
   ['color', 'De color', 'Llega solo a quienes aman un tema que eliges', '#FF70A9'],
   ['far', 'Que llega lejos', 'A 20 personas en vez de 8', '#8E8CFF'],
   ['tide', 'Dorada', 'Sale primera en la marea de las 21:00', '#FFC24B'],
-  ['gift', 'Con lacre', 'Un regalo para alguien con quien conversas', '#FFB061']
+  ['gift', 'De regalo', 'Para alguien con quien conversas: le das una botella más', '#FFB061']
 ];
 const GLASS = [['Claro', '#CFE9F2'], ['Verde', '#7FD8A0'], ['Ámbar', '#FFB061'], ['Esmerilado', '#B9C6D3']];
 const PACKS = [[3, 'Para un día con mucho que decir'], [10, 'Para toda la semana'], [30, '25 más 5 de regalo']];
