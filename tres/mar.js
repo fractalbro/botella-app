@@ -52,7 +52,7 @@ export function create(canvas, env) {
   const pivot = new THREE.Group(); pivot.position.set(LX, 1.2 + LY * .85, LZ); const beam = new THREE.Mesh(bgeo, beamM); pivot.add(beam); const beam2 = beam.clone(); beam2.rotation.y = Math.PI; pivot.add(beam2); scene.add(pivot);
 
   // ---- botellas ----
-  const tintOf = (o, c) => { o.b.traverse(m => { if (m.isMesh && m.material.transmission) { m.material.color.copy(c).lerp(new THREE.Color('#ffffff'), .55); m.material.attenuationColor.copy(c); } }); o.pl.color.copy(c); };
+  const tintOf = (o, c) => { o.b.traverse(m => { if (m.isMesh && m.material.userData.glass) m.material.color.copy(c).lerp(new THREE.Color('#ffffff'), .35); }); o.pl.color.copy(c); };
   // la luz de cada botella vive fuera de ella y nunca se oculta: si cambia la cantidad de luces, three recompila todo (congelón)
   const mk = (light) => { const b = bottle({ light: 0 }); const holder = new THREE.Group(); holder.add(b); b.position.y = -1.4; const root = new THREE.Group(); root.add(holder); scene.add(root);
     const pl = new THREE.PointLight(C.a, 0, 4, 2); scene.add(pl); return { root, holder, b, pl, light }; };
