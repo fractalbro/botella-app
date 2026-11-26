@@ -1,0 +1,41 @@
+/* Lanzar una botella (lanzar.js). Usa los tokens de ds.css. */
+.lv .lv-kinds{margin-top:var(--s4)}
+.lv-priv{display:flex;gap:6px;align-items:flex-start;margin:var(--s4) 2px 0}
+.lv-priv .i{flex:none;margin-top:2px}
+.lv-stage{margin-top:var(--s6)}
+.lv-big .rec{gap:var(--s3)}
+.lv-big .rec .mic{width:112px;height:112px}
+.lv-big .rec .mic .i{width:38px;height:38px}
+.lv-big .rec .time{font-size:var(--t-title);color:var(--c-fg-2)}
+.lv .rec .hint{text-align:center;max-width:30ch;color:var(--c-fg-2)}
+.lv-help{display:flex;justify-content:center;margin-top:var(--s2)}
+.lv-help .btn-text{color:var(--c-fg-2);font-weight:500}
+.lv-help .btn-text .i{color:var(--c-primary)}
+.lv-picked{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-radius:var(--r-sm);background:var(--c-info);margin-bottom:var(--s3)}
+.lv-picked .q{flex:1;font-size:var(--t-sub);color:var(--c-fg);line-height:1.3}
+.lv-picked .btn{flex:none;width:auto;color:var(--c-fg-2)}
+.lv-ideas .idea{font-size:var(--t-body);font-family:inherit;font-weight:400;padding:12px 0;color:var(--c-fg-2)}
+.lv-ideas .idea.on{color:var(--c-fg)}
+
+/* Botón que se desliza: la botella es la perilla y la estela turquesa la sigue */
+.slide{--sl-k:56px;position:relative;height:64px;border-radius:var(--r-pill);background:var(--c-tonal);border:1px solid color-mix(in srgb,var(--c-primary) 40%,transparent);
+  overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;display:flex;align-items:center;outline:none}
+.slide:focus-visible{box-shadow:0 0 0 3px var(--c-bg),0 0 0 5px var(--c-primary)}
+.slide.drag{cursor:grabbing}
+.sl-fill{position:absolute;left:0;top:0;bottom:0;width:var(--sl-k);border-radius:var(--r-pill);background:var(--c-primary);opacity:.9}
+.sl-t{position:relative;flex:1;text-align:center;padding-left:calc(var(--sl-k) + 4px);padding-right:36px;font-size:var(--t-body);font-weight:600;color:var(--c-primary);pointer-events:none;white-space:nowrap}
+.sl-arrows{position:absolute;right:20px;top:50%;transform:translateY(-52%);font-size:22px;letter-spacing:-2px;color:var(--c-primary);opacity:.55;pointer-events:none;
+  -webkit-mask:linear-gradient(90deg,#000 0 30%,rgba(0,0,0,.25) 50%,#000 70%) 0 0/300% 100%;mask:linear-gradient(90deg,#000 0 30%,rgba(0,0,0,.25) 50%,#000 70%) 0 0/300% 100%;animation:slarr 1.8s linear infinite}
+.sl-k{position:absolute;left:4px;top:3px;width:var(--sl-k);height:var(--sl-k);border-radius:50%;background:var(--c-primary);display:grid;place-items:center;box-shadow:0 6px 18px -6px rgba(0,0,0,.6);z-index:1}
+.sl-k svg{width:46px;margin-left:2px}
+.slide:not(.drag):not(.done) .sl-k{animation:slhint 3.2s 1s var(--e-out) infinite}
+.slide.nudge .sl-k{animation:slnudge .6s var(--e-out)}
+.slide.done .sl-k{transition:transform .25s ease-in,opacity .25s .1s!important;opacity:0}
+.slide.done .sl-arrows{opacity:0}
+.slide.soft{opacity:.55}
+.sl-sub{text-align:center;margin:0}
+@keyframes slhint{0%,70%,100%{transform:translateX(0)}78%{transform:translateX(18px) rotate(-2deg)}86%{transform:translateX(0)}92%{transform:translateX(8px)}}
+@keyframes slnudge{0%,100%{transform:translateX(0)}40%{transform:translateX(34px) rotate(-3deg)}}
+@keyframes slarr{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0 0;mask-position:0 0}}
+@media (prefers-reduced-motion:reduce){.slide .sl-k,.sl-arrows{animation:none!important}}
+@media (max-height:700px){.lv-big .rec .mic{width:88px;height:88px}.lv-stage{margin-top:var(--s4)}.slide{height:58px;--sl-k:50px}}

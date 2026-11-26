@@ -258,40 +258,19 @@ P.actions.sendAns = async el => {
 };
 
 /* ================= LANZAR ================= */
-P.screens.launch = {
-  render: () => { const left = btLeft(S.btype); return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Lanzar una botella<small>${BT[S.btype].name}: ${left ? `te ${left === 1 ? 'queda 1' : 'quedan ' + left}` : 'no te quedan'}</small></span></div>
-    <div class="scroll pad">
-      ${S.rec.launch ? `<div class="h2 rise" style="margin-top:4px">Lista para lanzar</div><p class="small muted" style="margin:6px 2px 0">${S.kind}${S.body ? ' · “' + esc(S.body) + '”' : ''}</p>` : `<div class="display rise" style="margin-top:4px">¿Qué quieres <b>lanzar</b> al mar?</div>
-      <div class="chips rise d1" style="margin-top:16px" id="kinds">${Object.keys(KINDS).map(k => `<button class="chip${S.kind === k ? ' on' : ''}" data-act="kind" data-k="${k}">${k}</button>`).join('')}</div>
-      <div class="sec rise d2" style="margin-top:18px"><p class="small muted" style="margin:0 2px">Toca una idea si quieres. Lo que cuenta es tu voz.</p><div class="ideas" id="ideas" style="margin-top:8px">${ideasHTML()}</div></div>`}
-      <div class="sec">${recBox('launch', 'Toca para grabarla. Con 10 segundos basta; tienes hasta 60.')}<p class="small muted" style="margin:8px 2px 0">${icon('lock', 's')} Llega a ${S.duoOn ? 12 : S.btype === 'far' ? 20 : 8} personas con cuenta. No ven tu nombre ni tu distrito.</p></div>
-      ${S.moreOpts || S.duoOn || S.btype !== 'free' || S.featured ? `      <div class="sec"><label class="field"><input id="bbody" maxlength="140" value="${esc(S.body)}" placeholder="De qué trata (opcional)" aria-label="Tu botella en una línea"></label></div>
+// opciones de la botella (para dos, tipo, dorada) y aviso de botellas agotadas: compartidos con las variantes de lanzar.js
+function launchOptsHTML() { return S.moreOpts || S.duoOn || S.btype !== 'free' || S.featured ? `      <div class="sec"><label class="field"><input id="bbody" maxlength="140" value="${esc(S.body)}" placeholder="De qué trata (opcional)" aria-label="Tu botella en una línea"></label></div>
       <div class="sec" style="margin-top:16px"><button class="setrow duot" role="switch" aria-checked="${!!S.duoOn}" data-act="duoT">${icon('duo')}<span style="flex:1"><b>Botella para dos</b><span>Tú grabas una mitad y alguien que tú elijas, la otra. Sale con las dos voces a 12 personas.</span></span><span class="sw"></span></button></div>
       ${S.duoOn ? '' : `<div class="sec"><span class="eyebrow">Tipo de botella</span><div class="btypes" id="btypes">${btypesHTML()}</div>
         ${S.btype === 'color' ? `<label class="field select" style="margin-top:10px"><select id="btarget" aria-label="A quién llega">${targetOpts()}</select></label>` : ''}
         <p class="small muted" style="margin:8px 0 0">${BT[S.btype].desc}</p>
         <button class="setrow" role="switch" aria-checked="${S.featured}" data-act="featT" style="margin-top:10px">${icon('tide')}<span style="flex:1"><b>Que salga dorada, en la marea de las 21:00</b><span>${(S.me?.tide_left || 0) ? `Arriba de todas, para todo Lima. Te ${S.me.tide_left === 1 ? 'queda 1' : 'quedan ' + S.me.tide_left}.` : 'No te quedan. Pide una en el muelle.'}</span></span><span class="sw"></span></button></div>`}
-` : `<div class="sec"><button class="setrow" data-act="moreOpts">${icon('spark')}<span style="flex:1"><b>${launchKind()}</b><span>Cambiar: para dos, elegir tema, llegar más lejos o salir dorada.</span></span>${icon('arrow', 's')}</button></div>`}
-      ${left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`}
-    </div>
-    ${S.rec.launch && S.duoOn ? `<div class="foot pad"><button class="btn btn-a${S.me?.bottles ? '' : ' soft'}" data-act="duoStart">${icon('duo')} Guardar mi mitad e invitar</button></div>` : S.rec.launch ? `<div class="foot pad"><div class="fling${left ? '' : ' soft'}" id="fling"><span class="fb" id="fb">${bottleSVG()}</span><span class="ft">También puedes deslizarla hacia arriba</span></div><button class="btn btn-a${left ? '' : ' soft'}" data-act="throw">${icon('send')} Lanzar al mar</button></div>` : ''}`; },
-  after(sec) {
-    const fb = sec.querySelector('#fb'); let y0 = null, dy = 0;
-    sec.querySelector('#bbody')?.addEventListener('input', e => { S.body = e.target.value; });
-    sec.querySelector('#btarget')?.addEventListener('change', e => { S.target = e.target.value; });
-    if (!fb) return;
-    fb.addEventListener('pointerdown', e => { if (!S.rec.launch) { needVoice('launch'); return; } y0 = e.clientY; fb.setPointerCapture(e.pointerId); fb.style.transition = 'none'; });
-    fb.addEventListener('pointermove', e => { if (y0 == null) return; dy = Math.min(0, e.clientY - y0); fb.style.transform = `translateY(${dy}px) rotate(${dy * .25}deg) scale(${1 - dy / 400})`; });
-    const end = () => { if (y0 == null) return; y0 = null; fb.style.transition = 'transform .35s cubic-bezier(.2,1.4,.3,1)'; if (dy < -70) { fb.style.transform = 'translateY(-400px) rotate(-60deg) scale(.4)'; setTimeout(() => P.actions.throw(), 220); } else fb.style.transform = ''; dy = 0; };
-    fb.addEventListener('pointerup', end); fb.addEventListener('pointercancel', end);
-  }
-};
+` : `<div class="sec"><button class="setrow" data-act="moreOpts">${icon('spark')}<span style="flex:1"><b>${launchKind()}</b><span>Cambiar: para dos, elegir tema, llegar más lejos o salir dorada.</span></span>${icon('arrow', 's')}</button></div>`; }
+function launchEmptyHTML(left) { return left ? '' : `<div class="empty-note"><p class="small" style="margin:0">${S.btype === 'free' ? 'Te quedaste sin botellas normales. Responde una que te llegó y ganas otra, o pide más en el muelle.' : 'Ya usaste las de este tipo.'}</p><button class="btn btn-light btn-sm" data-act="getMore" data-k="${S.btype === 'free' ? 'p10' : S.btype}">${icon('bag', 's')} Pedir ${S.btype === 'free' ? '10 botellas' : 'otra'} gratis</button></div>`; }
+// La pantalla de lanzar vive en lanzar.js.
 P.actions.recorded = id => { if (id === 'launch' && P.curId === 'launch') { go('launch', { noPush: true }); if (S.rec.launch) setTimeout(() => { const sc = P.root.querySelector('.scroll'); sc && sc.scrollTo({ top: sc.scrollHeight, behavior: 'smooth' }); }, 60); } };
 // qué botella sale ahora, en palabras (la fila plegada de opciones)
 const launchKind = () => (S.duoOn ? 'Botella para dos · 12 personas' : S.btype === 'color' ? 'Botella de color · llega a 8 personas por tema' : S.btype === 'far' ? 'Llega lejos · 20 personas' : 'Botella normal · llega a 8 personas') + (S.featured ? ' · dorada' : '');
-function ideasHTML() { return KINDS[S.kind].map((q, i) => `<button class="idea${S.idea === i ? ' on' : ''}" data-act="idea" data-i="${i}">${q}</button>`).join(''); }
-P.actions.kind = el => { S.kind = el.dataset.k; S.idea = -1; document.querySelectorAll('#kinds .chip').forEach(c => c.classList.toggle('on', c.dataset.k === S.kind)); $('#ideas').innerHTML = ideasHTML(); };
-P.actions.idea = el => { S.idea = +el.dataset.i; S.body = KINDS[S.kind][S.idea]; const f = $('#bbody'); if (f) f.value = S.body; $('#ideas').innerHTML = ideasHTML(); };
 const BT = {
   free: { name: 'Normal', sub: '8 personas', desc: 'Llega a 8 personas con gustos parecidos, y a 4 más si nadie responde en 6 horas.', col: '127,216,201' },
   color: { name: 'De color', sub: 'tú eliges el tema', desc: 'Llega a 8 personas a quienes les gusta el tema que elijas.', col: '255,112,169' },
@@ -345,12 +324,12 @@ P.screens.thrown = {
     if (k >= 3.4 && st.shores != null) { const q = Math.min(1, (k - 3.4) / .8); for (let i = 0; i < n; i++) { if (i / n > q) continue; const x = w * (.1 + i * (.6 / Math.max(1, n - 1))), a = .5 + Math.sin(t * 2 + i) * .3; ctx.fillStyle = `rgba(${col},${a})`; ctx.shadowColor = `rgb(${col})`; ctx.shadowBlur = 16; ctx.beginPath(); ctx.arc(x, h * horizon - 2, 3.8, 0, 7); ctx.fill(); ctx.shadowBlur = 0; } }
   },
   render: () => `<div style="flex:1"></div><div class="pad" style="padding-bottom:26px;background:linear-gradient(transparent,rgba(3,16,28,.92) 35%)">
-    <span class="eyebrow a" id="tstat">Lanzada</span><div class="display" id="thead" style="margin-top:8px">Tu botella cayó al mar.</div>
-    <p class="lead" id="tlead">La marea la lleva hacia personas con tus mismos temas.</p>
+    <span class="eyebrow a" id="tstat">Lanzada</span><div class="display" id="thead" style="margin-top:8px">Tu botella ya está en el mar.</div>
+    <p class="lead" id="tlead">Ahora buscamos a quién le llega.</p>
     <div class="foot" style="padding-bottom:0"><button class="btn btn-a" data-act="toMine">Ver mis botellas</button><button class="btn btn-text" data-act="toShore">Volver a la orilla</button></div></div>`,
   after() {
     const set = (a, b, c) => { const e1 = $('#tstat'), e2 = $('#thead'), e3 = $('#tlead'); if (!e1) return; [e1, e2, e3].forEach(e => { e.classList.remove('rise'); void e.offsetWidth; e.classList.add('rise'); }); e1.textContent = a; e2.textContent = b; e3.textContent = c; };
-    P.timers.push(setTimeout(() => set('El faro la guía', 'La luz del faro pasa por tu botella.', 'Busca orillas con tus mismos temas.'), 1300));
+    P.timers.push(setTimeout(() => set('Buscando', 'Buscamos a quien le guste lo mismo que a ti.', 'Así es más fácil que alguien quiera responderte.'), 1300));
     const final = () => { const n = P.st.shores; if (n == null) { P.timers.push(setTimeout(final, 400)); return; } if (n < 0) return;
       set('En camino', n > 1 ? `Tu botella va hacia ${n} personas.` : n === 1 ? 'Ya le llegó a una persona.' : 'Tu botella flota en el mar.',
         (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 8 ? (P.st.duo ? 'Lleva las dos voces. Si alguien responde, les llega a los dos. ' : '') + 'Si alguien responde, te avisamos y conversan en privado. Si en 6 horas nadie responde, llega a 4 personas más.' : 'Todavía somos pocos: llegará a más personas a medida que se sumen. Cuando alguien responda, aparece en Conversaciones.')); };
