@@ -9,7 +9,7 @@ const lvPicked = () => S.idea >= 0 && KINDS[S.kind][S.idea] ? `<div class="lv-pi
 const lvIdeaList = () => `<div class="lv-ideas">${KINDS[S.kind].map((q, i) => `<button class="idea${S.idea === i ? ' on' : ''}" data-act="lvIdea" data-i="${i}">${q}</button>`).join('')}</div>`;
 // botón que se desliza: la botella es la perilla. Con teclado, Enter o espacio la lanzan.
 const lvSlide = left => `<div class="slide${left ? '' : ' soft'}" id="slide" role="button" tabindex="0" aria-label="Lanzar al mar. Desliza la botella hacia la derecha, o presiona Enter.">
-    <span class="sl-fill" id="slf"></span><span class="sl-t" id="slt">Desliza la botella al mar</span><span class="sl-arrows" aria-hidden="true">›››</span>
+    <span class="sl-fill" id="slf"></span><span class="sl-t" id="slt">Desliza la botella al mar</span><span class="sl-arrows" aria-hidden="true">›››</span><span class="sl-go" id="slg" aria-hidden="true">Suelta y sale al mar</span>
     <span class="sl-k" id="slk">${bottleSVG('rgba(4,18,28,.85)', 'rgba(4,18,28,.10)')}</span></div><p class="small muted sl-sub">Sale hacia ${lvReach()} personas. Si te arrepientes, suéltala.</p>`;
 
 P.screens.launch = {
@@ -30,16 +30,29 @@ P.screens.launch = {
 };
 
 function bindSlide(sl) {
-  const k = sl.querySelector('#slk'), f = sl.querySelector('#slf'), t = sl.querySelector('#slt');
-  let x0 = null, dx = 0, max = 0, moved = false;
-  const set = (x, anim) => { const tr = anim ? 'transform .35s cubic-bezier(.2,1.3,.3,1), width .35s cubic-bezier(.2,1.3,.3,1), opacity .2s' : 'none';
-    k.style.transition = f.style.transition = t.style.transition = tr; k.style.transform = `translateX(${x}px) rotate(${-x * .06}deg)`; f.style.width = `calc(${x}px + var(--sl-k))`; t.style.opacity = Math.max(0, 1 - x / (max * .55)); };
-  const go = () => { sl.classList.add('done'); hap([8, 30, 14]); set(max, true); setTimeout(() => { P.actions.throw(); if (sl.isConnected && P.curId === 'launch') { sl.classList.remove('done'); set(0, true); } }, 260); };
-  sl.addEventListener('pointerdown', e => { if (sl.classList.contains('done')) return; max = sl.clientWidth - k.offsetWidth - 8; x0 = e.clientX - dx; moved = false; sl.setPointerCapture(e.pointerId); sl.classList.add('drag'); });
-  sl.addEventListener('pointermove', e => { if (x0 == null) return; dx = Math.max(0, Math.min(max, e.clientX - x0)); if (dx > 6) moved = true; set(dx); });
+  const k = sl.querySelector('#slk'), f = sl.querySelector('#slf'), t = sl.querySelector('#slt'), g = sl.querySelector('#slg');
+  let x0 = null, dx = 0, max = 0, moved = false, ready = false;
+  // Fuera de los bordes la botella se resiste (como una liga) en vez de frenarse en seco.
+  const band = (over, size = 44) => (1 - 1 / (over * .55 / size + 1)) * size;
+  const SPRING = 'cubic-bezier(.2,1.3,.3,1)';
+  const set = (x, anim) => { const tr = anim ? `transform .32s ${SPRING}, width .32s ${SPRING}, opacity .2s` : 'none';
+    k.style.transition = f.style.transition = t.style.transition = tr; k.style.transform = `translateX(${x}px) rotate(${-Math.max(0, x) * .06}deg)`; f.style.width = `calc(${Math.max(0, x)}px + var(--sl-k))`; t.style.opacity = Math.max(0, 1 - x / (max * .55)); };
+  const setReady = on => { if (on === ready) return; ready = on; sl.classList.toggle('ready', on); if (on) hap(8); };
+  const go = () => {
+    sl.classList.add('done'); setReady(true); if (g) g.textContent = '¡Al mar!'; hap([8, 30, 14]);
+    // Anticipación: la botella retrocede un poquito y luego sale en curva hacia el mar.
+    const from = k.style.transform || 'none';
+    if (reduceMotion || !k.animate) set(max, true);
+    else { k.style.transition = 'none'; f.style.transition = `width .2s ${SPRING}`; f.style.width = '100%';
+      k.animate([{ transform: from }, { transform: `translateX(${max - 10}px) rotate(6deg) scale(1.06,.94)`, offset: .3, easing: 'cubic-bezier(.7,0,.84,0)' },
+        { transform: `translateX(${max + 70}px) translateY(-30px) rotate(-32deg) scale(.8)`, opacity: 0 }], { duration: 380, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' }); }
+    setTimeout(() => { P.actions.throw(); if (sl.isConnected && P.curId === 'launch') { k.getAnimations?.().forEach(a => a.cancel()); sl.classList.remove('done'); setReady(false); if (g) g.textContent = 'Suelta y sale al mar'; set(0, true); } }, reduceMotion ? 200 : 340); };
+  sl.addEventListener('pointerdown', e => { if (sl.classList.contains('done')) return; max = sl.clientWidth - k.offsetWidth - 8; x0 = e.clientX - dx; moved = false; sl.setPointerCapture(e.pointerId); sl.classList.add('drag'); hap(4); });
+  sl.addEventListener('pointermove', e => { if (x0 == null) return; const raw = e.clientX - x0;
+    dx = raw < 0 ? -band(-raw, 10) : raw > max ? max + band(raw - max, 16) : raw; if (Math.abs(raw) > 6) moved = true; set(dx); setReady(dx > max * .82); });
   const end = () => { if (x0 == null) return; x0 = null; sl.classList.remove('drag');
     if (dx > max * .82) { dx = 0; return go(); }
-    dx = 0; set(0, true);
+    dx = 0; setReady(false); set(0, true);
     // un toque sin arrastrar: la botella da un saltito para mostrar hacia dónde va
     if (!moved) { sl.classList.remove('nudge'); void sl.offsetWidth; sl.classList.add('nudge'); } };
   sl.addEventListener('pointerup', end); sl.addEventListener('pointercancel', end);

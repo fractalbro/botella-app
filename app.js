@@ -104,9 +104,22 @@ function err(e, fallback) {
   const mine = /[áéíóú¿¡ñ]|Ese |Esta |Te |Primero|Falta|Lanzaste|botella/.test(m) && !/row-level|violates|JWT|fetch|policy/i.test(m);
   toast(mine ? m : (fallback || 'No salió. Fue cosa nuestra: intenta otra vez en un momento.'));
 }
-function closeSheet() { document.getElementById('sheet')?.remove(); }
+// La hoja sale más rápido de lo que entra (160 ms) y el fondo oscuro se desvanece, no se desliza con ella.
+function closeSheet(instant) {
+  const s = document.getElementById('sheet'); if (!s) return; s.removeAttribute('id');
+  const sc = s.previousElementSibling?.classList.contains('scrim') ? s.previousElementSibling : null;
+  if (instant === true || reduceMotion) { s.remove(); sc?.remove(); return; }
+  s.classList.add('out'); sc?.classList.add('out'); setTimeout(() => { s.remove(); sc?.remove(); }, 170);
+}
 P.actions.closeSheet = closeSheet;
-function sheet(html) { closeSheet(); const s = document.createElement('div'); s.className = 'sheet pad'; s.id = 'sheet'; s.innerHTML = `<div class="grab"></div>${html}`; (P.root || phoneEl()).appendChild(s); return s; }
+function sheet(html) {
+  const had = document.getElementById('sheet'); closeSheet(true);
+  const host = P.root || phoneEl(), sc = document.createElement('div'); sc.className = 'scrim' + (had ? ' still' : ''); sc.setAttribute('aria-hidden', 'true');
+  // Tocar afuera cierra la hoja (antes el toque pasaba a los botones de atrás).
+  sc.addEventListener('click', () => closeSheet());
+  const s = document.createElement('div'); s.className = 'sheet pad' + (had ? ' still' : ''); s.id = 'sheet'; s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true');
+  s.innerHTML = `<div class="grab"></div>${html}`; host.appendChild(sc); host.appendChild(s); window.bindSheetDrag?.(s); return s;
+}
 const sheetHead = t => `<div style="display:flex;align-items:center;margin-bottom:8px"><span class="h3" style="flex:1">${t}</span><button class="iconbtn" data-act="closeSheet" aria-label="Cerrar">${icon('close')}</button></div>`;
 
 /* ================= DIBUJO DEL MAR ================= */
@@ -117,7 +130,9 @@ function sky(ctx, w, h, t, horizon) {
   for (const [x, y, s, p] of STARS) { if (y * h > horizon * h - 10) continue; ctx.fillStyle = 'rgba(230,245,255,' + (.35 + Math.sin(t * 1.5 + p) * .25) + ')'; ctx.fillRect(x * w, y * h, s, s); }
   const mx = w * .78, my = h * .14, mr = Math.min(w, h) * .06;
   const mg = ctx.createRadialGradient(mx, my, mr * .5, mx, my, mr * 5); mg.addColorStop(0, 'rgba(220,245,240,.22)'); mg.addColorStop(1, 'rgba(220,245,240,0)');
-  ctx.fillStyle = mg; ctx.fillRect(0, 0, w, h * horizon + 40); ctx.fillStyle = '#EAF6F2'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.fill();
+  ctx.fillStyle = mg; ctx.fillRect(0, 0, w, h * horizon + 40);
+  // En pantallas donde el texto pasa por encima de la luna, la luna baja de brillo para que se lea.
+  ctx.globalAlpha = P.cur?.moon ?? 1; ctx.fillStyle = '#EAF6F2'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
   return mx;
 }
 function waves(ctx, w, h, t, horizon, mx, onLayer, n = 6) {
@@ -333,7 +348,7 @@ function recBox(id, hint = 'Toca para grabar. Con 10 segundos basta.') {
 }
 P.actions.recToggle = async btn => {
   const id = btn.dataset.id, box = document.getElementById('rec-' + id); if (!box) return;
-  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) S.rec[id] = r; if (box.isConnected) box.outerHTML = recBox(id); refreshNeeds(); if (r) P.actions.recorded?.(id); if (r && (id === 'lp' || id === 'duo2')) rerender(); return; }
+  if (REC.mr && REC.id === id) { const r = await recStop(); if (r) S.rec[id] = r; if (box.isConnected) { box.outerHTML = recBox(id); if (r) { document.getElementById('rec-' + id)?.classList.add('fresh'); hap([6, 20, 10]); } } refreshNeeds(); if (r) P.actions.recorded?.(id); if (r && (id === 'lp' || id === 'duo2')) rerender(); return; }
   if (REC.mr) return;
   const wave = box.querySelector('.wave'), time = box.querySelector('.time'), hint = box.querySelector('.hint');
   const ok = await recStart(MAXV, (t, s) => {
