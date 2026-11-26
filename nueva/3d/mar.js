@@ -9,7 +9,6 @@ const ok = (() => { try { if (window.__no3d) return false; const g = document.cr
 if (!ok) { window.Mar = { set() {}, uncork() {}, ok: false }; document.documentElement.classList.add('no3d'); }
 else {
   const S = stage(cv, { fov: 40, bloom: [0.5, 0.4, 0.9], progress: () => 0, active: () => on });
-  S.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
   const { scene, camera } = S; scene.fog = new THREE.Fog('#0B2436', 40, 260); scene.environmentIntensity = .45;
   const sk = sky(scene, { hz: '#173E5C', stars: 900 });
   const mpos = new THREE.Vector3(8, 24, -90); const mo = moon(3); mo.position.copy(mpos); scene.add(mo);
@@ -19,10 +18,10 @@ else {
 
   // faro lejano: un punto de luz cálida con su haz que barre
   const LX = 16, LZ = -70;
-  const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 2), new THREE.MeshStandardMaterial({ color: '#14324A', roughness: .95, flatShading: true })); rock.scale.set(8, 3, 6); rock.position.set(LX, SEA - 1, LZ); scene.add(rock);
+  const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 5), new THREE.MeshStandardMaterial({ color: '#14324A', roughness: .9 })); rock.scale.set(8, 3, 6); rock.position.set(LX, SEA - 1, LZ); scene.add(rock);
   const lh = new THREE.Group(); lh.position.set(LX, SEA + 1.4, LZ); scene.add(lh);
   const wht = new THREE.MeshStandardMaterial({ color: '#EFE9E1', roughness: .55 }), red = new THREE.MeshStandardMaterial({ color: '#E8585E', roughness: .55 });
-  let y = 0; [[1.4, 1.25], [1.25, 1.1], [1.1, .95], [.95, .85]].forEach(([a, b], i) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(b, a, 2, 32), i % 2 ? red : wht); m.position.y = y + 1; lh.add(m); y += 2; });
+  let y = 0; [[1.4, 1.25], [1.25, 1.1], [1.1, .95], [.95, .85]].forEach(([a, b], i) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(b, a, 2, 48), i % 2 ? red : wht); m.position.y = y + 1; lh.add(m); y += 2; });
   const lan = new THREE.Mesh(new THREE.CylinderGeometry(.75, .75, 1.1, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color('#FFE7B0').multiplyScalar(3) })); lan.position.y = y + .55; lh.add(lan); const LY = y + .55;
   const L = 120; const bgeo = new THREE.ConeGeometry(12, L, 40, 1, true); bgeo.translate(0, -L / 2, 0); bgeo.rotateX(-Math.PI / 2); bgeo.rotateY(Math.PI);
   const beamM = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false, uniforms: { uI: { value: .7 } },
@@ -68,6 +67,7 @@ else {
     camera.position.copy(cur.cam).add(tmp.set(S.pointer.x * .3, 0, 0)); camera.lookAt(cur.look);
   });
 
+  S.go();
   window.Mar = {
     ok: true,
     set(m) { if (m === mode) return; mode = m; tMode = 0; on = m !== 'off'; cv.classList.toggle('on', on); if (m !== 'open') cork = 0; },

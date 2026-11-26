@@ -6,14 +6,16 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const store = { get(k, d) { try { const v = localStorage.getItem('bn.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('bn.' + k, JSON.stringify(v)); } catch (e) {} } };
 
 // ---------- datos de ejemplo (voces sintéticas) ----------
-const PK = {"majo-say":[14,[1.0,0.48,0.77,0.57,0.82,0.74,0.67,0.41,0.35,0.91,0.76,0.58,0.92,0.51,0.68,0.28,0.88,0.57,0.71,0.74,0.53,0.33,0.89,0.5,0.38,0.86,1.0,0.48]],"leo-say":[13,[0.67,0.42,0.32,0.41,1.0,0.48,0.49,0.29,0.59,0.6,0.53,0.39,0.4,0.16,0.6,0.49,0.4,0.39,0.44,0.41,0.67,0.55,0.61,0.52,0.4,0.3,0.42,0.18]],"ivan-say":[14,[0.82,0.91,0.74,0.68,0.67,0.86,0.81,1.0,0.89,0.71,0.58,0.86,0.65,0.91,0.62,0.63,0.74,0.73,0.89,0.71,0.73,0.74,0.79,0.69,0.87,0.8,0.69,0.74]],"caro-say":[13,[0.71,0.79,0.58,0.79,0.67,0.66,0.88,0.59,0.59,0.9,0.84,0.64,0.86,0.74,0.69,1.0,0.63,0.8,1.0,0.69,0.87,0.91,0.74,0.74,0.81,0.89,0.59,0.7]],"belen-say":[17,[0.62,0.6,0.83,0.63,0.52,0.56,0.56,0.58,0.7,0.64,0.59,0.57,0.71,0.7,0.48,0.74,0.55,0.67,0.58,0.52,0.71,0.62,0.66,0.82,0.73,0.62,0.61,1.0]],"leo-reply":[9,[0.77,1.0,0.44,0.52,0.52,0.6,0.32,0.28,0.79,0.72,0.29,0.15,0.91,0.62,0.48,0.87,0.74,0.51,0.67,0.64,0.56,0.44,0.38,0.4,0.48,0.37,0.32,0.12]],"leo-call":[8,[0.45,0.85,0.32,0.69,0.85,1.0,0.48,0.3,0.87,0.5,0.92,0.72,0.76,0.56,0.57,0.25,0.12,0.82,0.83,0.66,0.14,0.12,0.9,0.92,0.68,0.75,0.52,0.15]],"answer-1":[12,[1.0,0.54,0.49,0.54,0.47,0.57,0.61,0.55,0.63,0.5,0.6,0.53,0.63,0.64,0.58,0.46,0.51,0.45,0.49,0.58,0.46,0.74,0.57,0.59,0.42,0.61,0.62,0.46]],"answer-2":[9,[0.87,0.79,0.55,0.46,0.5,0.16,0.81,0.75,0.65,0.79,0.47,0.43,0.29,0.77,0.96,0.64,0.7,0.5,0.38,0.12,0.52,1.0,0.5,0.47,0.79,0.87,0.35,0.17]],"ivan-reply":[10,[0.97,0.85,1.0,0.8,0.8,0.63,0.72,0.69,0.65,0.57,0.92,0.63,0.84,0.83,0.41,0.89,0.79,0.65,0.71,0.8,0.84,0.75,0.76,0.76,0.65,0.64,0.69,0.71]]};
+const PK = {"answer-3":[8,[0.56,0.69,0.44,1.0,0.81,0.53,0.78,0.53,0.63,0.62,0.17,0.69,0.91,0.75,0.64,0.9,0.91,0.25,0.98,0.74,0.57,0.57,0.93,0.54,0.74,0.59,0.51,0.55]],"majo-reply":[12,[0.58,0.71,0.41,0.62,0.58,0.99,0.6,0.61,0.59,0.65,0.71,0.73,0.58,0.84,0.56,0.4,0.43,0.37,0.37,0.85,0.36,0.79,0.56,0.29,1.0,0.7,0.52,0.13]],"majo-call":[8,[0.54,0.66,0.66,0.91,0.62,0.57,0.37,0.78,0.47,0.66,0.38,0.37,0.25,0.74,0.86,0.84,0.77,0.79,0.47,0.7,0.8,1.0,0.64,0.44,0.51,0.41,0.29,0.12]],"caro-reply":[7,[0.7,0.69,0.54,0.74,0.71,0.59,0.71,0.49,0.69,1.0,0.7,0.44,0.52,0.8,0.57,0.71,0.71,0.53,0.58,0.49,0.86,0.47,0.48,0.69,0.53,0.73,0.53,0.28]],"caro-call":[5,[0.52,0.48,0.17,0.65,1.0,0.56,0.52,0.52,0.52,0.88,0.61,0.56,0.57,0.63,0.72,0.7,0.46,0.62,0.34,0.64,0.77,0.56,0.61,0.93,0.81,0.39,0.74,0.22]],"ivan-call":[8,[0.53,0.56,0.43,0.68,0.55,0.8,0.73,0.63,0.71,0.72,0.57,0.72,0.88,0.56,0.73,0.5,0.83,0.63,0.76,0.85,0.71,1.0,0.84,0.86,0.99,0.63,0.55,0.6]],"belen-reply":[8,[0.67,0.48,0.54,0.65,0.4,0.61,0.49,0.59,0.58,0.66,0.48,0.8,0.74,0.48,0.93,0.8,0.64,0.73,0.62,0.32,0.82,0.91,0.73,0.55,1.0,0.59,0.62,0.45]],"belen-call":[6,[0.53,0.45,0.28,0.9,0.88,0.54,0.56,0.97,0.56,0.12,0.55,1.0,0.52,0.64,0.66,0.71,0.63,0.91,0.58,0.68,0.72,0.59,0.69,0.75,0.79,0.68,0.64,0.41]],"majo-say":[14,[1.0,0.48,0.77,0.57,0.82,0.74,0.67,0.41,0.35,0.91,0.76,0.58,0.92,0.51,0.68,0.28,0.88,0.57,0.71,0.74,0.53,0.33,0.89,0.5,0.38,0.86,1.0,0.48]],"leo-say":[13,[0.67,0.42,0.32,0.41,1.0,0.48,0.49,0.29,0.59,0.6,0.53,0.39,0.4,0.16,0.6,0.49,0.4,0.39,0.44,0.41,0.67,0.55,0.61,0.52,0.4,0.3,0.42,0.18]],"ivan-say":[14,[0.82,0.91,0.74,0.68,0.67,0.86,0.81,1.0,0.89,0.71,0.58,0.86,0.65,0.91,0.62,0.63,0.74,0.73,0.89,0.71,0.73,0.74,0.79,0.69,0.87,0.8,0.69,0.74]],"caro-say":[13,[0.71,0.79,0.58,0.79,0.67,0.66,0.88,0.59,0.59,0.9,0.84,0.64,0.86,0.74,0.69,1.0,0.63,0.8,1.0,0.69,0.87,0.91,0.74,0.74,0.81,0.89,0.59,0.7]],"belen-say":[17,[0.62,0.6,0.83,0.63,0.52,0.56,0.56,0.58,0.7,0.64,0.59,0.57,0.71,0.7,0.48,0.74,0.55,0.67,0.58,0.52,0.71,0.62,0.66,0.82,0.73,0.62,0.61,1.0]],"leo-reply":[9,[0.77,1.0,0.44,0.52,0.52,0.6,0.32,0.28,0.79,0.72,0.29,0.15,0.91,0.62,0.48,0.87,0.74,0.51,0.67,0.64,0.56,0.44,0.38,0.4,0.48,0.37,0.32,0.12]],"leo-call":[8,[0.45,0.85,0.32,0.69,0.85,1.0,0.48,0.3,0.87,0.5,0.92,0.72,0.76,0.56,0.57,0.25,0.12,0.82,0.83,0.66,0.14,0.12,0.9,0.92,0.68,0.75,0.52,0.15]],"answer-1":[12,[1.0,0.54,0.49,0.54,0.47,0.57,0.61,0.55,0.63,0.5,0.6,0.53,0.63,0.64,0.58,0.46,0.51,0.45,0.49,0.58,0.46,0.74,0.57,0.59,0.42,0.61,0.62,0.46]],"answer-2":[9,[0.87,0.79,0.55,0.46,0.5,0.16,0.81,0.75,0.65,0.79,0.47,0.43,0.29,0.77,0.96,0.64,0.7,0.5,0.38,0.12,0.52,1.0,0.5,0.47,0.79,0.87,0.35,0.17]],"ivan-reply":[10,[0.97,0.85,1.0,0.8,0.8,0.63,0.72,0.69,0.65,0.57,0.92,0.63,0.84,0.83,0.41,0.89,0.79,0.65,0.71,0.8,0.84,0.75,0.76,0.76,0.65,0.64,0.69,0.71]]};
 const B = {
-  majo: { theme: 'la música', tag: 'Música', kind: 'Pregunta', q: '¿Qué harías un domingo si nadie en esta ciudad te conociera?', v: 'majo-say', c: '#FF70A9' },
-  caro: { theme: 'los atardeceres', tag: 'Atardeceres', kind: 'Pregunta', q: '¿Cuál es el mejor atardecer que has visto en Lima?', v: 'caro-say', c: '#FFB061' },
-  ivan: { theme: 'la música', tag: 'Música', kind: 'Pregunta', q: '¿Qué canción te devuelve a tus 15 años?', v: 'ivan-say', c: '#FFC24B' },
+  majo: { theme: 'la música', tag: 'Música', name: 'Majo', kind: 'Pregunta', q: '¿Qué harías un domingo si nadie en esta ciudad te conociera?', v: 'majo-say', c: '#FF70A9' },
+  caro: { theme: 'la ciudad', tag: 'La ciudad', name: 'Caro', kind: 'Pregunta', q: '¿Cuál es el mejor atardecer que has visto en Lima?', v: 'caro-say', c: '#FFB061' },
+  ivan: { theme: 'la música', tag: 'Música', name: 'Iván', kind: 'Pregunta', q: '¿Qué canción te devuelve a tus 15 años?', v: 'ivan-say', c: '#FFC24B' },
   leo: { theme: 'el cine', tag: 'Cine', kind: 'Confesión', q: 'Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.', v: 'leo-say', c: '#8E8CFF', name: 'Leo' },
   belen: { theme: 'los libros', tag: 'Libros', kind: 'Historia', q: 'El día que me perdí en el Centro y terminó siendo lo mejor.', v: 'belen-say', c: '#9FE3B0', name: 'Belén' }
 };
+const TEMAS = ['Música', 'Cine', 'Libros', 'Comida', 'Viajes', 'La ciudad', 'Fútbol', 'Arte', 'Tecnología', 'Filosofía', 'Amor', 'Trabajo'];
+const AMA = { 'Música': 'la música', 'Cine': 'el cine', 'Libros': 'los libros', 'Comida': 'la comida', 'Viajes': 'viajar', 'La ciudad': 'la ciudad', 'Fútbol': 'el fútbol', 'Arte': 'el arte', 'Tecnología': 'la tecnología', 'Filosofía': 'la filosofía', 'Amor': 'el amor', 'Trabajo': 'su trabajo' };
 const IDEAS = { Pregunta: ['¿Qué canción te devuelve a tus 15 años?', '¿Cuál es tu huarique favorito?', '¿Qué harías si mañana no tuvieras que trabajar?'], Confesión: ['Algo que nunca le he dicho a nadie…', 'Lo que más extraño de cuando era niño', 'Una costumbre rara que tengo'], Historia: ['Lo más raro que me pasó en una combi', 'El mejor día de este año', 'Cómo conocí a mi mejor amigo'] };
 const S = {
   shore: store.get('shore', ['caro', 'ivan']),
@@ -22,9 +24,11 @@ const S = {
     leo: { stage: 0, unread: true, when: '9:41', msgs: [{ f: 'them', v: 'leo-say' }, { f: 'me', v: 'answer-1' }, { f: 'them', v: 'leo-reply' }] },
     belen: { stage: 0, when: 'Ayer', msgs: [{ f: 'them', v: 'belen-say' }, { f: 'me', v: 'answer-1' }] }
   },
-  mine: { heard: 3 }
+  temas: store.get('temas', ['Música', 'Cine', 'La ciudad']),
+  left: store.get('left', 4),
+  mine: store.get('mine', null)
 };
-const save = () => { store.set('shore', S.shore); store.set('convs', S.convs); store.set('name', S.name); };
+const save = () => { store.set('shore', S.shore); store.set('convs', S.convs); store.set('name', S.name); store.set('temas', S.temas); store.set('left', S.left); store.set('mine', S.mine); };
 
 // ---------- iconos ----------
 const I = {
@@ -58,9 +62,9 @@ const fakePeaks = n => Array.from({ length: 28 }, (_, i) => +(0.3 + Math.abs(Mat
 
 // ---------- audio: un solo reproductor para toda la app ----------
 const audio = new Audio(); let curP = null, fakeT = null;
-function player(v, { mine = false, secs, peaks } = {}) {
+function player(v, { mine = false, secs, peaks, real = false } = {}) {
   const [s, pk] = PK[v] || [secs || 8, peaks || fakePeaks(v.length)];
-  return `<button class="player${mine ? ' mine' : ''}" data-v="${esc(v)}" data-s="${s}" aria-label="Escuchar nota de ${fmt(s)}"><span class="pb">${I.play}</span><span class="wave">${pk.map(p => `<i style="height:${Math.round(p * 100)}%"></i>`).join('')}</span><span class="t">${fmt(s)}</span></button>`;
+  return `<button class="player${mine ? ' mine' : ''}"${real ? ' data-r="1"' : ''} data-v="${esc(v)}" data-s="${s}" aria-label="Escuchar nota de ${fmt(s)}"><span class="pb">${I.play}</span><span class="wave">${pk.map(p => `<i style="height:${Math.round(p * 100)}%"></i>`).join('')}</span><span class="t">${fmt(s)}</span></button>`;
 }
 function stopAudio() { audio.pause(); clearInterval(fakeT); fakeT = null; if (curP) { curP.querySelector('.pb').innerHTML = I.play; $$('.wave i', curP).forEach(i => i.classList.remove('on')); curP.querySelector('.t').textContent = fmt(+curP.dataset.s); } curP = null; }
 function paint(p, f) { const bars = $$('.wave i', p); const n = Math.round(f * bars.length); bars.forEach((b, i) => b.classList.toggle('on', i < n)); }
@@ -68,7 +72,7 @@ document.addEventListener('click', e => {
   const p = e.target.closest('.player'); if (!p) return;
   if (curP === p) { stopAudio(); return; }
   stopAudio(); curP = p; p.querySelector('.pb').innerHTML = I.pause; const s = +p.dataset.s; const v = p.dataset.v;
-  const src = v.startsWith('blob:') ? v : (PK[v] && !v.startsWith('answer') ? `v/${v}.mp3` : null);
+  const src = v.startsWith('blob:') ? v : (PK[v] && (!v.startsWith('answer') || p.dataset.r) ? `v/${v}.mp3` : null);
   const fake = () => { if (curP !== p || fakeT) return; let t = 0; fakeT = setInterval(() => { t += .1; paint(p, t / s); p.querySelector('.t').textContent = fmt(t); if (t >= s) stopAudio(); }, 100); };
   if (src && !window.__noAudio) { audio.src = src; audio.play().catch(e => { if (e && e.name !== 'AbortError') fake(); }); audio.onerror = fake; audio.ontimeupdate = () => { if (curP !== p) return; paint(p, audio.currentTime / (audio.duration || s)); p.querySelector('.t').textContent = fmt(audio.currentTime); }; audio.onended = () => curP === p && stopAudio(); }
   else fake();
@@ -218,17 +222,17 @@ R.cuenta = () => ({ html: `
   bind(el) { $('#f', el).onsubmit = e => { e.preventDefault(); S.name = new FormData(e.target).get('n').trim(); save(); go('temas'); }; } });
 
 // Temas: lo único que se muestra de ti antes del nombre.
-R.temas = () => { const T = ['Música', 'Cine', 'Libros', 'Comida', 'Viajes', 'La ciudad', 'Fútbol', 'Arte', 'Tecnología', 'Filosofía', 'Amor', 'Trabajo']; return { html: `
-  <div class="top"><button class="ib edge" data-go="cuenta" aria-label="Atrás">${I.back}</button><span class="cap">2 de 2</span><span style="width:44px"></span></div>
-  <h1 class="title mt2">¿Qué te mueve?</h1>
-  <p class="sub mt1 mb3">Elige tres. Es lo primero que otros sabrán de ti.</p>
-  <div class="chips" id="ch">${T.map(t => `<button class="chip" aria-pressed="false">${t}</button>`).join('')}</div>
+R.temas = ({ edit = false } = {}) => { const T = TEMAS; return { html: `
+  <div class="top"><button class="ib edge" data-go="${edit ? 'perfil' : 'cuenta'}" aria-label="Atrás">${I.back}</button><span class="cap">${edit ? '' : '2 de 2'}</span><span style="width:44px"></span></div>
+  <h1 class="title mt2">${edit ? 'Tus temas' : '¿Qué te mueve?'}</h1>
+  <p class="sub mt1 mb3">Elige tres. Tus botellas llegan a quien ama lo mismo.</p>
+  <div class="chips" id="ch">${T.map(t => `<button class="chip" aria-pressed="${edit && S.temas.includes(t)}">${t}</button>`).join('')}</div>
   <label class="field mt4"><span style="display:flex;justify-content:space-between">Tu distrito <i class="lock" style="font-style:normal">${I.lock}Nunca se muestra</i></span>
   <select class="inp"><option>Barranco</option><option>Jesús María</option><option>Lince</option><option>Miraflores</option><option>San Isidro</option><option>Surco</option><option>Otro</option></select></label>
   <div class="grow"></div>
-  <button class="btn btn-a mt3" id="go" disabled style="opacity:.4">Entrar al mar</button>`,
+  <button class="btn btn-a mt3" id="go" ${edit ? '' : 'disabled style="opacity:.4"'}>${edit ? 'Guardar' : 'Entrar al mar'}</button>`,
   bind(el) { const sel = () => $$('.chip[aria-pressed=true]', el).length; $$('.chip', el).forEach(c => c.onclick = () => { if (c.getAttribute('aria-pressed') === 'false' && sel() >= 3) return; c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'false'); const ok = sel() === 3; $('#go', el).disabled = !ok; $('#go', el).style.opacity = ok ? 1 : .4; });
-    $('#go', el).onclick = () => { const p = store.get('pending'); if (p) { const b = B[p.id]; S.convs[p.id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: 'answer-1' }] }; store.set('pending', null); save(); } store.set('onb', 1); go('mar'); toast('Tu respuesta llegó.'); }; } }; };
+    $('#go', el).onclick = () => { S.temas = $$('.chip[aria-pressed=true]', el).map(c => c.textContent); save(); if (edit) { go('perfil'); toast('Temas guardados'); return; } const p = store.get('pending'); if (p) { const b = B[p.id]; S.convs[p.id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: 'answer-1' }] }; store.set('pending', null); save(); } store.set('onb', 1); go('mar'); toast('Tu respuesta llegó.'); }; } }; };
 
 // Entrar y recuperar contraseña.
 R.entrar = () => ({ html: `
@@ -255,21 +259,27 @@ R.mar = () => { const n = S.shore.length; const pos = [[4, 14], [50, 44], [28, 4
     ${S.shore.map((id, i) => `<button class="float" style="left:${pos[i][0]}%;top:${pos[i][1]}%" data-go="abrir" data-p='{"id":"${id}"}' aria-label="Abrir botella de ${esc(B[id].tag)}">${bottleSVG(B[id].c)}<span>${esc(B[id].tag)}</span></button>`).join('')}
   </div>
   <div class="list mt2">
-    <button class="item" id="mine"><span class="ic">${I.bottle}</span><span class="tx"><b>Tu botella</b><small>${S.mine.heard} de 8 ya la oyeron</small></span><span class="reach sm">${Array.from({ length: 8 }, (_, i) => `<i class="${i < S.mine.heard ? 'heard' : 'on'}"></i>`).join('')}</span></button>
-    <button class="item" id="today"><span class="ic">${I.moon}</span><span class="tx"><b>¿Qué le dirías a tu yo de hace diez años?</b><small>Pregunta de hoy · todos a las 21:00</small></span>${I.chev}</button>
+    ${S.mine ? `<button class="item" id="mine"><span class="ic">${I.bottle}</span><span class="tx"><b>Tu ${esc(S.mine.kind.toLowerCase())} sobre ${esc(S.mine.tema.toLowerCase())}</b><small>${S.mine.heard ? `${S.mine.heard} de 8 ya la oyeron` : 'En camino a 8 personas'}</small></span><span class="reach sm">${Array.from({ length: 8 }, (_, i) => `<i class="${i < S.mine.heard ? 'heard' : 'on'}"></i>`).join('')}</span></button>` : ''}
+    <button class="item" id="today"><span class="ic">${I.moon}</span><span class="tx"><b>¿Qué le dirías a tu yo de hace diez años?</b><small>${store.get('hoy') ? 'Escucha lo que respondieron otros' : 'Pregunta de hoy · responde con tu voz'}</small></span>${I.chev}</button>
   </div>`,
   bind(el) {
-    $('#mine', el).onclick = () => sheet(`<h2 class="title">Tu botella</h2><p class="sub">“¿Qué canción te devuelve a tus 15 años?”</p>
+    $('#mine', el) && ($('#mine', el).onclick = () => sheet(`<h2 class="title">Tu ${esc(S.mine.kind.toLowerCase())}</h2><p class="sub">${S.mine.idea ? `“${esc(S.mine.idea)}” · ` : ''}Para quien ama ${esc(AMA[S.mine.tema] || S.mine.tema.toLowerCase())}</p>
       <div class="reach big mb2">${Array.from({ length: 8 }, (_, i) => `<i class="${i < S.mine.heard ? 'heard' : 'on'}"></i>`).join('')}<span class="sep"></span>${'<i class="later"></i>'.repeat(4)}</div>
       <p class="cap center mb3">Blanco: la escucharon · Turquesa: en camino · Las 4 de la derecha llegan si en 6 h nadie responde</p>
-      <button class="btn btn-2" data-close>Listo</button>`);
-    $('#today', el).onclick = () => go('lanzar', { idea: '¿Qué le dirías a tu yo de hace diez años?' });
+      <button class="btn btn-2" data-close>Listo</button>`));
+    $('#today', el).onclick = () => go('hoy');
   } }; };
 
 // Lanzar: tipo → grabar (lo principal) → ideas solo si las pides → deslizar.
-R.lanzar = ({ idea = '' } = {}) => { let kind = 'Pregunta'; const P = { Pregunta: '¿Qué quieres preguntar?', Confesión: '¿Qué quieres confesar?', Historia: '¿Qué quieres contar?' }; return { html: `
-  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">4 botellas para lanzar</span><span style="width:44px"></span></div>
+R.lanzar = ({ idea = '' } = {}) => { let kind = 'Pregunta', tema = S.temas[0]; const P = { Pregunta: '¿Qué quieres preguntar?', Confesión: '¿Qué quieres confesar?', Historia: '¿Qué quieres contar?' };
+  if (S.left <= 0) return { html: `
+  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span></span><span style="width:44px"></span></div>
+  <div class="grow"></div><h1 class="title">Por hoy lanzaste todas.</h1><p class="sub mt1">Mañana tienes 4 más. Si invitas a alguien, te damos una ahora.</p><div class="grow"></div>
+  <button class="btn btn-2" data-go="perfil">Invitar a alguien</button>` };
+  return { html: `
+  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">${S.left === 1 ? 'Te queda 1 botella' : `Te quedan ${S.left} botellas`}</span><span style="width:44px"></span></div>
   <div class="seg mt1" id="seg">${Object.keys(P).map(k => `<button aria-pressed="${k === kind}">${k}</button>`).join('')}</div>
+  <div class="chips mt2" id="tm" role="radiogroup" aria-label="Sobre qué">${S.temas.map(t => `<button class="chip" role="radio" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}</div>
   <h1 class="title mt3" id="pq">${P[kind]}</h1>
   <p class="sub mt1" id="idea" ${idea ? '' : 'hidden'}>${esc(idea)}</p>
   <div class="grow"></div>
@@ -279,20 +289,32 @@ R.lanzar = ({ idea = '' } = {}) => { let kind = 'Pregunta'; const P = { Pregunta
   <button class="btn btn-q" id="ideas">¿Sin ideas?</button>`,
   bind(el) {
     $$('#seg button', el).forEach(b => b.onclick = () => { kind = b.textContent; $$('#seg button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#pq', el).textContent = P[kind]; });
+    $$('#tm .chip', el).forEach(b => b.onclick = () => { tema = b.textContent; $$('#tm .chip', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
     const ideas = $('#ideas', el);
     ideas.onclick = () => sheet(`<h2 class="title">Ideas para ${kind === 'Pregunta' ? 'preguntar' : kind === 'Confesión' ? 'confesar' : 'contar'}</h2><p class="sub">Tócala y dila con tus palabras.</p>${IDEAS[kind].map(t => `<button class="idea">${esc(t)}</button>`).join('')}`, (s, close) => $$('.idea', s).forEach(b => b.onclick = () => { const p = $('#idea', el); p.hidden = false; p.textContent = b.textContent; close(); }));
-    recUI(el, 'Desliza al mar', () => go('lanzada'));
+    recUI(el, 'Desliza al mar', () => { const p = $('#idea', el); S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0 }; save(); go('lanzada'); });
     new MutationObserver(() => ideas.hidden = !!$('#sl', el)).observe($('#after', el), { childList: true });
   } }; };
 
+// Pregunta de hoy: la misma para todos. Respondes con tu voz y se abren las respuestas de los demás.
+R.hoy = () => { const done = store.get('hoy'); const A = [['answer-1', 'el cine', '#8E8CFF'], ['answer-2', 'los libros', '#9FE3B0'], ['answer-3', 'la música', '#FF70A9']]; return { html: `
+  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">Pregunta de hoy</span><span style="width:44px"></span></div>
+  <h1 class="title mt2">¿Qué le dirías a tu yo de hace diez años?</h1>
+  ${done ? `<p class="sub mt1 mb3">Tú ya respondiste. Esto dijeron otros.</p>
+  <div class="row-btns">${A.map(([v, t, c]) => `<div class="paper" style="padding:14px 16px"><p class="who" style="margin-bottom:8px"><i class="orb" style="background:${c}"></i>Alguien que ama ${t}</p>${player(v, { real: true })}</div>`).join('')}</div>
+  <p class="cap center mt3">Mañana hay otra.</p>`
+  : `<p class="sub mt1">Todos responden la misma. Cuando respondas, escuchas a los demás.</p>
+  <div class="grow"></div><div class="rec-wrap" id="rw"></div><div class="grow"></div><div id="after"></div>`}`,
+  bind(el) { if (!done) recUI(el, 'Desliza para enviar', () => { store.set('hoy', 1); go('hoy'); toast('Respuesta enviada'); }); } }; };
+
 // Lanzada: el momento alto. 8 luces se encienden; 4 esperan.
-R.lanzada = () => ({ cls: 'clear', mar: 'away', html: `
+R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: 'clear', mar: 'away', html: `
   <div class="grow"></div>
   <h1 class="display center">Va en camino.</h1>
   <div class="reach big mt3" id="rb">${'<i></i>'.repeat(8)}<span class="sep"></span>${'<i class="later"></i>'.repeat(4)}</div>
-  <p class="sub center mt2">Llega a 8 personas. Si nadie responde en 6 horas, a 4 más.</p>
+  <p class="sub center mt2">Llega a 8 personas que aman ${esc(AMA[t] || t.toLowerCase())}. Si nadie responde en 6 horas, a 4 más.</p>
   <button class="btn btn-2 mt4" data-go="mar">Volver al mar</button>`,
-  bind(el) { $$('#rb i:not(.later)', el).forEach((d, i) => setTimeout(() => d.classList.add('on'), (window.Mar && Mar.ok ? 2600 : 400) + i * 180)); S.mine.heard = 0; } });
+  bind(el) { $$('#rb i:not(.later)', el).forEach((d, i) => setTimeout(() => d.classList.add('on'), (window.Mar && Mar.ok ? 2600 : 400) + i * 180)); } }; };
 
 // Conversaciones.
 const stepsHTML = (st, cls = '') => `<span class="steps ${cls}">${[0, 1, 2, 3].map(i => `<i class="${i <= st ? 'on' : ''}"></i>`).join('')}</span>`;
@@ -336,7 +358,7 @@ R.chat = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id]; c.unread = fals
     rb.onclick = async () => {
       if (!rec) { rec = recorder(t => { next.innerHTML = `<span style="color:var(--danger)">●</span> ${fmt(t)} · toca para enviar`; }); rb.classList.add('live'); rb.innerHTML = I.check; next.disabled = true; await rec.start(); return; }
       const r = await rec.stop(); rec = null; rb.classList.remove('live'); rb.innerHTML = I.mic; push({ f: 'me', v: r.url || 'mine' + c.msgs.length, s: Math.max(2, Math.round(r.secs)) });
-      if (counts().them < 3 || c.stage === 0) { th.insertAdjacentHTML('beforeend', '<div class="typing"><i></i><i></i><i></i></div>'); el.scrollTop = el.scrollHeight; setTimeout(() => push({ f: 'them', v: id === 'leo' ? 'leo-reply' : 'ivan-reply' }), 2400); }
+      if (counts().them < 3 || c.stage === 0) { th.insertAdjacentHTML('beforeend', '<div class="typing"><i></i><i></i><i></i></div>'); el.scrollTop = el.scrollHeight; setTimeout(() => push({ f: 'them', v: `${id}-reply` }), 2400); }
     };
     draw();
   } }; };
@@ -352,16 +374,16 @@ R.llamada = ({ id = 'leo' }) => { const b = B[id]; return { cls: 'call clear', h
 // Perfil: lo que no es del día a día vive aquí.
 R.perfil = () => ({ html: `
   <div class="top"><button class="ib edge" data-go="mar" aria-label="Atrás">${I.back}</button><span></span><span style="width:44px"></span></div>
-  <h1 class="title mt1">${esc(S.name || 'Tú')}</h1><p class="sub mt1">Música · Cine · La ciudad</p>
-  <div class="stat"><div><b>4</b><span>días seguidos</span></div><div><b>4</b><span>botellas para lanzar</span></div></div>
+  <h1 class="title mt1">${esc(S.name || 'Tú')}</h1><p class="sub mt1">${S.temas.map(esc).join(' · ')}</p>
+  <div class="stat"><div><b>4</b><span>días seguidos</span></div><div><b>${S.left}</b><span>botellas para lanzar hoy</span></div></div>
   <div class="list">
-    ${[['gift', 'Invitar a alguien', 'Te regalamos una botella extra', 'inv'], ['dock', 'Muelle', 'Botellas especiales', 'soon'], ['people', 'Salidas en grupo', 'Planes con más gente', 'soon'], ['tag', 'Tus temas', '', 'soon'], ['rules', 'Normas de la casa', '', 'rules'], ['key', 'Cambiar contraseña', '', 'pw'], ['out', 'Cerrar sesión', '', 'out']]
+    ${[['gift', 'Invitar a alguien', 'Te regalamos una botella extra', 'inv'], ['dock', 'Muelle', 'Botellas especiales', 'soon'], ['people', 'Salidas en grupo', 'Planes con más gente', 'soon'], ['tag', 'Tus temas', S.temas.join(', '), 'temas'], ['rules', 'Normas de la casa', '', 'rules'], ['key', 'Cambiar contraseña', '', 'pw'], ['out', 'Cerrar sesión', '', 'out']]
       .map(([ic, t, s, a]) => `<button class="item" data-a="${a}"><span class="ic">${I[ic]}</span><span class="tx"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</span>${I.chev}</button>`).join('')}
   </div>`,
   bind(el) { $$('[data-a]', el).forEach(b => b.onclick = () => ({
     inv: () => sheet(`<h2 class="title">Invita a alguien</h2><p class="sub">Cuando entre, los dos reciben una botella extra.</p><div class="inp" style="display:flex;align-items:center;color:var(--fg-2);font-size:14px">botella-app.vercel.app/?c=TU-CODIGO</div><div class="row-btns mt2"><button class="btn btn-a" id="cp">Copiar enlace</button></div>`, (s, close) => $('#cp', s).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); close(); toast('Enlace copiado'); }),
     rules: () => sheet(`<h2 class="title">Normas de la casa</h2><div class="list mt2 mb3">${['Coquetear está bien. Lo explícito, no.', 'Sin insultos ni amenazas.', 'Tu distrito nunca se muestra.', 'Puedes reportar o bloquear desde cualquier conversación.'].map(t => `<p class="item" style="margin:0;min-height:52px">${t}</p>`).join('')}</div><button class="btn btn-2" data-close>Entendido</button>`),
-    pw: () => go('olvide'), out: () => { store.set('onb', 0); go('bienvenida'); },
+    pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => { store.set('onb', 0); go('bienvenida'); },
     soon: () => toast('Viene en la siguiente versión', '#FFE7B0')
   }[b.dataset.a]())); } });
 
