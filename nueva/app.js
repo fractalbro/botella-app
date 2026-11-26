@@ -3,6 +3,9 @@
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const app = $('#app'), tabs = $('#tabs'), sheetRoot = $('#sheet-root');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Telemetría (plan en docs/ux-discovery): se guarda local; al conectar Supabase se envía a una tabla de eventos.
+const track = (ev, props = {}) => { try { const k = 'bn.ev', a = JSON.parse(localStorage.getItem(k) || '[]'); a.push({ ev, t: Date.now(), ...props }); localStorage.setItem(k, JSON.stringify(a.slice(-500))); } catch (e) {} };
+(() => { try { const l = +localStorage.getItem('bn.last') || 0, now = Date.now(); track('sesion_iniciada', { dias_desde_ultima: l ? Math.floor((now - l) / 864e5) : null }); localStorage.setItem('bn.last', now); } catch (e) {} })();
 const store = { get(k, d) { try { const v = localStorage.getItem('bn.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('bn.' + k, JSON.stringify(v)); } catch (e) {} } };
 
 // ---------- datos de ejemplo (voces sintéticas) ----------
@@ -178,7 +181,7 @@ R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: '
     h.addEventListener('pointerdown', down); h.addEventListener('pointerup', up); h.addEventListener('pointerleave', up);
     h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
     function open() {
-      done = true; navigator.vibrate && navigator.vibrate(12);
+      done = true; track('botella_escuchada', { id, first }); navigator.vibrate && navigator.vibrate(12);
       let c = .7; const pop = () => { c = Math.min(1, c + .03); window.Mar && Mar.uncork(c); if (c < 1) requestAnimationFrame(pop); }; pop();
       $('#stage', el).innerHTML = `<article class="paper in"><p class="who"><i class="orb" style="background:${b.c}"></i>Alguien que ama ${esc(b.theme)}</p><p class="q">${esc(b.q)}</p>${player(b.v)}</article>
         <div class="row-btns mt2"><button class="btn btn-a" id="reply">${I.mic}Responder con mi voz</button><button class="btn btn-q" id="pass">Devolverla al mar</button></div>`;
@@ -198,7 +201,7 @@ R.grabar = ({ id = 'majo', first = false }) => { const b = B[id]; return { html:
   <div id="after"></div>`,
   bind(el) {
     $('#x', el).onclick = () => go(first ? 'abrir' : 'mar', { id, first });
-    recUI(el, 'Desliza para enviar', r => {
+    recUI(el, 'Desliza para enviar', r => { track('respuesta_enviada', { id, first, segundos: r.secs });
       if (first) { store.set('pending', { id }); go('cuenta'); }
       else { S.shore = S.shore.filter(x => x !== id); S.convs[id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: r.url || 'mine', s: r.secs }] }; save(); go('mar'); toast('Enviada. Te avisamos cuando responda.'); }
     });
@@ -292,7 +295,8 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   return { html: `
   <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">${dorada ? 'Dorada · sale a las 21:00' : S.left === 1 ? 'Te queda 1 botella' : `Te quedan ${S.left} botellas`}</span><span style="width:44px"></span></div>
   <div class="seg mt1" id="seg">${Object.keys(P).map(k => `<button aria-pressed="${k === kind}">${k}</button>`).join('')}</div>
-  <div class="chips mt2" id="tm" role="radiogroup" aria-label="Sobre qué">${S.temas.map(t => `<button class="chip" role="radio" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}</div>
+  <p class="cap mt2" style="margin-bottom:8px">Llega a quienes aman</p>
+  <div class="chips" id="tm" role="radiogroup" aria-label="Llega a quienes aman">${S.temas.map(t => `<button class="chip" role="radio" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}<button class="chip more" id="more">+ Otro tema</button></div>
   <h1 class="title mt3" id="pq">${P[kind]}</h1>
   <p class="sub mt1" id="idea" ${idea ? '' : 'hidden'}>${esc(idea)}</p>
   <div class="grow"></div>
@@ -302,10 +306,11 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   <button class="btn btn-q" id="ideas">¿Sin ideas?</button>`,
   bind(el) {
     $$('#seg button', el).forEach(b => b.onclick = () => { kind = b.textContent; $$('#seg button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#pq', el).textContent = P[kind]; });
-    $$('#tm .chip', el).forEach(b => b.onclick = () => { tema = b.textContent; $$('#tm .chip', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+    const wireTm = () => $$('#tm .chip:not(.more)', el).forEach(b => b.onclick = () => { tema = b.textContent; $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+    wireTm(); $('#more', el).onclick = () => sheet(`<h2 class="title">¿Sobre qué tema?</h2><p class="sub">Tu botella llega a quienes lo aman.</p><div class="chips mt2">${TEMAS.map(t => `<button class="chip" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}</div>`, (sh, close) => $$('.chip', sh).forEach(c => c.onclick = () => { tema = c.textContent; if (![...$$('#tm .chip', el)].some(x => x.textContent === tema)) $('#more', el).insertAdjacentHTML('beforebegin', `<button class="chip" role="radio">${esc(tema)}</button>`); $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x.textContent === tema)); wireTm(); close(); }));
     const ideas = $('#ideas', el);
     ideas.onclick = () => sheet(`<h2 class="title">Ideas para ${kind === 'Pregunta' ? 'preguntar' : kind === 'Confesión' ? 'confesar' : 'contar'}</h2><p class="sub">Tócala y dila con tus palabras.</p>${IDEAS[kind].map(t => `<button class="idea">${esc(t)}</button>`).join('')}`, (s, close) => $$('.idea', s).forEach(b => b.onclick = () => { const p = $('#idea', el); p.hidden = false; p.textContent = b.textContent; close(); }));
-    recUI(el, 'Desliza al mar', () => { const p = $('#idea', el); if (dorada) X.tide = Math.max(0, X.tide - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); go('lanzada'); });
+    recUI(el, 'Desliza al mar', () => { const p = $('#idea', el); if (dorada) X.tide = Math.max(0, X.tide - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); track('botella_lanzada', { dorada: !!dorada, tema }); go('lanzada'); });
     new MutationObserver(() => ideas.hidden = !!$('#sl', el)).observe($('#after', el), { childList: true });
   } }; };
 
@@ -326,6 +331,7 @@ R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: '
   <h1 class="display center">Va en camino.</h1>
   <div class="reach big mt3" id="rb">${'<i></i>'.repeat(8)}<span class="sep"></span>${'<i class="later"></i>'.repeat(4)}</div>
   <p class="sub center mt2">Llega a 8 personas que aman ${esc(AMA[t] || t.toLowerCase())}. Si nadie responde en 6 horas, a 4 más.</p>
+  <p class="cap center mt2">Las respuestas suelen tardar unas horas. Te avisamos, y cada una abre una conversación privada.</p>
   <button class="btn btn-2 mt4" data-go="mar">Volver al mar</button>`,
   bind(el) { $$('#rb i:not(.later)', el).forEach((d, i) => setTimeout(() => d.classList.add('on'), (window.Mar && Mar.ok ? 2600 : 400) + i * 180)); } }; };
 
@@ -363,10 +369,10 @@ R.chat = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id]; c.unread = fals
       requestAnimationFrame(() => el.scrollTop = el.scrollHeight);
     };
     const push = m => { c.msgs.push(m); save(); draw(); };
-    function askName() { sheet(`<h2 class="title">¿Compartir tu nombre?</h2><p class="sub">Solo se muestra si los dos aceptan.</p><div class="row-btns"><button class="btn btn-a" id="y">Compartir</button><button class="btn btn-q" data-close>Todavía no</button></div>`, (s, close) => $('#y', s).onclick = () => { close(); push({ f: 'sys', t: 'Esperando su respuesta…' }); setTimeout(() => { c.msgs.pop(); c.stage = 1; push({ f: 'sys', t: `Ahora saben sus nombres: <b>${esc(b.name)}</b> y <b>${esc(S.name || 'tú')}</b>` }); }, 1800); }); }
+    function askName() { sheet(`<h2 class="title">¿Compartir tu nombre?</h2><p class="sub">Solo se muestra si los dos aceptan.</p><div class="row-btns"><button class="btn btn-a" id="y">Compartir</button><button class="btn btn-q" data-close>Todavía no</button></div>`, (s, close) => $('#y', s).onclick = () => { close(); push({ f: 'sys', t: 'Esperando su respuesta…' }); setTimeout(() => { c.msgs.pop(); c.stage = 1; track('nombres_compartidos', { id }); push({ f: 'sys', t: `Ahora saben sus nombres: <b>${esc(b.name)}</b> y <b>${esc(S.name || 'tú')}</b>` }); }, 1800); }); }
     function askCall() { sheet(`<h2 class="title">¿Llamar a ${esc(b.name)}?</h2><p class="sub">Solo voz. Si no puede, no pasa nada.</p><div class="row-btns"><button class="btn btn-a" id="y">${I.phone}Pedir llamada</button><button class="btn btn-q" data-close>Ahora no</button></div>`, (s, close) => $('#y', s).onclick = () => { close(); toast(`${b.name} aceptó`); setTimeout(() => go('llamada', { id }), 900); }); }
     function askPlan() { const O = ['Ir al cine el martes', 'Café en el Centro', 'Caminar por el malecón']; sheet(`<h2 class="title">Propón un plan</h2><p class="sub">Un lugar público. Cada uno paga lo suyo.</p>${O.map(t => `<button class="idea">${t}</button>`).join('')}`, (s, close) => $$('.idea', s).forEach(o => o.onclick = () => { close(); push({ f: 'plan', t: o.textContent }); setTimeout(() => { c.msgs[c.msgs.length - 1].ok = true; c.stage = 3; save(); draw(); toast(`${b.name} dijo que sí`); }, 2000); })); }
-    $('#menu', el).onclick = () => sheet(`<h2 class="title">${esc(who())}</h2><p class="sub">Nadie se entera de lo que elijas aquí.</p><div class="row-btns"><button class="btn btn-2" id="rp">Reportar</button><button class="btn btn-2" id="bl">Bloquear</button><button class="btn btn-q" data-close>Cancelar</button></div>`, (s, close) => { $('#rp', s).onclick = () => { close(); toast('Gracias. Lo revisamos hoy.'); }; $('#bl', s).onclick = () => { close(); delete S.convs[id]; save(); go('charlas'); toast('Bloqueado. No volverá a escucharte.'); }; });
+    $('#menu', el).onclick = () => sheet(`<h2 class="title">${esc(who())}</h2><p class="sub">Nadie se entera de lo que elijas aquí.</p><div class="row-btns"><button class="btn btn-2" id="rp">Reportar</button><button class="btn btn-2" id="bl">Bloquear</button><button class="btn btn-q" data-close>Cancelar</button></div>`, (s, close) => { $('#rp', s).onclick = () => { close(); track('reporte_creado', { id }); toast('Gracias. Lo revisamos hoy.'); }; $('#bl', s).onclick = () => { close(); delete S.convs[id]; save(); go('charlas'); toast('Bloqueado. No volverá a escucharte.'); }; });
     // micrófono: toca para grabar, toca para enviar
     let rec = null; const rb = $('#rec', el);
     rb.onclick = async () => {
@@ -431,9 +437,10 @@ R.perfil = () => ({ cls: 'pin', html: `
   </div>`,
   bind(el) {
     const acts = {
-      inv: () => sheet(`<h2 class="title">Invita a alguien</h2><p class="sub">Cuando entre, los dos reciben una botella extra.</p><div class="inp mt2" style="display:flex;align-items:center;color:var(--fg-2);font-size:14px">botella-app.vercel.app/?c=TU-CODIGO</div><div class="row-btns mt2"><button class="btn btn-a" id="cp">Copiar enlace</button></div>`, (s, close) => $('#cp', s).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); close(); toast('Enlace copiado'); }),
+      inv: () => sheet(`<h2 class="title">Invita a alguien</h2><p class="sub">Cuando entre, los dos reciben una botella extra.</p><div class="inp mt2" style="display:flex;align-items:center;color:var(--fg-2);font-size:14px">botella-app.vercel.app/?c=TU-CODIGO</div><div class="row-btns mt2"><button class="btn btn-a" id="cp">Copiar enlace</button></div>`, (s, close) => $('#cp', s).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); close(); track('invitacion_copiada'); toast('Enlace copiado'); }),
       rules: () => sheet(`<h2 class="title">Normas de la casa</h2><div class="list mt2 mb3">${['Coquetear está bien. Lo explícito, no.', 'Sin insultos ni amenazas.', 'Tu distrito nunca se muestra.', 'Puedes reportar o bloquear desde cualquier conversación.'].map(t => `<p class="item" style="margin:0;min-height:52px">${t}</p>`).join('')}</div><button class="btn btn-2" data-close>Entendido</button>`),
-      cuenta: () => sheet(`<h2 class="title">Cuenta</h2><div class="list mt2">${row('tag', 'Tus temas', S.temas.join(', '), 'data-a="temas"')}${row('rules', 'Normas de la casa', '', 'data-a="rules"')}${row('key', 'Cambiar contraseña', '', 'data-a="pw"')}${row('out', 'Cerrar sesión', '', 'data-a="out"')}</div><p class="cap mt3 mb2" style="margin-bottom:8px">Estilo visual (prueba)</p>${dirSeg()}`, (s, close) => { bindDir(s); $$('[data-a]', s).forEach(b => b.onclick = () => { const k = b.dataset.a; if (k === 'rules') return acts.rules(); close(); setTimeout(acts[k], 210); }); }),
+      cuenta: () => sheet(`<h2 class="title">Cuenta</h2><div class="list mt2">${row('tag', 'Tus temas', S.temas.join(', '), 'data-a="temas"')}${row('rules', 'Normas de la casa', '', 'data-a="rules"')}${row('key', 'Cambiar contraseña', '', 'data-a="pw"')}${row('quote', 'Cuéntanos qué te parece', 'Lo leemos todo', 'data-a="fb"')}${row('out', 'Cerrar sesión', '', 'data-a="out"')}</div><p class="cap mt3 mb2" style="margin-bottom:8px">Estilo visual (prueba)</p>${dirSeg()}`, (s, close) => { bindDir(s); $$('[data-a]', s).forEach(b => b.onclick = () => { const k = b.dataset.a; if (k === 'rules') return acts.rules(); close(); setTimeout(acts[k], 210); }); }),
+      fb: () => sheet(`<h2 class="title">¿Qué tal Botella?</h2><p class="sub">Una frase basta. Nos ayuda a mejorarla.</p><div class="chips mt2" id="fbm">${['Me encanta', 'Me confunde algo', 'Me falta gente'].map(t => `<button class="chip" aria-pressed="false">${t}</button>`).join('')}</div><textarea class="inp mt2" id="fbt" rows="3" placeholder="Escribe aquí (opcional)" style="height:auto;padding-top:12px;resize:none"></textarea><div class="row-btns mt2"><button class="btn btn-a" id="fbs">Enviar</button></div>`, (sh, close) => { $$('#fbm .chip', sh).forEach(c => c.onclick = () => $$('#fbm .chip', sh).forEach(x => x.setAttribute('aria-pressed', x === c))); $('#fbs', sh).onclick = () => { const m = $('#fbm [aria-pressed=true]', sh); track('comentario', { animo: m ? m.textContent : null, texto: $('#fbt', sh).value.slice(0, 500) }); close(); toast('Gracias. Lo leemos todo.'); }; }),
       pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => sheet(`<h2 class="title">¿Cerrar sesión?</h2><p class="sub">Tus botellas y conversaciones te esperan cuando vuelvas a entrar.</p><div class="row-btns mt3"><button class="btn btn-2" id="bye">Cerrar sesión</button><button class="btn btn-q" data-close>Seguir aquí</button></div>`, (sh, close) => $('#bye', sh).onclick = () => { close(); store.set('onb', 0); go('bienvenida'); })
     };
     $$('[data-a]', el).forEach(b => b.onclick = () => acts[b.dataset.a]());
@@ -447,11 +454,12 @@ const SPECIAL = [
   ['gift', 'De regalo', 'Para alguien con quien conversas: le das una botella más', '#FFB061']
 ];
 const GLASS = [['Claro', '#CFE9F2'], ['Verde', '#7FD8A0'], ['Ámbar', '#FFB061'], ['Esmerilado', '#B9C6D3']];
-const PACKS = [[3, 'Para un día con mucho que decir'], [10, 'Para toda la semana'], [30, '25 más 5 de regalo']];
+const PACKS = [[3, 'Para un día con mucho que decir'], [10, 'Para toda la semana'], [30, 'Para el mes, con 5 de regalo']];
 let muelleTab = 0;
 const MUELLE = [
   () => `<div class="grid2">${SPECIAL.map(([k, t, d, c]) => `<button class="spc" data-k="${k}"><span class="art">${bottleSVG(c)}</span><b>${t}</b><small>${d}</small><span class="foot">${X[k] ? `<em class="have">Tienes ${X[k]}</em>` : '<span></span>'}<span class="chip sm">Pedir</span></span></button>`).join('')}</div>`,
-  () => `<div class="tiles">${PACKS.map(([q, d]) => `<button class="tile" data-pack="${q}"><b>${q}</b><span>${d}</span></button>`).join('')}</div>
+  () => `<p class="sub">Cada día puedes lanzar 4 botellas. Si quieres lanzar más, pide un paquete.</p>
+    <div class="list mt2">${PACKS.map(([q, d]) => `<button class="item" data-pack="${q}"><span class="ic"><b style="font-weight:500">+${q}</b></span><span class="tx"><b>${q} botellas más</b><small>${d}</small></span><span class="chip sm">Pedir</span></button>`).join('')}</div>
     <p class="eyebrow">El vidrio de tus botellas</p>
     <div class="tiles">${GLASS.map(([g, c]) => `<button class="tile glass" data-g="${g}" aria-pressed="${X.glass === g}"><span class="art">${bottleSVG(c)}</span><span>${g}</span></button>`).join('')}</div>`,
   () => `<div class="capt">
@@ -483,12 +491,11 @@ const reachRow = (heard, cls = 'sm') => `<span class="reach ${cls}">${Array.from
 R.botellas = () => ({ cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">Mis botellas</h1>
-  <p class="sub mt1">Blanco: ya la escucharon. Turquesa: en camino.</p>
-  <div class="list mt2">${S.sent.length ? S.sent.map((b, i) => `<button class="item" data-i="${i}"><span class="ic">${I.bottle}</span><span class="tx"><b>Tu ${esc(b.kind.toLowerCase())} sobre ${esc(b.tema.toLowerCase())}</b><small>${b.ans ? n_(b.ans, 'respuesta', 'respuestas') : b.heard ? `${b.heard} de 8 la escucharon` : 'En camino'} · ${esc(b.when)}</small></span>${reachRow(b.heard)}</button>`).join('') : '<p class="sub">Todavía no lanzas ninguna.</p>'}</div>
+  <div class="list mt2">${S.sent.length ? S.sent.map((b, i) => `<button class="item" data-i="${i}"><span class="ic">${I.bottle}</span><span class="tx"><b>Tu ${esc(b.kind.toLowerCase())} sobre ${esc(b.tema.toLowerCase())}</b><small>${b.ans ? n_(b.ans, 'respuesta', 'respuestas') : b.heard ? `${b.heard} de 8 la escucharon` : 'En camino'} · ${esc(b.when)}</small></span>${I.chev}</button>`).join('') : '<p class="sub">Todavía no lanzas ninguna.</p>'}</div>
   <div class="grow"></div><button class="btn btn-2 mt3" data-go="lanzar">Lanzar otra</button>`,
   bind(el) { $$('[data-i]', el).forEach(b => b.onclick = () => { const x = S.sent[+b.dataset.i]; sheet(`<h2 class="title">Tu ${esc(x.kind.toLowerCase())}</h2><p class="sub">${x.idea ? `“${esc(x.idea)}” · ` : ''}Para quien ama ${esc(AMA[x.tema] || x.tema.toLowerCase())}</p>
-    <div class="reach big mt2 mb2">${Array.from({ length: 8 }, (_, i) => `<i class="${i < x.heard ? 'heard' : 'on'}"></i>`).join('')}<span class="sep"></span>${'<i class="later"></i>'.repeat(4)}</div>
-    <p class="cap center mb3">Las 4 de la derecha llegan si en 6 h nadie responde.</p>
+    <div class="facts mt2 mb3"><p><b>8</b><span>personas la recibieron</span></p><p><b>${x.heard}</b><span>ya la escucharon</span></p><p><b>${x.ans || 0}</b><span>${x.ans === 1 ? 'respondió' : 'respondieron'}</span></p></div>
+    ${x.ans ? '' : '<p class="cap mb3">Si en 6 horas nadie responde, llega a 4 personas más.</p>'}
     ${x.ans ? `<button class="btn btn-a" id="toc">Escuchar ${x.ans === 1 ? 'la respuesta' : `las ${x.ans} respuestas`}</button>` : '<button class="btn btn-2" data-close>Listo</button>'}`, (s, close) => { const t = $('#toc', s); t && (t.onclick = () => { close(); go('charlas'); }); }); }); } });
 
 // El mapa de tu voz: los temas con los que conectó.
@@ -586,7 +593,7 @@ R.dos = () => { const d = S.duo; return d ? { html: `
   <div class="grow"></div>
   ${d.friend ? '<div class="slide mt3" id="sl"></div>' : `<button class="btn btn-a mt3" id="share">Mandar el enlace otra vez</button><button class="btn btn-q" id="sim">Ver cómo queda cuando responda</button>`}
   <button class="btn btn-q" id="del">Empezar de nuevo</button>`,
-  bind(el) { const sl = $('#sl', el); sl && slider(sl, 'Desliza al mar', () => { S.mine = { kind: 'Historia', tema: S.temas[0], idea: 'Botella para dos', heard: 0 }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); S.duo = null; saveX(); go('lanzada'); });
+  bind(el) { const sl = $('#sl', el); sl && slider(sl, 'Desliza al mar', () => { S.mine = { kind: 'Historia', tema: S.temas[0], idea: 'Botella para dos', heard: 0 }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); S.duo = null; saveX(); track('botella_lanzada', { duo: true }); go('lanzada'); });
     $('#share', el) && ($('#share', el).onclick = () => { navigator.clipboard && navigator.clipboard.writeText('https://botella-app.vercel.app').catch(() => {}); toast('Enlace copiado'); });
     $('#sim', el) && ($('#sim', el).onclick = () => { d.friend = true; saveX(); go('dos', { nohash: true }); });
     $('#del', el).onclick = () => { S.duo = null; saveX(); go('dos', { nohash: true }); }; } }
