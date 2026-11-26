@@ -308,42 +308,11 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .arow .vn{max-width:100%}
 .nic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--a) 18%,transparent);color:var(--a)}
 
-/* conversación por etapas: el chat va primero; llamada y plan se ven como próximos pasos */
-.stagebar{flex:none;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.stages{display:flex;align-items:center;gap:0;margin-top:2px}
-.stg{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none;min-width:52px;color:var(--dim);font-size:10.5px;font-weight:600;letter-spacing:.02em}
-.stg i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1.5px dashed var(--dim);transition:all .3s}
-.stg i .i{width:13px;height:13px}
-.stg.done{color:var(--muted)}
-.stg.done i{border:0;background:color-mix(in srgb,var(--a) 28%,transparent);color:var(--a)}
-.stg.cur{color:var(--fg)}
-.stg.cur i{border:1.5px solid var(--a);color:var(--a);box-shadow:0 0 16px -4px var(--a)}
-.stg.open{color:var(--muted)}
-.stg.open i{border:1.5px solid var(--line);color:var(--muted)}
-.sln{flex:1;height:1.5px;margin:0 -6px 18px;background:repeating-linear-gradient(90deg,var(--dim) 0 3px,transparent 3px 6px);opacity:.6}
-.sln.on{background:color-mix(in srgb,var(--a) 50%,transparent);opacity:1}
-.nextl{margin:8px 0 0;font-size:12.5px;color:var(--muted);line-height:1.4}
-.nextl .i{color:var(--a);width:14px;height:14px;vertical-align:-2px;margin-right:4px}
-.vc{display:inline-flex;gap:3px;margin-right:6px;vertical-align:0}
-.vc i{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--a)}
-.vc i.on{background:var(--a)}
-.scard{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--line)}
-.scard.on{border-color:color-mix(in srgb,var(--a) 45%,transparent);background:color-mix(in srgb,var(--a) 10%,transparent)}
-.scard .tx{flex:1;min-width:0}
-.scard .tx b{display:block;font-weight:600;font-size:14px}
-.scard .tx span{font-size:12px;color:var(--muted)}
-.scard .btn{width:auto;flex:none;padding:0 14px}
-.scard .si{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--a) 18%,transparent);color:var(--a)}
-.scard .pair{display:flex;align-items:center;gap:4px;flex:none}
-.scard .k{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1.5px dashed var(--dim);color:var(--dim)}
-.scard .k.on{border:1.5px solid var(--a);background:color-mix(in srgb,var(--a) 22%,transparent);color:var(--a)}
-.scard .k .i{width:12px;height:12px}
-.scard .link{width:10px;height:1.5px;background:var(--line)}
 .stinfo{cursor:default}
 .stinfo.done>.i{color:var(--a)}
 .stinfo.cur>.i{color:var(--a)}
 .stinfo.lock{opacity:.75}
-@media (max-width:360px){.stg{min-width:46px;font-size:10px}.streak{padding:0 10px 0 8px;margin-right:6px}.mybottles span{display:none}}
+@media (max-width:360px){.streak{padding:0 10px 0 8px;margin-right:6px}.mybottles span{display:none}}
 .top .title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top .title small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .eyebrow{display:block;margin-bottom:4px}
@@ -358,7 +327,6 @@ input,textarea{-webkit-user-select:text;user-select:text}
   .shorebot .quick .tide b{font-size:13px}
   .shorebot .quick .tide .cnt{font-size:10px}
 }
-.scard{flex-wrap:wrap}.scard .tx{flex:1 1 150px}
 .week{display:flex;justify-content:space-between;gap:6px;margin:18px auto 0;max-width:320px}
 .wd{display:grid;justify-items:center;gap:6px;flex:1}
 .wd small{font-size:11px;font-weight:600;color:var(--muted)}
@@ -410,7 +378,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
 /* Una jerarquía: el resplandor solo en el principal del pie */
 .btn-a{box-shadow:none}
 .foot .btn-a,.shorebot .btn-a,.sheet>.btn-a{box-shadow:0 10px 28px -14px var(--a)}
-.scard .btn,.duoacts .btn,.code .btn,.sitem .pr .btn,.plancard .btn{height:40px;border-radius:20px;font-size:14px;padding:0 16px;box-shadow:none}
+.duoacts .btn,.code .btn,.sitem .pr .btn,.plancard .btn{height:40px;border-radius:20px;font-size:14px;padding:0 16px;box-shadow:none}
 button .pill.a{background:var(--a);color:var(--a-ink);font-size:12.5px;padding:7px 14px}
 .reveal{border-style:solid;border-color:color-mix(in srgb,var(--a) 40%,transparent);background:color-mix(in srgb,var(--a) 8%,transparent);color:var(--fg);font-size:13.5px;min-height:52px}
 .reveal::after{content:"";width:8px;height:8px;margin-left:auto;flex:none;border-right:1.5px solid var(--a);border-top:1.5px solid var(--a);transform:rotate(45deg)}
@@ -424,7 +392,7 @@ button .pill.a{background:var(--a);color:var(--a-ink);font-size:12.5px;padding:7
 /* Legibilidad */
 :root{--dim:#938C8A}
 .paper .eyebrow,.paper .vn .vd,.minipaper small{color:#65563F}
-.small,.note,.samplenote,.safe,.transcript,.rec .hint,.nextl{font-size:13px}
+.small,.note,.samplenote,.safe,.transcript,.rec .hint{font-size:13px}
 .eyebrow{font-size:11px;letter-spacing:.14em}
 .msg .when,.crow .cl1 time{font-size:12px}
 .lead{line-height:1.45}

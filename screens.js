@@ -436,9 +436,9 @@ function dayLabel(iso) {
   const l = d.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
   return l.charAt(0).toUpperCase() + l.slice(1);
 }
-function threadHTML(list, extra) {
+function threadHTML(list) {
   let last = '';
-  return list.map((m, i) => { const x = extra ? extra(m, i) : '', h = msgHTML(m, i); if (!h || !m.created_at) return h + x; const d = new Date(m.created_at).toDateString(); const sep = d !== last ? `<div class="day" role="separator">${dayLabel(m.created_at)}</div>` : ''; last = d; return sep + h + x; }).join('');
+  return list.map((m, i) => { const h = msgHTML(m, i); if (!h || !m.created_at) return h; const d = new Date(m.created_at).toDateString(); const sep = d !== last ? `<div class="day" role="separator">${dayLabel(m.created_at)}</div>` : ''; last = d; return sep + h; }).join('');
 }
 /* La conversación avanza por etapas: primero las voces, después los nombres, la llamada y, si les nace, un plan.
    Todas se ven desde el inicio; las que faltan muestran qué las abre. */
@@ -455,33 +455,6 @@ function stageOf(c) {
   return { st, mine, theirs, need, voices, callable, spoke, plan };
 }
 const STAGES = [['voz', 'Voces', 'mic'], ['nombre', 'Nombres', 'eye'], ['llamada', 'Llamada', 'phone'], ['plan', 'Plan', 'pin']];
-function stagesHTML(c) {
-  if (c.closed) return '';
-  const g = stageOf(c);
-  return `<div class="stages" role="list" aria-label="Etapas de la conversación">${STAGES.map(([k, label, ic], i) => { const v = g.st[k];
-    return `${i ? `<span class="sln${v === 'lock' ? '' : ' on'}"></span>` : ''}<button class="stg ${v}" role="listitem" data-act="stageInfo" aria-label="${label}: ${v === 'done' ? 'listo' : v === 'lock' ? 'todavía cerrado' : 'disponible'}"><i>${icon(v === 'done' ? 'check' : v === 'lock' ? 'lock' : ic, 's')}</i><span>${label}</span></button>`; }).join('')}</div>`;
-}
-/* una sola línea con lo que sigue */
-function nextLine(c) {
-  const g = stageOf(c), other = c.revealed ? esc(c.alias) : 'esta persona';
-  if (c.cooled) return `${icon('clock', 's')} Pasaron 48 horas sin respuesta y esta conversación se cerró sola. Pasa seguido y no es culpa de nadie.`;
-  const cool = c.cool_at && new Date(c.cool_at) - Date.now() < 12 * 3600e3 ? ` Si nadie responde, se cierra en ${until(c.cool_at)}.` : '';
-  if (!g.voices) return `<span class="vc">${Array.from({ length: g.need }, (_, k) => `<i class="${k < g.mine ? 'on' : ''}"></i>`).join('')}</span> Notas de voz: ${c.sample ? `llevas ${g.mine} de ${g.need}` : `tú ${g.mine}&nbsp;de&nbsp;${g.need} · ${c.revealed ? esc(c.alias) : 'la otra persona'} ${g.theirs}&nbsp;de&nbsp;${g.need}`}.${cool}`;
-  // en llamada y plan, la tarjeta de siguiente paso ya lo dice: aquí solo el aviso de que se enfría
-  if (!g.callable || !g.spoke || !g.plan) return cool ? `${icon('clock', 's')}${cool.trim()}` : '';
-  return `${icon('check', 's')} Ya hay un plan. Lugares públicos y avísale a alguien de confianza.`;
-}
-/* la acción de la etapa actual, al final del hilo y pequeña: el chat va primero */
-function stageCard(c) {
-  if (c.closed) return '<div class="divider">Esta conversación terminó</div>';
-  if (c.cooled) return '<div class="divider">Se enfrió</div>';
-  const g = stageOf(c);
-  if (!g.voices) return '';
-  if (!g.callable) return `<div class="scard"><span class="si">${icon(c.my_key ? 'clock' : 'phone')}</span><span class="tx"><b>${c.other_key ? 'Pidió una llamada' : c.my_key ? 'Pediste la llamada' : '¿Hablan en vivo?'}</b><span>${c.my_key ? 'Se abre cuando también la pida.' : c.other_key ? 'Si te provoca, pídela tú. Si no, sigan con notas de voz.' : 'Se abre si los dos la piden.'}</span></span>${c.my_key ? '' : '<button class="btn btn-tonal btn-sm" data-act="key">Pedir llamada</button>'}</div>`;
-  if (!g.spoke) return `<div class="scard on"><span class="si">${icon('phone')}</span><span class="tx"><b>Ya pueden llamarse</b><span>Los dos dijeron que sí.</span></span><button class="btn btn-tonal btn-sm" data-act="call">Llamar</button></div>`;
-  if (!g.plan) return `<div class="scard"><span class="si">${icon('pin')}</span><span class="tx"><b>¿Se ven?</b><span>Propón un lugar público y un día.</span></span><button class="btn btn-tonal btn-sm" data-act="planAsk">Armar un plan</button></div>`;
-  return '';
-}
 P.actions.stageInfo = () => {
   const c = convo(); if (!c) return; const g = stageOf(c);
   const row = (k, ic, t, d) => { const v = g.st[k]; return `<div class="setrow stinfo ${v}">${icon(v === 'done' ? 'check' : v === 'lock' ? 'lock' : ic)}<span style="flex:1"><b>${t}</b><span>${d}</span></span>${v === 'done' ? '<span class="tag ok">Listo</span>' : v === 'lock' ? '<span class="tag">Aún no</span>' : ''}</div>`; };
@@ -492,34 +465,6 @@ P.actions.stageInfo = () => {
     ${row('plan', 'pin', '4. Un plan', 'Después de hablar, si les nace, propongan un lugar público.')}
     ${c.revealed || c.closed ? '' : `<button class="btn btn-glass" data-act="reveal" style="margin-top:10px">${icon('eye')} ${c.my_reveal ? 'Ocultar mi nombre' : 'Compartir mi nombre'}</button>`}`);
 };
-P.screens.chat = {
-  // variantes en prueba (?chat=a|b|c|d); sin variante, la pantalla de siempre
-  get cls() { const v = chatV(); return v ? 'chat v-' + v + (v.length > 1 ? ' v-' + v[0] : '') : ''; },
-  render: () => { const c = convo(); if (!c) return ''; if (chatV()) return chatAlt(chatV(), c); const list = S.msgs[c.id] || [], g = stageOf(c), nl = c.closed ? '' : nextLine(c), sc = stageCard(c), div = /class="divider"/.test(sc);
-    // un solo hueco fijo sobre la barra de grabar con lo que sigue (la etapa manda; si no hay, el nombre)
-    const slot = slotOf(c, sc, div);
-    return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 40)}<span class="title">${/^Alguien que /.test(c.alias || '') ? `<small class="pre">Alguien que</small>${esc(c.alias.slice(12))}` : esc(c.alias)}<small>${c.sample ? 'de ejemplo · ' : ''}${c.duo ? 'botella para dos' : c.i_launched ? 'respondió tu botella' : 'respondiste su botella'}</small></span>${g.spoke && !c.closed ? `<button class="iconbtn glass" data-act="call" aria-label="Llamar">${icon('phone')}</button>` : ''}<button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
-    ${c.closed ? '' : `<div class="pad stagebar">${stagesHTML(c)}${nl ? `<p class="nextl">${nl}</p>` : ''}</div>`}
-    <div class="scroll pad" id="thread"><div class="thread">
-      ${c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo: la otra voz es grabada y no escucha lo que dices. Así avanza una conversación real, paso a paso.</span></div>` : ''}
-      ${threadHTML(list)}
-      ${c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">${c.sample ? 'Llega una respuesta de ejemplo…' : 'Grabando una nota de voz…'}</span></div>` : ''}
-      ${div ? sc : ''}
-      ${c.sample && g.mine >= 1 && !(c.next_at && new Date(c.next_at) > Date.now()) && S.home?.quest && !S.home.quest.launched ? `<p class="small muted realnext" style="text-align:center">Ya sabes cómo funciona. <button class="btn btn-text" data-go="launch">Lanzar mi botella</button></p>` : ''}
-    </div></div>
-    ${slot ? `<div class="pad nextstep">${slot}</div>` : ''}
-    ${c.closed || c.cooled ? '' : `<div class="foot pad cfoot" id="cfoot">${chatFoot()}</div>`}`; },
-  after(sec) { const s = sec.querySelector('#thread'); if (s) s.scrollTop = s.scrollHeight; watchPending(); },
-  leave() { if (S.convo) markRead(S.convo.id); }
-};
-function slotOf(c, sc, div) {
-  return sc && !div ? sc : c.closed || c.cooled || c.revealed ? '' : c.other_reveal && !c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Ya compartió su nombre</b><span>Lo ves cuando compartas el tuyo. No hay apuro.</span></span><button class="btn btn-tonal btn-sm" data-act="reveal">Compartir el mío</button></div>`
-    : c.my_reveal ? `<div class="scard"><span class="si">${icon('eye')}</span><span class="tx"><b>Compartiste tu nombre</b><span>Se ve cuando la otra persona también lo comparta.</span></span><button class="btn btn-text" data-act="reveal">Ocultar</button></div>` : '';
-}
-/* ===== Chat: 4 alternativas en prueba =====
-   ?chat=a|b|c|d elige una y queda guardada (d1|d2|d3: tres maneras de resolver la parte de abajo de D); ?chat=0 vuelve a la de siempre. Mismo contenido, otro orden. */
-const CHATV = (() => { try { const q = new URLSearchParams(location.search).get('chat'); if (q != null) LS.set('chatv', /^([abc]|d[123]?)$/.test(q) ? q : ''); } catch (e) {} return LS.get('chatv', ''); })();
-const chatV = () => CHATV;
 const nameHTML = c => /^Alguien que /.test(c.alias || '') ? `<small class="pre">Alguien que</small>${esc(c.alias.slice(12))}` : esc(c.alias);
 /* lo que toca ahora, en una frase y con su botón (si hay) */
 function stepNow(c) {
@@ -539,72 +484,39 @@ function stepsBar(c) {
   const g = stageOf(c);
   return `<button class="sbar" data-act="stageInfo" aria-label="Etapas: ${STAGES.map(([k, l]) => `${l} ${g.st[k] === 'done' ? 'listo' : g.st[k] === 'lock' ? 'cerrado' : 'disponible'}`).join(', ')}. Toca para ver cómo avanza.">${STAGES.map(([k, l]) => `<i class="${g.st[k]}"><b></b><em>${g.st[k] === 'lock' ? icon('lock', 's') : g.st[k] === 'done' ? icon('check', 's') : ''}${l}</em></i>`).join('')}</button>`;
 }
-function chatAlt(v, c) {
-  const list = S.msgs[c.id] || [], g = stageOf(c), now = stepNow(c), sc = stageCard(c), div = /class="divider"/.test(sc);
-  const typing = c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">${c.sample ? 'Llega una respuesta de ejemplo…' : 'Grabando una nota de voz…'}</span></div>` : '';
-  const sample = c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo: la otra voz es grabada y no escucha lo que dices.</span></div>` : '';
-  const real = c.sample && g.mine >= 1 && !typing && S.home?.quest && !S.home.quest.launched ? `<p class="small muted realnext" style="text-align:center">Ya sabes cómo funciona. <button class="btn btn-text" data-go="launch">Lanzar mi botella</button></p>` : '';
-  const callB = g.spoke && !c.closed ? `<button class="iconbtn glass" data-act="call" aria-label="Llamar">${icon('phone')}</button>` : '', menuB = `<button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button>`;
-  const role = c.duo ? 'botella para dos' : c.i_launched ? 'respondió tu botella' : 'respondiste su botella';
-  const foot = c.closed || c.cooled ? '' : `<div class="foot pad cfoot" id="cfoot">${chatFoot()}</div>`;
-  const wrap = inner => `<div class="scroll pad" id="thread"><div class="thread">${inner}</div></div>`;
-  const cur = now && now.i < 4 ? STAGES[now.i][1] : 'Todo listo';
-  if (v === 'a') { // A · Tranquila: cabecera de una línea, las etapas en un renglón que se toca, lo que sigue junto al micrófono
-    return `${sb_()}<div class="top pad">${backBtn()}<span class="tcol"><span class="title">${c.sample ? '<span class="tag">Ejemplo</span> ' : ''}${nameHTML(c)}</span>${c.closed ? '' : `<button class="stmini" data-act="stageInfo"><span class="dots">${STAGES.map(([k]) => `<i class="${g.st[k]}"></i>`).join('')}</span><span class="lb">${now && now.i < 4 ? `Paso ${now.i + 1} de 4: ${cur}` : cur}</span>${icon('arrow', 's')}</button>`}</span>${callB}${menuB}</div>
-    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${real}`)}${foot}`;
-  }
-  if (v === 'b') { // B · Capítulos: las etapas viven dentro del hilo, como capítulos
-    const need = g.need; let mi = 0, th = c.sample ? need : 0, at = -1, callAt = -1;
-    list.forEach((m, i) => { if (m.voice) { if (m.sender === uid()) mi++; else if (!c.sample) th++; } if (at < 0 && mi >= need && th >= need) at = i; if (callAt < 0 && m.body && /^#(call|plan)\|/.test(m.body)) callAt = i; });
-    if (g.voices && at < 0) at = list.length - 1;
-    const chap = (n, k, desc) => { const st = g.st[k]; return `<div class="chap ${st}" role="separator"><span class="cn">${st === 'done' ? icon('check', 's') : n}</span><b>${STAGES[n - 1][1]}</b>${desc && st !== 'done' ? `<span>${desc}</span>` : st === 'done' ? '<span>Listo</span>' : ''}</div>`; };
-    const vdesc = c.sample ? `Mándense 2 notas de voz cada uno. Llevas ${g.mine} de ${need}.` : `Mándense 2 notas de voz cada uno. Tú ${g.mine} de ${need}, ${c.revealed ? esc(c.alias) : 'la otra persona'} ${g.theirs} de ${need}.`;
-    const after = (m, i) => (i === at ? (c.revealed ? chap(2, 'nombre') : '') + chap(3, 'llamada', g.callable ? 'Llamada de voz: sin video y sin dar tu número.' : 'Se abre si los dos la piden. Sin video y sin dar tu número.') : '') + (g.spoke && i === callAt ? chap(4, 'plan', 'Si les nace, propongan un lugar público.') : '');
-    const left = STAGES.map(([k, l], n) => ({ k, l, n })).filter(({ n }) => (n === 1 && !(g.voices && c.revealed)) || (n === 2 && !g.voices) || (n === 3 && !g.spoke));
-    const slot = slotOf(c, sc, div);
-    const nextUp = c.closed || c.cooled ? '' : `<button class="chapnext" data-act="stageInfo">${now && !slot ? `<span class="nw"><b>Ahora · ${now.i < 4 ? `${now.i + 1} ${cur}` : cur}</b> ${now.i === 0 ? now.d : now.i < 4 && !slot ? now.t + '. ' + now.d : ''}</span>` : ''}${left.length ? `<span class="af"><span>Después</span>${left.map(({ k, l, n }) => `<i class="${g.st[k]}">${n + 1} ${l}</i>`).join('')}</span>` : ''}${icon('arrow', 's')}</button>`;
-    return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 36)}<span class="title">${nameHTML(c)}<small>${c.sample ? 'de ejemplo · ' : ''}${role}</small></span>${callB}${menuB}</div>
-    ${wrap(`${sample}${c.closed ? '' : chap(1, 'voz', vdesc)}${threadHTML(list, after)}${typing}${div ? sc : ''}${slot ? `<div class="chapact">${slot}</div>` : ''}${nextUp}${real}`)}${foot}`;
-  }
-  if (v === 'c') { // C · Panel de abajo: arriba solo el nombre; abajo, todo lo que se hace
-    return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 32)}<span class="title">${nameHTML(c)}${c.sample ? '<small>de ejemplo</small>' : ''}</span>${callB}${menuB}</div>
-    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${real}`)}
-    ${c.closed || c.cooled ? '' : `<div class="cpanel"><div class="pad">${stepsBar(c)}${now ? `<div class="cnow"><span class="tx"><b>${now.t}</b><span>${now.d}</span></span>${now.b}</div>` : ''}</div>${foot}</div>`}`;
-  }
-  // D · Ficha: arriba lo que comparten (su pregunta, el tema) y el avance; abajo, solo voz.
-  // D2 y D3 bajan lo que sigue junto al micrófono, así la ficha queda con la pregunta y las etapas.
-  const bm = list.find(m => m.body && m.body.startsWith('#bottle|')), [, kind, text] = bm ? bm.body.split('|') : [], low = v === 'd2' || v === 'd3';
-  return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 36)}<span class="title">${nameHTML(c)}${c.sample ? '<small>de ejemplo</small>' : ''}</span>${callB}${menuB}</div>
-    ${c.closed ? '' : `<div class="ficha pad"><div class="fbox">${bm ? `<div class="fq${c.i_launched ? ' mine' : ''}"><small>${c.i_launched ? 'Tu botella' : 'Su botella'} · ${c.place ? `tema: ${esc(c.place.toLowerCase())}` : esc((kind || '').toLowerCase())}</small><span>${esc(text || 'Una nota de voz')}</span></div>` : ''}${stepsBar(c)}${now && !low ? `<div class="fnow"><span class="tx"><b>${now.t}.</b> ${now.d}</span>${now.b}</div>` : ''}</div></div>`}
-    ${wrap(`${sample}${threadHTML(list)}${typing}${div ? sc : ''}${v === 'd2' && dSides(c).some(o => o.go) ? '' : real}`)}${foot}`;
-}
-/* D1-D3: lo que va junto al micrófono */
+/* La pantalla del chat (ficha corta arriba, hilo, y abajo dos zonas: lo que sigue a la izquierda y el micrófono a la derecha) */
+P.screens.chat = {
+  cls: 'chat',
+  render: () => { const c = convo(); if (!c) return '';
+    const list = S.msgs[c.id] || [], g = stageOf(c);
+    const end = c.closed ? '<div class="divider">Esta conversación terminó</div>' : c.cooled ? '<div class="divider">Se enfrió</div>' : '';
+    const typing = c.next_at && new Date(c.next_at) > Date.now() ? `<div class="msg typing"><span class="dots3"><i></i><i></i><i></i></span><span class="when">${c.sample ? 'Llega una respuesta de ejemplo…' : 'Grabando una nota de voz…'}</span></div>` : '';
+    const sample = c.sample ? `<div class="samplenote">${icon('spark', 's')}<span>Conversación de ejemplo: la otra voz es grabada y no escucha lo que dices.</span></div>` : '';
+    const real = c.sample && g.mine >= 1 && !typing && S.home?.quest && !S.home.quest.launched ? `<p class="small muted realnext" style="text-align:center">Ya sabes cómo funciona. <button class="btn btn-text" data-go="launch">Lanzar mi botella</button></p>` : '';
+    const callB = g.spoke && !c.closed ? `<button class="iconbtn glass" data-act="call" aria-label="Llamar">${icon('phone')}</button>` : '';
+    // la ficha: lo que los une (su pregunta en papel y el tema) y el avance por etapas
+    const bm = list.find(m => m.body && m.body.startsWith('#bottle|')), [, kind, text] = bm ? bm.body.split('|') : [];
+    return `${sb_()}<div class="top pad">${backBtn()}${orb(colorOf(c.id), 36)}<span class="title">${nameHTML(c)}${c.sample ? '<small>de ejemplo</small>' : ''}</span>${callB}<button class="iconbtn glass" data-act="chatMenu" aria-label="Opciones">${icon('more')}</button></div>
+    ${c.closed ? '' : `<div class="ficha pad"><div class="fbox">${bm ? `<div class="fq${c.i_launched ? ' mine' : ''}"><small>${c.i_launched ? 'Tu botella' : 'Su botella'} · ${c.place ? `tema: ${esc(c.place.toLowerCase())}` : esc((kind || '').toLowerCase())}</small><span>${esc(text || 'Una nota de voz')}</span></div>` : ''}${stepsBar(c)}</div></div>`}
+    <div class="scroll pad" id="thread"><div class="thread">${sample}${threadHTML(list)}${typing}${end}${real}</div></div>
+    ${c.closed || c.cooled ? '' : `<div class="foot pad cfoot" id="cfoot">${chatFoot()}</div>`}`; },
+  after(sec) { const s = sec.querySelector('#thread'); if (s) s.scrollTop = s.scrollHeight; watchPending(); },
+  leave() { if (S.convo) markRead(S.convo.id); }
+};
+// Ya no hay variantes del chat: se borra la elección que pudo quedar guardada
+try { localStorage.removeItem('chatv'); } catch (e) {}
+/* abajo, a la izquierda: lo que sigue (icono + verbo); si no hay nada que hacer, cómo va */
 const D_ACT = { call: ['phone', 'Llamar'], key: ['phone', 'Pedir llamada'], planAsk: ['pin', 'Armar plan'], reveal: ['eye', 'Mi nombre'] };
 const dAct = now => { const a = now && (now.b.match(/data-act="(\w+)"/) || [])[1]; return a && D_ACT[a] ? { act: a, i: D_ACT[a][0], l: D_ACT[a][1] } : null; };
-/* D2: dos acciones a los lados del micrófono, nunca un lado vacío */
-function dSides(c) {
-  const g = stageOf(c), q = S.home?.quest, a = dAct(stepNow(c)), opts = [a && { ...a, now: 1 }, { act: 'stageInfo', i: 'spark', l: 'Cómo va' }, c.sample && g.mine >= 1 && q && !q.launched ? { go: 'launch', i: 'bottle', l: 'Mi botella' } : null, c.sample ? null : { act: 'giftAsk', i: 'gift', l: 'Lacre' }, { act: 'chatMenu', i: 'more', l: 'Más' }].filter(Boolean);
-  return opts[0].now ? [opts[0], opts.find((o, k) => k && o.act !== 'stageInfo')] : [opts[0], opts[1]];
-}
-function dFoot(v, c) {
-  const g = stageOf(c), now = stepNow(c), mic = `<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
-  if (v === 'd1') // barra de grabar a lo ancho, como un campo de mensaje: todo el ancho se toca
-    return `<div class="d1bar"><button class="d1tx" data-act="chatRec"><b>Toca para grabar tu nota</b><span>Solo voz: aquí no se escribe</span></button>${mic}</div>`;
-  if (v === 'd2') { // micrófono grande al centro; a los lados, lo que sigue y otra acción
-    const side = (o, k) => `<button class="d2side${o.now ? ' first' : ''}" ${o.go ? `data-go="${o.go}"` : `data-act="${o.act}"`}><span class="ic">${icon(o.i)}</span><span class="lb">${o.l}</span></button>`, [a, b] = dSides(c);
-    return `${side(a, 0)}<span class="d2mic">${mic}<span class="lb">${g.voices ? 'Grabar' : `Nota ${Math.min(g.mine + 1, g.need)} de ${g.need}`}</span></span>${side(b, 1)}`;
-  }
-  // d3: dos zonas, a la izquierda lo que sigue (icono + verbo), a la derecha el micrófono
-  const a = dAct(now), t = now ? now.t : '', d = now ? now.d.split('. ')[0].replace(/\.$/, '') : '';
+function nowZone(c) {
+  const g = stageOf(c), now = stepNow(c), a = dAct(now), t = now ? now.t : '', d = now ? now.d.split('. ')[0].replace(/\.$/, '') : '';
   const z = a ? { at: `data-act="${a.act}"`, i: a.i, b: a.l, s: t } : !g.voices ? { at: 'data-act="stageInfo"', i: 'spark', b: `Llevas ${g.mine} de ${g.need}`, s: 'notas de voz' } : { at: 'data-act="stageInfo"', i: now && now.i === 4 ? 'pin' : 'spark', b: t || 'Cómo va', s: d };
-  return `<button class="d3now${a ? ' act' : ''}" ${z.at}><span class="ic">${icon(z.i)}</span><span class="tx"><b>${z.b}</b>${z.s ? `<span>${z.s}</span>` : ''}</span></button>${mic}`;
+  return `<button class="d3now${a ? ' act' : ''}" ${z.at}><span class="ic">${icon(z.i)}</span><span class="tx"><b>${z.b}</b>${z.s ? `<span>${z.s}</span>` : ''}</span></button>`;
 }
 function chatFoot() {
   if (REC.mr && REC.id === 'chat') return `<button class="iconbtn glass" data-act="chatRecCancel" aria-label="Cancelar">${icon('close')}</button><div class="clive"><span class="num" id="ctime">0:00</span><span class="cwave" id="cwave"></span></div><button class="iconbtn sendb" data-act="chatRecSend" aria-label="Enviar nota de voz">${icon('send')}</button>`;
-  if (chatV() === 'a' && convo()) { const n = stepNow(convo()); if (n) return `<span class="anext"><span class="tx"><b>${n.t}.</b> ${n.d}</span>${n.b}</span><button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`; }
-  if (/^d\d$/.test(chatV()) && convo()) return dFoot(chatV(), convo());
-  if (chatV() === 'c') return `${stageOf(convo() || {}).mine < 2 ? '<span class="small muted">Toca el micrófono para grabar</span>' : '<span></span><span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
-  return `<span></span>${stageOf(convo() || {}).mine < 2 ? '<span class="small muted" style="text-align:center">Toca el micrófono para grabar</span>' : '<span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
+  const c = convo();
+  return `${c ? nowZone(c) : '<span></span>'}<button class="iconbtn sendb" data-act="chatRec" aria-label="Grabar nota de voz">${icon('mic')}</button>`;
 }
 P.actions.chatRec = async () => {
   if (REC.mr || CALL) return;

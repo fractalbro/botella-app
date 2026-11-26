@@ -53,8 +53,8 @@
 
 /* ---------- Tipografía de jerarquía ---------- */
 .display{font-size:var(--t-display)} .h2,.paper .q,.tq .q{font-size:var(--t-title)} .h3{font-size:var(--t-head)}
-.lead,.coach p{font-size:var(--t-body)} .small,.transcript,.rec .hint,.nextl{font-size:var(--t-sub)}
-.eyebrow,.msg .when,.crow .cl1 time,.stg,.thread .day,.today small,.minipaper small,.bal span,.look span,.wd small,.float span small{font-size:var(--t-cap)}
+.lead,.coach p{font-size:var(--t-body)} .small,.transcript,.rec .hint{font-size:var(--t-sub)}
+.eyebrow,.msg .when,.crow .cl1 time,.thread .day,.today small,.minipaper small,.bal span,.look span,.wd small,.float span small{font-size:var(--t-cap)}
 .eyebrow{color:var(--c-fg-2)}                 /* gris = encabezado de sección */
 .eyebrow.a{color:var(--c-primary)}            /* solo sobre un título display o dentro de tarjeta destacada */
 .stat2 b,.bal b,.spack b,.pack .qty,.pp b,.rec .time{font-size:var(--t-display)}
@@ -78,7 +78,7 @@
   color:var(--c-primary);font-size:var(--t-body);font-weight:600;text-decoration:none}
 .btn-text:active,.linkbtn:active{background:none;opacity:.7}
 /* Pequeño */
-.btn-sm,.scard .btn,.duoacts .btn,.code .btn,.sitem .pr .btn,.plancard .btn,.coach .btn{height:36px;padding:0 var(--s4);
+.btn-sm,.duoacts .btn,.code .btn,.sitem .pr .btn,.plancard .btn,.coach .btn{height:36px;padding:0 var(--s4);
   font-size:var(--t-sub);border-radius:var(--r-pill);width:auto;flex:none;box-shadow:none}
 .btn-text.btn-sm{height:36px;font-size:var(--t-sub)}
 /* Estados */
@@ -119,13 +119,13 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 .quick .tide b{display:flex;align-items:center;white-space:nowrap}
 
 /* ---------- Tarjeta: normal y destacada ---------- */
-.card,.today,.tq,.nextup,.empty-note,.scard,.mrow,.orow,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack,.spack,
+.card,.today,.tq,.nextup,.empty-note,.mrow,.orow,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack,.spack,
 .look,.btype,.frees>div,.bal>div,.stat2,.lq,.keys,.ecard,.pcard,.fcard,.lookcard,.passrow,.seasonc,.whoteaser,.travel,.quick .tide{
   border-radius:var(--r-card);border:1px solid var(--c-line);border-style:solid;background:var(--c-surface)}
 .screen.sea :is(.card,.today,.tq,.mrow,.orow,.travel,.quick .tide){background:var(--c-surface-sea)}
 :is(.card,.tq,.nextup,.empty-note,.sharebox,.invite,.captain,.plan){padding:var(--s4)}
-:is(.today,.mrow,.orow,.scard,.mapcard,.duorow){padding:var(--s3) 14px!important}
-.card-hl,.today.gold,.today.quest,.tq,.scard.on,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack.best,.spack.best,
+:is(.today,.mrow,.orow,.mapcard,.duorow){padding:var(--s3) 14px!important}
+.card-hl,.today.gold,.today.quest,.tq,.mapcard,.sharebox,.invite,.captain,.plan,.planc,.duorow,.pack.best,.spack.best,
 .look.on,.passrow.own,.ecard.owned,.pcard.owned,.lookcard.owned,.btype.on{
   --hl:var(--c-primary);border-color:color-mix(in srgb,var(--hl) 45%,transparent)!important;
   background:linear-gradient(150deg,color-mix(in srgb,var(--hl) 12%,transparent),transparent 70%),var(--c-surface)}
@@ -142,10 +142,10 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 
 /* ---------- Fila de lista tocable ---------- */
 .row,.setrow,.lrow,.urow,.item,.place,.arow{min-height:56px;gap:var(--s3);padding-block:var(--s3);border-top:1px solid var(--c-line)}
-.setrow b,.urow .tx b,.item b,.scard .tx b,.mapcard b,.sitem .tx b{font-family:var(--sans);font-size:var(--t-body);font-weight:600}
+.setrow b,.urow .tx b,.item b,.mapcard b,.sitem .tx b{font-family:var(--sans);font-size:var(--t-body);font-weight:600}
 .row .t,.lrow .t,.mrow .t,.orow .t,.today b,.crow .cl1 b,.place b{font-size:var(--t-head)}
 .row .s:not(.i),.lrow .s:not(.i),.orow .s:not(.i),.arow .s:not(.i),.setrow span span,.urow .tx span,.item .tx span,
-.sitem .tx span,.scard .tx span,.mapcard span span,.today .tx>span{font-size:var(--t-sub);color:var(--c-fg-2)}
+.sitem .tx span,.mapcard span span,.today .tx>span{font-size:var(--t-sub);color:var(--c-fg-2)}
 :is(.row,.setrow,.lrow,.today,.mapcard,.travel)>.i:last-child{width:16px;height:16px;color:var(--c-fg-3);flex:none;margin-left:auto}
 .chev::after{content:"";width:7px;height:7px;margin:0 4px 0 auto;flex:none;border-right:1.5px solid var(--c-fg-3);
   border-top:1.5px solid var(--c-fg-3);transform:rotate(45deg)}
@@ -204,12 +204,7 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 .mlink:active{opacity:.7} .mlink .cnt{margin-left:0}
 @media (max-width:360px){.mlink .i{display:none}.morerow>div{gap:var(--s3)}}
 @media (max-height:700px){.shorebot .statusline .shores{display:none}.shorebot .statusline{margin-top:8px}.morerow{margin-top:4px;padding-top:4px}.mlink{height:32px}}
-/* Chat: un solo hueco fijo para el siguiente paso, entre el hilo y la barra de grabar */
-.nextstep{flex:none;padding-top:8px;padding-bottom:4px}
-.nextstep .scard{flex-wrap:nowrap;margin:0}
 .realnext .btn-text{display:inline;height:auto;padding:0;font-size:inherit;width:auto}
-.nextstep .scard .si{display:none}.nextstep .scard .tx{min-width:0}.nextstep .scard .tx b{font-size:var(--t-body);line-height:1.3}
-.nextstep .scard .tx span{line-height:1.35}
 /* Lanzar: deslizar es un gesto extra, sin caja; el botón es lo principal */
 .fling{border:0!important;background:none!important;min-height:64px;height:auto!important}
 .fling .ft{font-size:var(--t-cap)!important;color:var(--c-fg-2)}
@@ -230,16 +225,12 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 /* ---------- Pulido (fase 3): textos que no se parten raro y nada que choque en 320 px ---------- */
 /* Registro: la respuesta guardada se dice bajo el título, como una línea; no flota encima */
 .savedl{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:var(--t-sub);color:var(--c-fg-2)} .savedl .i{color:var(--c-primary);flex:none}
-/* Chat: la línea de conteo se parte pareja */
-.nextl{text-wrap:balance}
 /* Lecturas: "Escúchala para ver quién es" en su línea; "Nueva · hace 22 min" debajo */
 .arow.new .s .who{display:block;text-wrap:balance} .arow .s .m{display:block;font-weight:500;color:var(--c-fg-2);margin-top:2px}
 /* Precios: "S/ 4.90" nunca se parte */
 .spack s,.look s,.sitem s,.pr-old{white-space:nowrap}
 /* Conversaciones: el estado se lee entero (hasta dos líneas), sin puntos suspensivos */
 .crow .cl2>span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-/* Chat: si el texto del siguiente paso no cabe junto al botón, el botón baja (nunca una columna angosta) */
-.nextstep .scard{flex-wrap:wrap;row-gap:var(--s2)} .nextstep .scard .tx{flex:1 1 190px}
 /* Primer día: el rótulo "Tu primer día · 2 de 3" va en una línea */
 .today.quest small{white-space:nowrap}
 @media (max-width:360px){
@@ -343,9 +334,10 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
   .samplenote{margin-top:var(--s2);padding-block:var(--s2)}
 }
 
-/* ===== chat variantes ===== */
-/* Cuatro maneras de mostrar lo mismo, para elegir con Cesar. Se activan con ?chat=a|b|c|d (?chat=0 vuelve a la de siempre). */
-/* Compartido: las 4 etapas como barrita con nombres (C y D). Tocarla abre la explicación. */
+/* ===== chat ===== */
+/* Arriba, una ficha corta con lo que los une (su pregunta en papel y el tema) y el avance; abajo, dos zonas:
+   lo que sigue a la izquierda y el micrófono a la derecha. El micrófono es el único turquesa sólido. */
+/* las 4 etapas como barrita con nombres; tocarla abre la explicación */
 .sbar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%;background:none;border:0;padding:0;text-align:left;color:inherit}
 .sbar i{display:grid;gap:5px;font-style:normal;min-width:0}
 .sbar b{height:4px;border-radius:2px;background:var(--c-line-2)}
@@ -354,93 +346,16 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 .sbar .done b{background:color-mix(in srgb,var(--c-primary) 50%,transparent)} .sbar .done em{color:var(--c-fg-2)} .sbar .done em .i{color:var(--c-primary)}
 .sbar .cur b{background:var(--c-primary)} .sbar .cur em{color:var(--c-fg)}
 .sbar .open em{color:var(--c-fg-2)} .sbar .lock b{background:var(--c-line)}
-
-/* A · Tranquila: nombre en una línea, las etapas en un renglón chico que se toca, lo que sigue junto al micrófono */
-.v-a .top{gap:10px}
-.v-a .tcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}
-.v-a .tcol .title{flex:none;max-width:100%;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.v-a .title small.pre{display:inline;font-size:inherit;letter-spacing:0;margin:0;color:inherit}
-.v-a .title small.pre::after{content:' '}
-.v-a .title .tag{vertical-align:2px;margin-right:2px}
-.stmini{display:inline-flex;align-items:center;gap:6px;height:24px;max-width:100%;padding:0;background:none;border:0;color:var(--c-fg-2);font-size:var(--t-sub)}
-.stmini .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stmini .i{width:12px;height:12px;flex:none;color:var(--c-fg-3)}
-.stmini .dots{display:flex;gap:3px;flex:none}
-.stmini .dots i{width:6px;height:6px;border-radius:50%;background:var(--c-line-2)}
-.stmini .dots i.done{background:var(--c-primary)} .stmini .dots i.cur{background:none;box-shadow:inset 0 0 0 1.5px var(--c-primary)}
-.stmini:active{opacity:.7}
-.v-a .thread{gap:16px}
-.v-a .thread .day{background:none;border:0;padding:0;color:var(--c-fg-3)}
-.v-a .cfoot{border-top:1px solid var(--c-line);padding-top:12px}
-.anext{grid-column:1/3;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35;text-wrap:pretty}
-.anext b{color:var(--c-fg);font-weight:600}
-.anext .btn{width:auto}
-
-/* B · Capítulos: sin barra arriba; cada etapa empieza como un capítulo dentro del hilo */
-.v-b .thread{gap:18px}
-.chap{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;padding-top:14px;border-top:1px solid var(--c-line)}
-.thread>.samplenote+.chap,.thread>.chap:first-child{border-top:0;padding-top:0}
-.chap .cn{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:var(--t-sub);font-weight:700;box-shadow:inset 0 0 0 1.5px var(--c-primary);color:var(--c-primary)}
-.chap .cn .i{width:13px;height:13px}
-.chap b{font-size:var(--t-body);font-weight:600;line-height:1.25}
-.chap>span:not(.cn){font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35}
-.chap.done .cn{box-shadow:none;background:var(--c-tonal)} .chap.done b{color:var(--c-fg-2);font-weight:500}
-.chap.done{grid-template-columns:auto auto 1fr} .chap.done .cn{grid-row:auto} .chap.done>span:not(.cn){color:var(--c-fg-3)}
-.chapact .scard{margin:0}
-.chapnext{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;width:100%;background:none;border:1px dashed var(--c-line-2);border-radius:var(--r-sm);padding:10px 12px;color:var(--c-fg-3);font-size:var(--t-sub);text-align:left}
-.chapnext{display:grid;grid-template-columns:1fr auto;gap:6px 10px}
-.chapnext .nw{color:var(--c-fg-2);line-height:1.35} .chapnext .nw b{color:var(--c-fg);font-weight:600}
-.chapnext .af{grid-column:1;display:flex;flex-wrap:wrap;gap:2px 10px} .chapnext .af>span{color:var(--c-fg-2);font-weight:600}
-.chapnext i{font-style:normal;white-space:nowrap} .chapnext i.open{color:var(--c-fg-2)}
-.chapnext>.i{grid-column:2;grid-row:1/3;align-self:center;width:14px;height:14px} .chapnext:active{opacity:.7}
-
-/* C · Panel de abajo: arriba solo el nombre; las etapas, lo que sigue y el micrófono juntos abajo */
-.v-c .cpanel{flex:none;background:var(--c-elev);border-radius:var(--r-card) var(--r-card) 0 0;border-top:1px solid var(--c-line);padding-top:14px;box-shadow:0 -14px 30px -20px rgba(0,0,0,.7)}
-.v-c .cpanel .cfoot{padding-top:10px}
-.cnow{display:flex;align-items:center;gap:12px;margin-top:12px}
-.cnow .tx{flex:1;min-width:0} .cnow b{display:block;font-size:var(--t-body);font-weight:600;line-height:1.3}
-.cnow .tx span{font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35} .cnow .btn{width:auto;flex:none}
-
-/* D · Ficha: arriba lo que los une (su pregunta en papel y el tema) con el avance; el hilo debajo, solo voces */
-.v-d .ficha{flex:none}
-.fbox{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:12px;border-radius:var(--r-card);background:var(--c-surface);border:1px solid var(--c-line)}
+/* la ficha */
+.chat .ficha{flex:none;padding-bottom:10px}
+.fbox{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:12px;border-radius:var(--r-card);background:var(--c-surface);border:1px solid var(--c-line)}
 .fq{background:var(--c-paper);color:var(--c-paper-ink);border-radius:var(--r-tag) var(--r-tag) var(--r-sm) var(--r-sm);padding:10px 12px}
 .fq small{display:block;font-size:var(--t-cap);letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:#65563F;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fq span{font-family:var(--display);font-size:var(--t-head);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.fnow{display:flex;align-items:center;gap:10px;font-size:var(--t-sub);color:var(--c-fg-2);line-height:1.35}
-.fnow .tx{flex:1;min-width:0} .fnow b{color:var(--c-fg);font-weight:600} .fnow .btn{width:auto;flex:none}
 .fq.mine{background:var(--c-secondary);color:var(--c-fg)} .fq.mine small{color:var(--c-fg-2)}  /* crema solo si la pregunta es de la otra persona */
-.v-d .ficha{padding-bottom:10px}
-.v-d .thread .minipaper{display:none}
-@media (max-width:360px){.sbar em .i{display:none}.sbar{gap:3px}}
-@media (max-height:600px){
-  .fbox{gap:8px;padding:10px} .fq{padding:8px 10px} .fq span{-webkit-line-clamp:1}
-  .v-c .cpanel{padding-top:10px} .cnow{margin-top:8px}
-}
-
-/* D1-D3: tres maneras de llenar la parte de abajo de D (sin esquina vacía). El micrófono sigue siendo el único turquesa sólido. */
-/* D1 · Barra: un campo a lo ancho, como el de escribir un mensaje, con el micrófono adentro a la derecha. Todo el campo se toca. */
-.v-d1 .cfoot:has(.d1bar){display:block!important}
-.d1bar{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 0;border-radius:var(--r-pill);background:var(--c-surface);border:1px solid var(--c-line-2)}
-.d1tx{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;align-self:stretch;justify-content:center;padding:0 0 0 18px;background:none;border:0;color:inherit;text-align:left;border-radius:var(--r-pill) 0 0 var(--r-pill)}
-.d1tx b{font-size:var(--t-body);font-weight:600;color:var(--c-fg)}
-.d1tx span{font-size:var(--t-sub);color:var(--c-fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.d1tx:active{opacity:.7}
-.d1bar .sendb{width:52px!important;height:52px!important}
-/* D2 · Centro: micrófono grande al medio; a los lados, lo que sigue y otra acción, con su nombre debajo */
-.v-d2 .cfoot:has(.d2mic){grid-template-columns:1fr auto 1fr!important;align-items:start}
-.d2side,.d2mic{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
-.d2side{background:none;border:0;padding:8px 0 0;color:var(--c-fg-2)} .d2side .lb{margin-top:8px}
-.d2side .ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--c-secondary);border:1px solid var(--c-line)}
-.d2side.first .ic{background:var(--c-tonal);border-color:transparent;color:var(--c-primary)}
-.d2side.first .lb{color:var(--c-primary)}
-.d2side .ic .i{width:20px;height:20px}
-.d2side .lb,.d2mic .lb{font-size:var(--t-cap);font-weight:600;letter-spacing:.02em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.d2mic .lb{color:var(--c-fg-3)}
-.d2mic .sendb{width:64px!important;height:64px!important} .d2mic .sendb .i{width:26px;height:26px}
-.d2side:active .ic{background:var(--c-secondary-press)} .d2side.first:active .ic{background:var(--c-tonal-press)}
-/* D3 · Dos zonas: a la izquierda lo que sigue (icono + verbo), a la derecha el micrófono */
-.v-d3 .cfoot:has(.d3now){grid-template-columns:1fr auto!important;gap:12px}
+.chat .thread .minipaper{display:none}  /* la pregunta ya está en la ficha */
+/* abajo: lo que sigue (icono + verbo) y el micrófono */
+.chat .cfoot:has(.d3now){grid-template-columns:1fr auto!important;gap:12px}
 .d3now{display:flex;align-items:center;gap:10px;min-width:0;height:56px;padding:0 14px 0 6px;border-radius:var(--r-pill);background:var(--c-surface);border:1px solid var(--c-line);color:inherit;text-align:left}
 .d3now .ic{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--c-secondary);color:var(--c-fg-2)}
 .d3now.act .ic{background:var(--c-tonal);color:var(--c-primary)}
@@ -450,10 +365,8 @@ button:active>.act,[role=button]:active>.act{background:var(--c-tonal-press)}
 .d3now.act b{color:var(--c-primary)}
 .d3now .tx span{font-size:var(--t-sub);color:var(--c-fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .d3now:active{background:var(--c-secondary)}
-/* sin la línea de lo que sigue, la ficha de D2 y D3 queda en pregunta + etapas */
-.v-d2 .fbox,.v-d3 .fbox{gap:10px}
+@media (max-width:360px){.sbar em .i{display:none}.sbar{gap:3px}}
 @media (max-height:600px){
-  .v-d .ficha{padding-bottom:6px}
-  .d2side .ic{width:44px;height:44px} .d2mic .sendb{width:58px!important;height:58px!important} .d2side,.d2mic{gap:4px} .d2side{padding-top:7px} .d2side .lb{margin-top:7px}
-  .d1bar .sendb{width:48px!important;height:48px!important}
+  .chat .ficha{padding-bottom:6px}
+  .fbox{gap:8px;padding:10px} .fq{padding:8px 10px} .fq span{-webkit-line-clamp:1}
 }
