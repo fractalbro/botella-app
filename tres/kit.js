@@ -102,7 +102,7 @@ export function moon(r = 6) {
 
 // ---------- mar de noche con olas, fresnel y reflejo de luna ----------
 export function ocean({ size = 600, deep = '#03101C', skyc = '#1E4A6C', fog = '#123049', moonDir = [0, 0.35, -1], moonCol = '#EAF6F2', amp = 1, fogNear = 40, fogFar = 420 } = {}) {
-  const geo = new THREE.PlaneGeometry(size, size, 220, 220); geo.rotateX(-Math.PI / 2);
+  const geo = new THREE.PlaneGeometry(size, size, 160, 160); geo.rotateX(-Math.PI / 2);
   const m = new THREE.ShaderMaterial({
     uniforms: { uTime: { value: 0 }, uAmp: { value: amp }, uDeep: { value: col(deep) }, uSky: { value: col(skyc) }, uFog: { value: col(fog) }, uMoonDir: { value: new THREE.Vector3(...moonDir).normalize() }, uMoon: { value: col(moonCol) }, uNear: { value: fogNear }, uFar: { value: fogFar }, uSpot: { value: new THREE.Vector4(0, 0, 0, 0) }, uSpotC: { value: col('#FFE7B0') } },
     vertexShader: `uniform float uTime,uAmp; varying vec3 vW; varying vec3 vN;
@@ -152,6 +152,34 @@ export function cloudTex() {
 export function cloud(color = '#3A6A8E', s = 10, op = 0.9) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(), color: col(color), transparent: true, opacity: op, depthWrite: false }));
   sp.scale.set(s * 2, s, 1); return sp;
+}
+
+// ---------- brillo sin luz real: un sprite aditivo (las luces reales que aparecen y desaparecen obligan a recompilar todo) ----------
+let _glowTex;
+export function glowTex() {
+  if (_glowTex) return _glowTex;
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.18, 'rgba(255,255,255,.6)'); g.addColorStop(.5, 'rgba(255,255,255,.12)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  return (_glowTex = new THREE.CanvasTexture(c));
+}
+export function glow(color, s = 2) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: new THREE.Color(color), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); sp.scale.setScalar(s); return sp; }
+// ---------- compila todos los shaders antes de mostrar nada (sin esto, lo primero que aparece congela la página) ----------
+export function warm(renderer, scene, camera) {
+  const hidden = []; scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
+  let p; try { p = renderer.compileAsync ? renderer.compileAsync(scene, camera) : Promise.resolve(renderer.compile(scene, camera)); } catch (e) { p = Promise.resolve(); }
+  hidden.forEach(o => { o.visible = false; }); // compileAsync recorre la escena al llamarlo; ya se puede restaurar
+  return p.catch(() => {});
+}
+// ---------- nitidez que se ajusta sola para sostener 60 cuadros ----------
+export function autoRes(renderer, composer, { budget = 1.4e6, min = .5 } = {}) {
+  const cap = () => Math.min(devicePixelRatio || 1, 2); let pr = 1, ema = 16.7, n = 0, w = 0, h = 0;
+  const apply = () => { renderer.setPixelRatio(pr); composer?.setPixelRatio?.(pr); if (w) { renderer.setSize(w, h, false); composer?.setSize(w, h); } };
+  return {
+    size(W, H) { w = W; h = H; pr = Math.min(cap(), Math.sqrt(budget / Math.max(1, w * h))); apply(); },
+    tick(dt) { if (!dt || dt > 250) return; ema += (dt - ema) * .08; if (++n < 40) return; n = 0;
+      if (ema > 19 && pr > min) { pr = Math.max(min, pr * .85); apply(); } else if (ema < 14 && pr < Math.min(cap(), Math.sqrt(budget / Math.max(1, w * h)))) { pr = Math.min(cap(), pr * 1.08); apply(); } },
+    get pr() { return pr; }
+  };
 }
 
 export const lerp = (a, b, k) => a + (b - a) * k;

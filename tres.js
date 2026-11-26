@@ -16,7 +16,7 @@
   };
   // si el teléfono no da (cuadros de más de 60 ms en promedio), se apaga el 3D y vuelve el mar 2D
   let n = 0, last = 0, slow = 0;
-  const loop = now => { raf = 0; if (!is3() || document.hidden) { last = 0; return; } try { M.frame(now); } catch (e) { off(e); return; }
+  const loop = now => { raf = 0; if (!is3() || document.hidden) { last = 0; M?.pause(); return; } try { M.frame(now); } catch (e) { off(e); return; }
     if (last && n < 40 && !window.__force3d) { n++; slow += now - last > 60 ? 1 : 0; if (n >= 10 && slow / n > .6) { off('lento'); return; } } last = now;
     // con "reducir movimiento" se dibuja la escena final y se queda quieta
     if (env.reduce && ++still > 2) return; raf = requestAnimationFrame(loop); };
@@ -25,6 +25,7 @@
   const off = e => { console.warn('mar 3D apagado', e); M = null; document.documentElement.classList.remove('g3on'); document.querySelectorAll('.screen.g3').forEach(s => s.classList.remove('g3')); };
   const _go = go; go = function (id, o) { _go(id, o); if (M) mark(); };
   document.addEventListener('visibilitychange', kick);
-  const load = () => import('./tres/mar.js').then(m => { M = m.create(cv, env); addEventListener('resize', () => M?.size()); mark(); }).catch(off);
+  // se compila todo en segundo plano y recién entonces se muestra: así no hay congelones al entrar
+  const load = () => import('./tres/mar.js').then(m => { const x = m.create(cv, env); return x.ready.then(() => { M = x; addEventListener('resize', () => M?.size()); mark(); }); }).catch(off);
   (window.requestIdleCallback || (f => setTimeout(f, 400)))(load, { timeout: 1500 });
 })();

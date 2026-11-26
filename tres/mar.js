@@ -2,7 +2,7 @@
 // Es el mismo mar, botella y faro de la web. Un solo escenario vive detrás de las pantallas; cada pantalla
 // pide una "toma" (cámara + qué hace la botella) y la cámara viaja suave de una toma a otra.
 // Movimiento: ease-out, nada lineal, nada pasa de 1,2 s salvo lo ambiental (docs de la web: MOTION.md).
-import { THREE, C, bottle, sky, moon, ocean, orb, lerp, seed, rnd } from './kit.js';
+import { THREE, C, bottle, sky, moon, ocean, orb, glow, warm, autoRes, lerp, seed, rnd } from './kit.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -18,13 +18,14 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 export function create(canvas, env) {
   // env: { reduce, cur() → { id, st, slide, since(key), col } }
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', alpha: false });
-  const DPR = Math.min(devicePixelRatio || 1, 1.75); renderer.setPixelRatio(DPR);
+  renderer.transmissionResolutionScale = .5; // el vidrio redibuja la escena: a media resolución no se nota
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1;
   const scene = new THREE.Scene(); scene.background = new THREE.Color(C.bg); scene.fog = new THREE.Fog('#0B2436', 40, 260);
   const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.5;
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 2000);
   const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(128, 128), 0.45, 0.4, 0.9); composer.addPass(bloom); composer.addPass(new OutputPass());
+  const ar = autoRes(renderer, composer, { budget: 1.1e6, min: .5 }); let lastNow = 0;
 
   // ---- cielo, luna, mar ----
   const sk = sky(scene, { hz: '#173E5C', stars: 900 });
@@ -51,14 +52,17 @@ export function create(canvas, env) {
   const pivot = new THREE.Group(); pivot.position.set(LX, 1.2 + LY * .85, LZ); const beam = new THREE.Mesh(bgeo, beamM); pivot.add(beam); const beam2 = beam.clone(); beam2.rotation.y = Math.PI; pivot.add(beam2); scene.add(pivot);
 
   // ---- botellas ----
-  const tintOf = (g, c) => { g.traverse(o => { if (o.isMesh && o.material.transmission) { o.material.color.copy(c).lerp(new THREE.Color('#ffffff'), .55); o.material.attenuationColor.copy(c); } if (o.isPointLight) o.color.copy(c); }); };
-  const mk = (light) => { const b = bottle({ light }); const holder = new THREE.Group(); holder.add(b); b.position.y = -1.4; const root = new THREE.Group(); root.add(holder); scene.add(root); return { root, holder, b }; };
+  const tintOf = (o, c) => { o.b.traverse(m => { if (m.isMesh && m.material.transmission) { m.material.color.copy(c).lerp(new THREE.Color('#ffffff'), .55); m.material.attenuationColor.copy(c); } }); o.pl.color.copy(c); };
+  // la luz de cada botella vive fuera de ella y nunca se oculta: si cambia la cantidad de luces, three recompila todo (congelón)
+  const mk = (light) => { const b = bottle({ light: 0 }); const holder = new THREE.Group(); holder.add(b); b.position.y = -1.4; const root = new THREE.Group(); root.add(holder); scene.add(root);
+    const pl = new THREE.PointLight(C.a, 0, 4, 2); scene.add(pl); return { root, holder, b, pl, light }; };
+  const lightAt = o => { if (o.root.visible) { o.b.userData.paper.getWorldPosition(o.pl.position); o.pl.intensity = o.light; } else o.pl.intensity = 0; };
   const H = mk(2.2);           // la protagonista: tu botella o la que te llegó
   const M2 = mk(1.6);          // la otra (intro 3 y el momento de conexión)
-  tintOf(M2.b, rgb('255,214,140'));
+  tintOf(M2, rgb('255,214,140'));
   seed(12); const far = []; // las orillas: 8 + 4 personas, y las doradas de la marea
   for (let i = 0; i < 12; i++) { const b = bottle({ light: 0 }); b.scale.setScalar(.6); b.userData.paper.material = b.userData.paper.material.clone(); const g = new THREE.Group(); g.add(b); b.rotation.z = -1.45; const slot = [5, 2, 9, 0, 7, 3, 10, 1, 6, 11, 4, 8][i];
-    g.userData = { x: (slot / 11 - .5) * 17 + (rnd() - .5) * 2, z: -16 - rnd() * 30, ph: rnd() * 6, ry: rnd() * 6, i }; const gl = new THREE.PointLight(C.a, 0, 7, 2); gl.position.y = .8; g.add(gl); g.userData.gl = gl; g.visible = false; scene.add(g); far.push(g); }
+    g.userData = { x: (slot / 11 - .5) * 17 + (rnd() - .5) * 2, z: -16 - rnd() * 30, ph: rnd() * 6, ry: rnd() * 6, i }; const gl = glow(C.a, 3); gl.position.y = .4; g.add(gl); g.userData.gl = gl; g.visible = false; scene.add(g); far.push(g); }
   // corcho que salta y chispas de papel
   const sparkG = new THREE.BufferGeometry(); const SN = 26; const sp = new Float32Array(SN * 3), sv = []; for (let i = 0; i < SN; i++) sv.push(V((rnd() - .5) * 1.4, .8 + rnd() * 1.6, (rnd() - .5) * 1.4)); sparkG.setAttribute('position', new THREE.BufferAttribute(sp, 3));
   const sparks = new THREE.Points(sparkG, new THREE.PointsMaterial({ color: new THREE.Color(C.paper).multiplyScalar(2.2), size: .07, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); scene.add(sparks);
@@ -80,20 +84,20 @@ export function create(canvas, env) {
   SHOTS.firstreply = SHOTS.moment;
   let cur = 'splash', from = { cam: SHOTS.splash.cam.clone(), look: SHOTS.splash.look.clone(), lift: SHOTS.splash.lift }, enterAt = 0, w = 0, h = 0;
   const camNow = { cam: from.cam.clone(), look: from.look.clone(), lift: from.lift };
-  const size = () => { const W = canvas.clientWidth, Hh = canvas.clientHeight; if (!W || !Hh || (W === w && Hh === h)) return; w = W; h = Hh; renderer.setPixelRatio(Math.min(DPR, Math.sqrt(1.6e6 / (w * h)))); renderer.setSize(w, h, false); composer.setSize(w, h); bloom.resolution.set(w / 2, h / 2); camera.aspect = w / h; camera.fov = w / h > 1 ? 34 : 48; camera.updateProjectionMatrix(); };
+  const size = () => { const W = canvas.clientWidth, Hh = canvas.clientHeight; if (!W || !Hh || (W === w && Hh === h)) return; w = W; h = Hh; ar.size(w, h); camera.aspect = w / h; camera.fov = w / h > 1 ? 34 : 48; camera.updateProjectionMatrix(); };
 
   function screen(id, now) { if (!SHOTS[id]) return; if (id !== cur) { from = { cam: camNow.cam.clone(), look: camNow.look.clone(), lift: camNow.lift }; cur = id; enterAt = now; } }
 
   const tmp = V(0, 0, 0), up = V(0, 1, 0), dir = V(0, 0, -1);
   const showFar = (n, q, col, t, golden) => far.forEach((g, i) => { const u = g.userData; const vis = i < n; g.visible = vis; if (!vis) return; g.position.set(u.x, sea(u.x, u.z, t) + .1, u.z); g.rotation.y = u.ry; g.children[0].rotation.x = Math.sin(t + u.ph) * .2;
-    u.gl.color.copy(col); const on = cl(q * n - i); u.gl.intensity = lerp(u.gl.intensity, on * (golden ? 4 : 3), .18); g.children[0].userData.paper.material.emissiveIntensity = .1 + on * (golden ? .9 : .6); });
+    u.gl.material.color.copy(col); const on = cl(q * n - i); u.gl.material.opacity = lerp(u.gl.material.opacity, on * (golden ? .9 : .75), .18); u.gl.scale.setScalar(1 + u.gl.material.opacity * 1.1); g.children[0].userData.paper.material.emissiveIntensity = .1 + on * (golden ? .9 : .6); });
   const bob = (o, x, z, t, lift = .25, s = 1) => { o.root.position.set(x, sea(x, z, t) + lift, z); o.root.scale.setScalar(s); };
   const corkReset = o => { o.b.userData.cork.position.set(0, 2.82, 0); o.b.userData.cork.rotation.set(0, 0, 0); o.b.userData.cork.visible = true; o.b.userData.paper.position.y = .85; o.b.userData.paper.material.emissiveIntensity = .35; };
   const project = (px, py, depth) => { // de un punto de la pantalla (px) al mundo, a cierta distancia de la cámara
     const ndc = V(px / w * 2 - 1, -(py / h) * 2 + 1, .5); ndc.unproject(camera); return ndc.sub(camera.position).normalize().multiplyScalar(depth).add(camera.position); };
 
   function frame(now) {
-    size(); if (!w) return;
+    size(); if (!w) return; if (lastNow) ar.tick(now - lastNow); lastNow = now;
     const c = env.cur(), R = env.reduce, t = R ? 2 : now / 1000, k = R ? 99 : (now - enterAt) / 1000;
     sk.update(t); oc.update(t); beamM.uniforms.uT.value = t;
     // cámara: viaja de la toma anterior a esta en 1 s con ease-out
@@ -105,7 +109,7 @@ export function create(canvas, env) {
     // por defecto: faro girando suave, sin foco, sin orillas, la segunda botella escondida
     let beamA = t * .35, spot = 0, sx = 0, sz = 0; beamM.uniforms.uI.value = .55; M2.root.visible = false; orbA.visible = orbB.visible = false; halo.material.opacity = 0; rings.forEach(r => r.material.opacity = 0); sparks.visible = false;
     let nFar = 0, qFar = 0, farCol = rgb(c.col), golden = false; oc.mesh.position.y = 0;
-    H.root.visible = true; tintOf(H.b, rgb(c.col));
+    H.root.visible = true; tintOf(H, rgb(c.col));
     const st = c.st || {};
 
     if (cur === 'splash' || cur === 'intro') {
@@ -150,7 +154,7 @@ export function create(canvas, env) {
 
     if (cur === 'moment' || cur === 'firstreply') {
       // dos botellas se encuentran; sus voces suben y se juntan en el aire
-      const kk = R ? 99 : c.since('momentAt'), a = R ? 1 : ez(kk / 1.2); M2.root.visible = true; tintOf(H.b, rgb('127,216,201'));
+      const kk = R ? 99 : c.since('momentAt'), a = R ? 1 : ez(kk / 1.2); M2.root.visible = true; tintOf(H, rgb('127,216,201'));
       const meet = 1.25; [H, M2].forEach((o, i) => { const s = i ? 1 : -1; bob(o, s * lerp(5.2, 1.05, a), -2, t, .22, .85); o.holder.rotation.set(Math.sin(t + i) * .08, 0, s * -1.36); o.root.rotation.set(0, i ? Math.PI : 0, 0);
         const ck = o.b.userData.cork; if (kk > meet) { const e = ez((kk - meet) / .6); ck.position.set(e * .5, 2.82 + e * 1.4, 0); ck.visible = kk < meet + .7; } else { ck.visible = true; ck.position.set(0, 2.82, 0); } });
       if (kk > meet) { const q2 = ez((kk - meet) / 1.1), sep = (1 - cl((kk - 1.9) / .6)) * .9; orbA.visible = orbB.visible = true;
@@ -164,8 +168,12 @@ export function create(canvas, env) {
     }
 
     pivot.rotation.y = beamA; pivot.rotation.x = -.05; oc.mat.uniforms.uSpot.value.set(sx, sz, 2, spot);
-    showFar(nFar, qFar, farCol, t, golden);
+    showFar(nFar, qFar, farCol, t, golden); lightAt(H); lightAt(M2);
     composer.render();
   }
-  return { frame, screen, size, dispose: () => renderer.dispose() };
+  // compila todo en segundo plano; la app muestra el 3D recién cuando esto termina
+  size(); camera.aspect = (w / h) || .5; camera.updateProjectionMatrix();
+  // y un cuadro de ensayo, todavía invisible, para que el vidrio y el brillo también queden listos
+  const ready = warm(renderer, scene, camera).then(() => { try { frame(performance.now()); lastNow = 0; } catch (e) {} });
+  return { frame, screen, size, ready, pause: () => { lastNow = 0; }, dispose: () => renderer.dispose() };
 }
