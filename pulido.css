@@ -105,3 +105,18 @@
 .slide .sl-help{position:absolute;inset:0;display:grid;place-items:center;padding-left:calc(var(--sl-k) + 8px);font-size:var(--t-sub);font-weight:600;color:var(--c-primary);opacity:0;transition:opacity 160ms;pointer-events:none}
 .slide.help .sl-help{opacity:1} .slide.help .sl-t,.slide.help .sl-arrows,.slide.holding .sl-arrows{opacity:0!important}
 .slide .sl-help{padding-right:12px;text-align:center}
+
+/* ---------- Invitación a llamarse (momentos.js) ---------- */
+.callinv{display:flex;gap:12px;align-items:flex-start;margin:18px 0 6px;padding:14px;border-radius:var(--r-card);background:linear-gradient(150deg,var(--c-tonal),transparent 70%),var(--c-surface);border:1px solid color-mix(in srgb,var(--c-primary) 35%,transparent)}
+.callinv .ci-ic{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--c-tonal);color:var(--c-primary)}
+.callinv .ci-ic .i{width:19px;height:19px}
+.callinv .ci-tx{flex:1;min-width:0}
+.callinv b{display:block;font-size:var(--t-body);font-weight:600;color:var(--c-fg)}
+.callinv p{margin:3px 0 10px;font-size:var(--t-sub);line-height:1.4;color:var(--c-fg-2)}
+.callinv .ci-b{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.callinv .ci-b .btn-tonal{width:auto;height:40px;padding-inline:16px}
+.callinv .ci-b .btn-text{color:var(--c-fg-2);font-weight:500;padding-inline:4px}
+/* Primera respuesta: su voz aparece junto al texto */
+.firstreply .frvn{display:flex;justify-content:center;margin-top:18px;animation:rise var(--t-rise) 1.15s var(--e-out) both}
+@media (prefers-reduced-motion:reduce){.firstreply .frvn{animation:none}}
+@media (max-height:600px){.firstreply .mword{font-size:42px!important}}
