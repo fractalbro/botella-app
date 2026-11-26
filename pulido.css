@@ -120,3 +120,25 @@
 .firstreply .frvn{display:flex;justify-content:center;margin-top:18px;animation:rise var(--t-rise) 1.15s var(--e-out) both}
 @media (prefers-reduced-motion:reduce){.firstreply .frvn{animation:none}}
 @media (max-height:600px){.firstreply .mword{font-size:42px!important}}
+
+/* ---------- 26/11 · mejoras de la prueba con 100 personas ---------- */
+/* casilla de normas: todo el renglón es el blanco, mínimo 48 px */
+.check.big{min-height:48px;align-items:center;padding:6px 0}
+.check.big .box{width:28px;height:28px}
+.rulesl{margin-top:2px;padding-left:0;justify-content:flex-start;min-height:44px}
+.nocode{margin-top:14px;min-height:44px}
+/* pregunta de hoy, fila corta bajo el recorrido del primer día */
+.today.mini{margin-top:8px;padding-block:10px}
+.today.mini .tx b{font-size:var(--t-sub);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.faltan{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;padding:12px 14px;border-radius:var(--r-card,14px);background:rgba(127,216,201,.08);color:var(--fg);font-size:var(--t-sub)}
+.faltan svg{flex:none;margin-top:2px;color:var(--a)}
+/* Lanzar en el centro de la barra: aro turquesa (no relleno, para no competir con el botón principal de cada vista) */
+.tabs .tlaunch{color:var(--c-fg-2)}
+.tabs .tlaunch .tl-ring{display:grid;place-items:center;width:34px;height:26px;border-radius:13px;border:1.5px solid var(--c-primary);color:var(--c-primary);margin-bottom:1px}
+.tabs .tlaunch .tl-ring svg{width:16px;height:16px}
+@media (max-width:360px){.tabs button{font-size:9.5px;letter-spacing:-.1px}}
+.selpair{display:grid;grid-template-columns:1.5fr 1fr;gap:10px}
+.faltan{margin:0 0 4px}
+.sheet .faltan + .btn{margin:6px 0 12px!important}
+/* en pantallas bajas (iPhone SE) la fila de la pregunta de hoy no cabe sin tapar las botellas: queda en la tarjeta del día siguiente */
+@media (max-height:600px){.today.mini{display:none}}

@@ -8,8 +8,8 @@ const lvKindChips = () => `<div class="chips lv-kinds" id="kinds" role="radiogro
 const lvPicked = () => S.idea >= 0 && KINDS[S.kind][S.idea] ? `<div class="lv-picked"><span class="tag">Idea</span><span class="q">“${esc(KINDS[S.kind][S.idea])}”</span><button class="btn btn-text btn-sm" data-act="ideaClear">Quitar</button></div>` : '';
 const lvIdeaList = () => `<div class="lv-ideas">${KINDS[S.kind].map((q, i) => `<button class="idea${S.idea === i ? ' on' : ''}" data-act="lvIdea" data-i="${i}">${q}</button>`).join('')}</div>`;
 // botón que se desliza: la botella es la perilla. Con teclado, Enter o espacio la lanzan.
-const lvSlide = left => `<div class="slide${left ? '' : ' soft'}" id="slide" role="button" tabindex="0" aria-label="Lanzar al mar. Desliza la botella hacia la derecha, mantenla presionada o presiona Enter.">
-    <span class="sl-fill" id="slf"></span><span class="sl-t" id="slt">Desliza la botella al mar</span><span class="sl-arrows" aria-hidden="true">›››</span><span class="sl-go" id="slg" aria-hidden="true">Suelta y sale al mar</span><span class="sl-help" aria-hidden="true">Arrástrala o mantenla presionada</span>
+const lvSlide = left => `<div class="slide${left ? '' : ' soft'}" id="slide" role="button" tabindex="0" aria-label="Enviar al mar. Desliza la botella hacia la derecha, mantenla presionada o presiona Enter.">
+    <span class="sl-fill" id="slf"></span><span class="sl-t" id="slt">Desliza para enviarla</span><span class="sl-arrows" aria-hidden="true">›››</span><span class="sl-go" id="slg" aria-hidden="true">Suelta y sale al mar</span><span class="sl-help" aria-hidden="true">Arrástrala o mantenla presionada</span>
     <span class="sl-k" id="slk">${bottleSVG('rgba(4,18,28,.85)', 'rgba(4,18,28,.10)')}</span></div><p class="small muted sl-sub">Sale hacia ${lvReach()} personas. Si te arrepientes, suéltala.</p>`;
 
 P.screens.launch = {

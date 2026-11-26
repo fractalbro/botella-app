@@ -12,10 +12,14 @@ alter table public.codes enable row level security; -- la app nunca lee la lista
 insert into public.codes(code) values ('BOTELLA-01') on conflict do nothing;
 
 -- Un link de lectura abierta también sirve de invitación ('L:<slug>'): quien responde crea su cuenta ahí mismo.
+-- Lo mismo un link de botella para dos que sigue abierto ('D:<token>').
 create or replace function public.check_code(p_code text) returns boolean language plpgsql stable security definer set search_path = public as $$
 begin
   if upper(trim(coalesce(p_code, ''))) like 'L:%' then
     return exists (select 1 from lecturas where lower(slug) = lower(substr(trim(p_code), 3)) and not closed and closes_at > now());
+  end if;
+  if upper(trim(coalesce(p_code, ''))) like 'D:%' then
+    return exists (select 1 from duos where lower(token) = lower(substr(trim(p_code), 3)) and status = 'open' and expires_at > now());
   end if;
   return exists (select 1 from codes where code = upper(trim(p_code)) and active and uses < max_uses);
 end $$;

@@ -70,7 +70,7 @@ function todayCard() {
   if (q && !q.done) {
     const st = [q.heard, q.answered, q.launched], n = st.filter(Boolean).length;
     const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 20 personas.'];
-    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>`;
+    return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>${tideMini(h)}`;
   }
   const t = h.tide || {}, left = tideIn();
   const [k, a, b] = t.arrived ? ['Llegó la marea', t.count ? `${plural(t.count, 'voz respondió', 'voces respondieron')} la pregunta de hoy` : 'Mira lo que trajo el mar esta noche', t.answered ? 'Escúchalas ahora.' : 'Deja la tuya para escucharlas.']
@@ -78,6 +78,8 @@ function todayCard() {
       : ['Pregunta de hoy', t.question || '', `Deja tu voz antes de las 21:00${left ? ` · faltan ${left}` : ''}.`];
   return `<button class="today${t.arrived ? ' gold' : ''}" data-go="marea"><span class="ti">${icon('tide')}</span><span class="tx"><small>${k}</small><b>${esc(a)}</b><span>${b}</span></span>${icon('arrow', 's')}</button>`;
 }
+// La pregunta de hoy también el primer día: una fila corta bajo el recorrido, para que se encuentre desde el inicio.
+function tideMini(h) { const t = h.tide || {}; if (t.answered) return ''; return `<button class="today mini" data-go="marea"><span class="ti">${icon('tide')}</span><span class="tx"><small>Pregunta de hoy</small><b>${esc(t.question || 'Todos responden la misma')}</b></span>${icon('arrow', 's')}</button>`; }
 P.actions.questGo = () => { const q = S.home?.quest || {}; if (q.heard && q.answered) return go('launch'); const f = P.root.querySelector('.float'); if (f) { toast(q.heard ? 'Abre una botella y respóndele con tu voz.' : 'Toca una botella para escucharla.'); f.classList.remove('nudge'); void f.offsetWidth; f.classList.add('nudge'); } else toast('Tu orilla está en calma. Lanza tu primera botella.'); };
 
 /* ================= BITÁCORA: CONSTANCIA Y DESBLOQUEOS ================= */
@@ -231,7 +233,7 @@ P.actions.leaveLink = () => { S.link = null; S.after = null; P.hist = []; if (S.
 P.actions.duoMine = () => { S.duoWait = { token: S.link.d, kind: S.duoPeek.kind, body: S.duoPeek.body || '' }; S.link = null; P.hist = ['orilla']; go('duowait'); };
 P.actions.duoJoin = async el => {
   const r = S.rec.duo2; if (!r) return needVoice('duo2');
-  if (!S.me) { S.after = 'duo'; toast('Guardamos tu mitad. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
+  if (!S.me) { S.after = 'duo'; if (!S.code) S.code = 'D:' + S.link.d; toast('Guardamos tu mitad. Sale al crear tu cuenta.'); return P.actions.skipIntro(); }
   if (S.busy) return; S.busy = true; el.classList.add('soft', 'busy'); el.textContent = 'Lanzando…';
   try {
     const path = await upload(r.blob, r.ext); const d = await rpc('duo_join', { p_token: S.link.d, p_voice: path, p_secs: r.secs, p_peaks: r.peaks });

@@ -33,7 +33,7 @@ const srv = http.createServer((q, r) => {
   });
   await step('registro', async () => {
     await shot('cuenta'); await p.fill('#em', 'ana@correo.com'); await p.fill('#pw', '12345678'); await tap('[data-act=authGo]'); await p.waitForTimeout(500);
-    await shot('sobre-ti'); await p.fill('#nm', 'Ana'); await p.selectOption('#dist', 'Lince'); await tap('[data-act=adult] .box'); await tap('[data-act=aboutNext]');
+    await shot('sobre-ti'); await p.fill('#nm', 'Ana'); await p.selectOption('#dist', 'Lince'); await p.selectOption('#yr', '1995'); await tap('[data-act=adult] .box'); await tap('[data-act=aboutNext]');
     await shot('voz'); await record(); await tap('[data-act=voiceNext]');
     for (const t of ['Música', 'Cine', 'Libros']) await tap('#tops .chip', t); await tap('.chip', 'Conversaciones profundas'); await shot('temas'); await tap('[data-act=finish]'); await p.waitForTimeout(1400);
     await shot('chat-primera'); await p.waitForTimeout(3200); await shot('chat-primera-respondio'); await p.locator('#thread').evaluate(e => e.scrollTo(0, 9999)); await shot('chat-primera-siguiente');

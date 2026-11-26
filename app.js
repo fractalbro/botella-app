@@ -218,8 +218,9 @@ const steps = n => `<div class="pad" style="flex:none"><div class="progress" ari
 
 function tabsHTML(active) {
   const badge = S.convos.filter(unread).length;
-  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['convos', 'Conversaciones', 'chat'], ['store', 'Muelle', 'bag']];
-  return `<nav class="tabs" aria-label="Secciones">${items.map(([id, label, ic]) => `<button class="${id === active ? 'on' : ''}" data-go="${id}" data-fade ${id === active ? 'aria-current="page"' : ''}>${icon(ic)}${label}${id === 'convos' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('')}</nav>`;
+  // Lanzar va al centro, a mano desde cualquier sección (antes solo estaba en la orilla)
+  const items = [['orilla', 'Orilla', 'home'], ['mine', 'Mis botellas', 'bottle'], ['launch', 'Lanzar', 'plus'], ['convos', 'Conversaciones', 'chat'], ['store', 'Muelle', 'bag']];
+  return `<nav class="tabs" aria-label="Secciones">${items.map(([id, label, ic]) => id === 'launch' ? `<button class="tlaunch" data-go="launch" aria-label="Lanzar una botella nueva"><span class="tl-ring">${icon('bottle')}</span>${label}</button>` : `<button class="${id === active ? 'on' : ''}" data-go="${id}" data-fade ${id === active ? 'aria-current="page"' : ''}>${icon(ic)}${label}${id === 'convos' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('')}</nav>`;
 }
 
 /* mantener presionado */
@@ -271,8 +272,13 @@ function micHelp(e) {
   else if (n === 'NotReadableError' || n === 'AbortError') steps = 'Otra app está usando el micrófono, quizá una llamada. Ciérrala y vuelve a tocar.';
   else if (ios) steps = pwa ? 'Abre <b>Ajustes</b>, busca <b>Botella</b> o <b>Safari</b>, entra a <b>Micrófono</b> y elige <b>Permitir</b>. Luego vuelve aquí.' : 'Toca <b>aA</b> a la izquierda de la dirección, luego <b>Configuración del sitio web</b> y pon <b>Micrófono</b> en <b>Permitir</b>.';
   else steps = pwa ? 'Mantén presionado el ícono de Botella, toca <b>Información de la app</b>, luego <b>Permisos</b> y activa <b>Micrófono</b>.' : 'Toca el ícono a la izquierda de la dirección, luego <b>Permisos</b> y activa <b>Micrófono</b>.';
-  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>`);
+  sheet(`${sheetHead('Para grabar, falta tu micrófono')}<p class="muted" style="margin:0 0 10px">${steps}</p><p class="small muted" style="margin:0 0 16px">${icon('lock', 's')} Solo grabamos cuando tú tocas el botón.</p><button class="btn btn-a" data-act="closeSheet">Listo, probar otra vez</button>${S.me ? '' : `<button class="btn btn-text" data-act="micLater">${P.curId === 'voice' ? 'Seguir sin grabar' : 'Crear mi cuenta primero y grabar después'}</button>`}`);
 }
+// Sin micrófono también se entra: la cuenta primero, la voz cuando se pueda.
+P.actions.micLater = () => { closeSheet(); if (P.curId === 'voice') return P.actions.voiceLater(); S.first = null; P.actions.skipIntro(); };
+// Sin señal: se dice al toque y se promete lo que sí pasa (la voz grabada no se pierde: queda con "Reintentar").
+addEventListener('offline', () => toast('Sin señal. Lo que grabes queda guardado y lo envías cuando vuelva.'));
+addEventListener('online', () => toast('Volvió la señal.'));
 function recMime() { if (!window.MediaRecorder) return null; for (const m of ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm']) if (MediaRecorder.isTypeSupported(m)) return m; return ''; }
 async function recStart(max, onTick, onAuto) {
   const mime = recMime(); if (mime === null) { toast('Aquí no se puede grabar. Si abriste el link desde Instagram o WhatsApp, toca ⋯ y elige “Abrir en el navegador”.'); return false; }

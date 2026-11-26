@@ -170,7 +170,7 @@ function boot() {
     if (ev === 'PASSWORD_RECOVERY') { S.session = ses; setTimeout(() => sheet(`${sheetHead('Tu nueva contraseña')}<label class="field"><input id="npw" type="password" autocomplete="new-password" placeholder="8 caracteres o más" aria-label="Nueva contraseña"></label><button class="btn btn-a" data-act="newPass" style="margin-top:12px">Guardar</button>`), 400); }
     if (ev === 'SIGNED_OUT') { S.session = null; }
   });
-  const guest = () => go(S.link?.l ? 'lecpub' : S.link?.d ? 'duojoin' : 'splash');
+  const guest = () => { if (S.link?.l || S.link?.d) { P.hist = ['splash']; guard(); } go(S.link?.l ? 'lecpub' : S.link?.d ? 'duojoin' : 'splash'); };
   sb.auth.getSession().then(({ data }) => { S.session = data && data.session; if (S.session) enter(); else guest(); }).catch(guest);
 }
 P.actions.newPass = async () => { const p = $('#npw').value; if (p.length < 8) return toast('La contraseña necesita 8 caracteres o más.'); const { error } = await sb.auth.updateUser({ password: p }); if (error) return err(error); closeSheet(); toast('Listo, ya tienes contraseña nueva.'); enter(); };
