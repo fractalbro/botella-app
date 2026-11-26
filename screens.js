@@ -324,12 +324,12 @@ P.screens.thrown = {
     if (k >= 3.4 && st.shores != null) { const q = Math.min(1, (k - 3.4) / .8); for (let i = 0; i < n; i++) { if (i / n > q) continue; const x = w * (.1 + i * (.6 / Math.max(1, n - 1))), a = .5 + Math.sin(t * 2 + i) * .3; ctx.fillStyle = `rgba(${col},${a})`; ctx.shadowColor = `rgb(${col})`; ctx.shadowBlur = 16; ctx.beginPath(); ctx.arc(x, h * horizon - 2, 3.8, 0, 7); ctx.fill(); ctx.shadowBlur = 0; } }
   },
   render: () => `<div style="flex:1"></div><div class="pad" style="padding-bottom:26px;background:linear-gradient(transparent,rgba(3,16,28,.92) 35%)">
-    <span class="eyebrow a" id="tstat">Lanzada</span><div class="display" id="thead" style="margin-top:8px">Tu botella cayó al mar.</div>
-    <p class="lead" id="tlead">La marea la lleva hacia personas con tus mismos temas.</p>
+    <span class="eyebrow a" id="tstat">Lanzada</span><div class="display" id="thead" style="margin-top:8px">Tu botella ya está en el mar.</div>
+    <p class="lead" id="tlead">Ahora buscamos a quién le llega.</p>
     <div class="foot" style="padding-bottom:0"><button class="btn btn-a" data-act="toMine">Ver mis botellas</button><button class="btn btn-text" data-act="toShore">Volver a la orilla</button></div></div>`,
   after() {
     const set = (a, b, c) => { const e1 = $('#tstat'), e2 = $('#thead'), e3 = $('#tlead'); if (!e1) return; [e1, e2, e3].forEach(e => { e.classList.remove('rise'); void e.offsetWidth; e.classList.add('rise'); }); e1.textContent = a; e2.textContent = b; e3.textContent = c; };
-    P.timers.push(setTimeout(() => set('El faro la guía', 'La luz del faro pasa por tu botella.', 'Busca orillas con tus mismos temas.'), 1300));
+    P.timers.push(setTimeout(() => set('Buscando', 'Buscamos a quien le guste lo mismo que a ti.', 'Así es más fácil que alguien quiera responderte.'), 1300));
     const final = () => { const n = P.st.shores; if (n == null) { P.timers.push(setTimeout(final, 400)); return; } if (n < 0) return;
       set('En camino', n > 1 ? `Tu botella va hacia ${n} personas.` : n === 1 ? 'Ya le llegó a una persona.' : 'Tu botella flota en el mar.',
         (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 8 ? (P.st.duo ? 'Lleva las dos voces. Si alguien responde, les llega a los dos. ' : '') + 'Si alguien responde, te avisamos y conversan en privado. Si en 6 horas nadie responde, llega a 4 personas más.' : 'Todavía somos pocos: llegará a más personas a medida que se sumen. Cuando alguien responda, aparece en Conversaciones.')); };
