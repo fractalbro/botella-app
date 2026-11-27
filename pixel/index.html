@@ -646,6 +646,7 @@ const ico = (n, col = 'currentColor', x = '#fff') => sprite(IC[n], { o: col, y: 
 const W = n => { let s = n * 9301 + 49297; return Array.from({ length: 30 }, (_, i) => { s = (s * 9301 + 49297) % 233280; const v = s / 233280; return .25 + .75 * Math.abs(Math.sin(i * .45 + n)) * (.55 + .45 * v); }); };
 // x, y en unidades de la isla (112 × 84)
 const BOT = [
+  { id:'oro',   cat:'dorada',   q:'Mañana renuncio a mi trabajo para estudiar música. Díganme algo bonito.', who:'Alguien que ama la música', ago:'hace 8 min', v:'ivan-say', t:14, x:56, y:44, w:28, gold:1 },
   { id:'leo',   cat:'verde',    q:'Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.', who:'Alguien que ama el cine', ago:'hace 12 min', v:'leo-say', t:13, x:28, y:36, w:36 },
   { id:'belen', cat:'azul',     q:'El día que me perdí en el Centro y terminó siendo lo mejor de mi semana.', who:'Alguien que ama los libros', ago:'hace 40 min', v:'belen-say', t:17, x:44, y:23, w:28 },
   { id:'ivan',  cat:'roja',     q:'¿Qué canción te devuelve a tus 15 años? La mía todavía me da vergüenza.', who:'Alguien que ama la música', ago:'hace 1 h', v:'ivan-say', t:14, x:73, y:25, w:24, sea:1, d:3.4, dl:-1.2, a:'5px' },
@@ -719,7 +720,7 @@ function renderBeach() {
   $('#beach').innerHTML = `<div class="stage">${scene()}${bottlesOn(BOT.slice(0, 5))}</div><span class="cap">${unheard ? unheard + ' sin escuchar' : 'Todo escuchado'}</span><button class="seeall" data-go="mar" data-p='{"v":"lista"}'>Todo el mar ${ico('chev', INK)}</button><button class="push sq expand" data-go="mar" data-p='{"v":"mapa"}' aria-label="Ver la orilla en grande">${ico('expand', INK)}</button>`;
 }
 function renderLegend() {
-  E('legend').innerHTML = `<button class="chip" aria-pressed="${!S.filt}" data-f="">Todas</button>` + KEYS.map(k => [k, CAT[k]]).map(([k, c]) => `<button class="chip" style="--c:${c.c}" aria-pressed="${S.filt === k}" data-f="${k}"><i></i>${c.g}</button>`).join('');
+  E('legend').innerHTML = `<button class="chip" aria-pressed="${!S.filt}" data-f="">Todas</button>` + (BOT.some(b => b.cat === 'dorada') ? ['dorada', ...KEYS] : KEYS).map(k => [k, CAT[k]]).map(([k, c]) => `<button class="chip" style="--c:${c.c}" aria-pressed="${S.filt === k}" data-f="${k}"><i></i>${c.g}</button>`).join('');
 }
 
 /* ================= ONDA EN BLOQUES (osciloscopio a 12 cuadros) ================= */
@@ -1340,7 +1341,7 @@ function renderTu() {
       ${menuRow(ico('people', INK), 'Salidas en grupo', LIVE ? 'Planes en lugares públicos' : '3 planes en Lima esta semana', 'salidas')}</div>
     <div class="sec"><span class="h2">Más botellas</span></div>
     <div class="box menu">
-      ${menuRow(`<span style="width:16px;display:block">${bottle('dorada')}</span>`, 'Botellas doradas', 'Las puede abrir cualquiera, sin importar el tema', 'doradas', '', '#FFF1C2')}
+      ${menuRow(`<span style="width:16px;display:block">${bottle('dorada')}</span>`, 'Botellas doradas', 'Salen primero en tu mar. Las abre cualquiera', 'mar', '', '#FFF1C2')}
       ${menuRow(ico('gift', INK), 'Invitar a un amigo', 'Mándale tu enlace para que entre', 'invitar')}
       ${menuRow(ico('star', INK), 'Racha', LIVE ? (LS.streak ? `${LS.streak} ${LS.streak === 1 ? 'día seguido' : 'días seguidos'} grabando` : 'Graba hoy y empieza') : '4 días seguidos grabando', 'racha')}</div>
     <div class="sec"><span class="h2">Lo que nadie ve</span></div>
@@ -1543,36 +1544,20 @@ function renderRespondio({ cat = 'roja', i = 0 } = {}) {
 }
 function renderMar(p = {}) {
   if (p.v) S.marV = p.v; const mv = S.marV || 'mapa', v = $('#v-mar');
-  const groups = KEYS.map(k => [k, BOT.filter(b => b.cat === k)]).filter(g => g[1].length);
+  const groups = ['dorada', ...KEYS].map(k => [k, BOT.filter(b => b.cat === k)]).filter(g => g[1].length);
   const seg = `<div class="seg" role="tablist" aria-label="Cómo ver el mar">${[['mapa', 'Orilla'], ['lista', 'Lista']].map(([k, t]) => `<button class="push" role="tab" aria-selected="${mv === k}" data-mv="${k}">${ico(k === 'mapa' ? 'map' : 'more', mv === k ? '#fff' : INK)}${t}</button>`).join('')}</div>`;
   v.classList.toggle('mapv', mv === 'mapa');
   v.innerHTML = `${topbar('playa', 'Todo el mar')}${seg}` + (mv === 'mapa'
     ? `<div class="beach box big" id="beach2"></div><div class="legend" id="legend2" role="group" aria-label="Filtrar por color"></div><article class="player box" id="player2"></article>`
     : `<h1 class="h1">Lo que llegó a tu orilla</h1>
     <p class="mute" style="margin:8px 0 0">${BOT.length ? `${BOT.length} ${BOT.length === 1 ? 'botella' : 'botellas'} de gente que ama lo mismo que tú.` : 'Todavía no llega ninguna. Mientras, lanza la tuya.'}</p>
-    <button class="push card gold" data-go="doradas" style="margin-top:24px;${cvars(CAT.dorada)}"><span class="tile">${bottle('dorada')}</span><span class="tx"><b>Botellas doradas</b><small>Salen primero en el mar de todos</small></span>${ico('chev', INK)}</button>
-    ${groups.map(([k, l]) => `<div class="sec"><span class="h2 row" style="gap:8px"><i class="dot" style="background:${CAT[k].c}"></i>${CAT[k].g}</span><span class="k mute3">${l.length}</span></div>
+    ${groups.map(([k, l]) => `<div class="sec"><span class="h2 row" style="gap:8px"><i class="dot" style="background:${CAT[k].c}"></i>${k === 'dorada' ? 'Doradas · las abre cualquiera' : CAT[k].g}</span><span class="k mute3">${l.length}</span></div>
       <div class="cards">${l.map(b => `<button class="card push" style="${cvars(CAT[k])}" data-pick="${b.id}"><span class="tile">${bottle(k)}</span><span class="tx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span>${S.heard.includes(b.id) ? '' : '<span class="new">Nueva</span>'}</button>`).join('')}</div>`).join('')}`);
   if (mv === 'mapa') { renderBeach(); renderLegend(); renderPlayer(true); }
   v.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { if (b.dataset.mv === mv) return; stop(); S.marV = b.dataset.mv; renderMar(); });
   v.querySelectorAll('[data-pick]').forEach(el => el.onclick = () => { S.sel = el.dataset.pick; S.filt = null; S.marV = 'mapa'; renderMar(); scrollTo(0, 0); });
 }
-const GOLD = [
-  { q: '¿Cuál es el plato que te recuerda a tu casa? El mío es el ají de gallina de mi abuela.', who: 'Alguien que ama la comida', v: 'caro-say', s: 51, n: 412 },
-  { q: 'Mañana renuncio a mi trabajo para estudiar música. Díganme algo bonito.', who: 'Alguien que ama la música', v: 'ivan-say', s: 52, n: 298 }
-];
-function renderDoradas() {
-  const C = CAT.dorada, v = $('#v-doradas');
-  v.innerHTML = `${topbar('mar', '')}
-    <div class="row" style="gap:16px;align-items:flex-end"><span class="gbot">${bottle('dorada')}</span><h1 class="h1">Botellas doradas</h1></div>
-    <p class="mute" style="margin:12px 0 24px">Una dorada llega como cualquier botella y, además, sale aquí, donde cualquiera puede abrirla aunque no comparta tu tema. Estas son las de hoy.</p>
-    <div class="vlist">${LIVE && !liveGold().length ? '<div class="box empty"><b>Todavía no hay doradas hoy.</b><small>La primera que se lance sale aquí, para todos.</small></div>' : ''}${(LIVE ? liveGold() : GOLD).map(g => `<div class="box gcard"><p class="q" style="margin:0 0 4px;font-size:16px">${qq(g.q)}</p><p class="from">${g.who}${g.n ? ' · la escucharon ' + g.n : ''}</p>${voiceRow(g.v, C, '', 0, g.s)}</div>`).join('')}</div>
-    ${haveSp().tide ? `<button class="push btn c" style="margin-top:32px;${cvars(C)}" data-go="lanzar" data-p='{"dorada":1}'>${ico('mic', C.on, C.c)} Lanzar una dorada</button>
-    <p class="k mute3" style="text-align:center;margin:12px 0 0">Tienes ${haveSp().tide} ${haveSp().tide === 1 ? 'dorada' : 'doradas'}</p>` : `<button class="push btn" style="margin-top:32px" data-go="racha">Ver mis días seguidos</button>
-    <p class="k mute3" style="text-align:center;margin:12px 0 0">Todavía no tienes una dorada. ${GANA.tide}</p>`}`;
-  bindVoices(v);
-}
-
+function renderDoradas() { setTimeout(() => go('mar', { v: 'lista' }), 0); }
 /* ---------- nombres y plan dentro de la conversación ---------- */
 const PLACES = ['Malecón de Miraflores', 'Parque Kennedy', 'Bajada de Baños, Barranco', 'Un café frente al parque'], DAYS = ['Hoy', 'Mañana', 'Este sábado'], HOURS = ['5:00 p. m.', '6:30 p. m.', '8:00 p. m.'];
 function renderPlan({ id = 'leo' } = {}) {
@@ -1785,7 +1770,7 @@ function syncMe() { const m = R.me; if (!m) return; S.left = m.bottles; S.temas.
 async function loadMe() { R.me = one(await rpc('tide')); if (R.me && !R.me.id) R.me = null; syncMe(); if (R.me && R.me.intro_voice) await signed([R.me.intro_voice]).catch(() => {}); return R.me; }
 async function loadShore() {
   const rows = (await rpc('shore')) || []; await signed(rows.map(r => r.voice)); R.shore = rows;
-  const list = rows.map((r, i) => ({ id: r.id, cat: catOf(r.voice, r.kind, r.id), q: r.body || '', who: someone(r.place), ago: agoS(r.arrived), url: R.urls.get(r.voice), voice: r.voice, t: r.voice_secs, wv: toW(r.voice_peaks) || W(hashS(r.id) % 60 + 1), ...POS[i % POS.length], status: r.status }));
+  const list = rows.map((r, i) => ({ id: r.id, cat: r.featured ? 'dorada' : catOf(r.voice, r.kind, r.id), gold: !!r.featured, q: r.body || '', who: someone(r.place), ago: agoS(r.arrived), url: R.urls.get(r.voice), voice: r.voice, t: r.voice_secs, wv: toW(r.voice_peaks) || W(hashS(r.id) % 60 + 1), ...POS[i % POS.length], status: r.status }));
   BOT.length = 0; BOT.push(...list);
   S.heard = list.filter(b => b.status === 'opened').map(b => b.id);
   if (!BOT.some(b => b.id === S.sel)) S.sel = BOT[0] ? BOT[0].id : null;
@@ -2192,7 +2177,6 @@ function liveMes(L, mix) {
     `<span class="k mute">Para el próximo mes</span><h1 class="hx">Lanza una botella de un color que nunca usaste.</h1><div class="count3">${bottle('morada')}${bottle('verde')}</div><button class="push btn blue" data-go="lanzar" style="margin-top:16px;position:relative;z-index:3">Lanzar una botella</button>`
   ];
 }
-const liveGold = () => ((R.marea && R.marea.featured) || []).filter(f => !f.mine).map((f, i) => ({ q: f.body || '', who: someone(f.place), v: R.urls.get(f.voice) || '', s: 51 + i, n: null }));
 function mineTap(m, i) {
   const C = CAT[m.cat] || CAT.azul;
   if (m.ans && m.convo) { const seen = store.get('seenAns', {}), was = m.nuevo; seen[m.id] = m.ans; store.set('seenAns', seen); m.nuevo = false; return was ? go('respondio', { cat: m.cat, i }) : go('chat', { id: m.convo }); }

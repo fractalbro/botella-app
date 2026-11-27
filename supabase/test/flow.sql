@@ -461,4 +461,16 @@ update bottles set grew_at = now() - interval '2 hours' where voice like '%011/l
 delete from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
 select tick();
 select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) >= 1, 'y otra hora después vuelve a sumar');
+-- las doradas llegan a todas las orillas, sin importar el tema, y salen primero
+update profiles set tide_left = 1, bottles = bottles + 1 where id = '00000000-0000-0000-0000-000000000011';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000011');
+select launch_bottle('Pregunta', 'Una dorada', '00000000-0000-0000-0000-000000000011/oro.m4a', 6, null, 'free', 'Música', null, true);
+reset role;
+delete from deliveries where bottle_id = (select id from bottles where voice like '%011/oro.m4a') and to_id = '00000000-0000-0000-0000-000000000008';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000008');
+select tide();
+select pg_temp.ok((select featured from shore() limit 1), 'la dorada llegó a otra orilla y sale primero');
+reset role;
 \echo 'TODO OK'
