@@ -371,6 +371,9 @@ button.mrow:active{background:#F7EFDF}
 .spc b{font:700 15px/1.24 var(--sans)}.spc small{font-size:13px;color:var(--ink-2);line-height:1.36}
 .spc.lock b,.spc.lock small{color:var(--ink-3)}
 .envio{width:100%;display:flex;flex-direction:column;gap:8px;padding:12px 16px 14px;margin-top:16px}
+.envio.mini{flex-direction:row;align-items:center;gap:12px;text-align:left;padding:10px 12px 10px 16px;margin-top:12px}
+.envio.mini .tx{flex:1;display:grid;gap:4px}.envio.mini b{font:700 15px/1.2 var(--sans)}
+.envio.mini .chg{font:700 14px/1 var(--sans);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;color:var(--ink-2)}
 .echips{display:flex;flex-wrap:wrap;gap:8px}
 .echips .chip{height:36px;padding:0 10px;font-size:12px}
 .echips .chip.off{opacity:.5}
@@ -1226,11 +1229,15 @@ function renderLanzar(p = {}) {
     }
   };
   // Antes de lanzar: a quién le llega (uno de tus temas) y cómo viaja (normal, que llega lejos o dorada).
+  // Para que la botella y el botón se vean sin bajar, la elección va resumida en una línea y se abre con Cambiar.
+  let envOpen = false;
   const envio = () => { const h = haveSp(), T = TIPO[tipo];
+    if (!envOpen) return `<button class="box envio mini" id="envio" aria-expanded="false"><span class="tx"><small class="k mute3">Llega a quien ama</small><b>${esc(tema)} · ${TIPO[tipo][0]}</b></span><span class="chg">Cambiar</span></button>`;
     return `<div class="box envio" id="envio"><span class="k mute3">Llega a quien ama</span><div class="echips" role="radiogroup" aria-label="Tema">${myT.map(t => `<button class="chip" role="radio" aria-checked="${t === tema}" aria-pressed="${t === tema}" data-tm="${esc(t)}">${esc(t)}</button>`).join('')}</div>
       ${p.dorada ? '' : `<span class="k mute3" style="margin-top:12px">Cómo viaja</span><div class="echips" role="radiogroup" aria-label="Cómo viaja">${Object.keys(TIPO).map(k => `<button class="chip${k !== 'free' && !h[k] ? ' off' : ''}" role="radio" style="${cvars(CAT[TIPO[k][3]])}" aria-checked="${k === tipo}" aria-pressed="${k === tipo}" data-tp="${k}"><i></i>${TIPO[k][0]}${k === 'free' ? '' : ` ×${h[k] || 0}`}</button>`).join('')}</div>`}
       <small class="mute edesc">${T[1]}. Y sigue llegando a más gente hasta que alguien responde.</small></div>`; };
   const bindEnvio = () => { const e = $('#envio'); if (!e) return;
+    if (!envOpen) { e.onclick = () => { envOpen = true; e.outerHTML = envio(); bindEnvio(); }; return; }
     e.querySelectorAll('[data-tm]').forEach(b => b.onclick = () => { tema = b.dataset.tm; store.set('lasttema', tema); if (S.rec) S.rec.tema = tema; e.outerHTML = envio(); bindEnvio(); });
     e.querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const k = b.dataset.tp; if (k !== 'free' && !haveSp()[k]) { toast(`No te quedan. ${GANA[k]}`, INK); return; } tipo = k; if (S.rec) { S.rec.tipo = k; S.rec.dorada = k === 'tide'; } pop(700); e.outerHTML = envio(); bindEnvio(); }); };
   let real = false, url = null, lw = null, blob = null, idea = null;
