@@ -92,6 +92,8 @@ const I = {
   dock: '<svg viewBox="0 0 24 24"><path d="M3 18h18M5 18V9l7-5 7 5v9M9 18v-5h6v5"/></svg>',
   knob: '<svg viewBox="0 0 48 48"><path d="M10 18h18c3 0 5 3 8 3h4v6h-4c-3 0-5 3-8 3H10a4 4 0 0 1-4-4v-4a4 4 0 0 1 4-4Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><rect x="11" y="21.5" width="13" height="5" rx="2.5" fill="currentColor" opacity=".5"/></svg>'
 };
+I.micoff = '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16"/></svg>';
+I.speaker = '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
 I.reel = '<svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 7.5h6"/></svg>';
 I.sea = '<svg viewBox="0 0 24 24"><path d="M5 8.5v-2l1-1.5v-1h2v1l1 1.5v2M15 13.5v-2l1-1.5v-1h2v1l1 1.5v2M6 8.5h2v3H6zM16 13.5h2v3h-2z"/><path d="M3 19c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1"/></svg>';
 I.shuffle = '<svg viewBox="0 0 24 24"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 3.8c1.1 1.6 2.3 2.6 4.3 2.6H21M17.5 13.5 21 17l-3.5 3.5M3 17h3.5c1.3 0 2.2-.4 3-1.2M13.2 8.2c.8-.8 1.8-1.2 3.3-1.2H21M17.5 3.5 21 7l-3.5 3.5"/></svg>';
@@ -148,12 +150,15 @@ function slider(el, label, done) {
 }
 
 // ---------- hojas y avisos ----------
+let killSheet = null;
 function sheet(html, bind) {
+  killSheet && killSheet();
   sheetRoot.innerHTML = `<div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
   let close = () => { const s = $('.sheet', sheetRoot), c = $('.scrim', sheetRoot); if (!s) return; s.classList.add('out'); c.classList.add('out'); setTimeout(() => sheetRoot.innerHTML = '', 200); };
   const prev = document.activeElement, sh = $('.sheet', sheetRoot); sh.tabIndex = -1;
   const key = e => { if (e.key === 'Escape') { close(); } else if (e.key === 'Tab') { const f = $$('button,input,select,a[href]', sh); if (!f.length) return; const a = f[0], z = f[f.length - 1]; if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } } };
-  document.addEventListener('keydown', key); const shut = close; close = () => { document.removeEventListener('keydown', key); shut(); if (prev && prev.focus) prev.focus(); };
+  document.addEventListener('keydown', key); const shut = close; close = () => { document.removeEventListener('keydown', key); killSheet = null; shut(); if (prev && prev.focus) prev.focus(); };
+  killSheet = () => { document.removeEventListener('keydown', key); killSheet = null; sheetRoot.innerHTML = ''; };
   setTimeout(() => ($('button,input', sh) || sh).focus(), 30);
   $('.scrim', sheetRoot).onclick = close; $$('[data-close]', sheetRoot).forEach(b => b.onclick = close);
   bind && bind($('.sheet', sheetRoot), close);
@@ -165,7 +170,7 @@ const R = {}; let cur = null, curName = '', curPar = {};
 const TABBED = { mar: 'mar', charlas: 'charlas' };
 function go(name, p = {}) {
   if (!R[name]) name = 'mar';
-  stopAudio(); const old = cur;
+  stopAudio(); killSheet && killSheet(); const old = cur;
   const el = document.createElement('section'); el.className = 'scr enter'; el.dataset.s = name;
   const r = R[name](p); el.innerHTML = r.html; if (r.cls) el.className += ' ' + r.cls;
   app.append(el); cur = el; curName = name; curPar = p; window.__snap = null;
@@ -265,8 +270,8 @@ R.bienvenida = () => ({ cls: 'clear cine', html: `
   <div class="cineimg" aria-hidden="true"></div>
   <div class="top"><span class="wm">botella</span></div>
   <div class="grow"></div>
-  <h1 class="display">Te escuchan<br><span class="light">antes de verte.</span></h1>
-  <p class="sub mt2 mb3">Graba una pregunta con tu voz y alguien que ama lo mismo que tú te responde.</p>
+  <h1 class="display">Aquí te conocen<br><span class="light">primero por tu voz.</span></h1>
+  <p class="sub mt2 mb3">Escucha la voz de alguien que ama lo mismo que tú y respóndele con la tuya.</p>
   <div class="row-btns"><button class="btn btn-a" data-go="abrir" data-p='{"id":"majo","first":true}'>Abrir mi primera botella</button>
   <button class="btn btn-q" data-go="entrar">Ya tengo cuenta</button></div>`,
   bind(el) { cineLive($('.cineimg', el), 'hero'); } });
@@ -278,10 +283,10 @@ const onbBar = now => `<div class="onbp" aria-label="Paso ${now + 1} de ${ONB.le
 // Abrir: mantener para descorchar → papel crema con la voz.
 R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: 'clear cine', html: `
   <div class="cineimg" aria-hidden="true"></div>
-  <div class="top"><button class="ib edge" data-go="${first ? 'bienvenida' : 'mar'}" aria-label="Cerrar">${I.x}</button><span class="cap">${esc(b.kind)}</span><span style="width:44px"></span></div>
+  <div class="top"><button class="ib edge" data-go="${first ? 'bienvenida' : 'mar'}" aria-label="Cerrar">${I.x}</button><span></span><span style="width:44px"></span></div>
   <div class="grow center" id="fallback"></div>
   <div id="stage">
-    <p class="center" style="margin:0"><span class="rtag" style="--c:${b.c}"><i></i>${esc(b.tag)} · ${esc(b.kind)}</span></p>
+    <p class="center" style="margin:0"><span class="rtag" style="--c:${b.c}"><i></i>${esc(b.tag)}</span></p>
     <p class="head center mt2">Alguien que ama ${esc(b.theme)} te dejó ${b.kind === 'Pregunta' ? 'una pregunta' : b.kind === 'Confesión' ? 'una confesión' : 'una historia'}.</p>
     <div class="mt3"><button class="hold" id="hold" aria-label="Mantén para abrir"><svg class="r" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47"/></svg><svg class="ico" viewBox="0 0 24 24"><path d="M9 3h6v4H9zM10 7v3l-3 3v7.5A1.5 1.5 0 0 0 8.5 22h7a1.5 1.5 0 0 0 1.5-1.5V13l-3-3V7"/></svg></button></div>
     <p class="cap center mt2">Mantén para abrir</p>
@@ -329,7 +334,7 @@ R.presentacion = () => { const p = S.intro; return { html: `
   <p class="sub mt1">Tu voz en vez de una foto. Solo la escucha quien comparte su nombre contigo.</p>
   ${p ? `<div class="half mt3"><p class="cap">La que tienes ahora</p>${player(p.url || 'mine' + p.secs, { mine: true, secs: p.secs })}</div>` : ''}
   <div class="grow"></div><div class="rec-wrap" id="rw"></div><div class="grow"></div><div id="after"></div>`,
-  bind(el) { recUI(el, 'Desliza para guardarla', r => { S.intro = { url: r.url, secs: r.secs }; saveX(); track('presentacion_grabada', { segundos: r.secs }); go('perfil'); toast('Presentación guardada'); }, `<p class="cap" style="margin:0 0 18px;text-align:center">Una idea: tu apodo y algo que te guste, en unos 15 segundos.</p>`); } }; };
+  bind(el) { recUI(el, 'Desliza para guardarla', r => { S.intro = { url: r.url, secs: r.secs }; saveX(); track('presentacion_grabada', { segundos: r.secs }); go('perfil'); toast('Presentación guardada'); }, `<p class="cap" style="margin:0 0 18px;text-align:center">Una idea: tu apodo y algo que te guste. Unos 15 segundos bastan.</p>`); } }; };
 
 function recUI(el, slideLabel, onSend, hintTop = '') {
   const rw = $('#rw', el), after = $('#after', el); let rec = null;
@@ -386,20 +391,25 @@ R.temas = ({ edit = false } = {}) => { const T = TEMAS; return { html: `
     $('#go', el).onclick = () => { S.temas = $$('.chip[aria-pressed=true]', el).map(c => c.textContent); save(); if (edit) { go('perfil'); toast('Temas guardados'); return; } const p = store.get('pending'); if (p) { const b = B[p.id]; S.shore = S.shore.filter(x => x !== p.id); S.convs[p.id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: p.url || 'answer-1', s: p.secs }] }; store.set('pending', null); save(); } store.set('onb', 1); track('temas_elegidos', { temas: S.temas }); go('mar'); toast(p ? 'Tu voz va en camino. Te avisamos cuando te responda.' : 'Bienvenido al mar.'); }; } }; };
 
 // Entrar y recuperar contraseña.
-R.entrar = () => ({ html: `
-  <div class="top"><button class="ib edge" data-go="bienvenida" aria-label="Atrás">${I.back}</button><span></span><span style="width:44px"></span></div>
-  <h1 class="title mt2 mb3">Hola de nuevo.</h1>
-  <form id="f"><label class="field"><span>Correo</span><input class="inp" type="email" required autocomplete="email"></label>
-  <label class="field"><span>Contraseña</span><input class="inp" type="password" required autocomplete="current-password"></label></form>
-  <button class="btn btn-q" style="width:auto;align-self:flex-start;padding:0 4px" data-go="olvide">Olvidé mi contraseña</button>
-  <div class="grow"></div><button class="btn btn-a" form="f">Entrar</button>`,
-  bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; store.set('onb', 1); go('mar'); }; } });
-R.olvide = () => ({ html: `
-  <div class="top"><button class="ib edge" data-go="entrar" aria-label="Atrás">${I.back}</button><span></span><span style="width:44px"></span></div>
-  <h1 class="title mt2">¿Olvidaste tu contraseña?</h1><p class="sub mt1 mb3">Te mandamos un enlace para crear otra.</p>
-  <form id="f"><label class="field"><span>Correo</span><input class="inp" type="email" required autocomplete="email"></label></form>
-  <div class="grow"></div><button class="btn btn-a" form="f">Enviar enlace</button>`,
-  bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; go('entrar'); toast('Listo. Revisa tu correo.'); }; } });
+const EQ = [{ k: 'e', q: '¿Cuál es tu correo?', h: 'El mismo con el que creaste tu cuenta.', t: 'email', ac: 'email', ph: 'nombre@correo.com' }, { k: 'p', q: 'Tu contraseña.', h: '', t: 'password', ac: 'current-password', ph: '••••••' }];
+const oneQ = (f, i, n, btn, extra = '') => `
+  <div class="top"><button class="ib edge" id="bk" aria-label="Atrás">${I.back}</button>${n > 1 ? `<span class="cdots" aria-label="Paso ${i + 1} de ${n}">${Array.from({ length: n }, (_, x) => `<i class="${x <= i ? 'on' : ''}"></i>`).join('')}</span>` : '<span></span>'}<span style="width:44px"></span></div>
+  <div class="csaved-sp"></div>
+  <form id="f" class="cform" autocomplete="on">
+    <label class="cq" for="ci">${f.q}</label>
+    <input class="cin" id="ci" type="${f.t}" autocomplete="${f.ac}" placeholder="${f.ph}" required value="${esc(f.v || '')}">
+    ${f.h ? `<p class="ch">${f.h}</p>` : ''}${extra}
+  </form>
+  <div class="grow"></div>
+  <button class="btn btn-a" form="f">${btn}</button>`;
+// Entrar: igual que crear la cuenta, una pregunta a la vez y sin cajas.
+R.entrar = ({ i = 0 } = {}) => { const f = { ...EQ[i], v: i ? '' : store.get('mail', '') }; return { cls: 'cta', html: oneQ(f, i, 2, i ? 'Entrar' : 'Seguir', i ? `<button type="button" class="lnk mt2" data-go="olvide">Olvidé mi contraseña</button>` : ''),
+  bind(el) { const fm = $('#f', el), inp = $('#ci', el); fm.noValidate = true; setTimeout(() => inp.focus({ preventScroll: true }), 350);
+    $('#bk', el).onclick = () => i ? go('entrar') : go('bienvenida');
+    fm.onsubmit = e => { e.preventDefault(); if (!check(fm)) return; if (!i) { store.set('mail', inp.value.trim()); return go('entrar', { i: 1 }); } store.set('onb', 1); go('mar'); }; } }; };
+R.olvide = () => ({ cls: 'cta', html: oneQ({ q: '¿A qué correo te mandamos el enlace?', h: 'Con ese enlace creas una contraseña nueva.', t: 'email', ac: 'email', ph: 'nombre@correo.com', v: store.get('mail', '') }, 0, 1, 'Enviar enlace'),
+  bind(el) { const fm = $('#f', el); fm.noValidate = true; setTimeout(() => $('#ci', el).focus({ preventScroll: true }), 350); $('#bk', el).onclick = () => go('entrar', { i: 1 });
+    fm.onsubmit = e => { e.preventDefault(); if (!check(fm)) return; go('entrar', { i: 1 }); toast('Listo. Revisa tu correo.'); }; } });
 
 // Mar: lo que te llegó, tu botella y la pregunta de hoy. Nada más.
 // Mar: voces a pantalla completa, una tras otra hacia arriba (como Reels).
@@ -504,7 +514,7 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { const LZ = store.get('lzd',
   <div class="grow"></div><h1 class="title">Por hoy lanzaste todas.</h1><p class="sub mt1">Mañana te llega una más. Y cada vez que respondes la botella de alguien, ganas otra.</p><div class="grow"></div>
   <button class="btn btn-a" data-go="mar">Responder una botella</button><button class="btn btn-q" data-go="muelle">Ver mis botellas especiales</button>` };
   return { html: `
-  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">${dorada ? 'Botella dorada' : S.left === 1 ? 'Te queda 1 botella' : `Te quedan ${S.left} botellas`}</span><span style="width:44px"></span></div>
+  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">${dorada ? 'Botella dorada' : ''}</span><span style="width:44px"></span></div>
   <div class="seg mt2" id="seg">${Object.keys(P).map(k => `<button aria-pressed="${k === kind}">${k}</button>`).join('')}</div>
   <div class="lzhead">
     <h1 class="title" id="pq">${P[kind]}</h1>
@@ -535,7 +545,7 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { const LZ = store.get('lzd',
     recUI(el, 'Desliza al mar', r => { store.set('lzd', null); const p = $('#idea', el), dor = kindSp === 'tide', far = kindSp === 'far'; if (dor) X.tide = Math.max(0, X.tide - 1); else if (far) X.far = Math.max(0, X.far - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada: dor, far, url: r.url, secs: r.secs }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); track('botella_lanzada', { dorada: dor, far, tema }); go('lanzada'); });
     // El tema se elige al final, junto al envío: primero hablas, después decides a quién le llega.
     new MutationObserver(() => { const sl = $('#sl', el); ideas.hidden = !!sl;
-      if (sl && !$('.dest', el)) { sl.insertAdjacentHTML('beforebegin', `<button class="dest" id="dest"><span class="dl">Llega a quienes aman</span><span class="dv"><i></i><b id="tmn">${esc(tema)}</b></span><span class="dc">Cambiar</span></button>`); $('#dest', el).onclick = openTema; sl.insertAdjacentHTML('beforebegin', `<button class="dest sp" id="spb"><span class="dl">Cómo viaja</span><span class="dv"><b id="spv">${spName(kindSp)}</b></span><span class="dc">Cambiar</span></button>`); $('#spb', el).onclick = openSp; } }).observe($('#after', el), { childList: true });
+      if (sl && !$('.dest', el)) { sl.insertAdjacentHTML('beforebegin', `<button class="dest" id="dest"><span class="dl">Llega a quienes aman</span><span class="dv"><i></i><b id="tmn">${esc(tema)}</b></span><span class="dc">Cambiar</span></button>`); $('#dest', el).onclick = openTema; sl.insertAdjacentHTML('beforebegin', `<button class="dest sp" id="spb"><span class="dl">Cómo viaja</span><span class="dv"><b id="spv">${spName(kindSp)}</b></span><span class="dc">Cambiar</span></button>`); $('#spb', el).onclick = openSp; const lf = S.left - 1; sl.insertAdjacentHTML('afterend', `<p class="cap lzleft">${dorada ? '' : lf > 0 ? (lf === 1 ? 'Después de esta te queda 1 botella.' : `Después de esta te quedan ${lf} botellas.`) : 'Es tu última botella de hoy. Mañana llega otra.'}</p>`); } }).observe($('#after', el), { childList: true });
     new MutationObserver(() => el.classList.toggle('recing', !!$('#rtm', el))).observe($('#rw', el), { childList: true });
   } }; };
 
@@ -546,7 +556,7 @@ R.hoy = () => { const done = store.get('hoy'); const A = [['answer-1', 'el cine'
   ${done ? `<p class="sub mt1 mb3">Tú ya respondiste. Esto dijeron otros.</p>
   <div class="row-btns">${A.map(([v, t, c]) => `<div class="paper" style="padding:14px 16px"><p class="who" style="margin-bottom:8px"><i class="orb" style="background:${c}"></i>Alguien que ama ${t}</p>${player(v, { real: true })}</div>`).join('')}</div>
   <p class="cap center mt3">Mañana hay otra.</p>`
-  : `<p class="sub mt1">Todos responden la misma. Cuando respondas, escuchas a los demás.</p>
+  : `<p class="sub mt1">Hoy todo Botella responde esta pregunta. Responde y escucha lo que dijeron los demás.</p>
   <div class="grow"></div><div class="rec-wrap" id="rw"></div><div class="grow"></div><div id="after"></div>`}`,
   bind(el) { if (!done) recUI(el, 'Desliza para enviar', () => { store.set('hoy', 1); go('hoy'); toast('Respuesta enviada'); }); } }; };
 
@@ -565,6 +575,8 @@ R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: '
 const stepsHTML = (st, cls = '') => `<span class="steps ${cls}">${[0, 1, 2, 3].map(i => `<i class="${i <= st ? 'on' : ''}"></i>`).join('')}</span>`;
 const theirPk = id => (PK[B[id].v] || [0, fakePeaks(id.length)])[1];
 const theirMark = (id, cls = '') => { const c = B[id].c; return voiceMark(cls, theirPk(id), [c, `color-mix(in oklab, ${c}, #fff 35%)`, `color-mix(in oklab, ${c}, #05121F 30%)`]); };
+const STEPN = ['Notas de voz', 'Nombres', 'Llamada', 'Plan'];
+const stepRing = (st, txt) => { const f = Math.min(1, (st + 1) / 4), C = 2 * Math.PI * 17; return `<span class="sring"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/><circle class="on" cx="20" cy="20" r="17" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - f)}"/></svg><b>${st + 1}<small>/4</small></b></span><span class="stx"><small>${STEPN[st]}</small>${txt}</span>`; };
 const pathHTML = st => `<span class="path">${STEP.map((t, i) => `<span class="${i < st ? 'done' : i === st ? 'now' : ''}"><i></i>${t}</span>`).join('')}</span>`;
 R.charlas = () => { const ids = Object.keys(S.convs).sort((x, y) => (S.convs[y].unread ? 1 : 0) - (S.convs[x].unread ? 1 : 0)); const nu = ids.filter(k => S.convs[k].unread).length;
   return { cls: 'tabbed', html: `
@@ -575,9 +587,9 @@ R.charlas = () => { const ids = Object.keys(S.convs).sort((x, y) => (S.convs[y].
     return `<button class="conv${c.unread ? ' new' : ''}" style="--c:${b.c}" data-go="${c.unread && !c.cel ? 'respondio' : 'chat'}" data-p='{"id":"${id}"}'>
       ${theirMark(id)}
       <span class="cx"><span class="ctop"><b>${named ? esc(b.name) : `Alguien que ama ${esc(b.theme)}`}</b><span class="when">${esc(c.when)}</span></span>
-      <span class="cq">“${esc(b.q)}”</span>
+      <span class="cq">${esc(b.q)}</span>
       <span class="clast">${last && last.f === 'them' ? `<span class="pip">${I.play}</span>${c.unread ? 'Nueva nota de voz' : 'Te respondió'} · ${fmt(secs)}` : `<span class="pip me">${I.check}</span>Le respondiste. Esperando su voz`}</span>
-      ${pathHTML(c.stage)}</span></button>`; }).join('')}</div>
+      </span></button>`; }).join('')}</div>
   ${S.shore.length ? `<div class="grow"></div><button class="waitc mt3" data-go="mar"><span class="wb">${S.shore.slice(0, 3).map(k => `<span class="mb">${voiceBottle(B[k].c)}</span>`).join('')}</span><span class="tx"><b>${S.shore.length === 1 ? 'Una botella flota en el mar' : `${S.shore.length} botellas flotan en el mar`}</b><small>Escúchalas y responde la que quieras</small></span>${I.chev}</button>` : ''}` }; };
 
 // Chat: la ficha arriba (pregunta y pasos), las voces al medio, el siguiente paso y el micrófono abajo.
@@ -594,25 +606,33 @@ R.chat = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id]; c.unread = fals
     const msgHTML = m => m.f === 'sys' ? `<p class="sys">${m.t}</p>` : m.f === 'intro' ? `<div class="plan introm"><small>La presentación de ${esc(b.name)}</small>${player(m.v, { secs: m.s })}</div>` : m.f === 'plan' ? `<div class="plan"><small>${m.ok ? 'Plan aceptado' : 'Propusiste'}</small><b>${esc(m.t)}</b></div>` : `<div class="msg ${m.f}">${player(m.v, { mine: m.f === 'me', secs: m.s })}</div>`;
     const draw = () => {
       th.innerHTML = c.msgs.map(msgHTML).join(''); $('#who', el).textContent = who();
-      st.innerHTML = pathHTML(c.stage);
       const k = counts(), need = Math.max(0, 2 - k.them) + Math.max(0, 2 - k.me);
       const N = [
-        need ? [need === 1 ? '1 nota más para ver nombres' : `${need} notas más para ver nombres`, null] : [`${I.eye}Compartir mi nombre`, askName],
+        need ? [need === 1 ? 'Una nota más y pueden compartir sus nombres' : `${need} notas más entre los dos y pueden compartir sus nombres`, null] : [`${I.eye}Compartir mi nombre`, askName],
         [`${I.phone}Pedir una llamada`, askCall], [`${I.plan}Proponer un plan`, askPlan], [`${I.check}Plan listo`, null]][c.stage];
-      next.innerHTML = N[0]; next.disabled = !N[1]; next.onclick = N[1];
+      next.innerHTML = N[0]; next.disabled = !N[1]; next.onclick = N[1]; next.hidden = !N[1];
+      st.innerHTML = stepRing(c.stage, N[1] ? ['Ya pueden compartir sus nombres, si los dos quieren.', 'Ya saben sus nombres. ¿Se escuchan en vivo?', 'Ya hablaron. ¿Se ven en un lugar público?'][c.stage] : c.stage === 3 ? 'Tienen un plan. Disfrútenlo.' : N[0]);
       requestAnimationFrame(() => el.scrollTop = el.scrollHeight);
     };
     const push = m => { c.msgs.push(m); save(); draw(); };
     function askName() { sheet(`<h2 class="title">¿Compartir tu nombre?</h2><p class="sub">Solo se muestra si los dos aceptan.</p><div class="row-btns"><button class="btn btn-a" id="y">Compartir</button><button class="btn btn-q" data-close>Todavía no</button></div>`, (s, close) => $('#y', s).onclick = () => { close(); push({ f: 'sys', t: 'Esperando su respuesta…' }); setTimeout(() => { c.msgs.pop(); c.stage = 1; track('nombres_compartidos', { id }); push({ f: 'sys', t: `Ahora saben sus nombres: <b>${esc(b.name)}</b> y <b>${esc(S.name || 'tú')}</b>` }); setTimeout(() => { push({ f: 'intro', v: b.v, s: 9 }); if (!S.intro) push({ f: 'sys', t: `Tu presentación falta. <button class="lnk" data-go="presentacion">Grábala aquí</button>` }); }, 900); }, 1800); }); }
     function askCall() { sheet(`<h2 class="title">¿Llamar a ${esc(b.name)}?</h2><p class="sub">Solo voz. Si no puede, no pasa nada.</p><div class="row-btns"><button class="btn btn-a" id="y">${I.phone}Pedir llamada</button><button class="btn btn-q" data-close>Ahora no</button></div>`, (s, close) => $('#y', s).onclick = () => { close(); toast(`${b.name} aceptó`); setTimeout(() => go('llamada', { id }), 900); }); }
     function askPlan() { const O = ['Ir al cine el martes', 'Café en el Centro', 'Caminar por el malecón']; sheet(`<h2 class="title">Propón un plan</h2><p class="sub">Un lugar público. Cada uno paga lo suyo.</p>${O.map(t => `<button class="idea">${t}</button>`).join('')}`, (s, close) => $$('.idea', s).forEach(o => o.onclick = () => { close(); push({ f: 'plan', t: o.textContent }); setTimeout(() => { c.msgs[c.msgs.length - 1].ok = true; c.stage = 3; save(); draw(); toast(`${b.name} dijo que sí`); }, 2000); })); }
-    $('#menu', el).onclick = () => sheet(`<h2 class="title">${esc(who())}</h2><p class="sub">Nadie se entera de lo que elijas aquí, salvo el regalo.</p><div class="row-btns"><button class="btn btn-2" id="gf">${I.gift}Regalarle una botella</button><button class="btn btn-2" id="rp">Reportar</button><button class="btn btn-2" id="bl">Bloquear</button><button class="btn btn-q" data-close>Cancelar</button></div>`, (s, close) => { $('#gf', s).onclick = () => { close(); const g = X.gift || 0; if (!g) return toast('No te quedan botellas de regalo. ' + GANA.gift); X.gift = g - 1; saveX(); track('botella_regalada', { id }); push({ f: 'sys', t: `Le regalaste una botella a ${esc(who())}. Ahora puede lanzar una más.` }); }; $('#rp', s).onclick = () => { close(); track('reporte_creado', { id }); toast('Gracias. Lo revisamos hoy.'); }; $('#bl', s).onclick = () => { close(); delete S.convs[id]; save(); go('charlas'); toast('Bloqueado. No volverá a escucharte.'); }; });
+    const RSN = ['Contenido sexual explícito', 'Insultos o burlas', 'Amenazas', 'Me hizo sentir incómodo', 'Otra cosa'];
+    const block = () => sheet(`<h2 class="title">¿Bloquear a ${esc(who())}?</h2><p class="sub">No volverá a escucharte ni a escribirte, y esta conversación se cierra. No se lo avisamos.</p><div class="row-btns mt3"><button class="btn btn-2 danger" id="byes">Bloquear</button><button class="btn btn-q" data-close>Cancelar</button></div>`, (sh, close) => $('#byes', sh).onclick = () => { close(); const keep = S.convs[id]; delete S.convs[id]; save(); track('bloqueo', { id }); go('charlas'); toast('Bloqueado. No volverá a escucharte.', '#FF7B7E', () => { S.convs[id] = keep; save(); go('charlas'); track('bloqueo_deshecho', { id }); }); });
+    const report = () => sheet(`<h2 class="title">¿Qué pasó?</h2><p class="sub">Lo revisa una persona del equipo. ${esc(who())} no sabe que lo reportaste.</p><div class="row-btns mt2" id="rsn">${RSN.map(r => `<button class="idea">${r}</button>`).join('')}</div>`, (sh, close) => $$('#rsn .idea', sh).forEach(b => b.onclick = () => { track('reporte_creado', { id, motivo: b.textContent }); close(); setTimeout(() => sheet(`<p class="okmark">${I.check}</p><h2 class="title">Gracias por avisar.</h2><p class="sub">Lo vamos a revisar. ¿Quieres bloquear también a ${esc(who())}?</p><div class="row-btns mt3"><button class="btn btn-2 danger" id="alsob">Bloquear también</button><button class="btn btn-q" data-close>Por ahora no</button></div>`, (s2, c2) => $('#alsob', s2).onclick = () => { c2(); setTimeout(block, 210); }), 210); }));
+    $('#menu', el).onclick = () => sheet(`<h2 class="title">${esc(who())}</h2><p class="sub">Nadie se entera de lo que elijas aquí, salvo el regalo.</p><div class="row-btns"><button class="btn btn-2" id="gf">${I.gift}Regalarle una botella</button><button class="btn btn-2" id="rp">Reportar</button><button class="btn btn-2" id="bl">Bloquear</button><button class="btn btn-q" data-close>Cancelar</button></div>`, (s, close) => { $('#gf', s).onclick = () => { close(); const g = X.gift || 0; if (!g) return toast('No te quedan botellas de regalo. ' + GANA.gift); X.gift = g - 1; saveX(); track('botella_regalada', { id }); push({ f: 'sys', t: `Le regalaste una botella a ${esc(who())}. Ahora puede lanzar una más.` }); }; $('#rp', s).onclick = () => { close(); setTimeout(report, 210); }; $('#bl', s).onclick = () => { close(); setTimeout(block, 210); }; });
     // micrófono: toca para grabar, toca para enviar
     let rec = null; const rb = $('#rec', el);
+    const dock = $('.dock', el), live = document.createElement('div'); live.className = 'dlive'; live.hidden = true; dock.prepend(live);
+    const sendMine = r => { push({ f: 'me', v: r.url || 'mine' + c.msgs.length, s: Math.max(2, Math.round(r.secs)) }); markDay();
+      if (counts().them < 3 || c.stage === 0) { th.insertAdjacentHTML('beforeend', '<div class="typing"><i></i><i></i><i></i></div>'); el.scrollTop = el.scrollHeight; setTimeout(() => push({ f: 'them', v: `${id}-reply` }), 2400); } };
+    const reset = () => { live.hidden = true; live.innerHTML = ''; rb.hidden = false; rb.classList.remove('live'); rb.innerHTML = I.mic; draw(); };
     rb.onclick = async () => {
-      if (!rec) { rec = recorder(t => { next.innerHTML = `<span style="color:var(--danger)">●</span> ${fmt(t)} · toca para enviar`; }); rb.classList.add('live'); rb.innerHTML = I.check; next.disabled = true; await rec.start(); return; }
-      const r = await rec.stop(); rec = null; rb.classList.remove('live'); rb.innerHTML = I.mic; push({ f: 'me', v: r.url || 'mine' + c.msgs.length, s: Math.max(2, Math.round(r.secs)) });
-      if (counts().them < 3 || c.stage === 0) { th.insertAdjacentHTML('beforeend', '<div class="typing"><i></i><i></i><i></i></div>'); el.scrollTop = el.scrollHeight; setTimeout(() => push({ f: 'them', v: `${id}-reply` }), 2400); }
+      if (!rec) { live.hidden = false; next.hidden = true; live.innerHTML = `<span class="rdot"></span><b id="ct">0:00</b><span class="cap">Toca para terminar</span>`; rec = recorder(t => { const ct = $('#ct', el); ct && (ct.textContent = fmt(t)); }); rb.classList.add('live'); rb.innerHTML = '<span class="sq"></span>'; await rec.start(); return; }
+      const r = await rec.stop(); rec = null; rb.hidden = true;
+      live.innerHTML = `<button class="ib" id="dis" aria-label="Borrar nota">${I.x}</button><div class="slide sm" id="csl"></div>`;
+      $('#dis', el).onclick = reset; slider($('#csl', el), 'Desliza para enviar', () => { reset(); sendMine(r); });
     };
     draw();
   } }; };
@@ -651,7 +671,7 @@ R.mes = () => { const cs = myColors(), pk = myPk(), mesN = new Date().toLocaleDa
     { c1: '#7FD8C9', c2: '#3A6A8E', h: `<p class="wk">Te escucharon</p><b class="wn" data-n="${heard}">0</b><h2>personas escucharon tu voz.</h2><p>Sin ver tu cara. Solo por lo que dijiste.</p>` },
     { c1: top[2], c2: '#05121F', h: `<p class="wk">Tu tema</p><h2 class="wt">${top[0]}</h2><p>Fue lo que más conectó contigo. ${top[1]} personas que lo aman te respondieron.</p><div class="wdots">${MAPA.map(([t, k, c]) => `<span style="--c:${c};--s:${10 + k * 6}px"><i></i>${t}</span>`).join('')}</div>` },
     { c1: cs[2], c2: cs[0], h: `<p class="wk">Hablaste</p><b class="wn" data-n="${mins}">0</b><h2>minutos con gente nueva.</h2><p>En ${notas} notas de voz y ${n_(ans, 'conversación', 'conversaciones')}.</p>${waveLine(pk, 40)}` },
-    { c1: '#FFC24B', c2: '#FF8E9E', h: `<p class="wk">Tu racha más larga</p><b class="wn" data-n="${best}">0</b><h2>días seguidos grabando tu voz.</h2><p>Pocas personas llegan a tanto.</p>` },
+    { c1: '#FFC24B', c2: '#FF8E9E', h: `<p class="wk">Tu racha más larga</p><b class="wn" data-n="${best}">0</b><h2>días seguidos grabando tu voz.</h2><p>Tu voz estuvo aquí todos esos días.</p>` },
     { c1: cs[0], c2: cs[2], h: `<div class="wcard"><p class="wk">Mi ${mesN} en Botella</p>${voiceMark('wx sm2', pk, cs)}<div class="wrow"><span><b>${heard}</b>me escucharon</span><span><b>${mins} min</b>de voz</span><span><b>${top[0]}</b>mi tema</span></div><p class="wbrand">botella · conoce gente por su voz</p></div><div class="row-btns mt3"><button class="btn rbtn" id="share">Compartir mi mes</button><button class="btn btn-q" data-go="perfil">Volver a mi perfil</button></div>` }
   ];
   return { cls: 'clear wrapped', html: `
@@ -672,8 +692,10 @@ R.mes = () => { const cs = myColors(), pk = myPk(), mesN = new Date().toLocaleDa
 R.llamada = ({ id = 'leo' }) => { const b = B[id]; return { cls: 'call clear', html: `
   <p class="cap">Llamada de voz</p><h1 class="title">${esc(b.name)}</h1><p class="sub" id="ct">Conectando…</p>
   <div class="voiceorb"></div>
-  <button class="hang" id="h" aria-label="Colgar">${I.phone}</button>`,
+  <div class="cctl"><button class="cbt" id="mute" aria-pressed="false"><span>${I.micoff}</span>Silenciar</button><button class="hang" id="h" aria-label="Colgar">${I.phone}</button><button class="cbt" id="spk" aria-pressed="false"><span>${I.speaker}</span>Altavoz</button></div>
+  <p class="cap csafe">${I.lock}Solo voz. Tu número no se comparte.</p>`,
   bind(el) { let t = 0, iv; setTimeout(() => { audio.src = `v/${id}-call.mp3`; audio.play().catch(() => {}); iv = setInterval(() => { t++; const c = $('#ct', el); c && (c.textContent = fmt(t)); }, 1000); }, 1200);
+    $$('.cbt', el).forEach(bt => bt.onclick = () => { const on = bt.getAttribute('aria-pressed') !== 'true'; bt.setAttribute('aria-pressed', on); navigator.vibrate && navigator.vibrate(6); if (bt.id === 'mute') { el.classList.toggle('muted', on); toast(on ? 'Silenciado. No te escucha.' : 'Te escucha de nuevo.'); } });
     $('#h', el).onclick = () => { clearInterval(iv); audio.pause(); const c = S.convs[id]; c.stage = 2; c.msgs.push({ f: 'sys', t: `Llamada · ${fmt(Math.max(t, 1))}` }); save(); go('chat', { id }); }; } }; };
 
 // ================= LO DEMÁS: vive en tu perfil, una pantalla por cosa =================
@@ -807,7 +829,7 @@ R.botellas = () => { const heard = S.sent.reduce((t, x) => t + reachOf(x), 0), a
   <h1 class="title mt1">Mis botellas</h1>
   ${pend.length ? `<p class="eyebrow" style="margin-top:20px">${pend.length === 1 ? 'Te respondieron. Escucha.' : `${pend.length} respuestas por escuchar`}</p>
   <div class="anscards">${pend.map(({ a: [v, th, c], x, i }) => `<div class="anscard" style="--c:${c}" data-v="${v}${i}"><p class="awho"><i></i>Alguien que ama ${esc(th)} respondió a tu ${esc(x.kind.toLowerCase())}${x.idea ? `: “${esc(x.idea)}”` : ''}</p>${player(v, { real: true })}<div class="aact"><button class="chip sm" data-go="charlas">${I.mic}Responder</button></div></div>`).join('')}</div>` : ''}
-  ${S.sent.length ? `<div class="facts mt3"><p><b>${S.sent.length}</b><span>${S.sent.length === 1 ? 'lanzada' : 'lanzadas'}</span></p><p><b>${heard}</b><span>personas las recibieron</span></p><p><b>${ans}</b><span>${ans === 1 ? 'te respondió' : 'te respondieron'}</span></p></div>` : ''}
+  ${S.sent.length ? `<div class="facts mt3"><p><b>${S.sent.length}</b><span>${S.sent.length === 1 ? 'lanzada' : 'lanzadas'}</span></p><p><b>${heard}</b><span>personas recibieron tus botellas</span></p><p><b>${ans}</b><span>${ans === 1 ? 'te respondió' : 'te respondieron'}</span></p></div>` : ''}
   <p class="eyebrow" style="margin-top:24px">Tus botellas en el mar</p>
   <div class="bcards">${S.sent.length ? S.sent.map((x, i) => `<button class="bcard" style="--c:${tc(x.tema)}" data-i="${i}"><span class="mb">${voiceBottle(tc(x.tema))}</span><span class="tx"><small class="btag"><i></i>Tu ${esc(x.kind.toLowerCase())} · ${esc(x.tema)} · ${esc(x.when)}</small><b>${x.idea ? esc(x.idea) : `Una ${esc(x.kind.toLowerCase())} solo con tu voz`}</b>${reachRow(x)}<small>${x.ans ? `<em class="hasans">${n_(x.ans, 'respuesta', 'respuestas')}</em> · ` : ''}Llegó a ${reachOf(x)} personas${x.heard ? `, ${x.heard} ya la escucharon` : ''}${x.far ? ' · con empujón' : ''}</small></span></button>`).join('') : `<div class="bempty"><span class="mb">${voiceBottle('#7FD8C9')}</span><p class="sub">Todavía no lanzas ninguna. Graba una pregunta y le llega a toda la gente que ama lo mismo que tú.</p></div>`}</div>
   <div class="grow"></div><button class="btn btn-a mt3" data-go="lanzar">${I.mic}Lanzar otra</button>`,
@@ -829,7 +851,7 @@ R.mapa = () => { const P = MAPA; const tot = P.reduce((a, p) => a + p[1], 0);
   return { cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">Tu voz conectó con ${P.length} temas.</h1>
-  <p class="sub mt1">${tot} personas te respondieron. Más cerca de ti, el tema que más te escuchó.</p>
+  <p class="sub mt1">${tot} personas te respondieron. El tema más cercano al centro es el que más respuestas te dio.</p>
   <svg class="mapsvg" viewBox="0 0 100 100" role="img" aria-label="Temas con los que conectó tu voz"><circle class="orbit" cx="50" cy="50" r="34"/>
     ${pts.map(p => `<line x1="50" y1="50" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="${p.c}" stroke-opacity=".35" stroke-width="${(.3 + p.n * .12).toFixed(2)}"/>`).join('')}
     ${pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(1.6 + p.n * .55).toFixed(1)}" fill="${p.c}"/><text x="${p.x.toFixed(1)}" y="${(p.y + 5.4 + p.n * .55).toFixed(1)}" text-anchor="middle">${p.t}</text>`).join('')}
@@ -844,7 +866,7 @@ R.bitacora = () => { const n = streak(), done = recToday(), nx = UNLOCK.find(u =
   <div class="rhead mt1"><span class="rnum">${n}</span><h1 class="title">${n === 1 ? 'día seguido' : 'días seguidos'} grabando tu voz.</h1></div>
   <p class="sub mt2">Cuenta cada día en que grabas algo: una botella, una respuesta o una pregunta para tus amigos.</p>
   <div class="week mt3">${weekStrip()}</div>
-  <div class="todayc mt3 ${done ? 'ok' : ''}">${done ? `${I.check}<span><b>Hoy ya grabaste.</b><small>Vuelve mañana y llegas a ${n + 1}.</small></span>` : `${I.mic}<span><b>Hoy todavía no grabas.</b><small>Si termina el día sin grabar, vuelves a empezar desde 0.</small></span><button class="chip sm" data-go="lanzar">Grabar</button>`}</div>
+  <div class="todayc mt3 ${done ? 'ok' : ''}">${done ? `${I.check}<span><b>Hoy ya grabaste.</b><small>Vuelve mañana y llegas a ${n + 1}.</small></span>` : `${I.mic}<span><b>Hoy todavía no grabas.</b><small>Graba algo hoy y sumas un día más.</small></span><button class="chip sm" data-go="lanzar">Grabar</button>`}</div>
   ${nx ? `<div class="next mt2"><span class="cap">Con ${nx[0]} días seguidos te regalamos</span><b>${nx[1]}</b><span class="bar"><i style="width:${Math.max(8, (n - prev) / (nx[0] - prev) * 100)}%"></i></span><span class="cap">${nx[0] - n === 1 ? 'Falta 1 día' : `Faltan ${nx[0] - n} días`}</span></div>` : ''}
   <p class="eyebrow">Regalos por días seguidos</p>
   <div class="gifts">${UNLOCK.map(([d, t, c]) => `<div class="gft${d <= n ? ' got' : ''}"><span class="art">${bottleSVG(c)}</span><b>${t}</b><small>${d <= n ? 'Ya es tuyo' : `A los ${d} días`}</small></div>`).join('')}</div>` }; };
@@ -854,7 +876,7 @@ R.marea = () => { const L = ['majo', 'leo', 'belen'];
   return { cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">Botellas doradas</h1>
-  <p class="sub mt1">Una dorada llega como cualquier botella y, además, sale aquí, donde cualquiera puede abrirla aunque no comparta tu tema. Estas son las de hoy.</p>
+  <p class="sub mt1">Las botellas doradas aparecen aquí para todo el mundo, sin importar el tema. Estas son las de hoy.</p>
   <div class="row-btns mt3">${L.map(id => { const b = B[id]; return `<button class="gold" data-go="abrir" data-p='{"id":"${id}"}'><span class="art">${bottleSVG('#FFC24B')}</span><span class="tx"><small><i class="orb" style="background:${b.c}"></i>Alguien que ama ${esc(b.theme)}</small><b>${esc(b.q)}</b></span></button>`; }).join('')}</div>
   <div class="grow"></div>
   <button class="btn btn-2 mt3" id="mine">${I.mic}Lanzar una dorada</button>`,
