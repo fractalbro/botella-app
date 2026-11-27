@@ -1517,3 +1517,21 @@ insert into public.outings(id, owner, name, place, starts_at, cap, descr, weekly
 insert into public.outings(id, owner, name, place, starts_at, cap, descr, weekly) values ('5a5a0e00-0000-4000-8000-000000000002', '5a5a0000-0000-4000-8000-000000000003', 'Preguntas frente al mar', 'Bajada de Baños, Barranco', ((date_trunc('week', now() at time zone 'America/Lima') + interval '4 days' + time '18:00') at time zone 'America/Lima'), 8, 'Cada uno trae una pregunta que lanzó esta semana y la contestamos en voz alta.', true) on conflict (id) do update set name = excluded.name, place = excluded.place, descr = excluded.descr;
 insert into public.outings(id, owner, name, place, starts_at, cap, descr, weekly) values ('5a5a0e00-0000-4000-8000-000000000003', '5a5a0000-0000-4000-8000-000000000002', 'Cine y conversa', 'Un cine en Lince, luego café', ((date_trunc('week', now() at time zone 'America/Lima') + interval '2 days' + time '20:00') at time zone 'America/Lima'), 6, 'Vemos la película de la semana y la comentamos a la salida.', true) on conflict (id) do update set name = excluded.name, place = excluded.place, descr = excluded.descr;
 -- ========== FIN PERSONAS DE EJEMPLO ==========
+
+-- ========== MEDICIÓN (27/11) ==========
+-- Eventos de uso del pixel para medir el recorrido (destapar, responder, crear cuenta, grabar, lanzar).
+-- La app solo puede escribir; nadie los lee por la API (se consultan desde el panel de Supabase).
+create table if not exists public.events (
+  id bigserial primary key,
+  user_id uuid default auth.uid() references auth.users on delete cascade,
+  name text not null check (length(name) between 1 and 40),
+  props jsonb check (props is null or length(props::text) < 2000),
+  app text not null default 'pixel' check (length(app) <= 20),
+  at timestamptz not null default now()
+);
+alter table public.events enable row level security;
+drop policy if exists events_insert on public.events;
+create policy events_insert on public.events for insert to anon, authenticated with check (user_id is null or user_id = auth.uid());
+grant insert on public.events to anon, authenticated;
+grant usage on sequence public.events_id_seq to anon, authenticated;
+create index if not exists events_name_at on public.events (name, at);

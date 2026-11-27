@@ -161,8 +161,8 @@ svg.px,.px svg{shape-rendering:crispEdges;image-rendering:pixelated;image-render
 .shelf{position:relative;display:flex;justify-content:space-between;align-items:flex-end;padding:24px 12px 12px;margin-top:24px;background:linear-gradient(180deg,transparent 68%,var(--sand) 68%)}
 .pick{position:relative;padding:4px;transition:transform .2s var(--spring);min-width:44px}
 .pick svg{width:36px;height:auto;margin:0 auto}
-.pick[aria-pressed=true]{transform:translateY(-12px)}
-.pick[aria-pressed=true]::after{content:"";position:absolute;left:50%;top:-12px;width:8px;height:8px;margin-left:-4px;background:var(--c);box-shadow:0 0 0 2px var(--ink);animation:wave .8s steps(2) infinite}
+.pick[aria-checked=true]{transform:translateY(-12px)}
+.pick[aria-checked=true]::after{content:"";position:absolute;left:50%;top:-12px;width:8px;height:8px;margin-left:-4px;background:var(--c);box-shadow:0 0 0 2px var(--ink);animation:wave .8s steps(2) infinite}
 .catname{margin-top:16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .catname b{font:700 16px/1.2 var(--sans)}
 .catname span{font-size:13px;color:var(--ink-3)}
@@ -505,6 +505,89 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   .recz{margin:24px 0 16px}.pad{height:200px}.hero{height:208px;margin-top:12px}.ask{margin-top:32px}.orb,.orb.big{width:176px;height:176px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ================= mejoras de la evaluación (27/11) ================= */
+/* lanzar: al terminar de grabar, la botella para deslizar y el botón quedan a la vista */
+#v-lanzar.ready2 .shelf,#v-lanzar.ready2 .catname{display:none}
+#v-lanzar.ready2 .top{margin-bottom:12px}
+#v-lanzar.ready2 .recz{margin:16px 0 0;gap:12px}
+#v-lanzar.ready2 .pad{height:196px}
+.catline{display:flex;gap:8px;align-items:center;align-self:flex-start;margin:0;font:700 14px/1 var(--sans);color:var(--ink-2)}
+.catline .dot{background:var(--c)}
+#v-lanzar .ready .wavebox .btn.sm{flex:none;width:auto}
+@media (max-height:600px){#v-lanzar.ready2 .pad{height:168px}#v-lanzar.ready2 .h1{font-size:24px}}
+
+/* la información pesa menos que lo que se toca: borde fino y sombra suave; el bisel queda para los botones */
+.box{border-width:2px;box-shadow:3px 3px 0 #D9CDB4}
+.nav.box{border-width:3px;box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #E6DAC0,4px 4px 0 var(--ink)}
+.toast.box{border-width:3px;box-shadow:4px 4px 0 var(--ink)}
+.say.box{box-shadow:none}
+.stats>div+div{border-color:var(--line)}
+
+/* botón desactivado: se ve en pausa, no roto, y debajo se dice qué falta */
+.push[disabled]{opacity:1;background:#ECE5D7!important;color:#8C8698!important;border-color:#B9AE98;--hl:#F7F2E8;--k:#DCD2BF;
+  box-shadow:inset 2px 2px 0 var(--hl),inset -2px -2px 0 var(--k),3px 3px 0 #C9BDA6}
+.why{min-height:20px;margin:0 0 12px;font-size:14px;color:var(--ink-2);text-align:center}
+
+/* los avisos aparecen debajo del botón Volver */
+.toast{top:calc(var(--safe-t) + 76px)}
+
+/* barra de abajo en pantallas angostas: etiquetas que no chocan */
+@media (max-width:360px){.nav{grid-template-columns:1fr 1fr 72px 1fr 1fr}.nb{font-size:10px;letter-spacing:0;gap:6px}.launch{width:64px;height:64px}.hud .wm{font-size:13px}}
+
+/* Playa compacta en pantallas bajas: Escuchar y Responder quedan sobre la barra */
+@media (max-height:700px){
+  #v-playa .beach{height:148px}
+  #v-playa .player{margin-top:8px}
+  #v-playa .from{font-size:12px}
+  #v-playa .ctrls .play,#v-playa .ctrls .resp{height:48px}#v-playa .ctrls .play{width:48px}
+}
+@media (max-height:600px){#v-playa .beach{height:128px}#v-playa .q{font-size:15px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}}
+.invm .plus,.leftc .plus{display:grid;place-items:center;width:20px;height:20px;background:var(--sea);color:#fff;border:2px solid var(--ink);border-radius:4px;font:700 14px/1 var(--px)}
+
+/* filtros y toques de 44 px */
+.legend .chip{height:44px}
+.sw{position:relative}.sw::after{content:"";position:absolute;inset:-8px -4px}
+
+/* temas en tinta neutra: el color queda solo para el tipo de botella */
+#v-temas .chip i{display:none}
+#v-temas .tgrid .chip[aria-pressed=true]{background:var(--ink);color:#fff}
+.chip[aria-checked=true]{background:var(--ink);color:#fff}
+
+/* conversación: nombre completo y caja de responder con fondo propio */
+.chead b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.dock{background:linear-gradient(rgba(250,246,238,0),var(--bg) 24px);margin:0 calc(-1*var(--pad));padding:24px var(--pad) 0;z-index:5}
+.presb{margin:0 0 16px;align-self:stretch}.presb .tile{background:#E6F3FF}
+
+/* Mis botellas: un dato por fila */
+.stats{grid-template-columns:1fr}
+.stats>div{display:flex;align-items:baseline;gap:12px;padding:12px 16px}
+.stats>div+div{border-left:0;border-top:2px dashed var(--line)}
+.stats .num{font-size:32px;min-width:48px}
+.stats small{margin:0;font-size:15px}
+
+/* voces de ejemplo */
+.eg{margin:4px 0 0;font-size:13px;color:var(--ink-3)}
+.egt{display:inline-block;justify-self:start;margin-top:4px;padding:3px 6px;border:2px dashed var(--ink-3);border-radius:6px;font:600 12px/1 var(--px);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+
+/* cuenta */
+.tbox{width:32px;height:32px}.tick{min-height:48px;align-items:center}
+.normas-l{margin:4px 0 0 44px;text-align:left}
+.eye{margin:8px 0 0;text-align:left}
+.field.em{font-size:clamp(20px,6vw,24px);letter-spacing:-.02em}
+.have{font:600 12px/1 var(--px);text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)}
+
+/* llamada: la forma de la voz, sin cuadro */
+.orb .core.voice{background:none;border:0;box-shadow:none;width:160px}
+.orb .core.voice svg{width:128px;height:48px}
+
+/* contraste */
+.new{background:var(--ink)!important;color:#fff!important}
+.mcard .k{color:#fff}
+
+/* la letra pixel queda para etiquetas cortas; las frases largas van en la letra de lectura */
+.btn.lg{font:700 16px/1.2 var(--sans);text-transform:none;letter-spacing:-.01em}
+.k.lg{font-family:var(--sans);font-weight:700;letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -772,14 +855,14 @@ function renderBienvenida() {
     <p class="mute" style="margin:12px 0 24px;font-size:16px;max-width:34ch">Graba algo que quieras contar o preguntar. Tu voz llega a gente que ama lo mismo que tú, y alguien responde.</p>
     <button class="push btn blue" id="first">Abrir mi primera botella</button>
     <button class="link" data-go="entrar">Ya tengo cuenta</button>`;
-  $('#first').onclick = () => uncork(WB[0], tap => go('primera', { i: 0, auto: tap }), 'Alguien que ama el cine te dejó una botella');
+  $('#first').onclick = () => ev('destapo') || uncork(WB[0], tap => go('primera', { i: 0, auto: tap }), 'Alguien que ama el cine te dejó una botella');
 }
 const QCODE = { k: 'codigo', q: 'Tu código de invitación', ph: 'BOTELLA-01', h: 'Por ahora se entra con invitación. Te lo pasa quien te invitó.', type: 'text', ac: 'off' };
 const QS = [
   { k: 'nombre', q: '¿Cómo te llamas?', ph: 'Tu nombre', h: 'Nadie lo ve hasta que los dos decidan compartirlo.', type: 'text', ac: 'given-name' },
+  { k: 'edad', q: '¿Cuántos años tienes?', ph: '24', h: 'Botella es para mayores de 18.', type: 'number', ac: 'off' },
   { k: 'correo', q: '¿Cuál es tu correo?', ph: 'tu@correo.com', h: 'Solo para entrar y avisarte cuando te respondan.', type: 'email', ac: 'email' },
-  { k: 'clave', q: 'Crea una contraseña', ph: 'Mínimo 8 letras', h: 'Solo tú la sabes.', type: 'password', ac: 'new-password' },
-  { k: 'edad', q: '¿Cuántos años tienes?', ph: '24', h: 'Botella es para mayores de 18.', type: 'number', ac: 'off' }
+  { k: 'clave', q: 'Crea una contraseña', ph: 'Mínimo 8 letras', h: 'Solo tú la sabes.', type: 'password', ac: 'new-password' }
 ];
 const pendBanner = () => store.get('pend', null) ? `<div class="banner box" style="${cvars(CAT[store.get('pend').cat])}"><span class="tile">${bottle(store.get('pend').cat)}</span><span><b>Tu respuesta está guardada.</b><small>Crea tu cuenta y la enviamos.</small></span></div>` : '';
 function renderCuenta({ i = 0 } = {}) {
@@ -794,6 +877,7 @@ function renderCuenta({ i = 0 } = {}) {
     <input class="field${Q.type === 'email' ? ' em' : ''}" id="fi" type="${Q.type}" inputmode="${Q.type === 'number' ? 'numeric' : Q.type === 'email' ? 'email' : 'text'}" autocomplete="${Q.ac}" ${Q.k === 'codigo' ? 'autocapitalize="characters" spellcheck="false"' : ''} placeholder="${Q.ph}" value="${esc(val)}" aria-label="${Q.q}">
     <p class="hint3">${ico('lock', '#6B6578')}${Q.h}</p>
     ${Q.type === 'password' ? '<button class="link eye" id="eye" type="button">Mostrar contraseña</button>' : ''}
+    ${Q.type === 'email' && LIVE && CFG.google ? '<button class="push btn" id="gg" type="button" style="margin-top:32px">Seguir con Google</button>' : ''}
     ${Q.k === 'edad' ? `<button class="tick" id="tk" role="checkbox" aria-checked="${okBox}"><span class="tbox">${ico('check', '#fff')}</span><span>Tengo 18 años o más y acepto las normas de Botella.</span></button><button class="link normas-l" data-go="normas" data-p='{"from":"cuenta","i":${i}}'>Leer las normas</button>` : ''}</div>
     <div class="sp" style="min-height:32px"></div>
     <p class="why" id="why" aria-live="polite"></p>
@@ -801,6 +885,7 @@ function renderCuenta({ i = 0 } = {}) {
   const fi = q('#fi'), ok = () => { const x = fi.value.trim(); return Q.type === 'email' ? /.+@.+\..+/.test(x) : Q.type === 'number' ? +x >= 18 && +x < 100 && okBox : Q.type === 'password' ? x.length >= 8 : Q.k === 'codigo' ? x.length >= 4 : x.length > 1; };
   const why = () => { const x = fi.value.trim(); if (Q.k === 'edad') return !x ? 'Escribe tu edad para seguir.' : +x < 18 ? 'Botella es solo para mayores de 18.' : !okBox ? 'Marca la casilla para crear tu cuenta.' : ''; if (Q.type === 'password') return x && x.length < 8 ? `Faltan ${8 - x.length} ${8 - x.length === 1 ? 'letra' : 'letras'}.` : ''; if (Q.type === 'email') return x && !ok() ? 'Revisa que el correo esté completo.' : ''; return ''; };
   const upd = () => { q('#cn').disabled = !ok(); q('#why').textContent = q('#cn').disabled ? why() : ''; }; upd(); fi.oninput = upd;
+  if (q('#gg')) q('#gg').onclick = async () => { const undo = busyBtn(q('#gg'), 'Abriendo Google…'); ev('google'); const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/pixel/#sobre' } }); if (error) { undo(); toast(errMsg(error), '#D63434'); } };
   if (q('#eye')) q('#eye').onclick = () => { const sh = fi.type === 'password'; fi.type = sh ? 'text' : 'password'; q('#eye').textContent = sh ? 'Ocultar contraseña' : 'Mostrar contraseña'; fi.focus(); };
   if (q('#tk')) q('#tk').onclick = e => { if (e.target.closest('[data-go]')) return; okBox = !okBox; store.set('c.normas', okBox); q('#tk').setAttribute('aria-checked', okBox); if (okBox) { pop(1200); burst(...center(q('.tbox')), ['#368DDB', '#fff'], 10); } upd(); };
   const next = async () => {
@@ -811,7 +896,7 @@ function renderCuenta({ i = 0 } = {}) {
     if (LIVE && !uid()) {
       if (!R.pass) { toast('Vuelve a escribir tu contraseña.', '#D63434'); go('cuenta', { i: QL.findIndex(y => y.k === 'clave') }); return; }
       const undo = busyBtn(q('#cn'), 'Creando tu cuenta…');
-      try { await signUp(store.get('c.correo', ''), R.pass); } catch (e) { undo(); toast(errMsg(e, 'No pudimos crear tu cuenta. Intenta en unos minutos.'), '#D63434'); if (e.exists || /already|registered/i.test(e.message || '')) setTimeout(() => go('entrar'), 1200); return; }
+      try { await signUp(store.get('c.correo', ''), R.pass); ev('cuenta_creada'); } catch (e) { undo(); toast(errMsg(e, 'No pudimos crear tu cuenta. Intenta en unos minutos.'), '#D63434'); if (e.exists || /already|registered/i.test(e.message || '')) setTimeout(() => go('entrar'), 1200); return; }
     }
     go('sobre');
   };
@@ -893,7 +978,7 @@ function renderPrimera({ i = 0, auto } = {}) {
     <button class="push btn c" id="fr">${ico('mic', C.on, C.c)} Responder con mi voz</button>
     <button class="link" id="fd">Devolverla al mar</button>`;
   const btn = q('#fp');
-  btn.onclick = () => { if (playing) { stop(); btn.innerHTML = ico('play', C.on); return; } btn.innerHTML = ico('pause', C.on); play(b, (p, cur) => { q('#fw').innerHTML = wave(b.wv, C.c, p, 9, true, C.h); q('#ft').textContent = mmss(cur); }, () => { btn.innerHTML = ico('play', C.on); q('#fw').innerHTML = wave(b.wv, C.c, 1); }); };
+  btn.onclick = () => { if (playing) { stop(); btn.innerHTML = ico('play', C.on); return; } btn.innerHTML = ico('pause', C.on); play(b, (p, cur) => { q('#fw').innerHTML = wave(b.wv, C.c, p, 9, true, C.h); q('#ft').textContent = mmss(cur); }, () => { ev('escucho_primera'); btn.innerHTML = ico('play', C.on); q('#fw').innerHTML = wave(b.wv, C.c, 1); }); };
   q('#fr').onclick = () => go('lanzar', { reply: b, onb: 1, i });
   if (auto) setTimeout(() => { if (cur === 'primera' && !playing) btn.click(); }, RM ? 0 : 320);
   q('#fd').onclick = () => { stop(); const el = q('.fbot'); el.classList.add('away'); pop(420); setTimeout(() => { burst(...center(el), ['#fff', '#BDEBFA', '#63C4F2', C.c], 30); toast('Volvió al mar. Llega otra.', C.c); go('primera', { i: i + 1 }); }, RM ? 0 : 420); };
@@ -918,7 +1003,7 @@ const DIST = ['Barranco', 'Jesús María', 'Lince', 'Miraflores', 'Pueblo Libre'
 function renderSobre() {
   const v = $('#v-sobre'); let d = store.get('dist', null);
   const draw = () => {
-    v.innerHTML = `<div class="top"><button class="push sq" data-go="${uid() ? 'sobre' : 'cuenta'}" data-p='{"i":3}' aria-label="Volver">${ico('back')}</button><span class="k mute">Tu perfil · 1 de 2</span><span class="k mute3">1/2</span></div>
+    v.innerHTML = `<div class="top">${uid() ? '<span style="width:48px"></span>' : `<button class="push sq" data-go="cuenta" data-p='{"i":3}' aria-label="Volver">${ico('back')}</button>`}<span class="k mute">Tu perfil · 1 de 2</span><span class="k mute3">1/2</span></div>
       <h1 class="hx">¿En qué distrito vives?</h1>
       <p class="hint3" style="font-size:15px;margin-top:16px">${ico('lock', '#4A4458')}<span><b>Nunca se muestra.</b> Solo sirve para que te lleguen voces de gente cerca.</span></p>
       <div class="tgrid" role="radiogroup" aria-label="Distrito">${DIST.map(t => `<button class="chip" role="radio" style="--c:#181425;--on:#fff" aria-checked="${d === t}" data-d="${t}">${t}</button>`).join('')}</div>
@@ -1027,6 +1112,7 @@ function renderPlayer(anim) {
     });
   };
   E('pp').onclick = () => {
+    if (!playing) ev('escucha_playa', { h: innerHeight });
     if (playing) { stop(); E('pp').innerHTML = ico('play', C.on); return; }
     if (!S.heard.includes(b.id)) { S.heard.push(b.id); store.set('heard', S.heard); if (LIVE) rpc('open_delivery', { p_id: b.id }).catch(() => {}); uncork(b, () => { renderBeach(); start(); }); }
     else start();
@@ -1105,7 +1191,7 @@ function renderLanzar(p = {}) {
       S.lastUrl = url; S.rec = { blob, secs, w, idea, dorada: !!p.dorada };
       $('#send').onclick = () => {
         if (LIVE && !blob) { toast('No se grabó nada. Graba otra vez.', '#D63434'); return; }
-        if (p.onb) { pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'sobre' : 'cuenta', { i: 0 }); return; }
+        if (p.onb) { ev('respondio_primera', { secs }); pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'sobre' : 'cuenta', { i: 0 }); return; }
         if (p.reply) { if (LIVE) { sendReply(p.reply, { blob, secs, w }, $('#send')); return; } pop(700); burst(...center($('#send')), [C.c, C.h, '#fff'], 32); toast('Tu respuesta va en camino. Si te responde, empieza una conversación.', C.c); setTimeout(() => go('voces'), 400); return; }
         fling(0, -1.6);
       };
@@ -1114,7 +1200,7 @@ function renderLanzar(p = {}) {
   };
   let real = false, url = null, lw = null, blob = null, idea = null;
   const start = async () => { stop(); const ok = await MIC.start(); if (ok === false) { go('mic'); return; } if (ok === null) return; real = ok === true; rec = 1; secs = 0; drawRec(); timer = setInterval(() => { secs++; const rt = $('#rt'); if (!rt) { clearInterval(timer); if (real) MIC.stop(); return; } rt.textContent = mmss(secs); $('#lf').innerHTML = life(secs / 60); if (secs >= 60) end(); }, 1000); };
-  const end = async () => { clearInterval(timer); url = null; lw = null; blob = null; if (real) { const r = await MIC.stop(); if (r) { url = r.url; lw = r.w; blob = r.blob; } } secs = Math.max(secs, 1); rec = 2; drawRec(); };
+  const end = async () => { clearInterval(timer); url = null; lw = null; blob = null; if (real) { const r = await MIC.stop(); if (r) { url = r.url; lw = r.w; blob = r.blob; } } secs = Math.max(secs, 1); rec = 2; R.readyAt = Date.now(); if (!p.reply) ev('grabo', { secs }); drawRec(); };
   // gesto: la botella sigue al dedo con un resorte (tensión 180, fricción 12) y sale volando si la sueltas rápido hacia arriba
   let fling = () => {};
   function tossable(cat) {
@@ -1143,6 +1229,7 @@ function renderLanzar(p = {}) {
   draw();
 }
 function launch(cat) {
+  ev('lanzo', { cat, ms: R.readyAt ? Date.now() - R.readyAt : null, h: innerHeight });
   if (LIVE) { const r = S.rec || {}, k = r.dorada ? 'dorada' : cat;
     R.launching = (async () => { const path = await upload(r.blob, k); const row = one(await rpc('launch_bottle', { p_kind: KIND[cat] || 'Pregunta', p_body: r.idea || null, p_voice: path, p_secs: Math.max(1, Math.min(60, r.secs || 1)), p_peaks: peaksOf(r.w), p_type: 'free', p_topic: null, p_district: null, p_featured: !!r.dorada })); S.left = row.left_bottles; if (R.me) R.me.bottles = row.left_bottles; loadMine().catch(() => {}); return row.shores; })();
     go('lanzada', { cat: k }); return; }
@@ -1240,12 +1327,12 @@ function renderLlamada({ id = 'leo', demo } = {}) {
   const c = (CONV.find(x => x.id === id) || CONV[0] || NOC), C = CAT[c.cat], v = $('#v-llamada'); v.setAttribute('style', cvars(C));
   let s = 0;
   v.innerHTML = `<span class="k mute">Llamada de voz</span>
-    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
+    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.c, 1, 6)}</span></div>
     <h1 class="h1">${esc(c.who)}</h1>
     <span class="num" id="ct" style="font-size:36px">0:00</span>
     <p class="mute" style="max-width:28ch;margin:0 auto">Solo sus voces. Nadie ve una cara hasta que los dos quieran.</p>
     <button class="push hang" id="hang" aria-label="Colgar">${ico('phone', '#fff')}</button>`;
-  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada') return clearInterval(t); s++; if (s % 12 === 0) ct.textContent = mmss(s / 12); $('#oc').innerHTML = wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6, true); }, 83);
+  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada') return clearInterval(t); s++; if (s % 12 === 0) ct.textContent = mmss(s / 12); $('#oc').innerHTML = wave(W(7).slice(0, 12), C.c, 1, 6, true); }, 83);
   if (LIVE && demo && c.raw && c.raw.call_voice) signed([c.raw.call_voice]).then(() => { if (cur === 'llamada') play({ url: R.urls.get(c.raw.call_voice), t: c.raw.call_secs || 20 }, () => {}); }).catch(() => {});
   $('#hang').onclick = () => { clearInterval(t); go('chat', { id }); };
 }
@@ -1718,6 +1805,7 @@ const POS = WB.map(b => ({ x: b.x, y: b.y, w: b.w, sea: b.sea, d: b.d, dl: b.dl,
 // las botellas de bienvenida son las de ejemplo del servidor: al crear tu cuenta, tu respuesta le llega a esa persona
 const WEL = { leo: ['5a5ab000-0000-4000-8000-000000000002', 'Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.'], belen: ['5a5ab000-0000-4000-8000-000000000007', 'El día que me perdí en el Centro y terminó siendo lo mejor.'], ivan: ['5a5ab000-0000-4000-8000-000000000004', '¿Qué canción te devuelve a tus 15 años?'], caro: ['5a5ab000-0000-4000-8000-000000000010', '¿Cuál es el mejor atardecer que has visto en Lima?'], noche: ['5a5ab000-0000-4000-8000-000000000001', '¿Qué harías un domingo si nadie en esta ciudad te conociera?'] };
 const uid = () => R.ses && R.ses.user ? R.ses.user.id : null;
+const ev = (name, props) => { if (!LIVE || !sb) return; try { sb.from('events').insert({ name, props: props || null, user_id: uid() }).then(() => {}, () => {}); } catch (e) {} };
 async function rpc(n, a) { const { data, error } = await sb.rpc(n, a); if (error) throw error; return data; }
 const one = d => Array.isArray(d) ? d[0] : d;
 const hashS = s => { let h = 7; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return Math.abs(h); };
@@ -2009,6 +2097,7 @@ function renderChatLive({ id } = {}) {
 
 /* ---------- arranque ---------- */
 async function liveBoot() {
+  ev('abrio', { h: innerHeight, w: innerWidth });
   WB.forEach(b => { if (WEL[b.id]) b.q = WEL[b.id][1]; });
   const qs = new URLSearchParams(location.search), code = qs.get('c');
   if (code) { const c = code.trim().toUpperCase(); store.set('code', c); history.replaceState(null, '', location.pathname + location.hash); rpc('check_code', { p_code: c }).then(ok => store.set('codeok', !!ok)).catch(() => {}); }
@@ -2200,12 +2289,12 @@ function renderLlamadaLive(id) {
   if (!CALL) { setTimeout(() => go('chat', { id }), 0); return; }
   const lab = () => !CALL ? '' : CALL.state === 'live' ? mmss((Date.now() - CALL.t0) / 1000) : CALL.state === 'connecting' ? 'Conectando…' : 'Llamando…';
   v.innerHTML = `<span class="k mute">Llamada de voz</span>
-    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
+    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.c, 1, 6)}</span></div>
     <h1 class="h1">${esc(c.name)}</h1>
     <span class="num" id="ct" style="font-size:36px">${lab()}</span>
     <p class="mute" style="max-width:28ch;margin:0 auto">Solo sus voces. Nadie ve una cara hasta que los dos quieran.</p>
     <button class="push hang" id="hang" aria-label="Colgar">${ico('phone', '#fff')}</button>`;
-  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada' || !CALL) return clearInterval(t); ct.textContent = lab(); if (CALL.state === 'live') $('#oc').innerHTML = wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6, true); }, 250);
+  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada' || !CALL) return clearInterval(t); ct.textContent = lab(); if (CALL.state === 'live') $('#oc').innerHTML = wave(W(7).slice(0, 12), C.c, 1, 6, true); }, 250);
   $('#hang').onclick = () => { clearInterval(t); callEnd(CALL && CALL.state === 'live' ? 'La llamada terminó.' : ''); };
 }
 
@@ -2226,6 +2315,7 @@ function show(name, p) {
   cur = name;
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + name));
   VIEWS[name](p);
+  longLabels(name);
   refresh(name, p);
   $('#nav').hidden = NONAV.includes(name);
   $('#app').classList.toggle('bare', NONAV.includes(name));
@@ -2233,6 +2323,7 @@ function show(name, p) {
   if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
   scrollTo(0, 0);
 }
+function longLabels(name) { document.querySelectorAll(`#v-${name} .btn, #v-${name} .k`).forEach(e => { if (e.textContent.trim().length > 18) e.classList.add('lg'); }); }
 function go(name, p = {}) {
   if (!VIEWS[name]) name = 'playa';
   stop(); $('#ov').innerHTML = '';
