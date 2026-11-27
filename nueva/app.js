@@ -194,22 +194,23 @@ R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: '
   <div class="top"><button class="ib edge" data-go="${first ? 'bienvenida' : 'mar'}" aria-label="Cerrar">${I.x}</button><span class="cap">${esc(b.kind)}</span><span style="width:44px"></span></div>
   <div class="grow center" id="fallback"></div>
   <div id="stage">
-    <p class="head center">Alguien que ama ${esc(b.theme)} te escribió.</p>
+    <p class="center" style="margin:0"><span class="rtag" style="--c:${b.c}"><i></i>${esc(b.tag)} · ${esc(b.kind)}</span></p>
+    <p class="head center mt2">Alguien que ama ${esc(b.theme)} te dejó ${b.kind === 'Pregunta' ? 'una pregunta' : b.kind === 'Confesión' ? 'una confesión' : 'una historia'}.</p>
     <div class="mt3"><button class="hold" id="hold" aria-label="Mantén para abrir"><svg class="r" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47"/></svg><svg class="ico" viewBox="0 0 24 24"><path d="M9 3h6v4H9zM10 7v3l-3 3v7.5A1.5 1.5 0 0 0 8.5 22h7a1.5 1.5 0 0 0 1.5-1.5V13l-3-3V7"/></svg></button></div>
     <p class="cap center mt2">Mantén para abrir</p>
   </div>`,
   bind(el) {
-    if (!window.Mar || !Mar.ok) $('#fallback', el).innerHTML = `<div style="width:62%;margin:12vh auto 0;transform:rotate(-14deg)">${bottleSVG(b.c)}</div>`;
+    if (!window.Mar || !Mar.ok) { el.classList.add('flat'); el.style.setProperty('--c', b.c); $('#fallback', el).innerHTML = `<div class="obot"><span class="rip"></span>${voiceBottle(b.c, PK[b.v] && PK[b.v][1])}</div>`; }
     const h = $('#hold', el), ring = $('circle', h); let t0 = 0, raf, done = false;
-    const tick = () => { const p = Math.min(1, (performance.now() - t0) / 900); ring.style.strokeDashoffset = 295 * (1 - p); window.Mar && Mar.uncork(p * .7); if (p >= 1) return open(); raf = requestAnimationFrame(tick); };
+    const tick = () => { const p = Math.min(1, (performance.now() - t0) / 900); ring.style.strokeDashoffset = 295 * (1 - p); window.Mar && Mar.uncork(p * .7); el.style.setProperty('--u', p.toFixed(3)); if (p >= 1) return open(); raf = requestAnimationFrame(tick); };
     const down = e => { if (done) return; e.preventDefault(); t0 = performance.now(); tick(); };
     const up = () => { if (done) return; cancelAnimationFrame(raf); ring.style.transition = 'stroke-dashoffset .3s'; ring.style.strokeDashoffset = 295; setTimeout(() => ring.style.transition = '', 300); window.Mar && Mar.uncork(0); };
     h.addEventListener('pointerdown', down); h.addEventListener('pointerup', up); h.addEventListener('pointerleave', up);
     h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
     function open() {
-      done = true; track('botella_escuchada', { id, first }); navigator.vibrate && navigator.vibrate(12);
+      done = true; track('botella_escuchada', { id, first }); navigator.vibrate && navigator.vibrate(12); el.classList.add('opened'); if (el.classList.contains('flat')) popSound();
       let c = .7; const pop = () => { c = Math.min(1, c + .03); window.Mar && Mar.uncork(c); if (c < 1) requestAnimationFrame(pop); }; pop();
-      $('#stage', el).innerHTML = `<article class="paper in"><p class="who"><i class="orb" style="background:${b.c}"></i>Alguien que ama ${esc(b.theme)}</p><p class="q">${esc(b.q)}</p>${player(b.v)}</article>
+      $('#stage', el).innerHTML = `<article class="paper in" style="--c:${b.c}"><p class="who"><i class="orb" style="background:${b.c}"></i>Alguien que ama ${esc(b.theme)} · ${esc(b.kind)}</p><p class="q">${esc(b.q)}</p>${player(b.v)}</article>
         <div class="row-btns mt2"><button class="btn btn-a" id="reply">${I.mic}Responder con mi voz</button><button class="btn btn-q" id="pass">Devolverla al mar</button></div>`;
       $('#reply', el).onclick = () => go('grabar', { id, first });
       $('#pass', el).onclick = () => { const before = [...S.shore]; S.shore = S.shore.filter(x => x !== id); save(); first ? go('cuenta') : (go('mar'), toast('Volvió al mar. Le llegará a otra persona.', '#7FD8C9', () => { S.shore = before; save(); go('mar'); })); };
@@ -442,30 +443,38 @@ R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: '
 
 // Conversaciones.
 const stepsHTML = (st, cls = '') => `<span class="steps ${cls}">${[0, 1, 2, 3].map(i => `<i class="${i <= st ? 'on' : ''}"></i>`).join('')}</span>`;
-R.charlas = () => { const ids = Object.keys(S.convs); return { cls: 'tabbed', html: `
-  <div class="top"><span class="wm">botella</span><button class="me-pill" data-go="perfil">${voiceMark()}Tú</button></div>
-  <h1 class="title mt2 mb2">Conversaciones</h1>
-  ${ids.length ? `<div class="list">${ids.map(id => { const c = S.convs[id], b = B[id]; const last = c.msgs[c.msgs.length - 1]; return `
-    <button class="item" data-go="chat" data-p='{"id":"${id}"}'><i class="orb" style="background:${b.c};width:12px;height:12px"></i>
-    <span class="tx"><b>${c.stage >= 1 && b.name ? esc(b.name) : `Alguien que ama ${esc(b.theme)}`}</b><small>${last.f === 'them' ? 'Te respondió' : 'Esperando su voz'}</small></span>
-    <span style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span class="when">${esc(c.when)}</span>${c.unread ? '<i class="unread"></i>' : stepsHTML(c.stage, 'mini')}</span></button>`; }).join('')}</div>`
-  : `<p class="sub">Cuando respondas una botella, la conversación aparece aquí.</p>`}
-  ${S.shore.length ? `<div class="grow"></div><button class="item waiting" data-go="mar"><span class="ic">${I.bottle}</span><span class="tx"><b>${S.shore.length === 1 ? 'Una botella te espera' : `${S.shore.length} botellas te esperan`}</b><small>Escúchalas en el Mar</small></span>${I.chev}</button>` : ''}` }; };
+const theirPk = id => (PK[B[id].v] || [0, fakePeaks(id.length)])[1];
+const theirMark = (id, cls = '') => { const c = B[id].c; return voiceMark(cls, theirPk(id), [c, `color-mix(in oklab, ${c}, #fff 35%)`, `color-mix(in oklab, ${c}, #05121F 30%)`]); };
+const pathHTML = st => `<span class="path">${STEP.map((t, i) => `<span class="${i < st ? 'done' : i === st ? 'now' : ''}"><i></i>${t}</span>`).join('')}</span>`;
+R.charlas = () => { const ids = Object.keys(S.convs).sort((x, y) => (S.convs[y].unread ? 1 : 0) - (S.convs[x].unread ? 1 : 0)); const nu = ids.filter(k => S.convs[k].unread).length;
+  return { cls: 'tabbed', html: `
+  <div class="top"><span class="wm">botella</span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></div>
+  <h1 class="title mt1">Conversaciones</h1>
+  <p class="sub mt1">${ids.length ? (nu ? `${nu === 1 ? 'Una voz nueva te espera.' : `${nu} voces nuevas te esperan.`}` : `${n_(ids.length, 'conversación', 'conversaciones')}. Todas por voz.`) : 'Cuando respondas una botella, la conversación aparece aquí.'}</p>
+  <div class="convs mt3">${ids.map(id => { const c = S.convs[id], b = B[id], last = c.msgs.filter(m => m.v).pop(), named = c.stage >= 1 && b.name, secs = last ? (PK[last.v] ? PK[last.v][0] : last.s || 8) : 0;
+    return `<button class="conv${c.unread ? ' new' : ''}" style="--c:${b.c}" data-go="${c.unread && !c.cel ? 'respondio' : 'chat'}" data-p='{"id":"${id}"}'>
+      ${theirMark(id)}
+      <span class="cx"><span class="ctop"><b>${named ? esc(b.name) : `Alguien que ama ${esc(b.theme)}`}</b><span class="when">${esc(c.when)}</span></span>
+      <span class="cq">“${esc(b.q)}”</span>
+      <span class="clast">${last && last.f === 'them' ? `<span class="pip">${I.play}</span>${c.unread ? 'Nueva nota de voz' : 'Te respondió'} · ${fmt(secs)}` : `<span class="pip me">${I.check}</span>Le respondiste. Esperando su voz`}</span>
+      ${pathHTML(c.stage)}</span></button>`; }).join('')}</div>
+  ${S.shore.length ? `<div class="grow"></div><button class="waitc mt3" data-go="mar"><span class="wb">${S.shore.slice(0, 3).map(k => `<span class="mb">${voiceBottle(B[k].c)}</span>`).join('')}</span><span class="tx"><b>${S.shore.length === 1 ? 'Una botella flota en el mar' : `${S.shore.length} botellas flotan en el mar`}</b><small>Escúchalas y responde la que quieras</small></span>${I.chev}</button>` : ''}` }; };
 
 // Chat: la ficha arriba (pregunta y pasos), las voces al medio, el siguiente paso y el micrófono abajo.
 const STEP = ['Voces', 'Nombres', 'Llamada', 'Plan'];
 R.chat = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id]; c.unread = false; save(); const who = () => c.stage >= 1 && b.name ? b.name : `Alguien que ama ${b.theme}`; return { cls: 'chat', html: `
-  <div class="top"><button class="ib" data-go="charlas" aria-label="Atrás">${I.back}</button><span class="mid" id="who">${esc(who())}</span><button class="ib" id="menu" aria-label="Más opciones">${I.more}</button></div>
-  <div class="ficha"><p class="q">“${esc(b.q)}”</p><div id="st"></div></div>
+  <div class="top ctop2" style="--c:${b.c}"><button class="ib" data-go="charlas" aria-label="Atrás">${I.back}</button><span class="chead">${theirMark(id)}<span><b id="who">${esc(who())}</b><small>Les une ${esc(b.theme)}</small></span></span><button class="ib" id="menu" aria-label="Más opciones">${I.more}</button></div>
+  <div class="ficha" style="--c:${b.c}"><p class="fk"><i></i>Su ${esc(b.kind.toLowerCase())}</p><p class="q">${esc(b.q)}</p><div id="st"></div></div>
   <div class="thread" id="th"></div>
   <div class="dock"><button class="next" id="next"></button><button class="rec" id="rec" aria-label="Grabar nota de voz">${I.mic}</button></div>`,
   bind(el) {
     const th = $('#th', el), st = $('#st', el), next = $('#next', el);
     const counts = () => ({ them: c.msgs.filter(m => m.f === 'them').length, me: c.msgs.filter(m => m.f === 'me').length });
+    el.style.setProperty('--c', b.c);
     const msgHTML = m => m.f === 'sys' ? `<p class="sys">${m.t}</p>` : m.f === 'plan' ? `<div class="plan"><small>${m.ok ? 'Plan aceptado' : 'Propusiste'}</small><b>${esc(m.t)}</b></div>` : `<div class="msg ${m.f}">${player(m.v, { mine: m.f === 'me', secs: m.s })}</div>`;
     const draw = () => {
       th.innerHTML = c.msgs.map(msgHTML).join(''); $('#who', el).textContent = who();
-      st.innerHTML = `${stepsHTML(c.stage)}<div class="lbls">${STEP.map((s, i) => i === c.stage ? `<b>${s}</b>` : `<span>${s}</span>`).join('')}</div>`;
+      st.innerHTML = pathHTML(c.stage);
       const k = counts(), need = Math.max(0, 2 - k.them) + Math.max(0, 2 - k.me);
       const N = [
         need ? [need === 1 ? '1 nota más para ver nombres' : `${need} notas más para ver nombres`, null] : [`${I.eye}Compartir mi nombre`, askName],
@@ -512,6 +521,33 @@ R.respondio = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id] || {}; c.ce
   bind(el) { const go1 = () => { el.classList.add('pop'); popSound(); navigator.vibrate && navigator.vibrate([18, 40, 70]); };
     setTimeout(go1, 950); } }; };
 
+
+// Tu mes, estilo Wrapped: historias a pantalla completa. Toca a la derecha para avanzar, a la izquierda para volver.
+R.mes = () => { const cs = myColors(), pk = myPk(), mesN = new Date().toLocaleDateString('es-PE', { month: 'long', timeZone: 'America/Lima' }).toLowerCase(), Mes = mesN[0].toUpperCase() + mesN.slice(1);
+  const heard = S.sent.reduce((t, x) => t + reachOf(x), 0), ans = S.sent.reduce((t, x) => t + (x.ans || 0), 0) + Object.keys(S.convs).length;
+  const notas = S.sent.length + Object.values(S.convs).reduce((t, c) => t + c.msgs.filter(m => m.f === 'me').length, 0) + 9, mins = Math.max(3, Math.round(notas * 34 / 60)), top = MAPA[0], best = streak() + 3;
+  const SL = [
+    { c1: cs[0], c2: cs[1], h: `<p class="wk">Tu ${mesN} en Botella</p>${voiceMark('wx', pk, cs)}<h2>Este mes, tu voz viajó por Lima.</h2><p>Mira hasta dónde llegó.</p>` },
+    { c1: '#7FD8C9', c2: '#3A6A8E', h: `<p class="wk">Te escucharon</p><b class="wn" data-n="${heard}">0</b><h2>personas escucharon tu voz.</h2><p>Sin ver tu cara. Solo por lo que dijiste.</p>` },
+    { c1: top[2], c2: '#05121F', h: `<p class="wk">Tu tema</p><h2 class="wt">${top[0]}</h2><p>Fue lo que más conectó contigo. ${top[1]} personas que lo aman te respondieron.</p><div class="wdots">${MAPA.map(([t, k, c]) => `<span style="--c:${c};--s:${10 + k * 6}px"><i></i>${t}</span>`).join('')}</div>` },
+    { c1: cs[2], c2: cs[0], h: `<p class="wk">Hablaste</p><b class="wn" data-n="${mins}">0</b><h2>minutos con gente nueva.</h2><p>En ${notas} notas de voz y ${n_(ans, 'conversación', 'conversaciones')}.</p>${waveLine(pk, 40)}` },
+    { c1: '#FFC24B', c2: '#FF8E9E', h: `<p class="wk">Tu racha más larga</p><b class="wn" data-n="${best}">0</b><h2>días seguidos grabando tu voz.</h2><p>Pocas personas llegan a tanto.</p>` },
+    { c1: cs[0], c2: cs[2], h: `<div class="wcard"><p class="wk">Mi ${mesN} en Botella</p>${voiceMark('wx sm2', pk, cs)}<div class="wrow"><span><b>${heard}</b>me escucharon</span><span><b>${mins} min</b>de voz</span><span><b>${top[0]}</b>mi tema</span></div><p class="wbrand">botella · conoce gente por su voz</p></div><div class="row-btns mt3"><button class="btn rbtn" id="share">Compartir mi mes</button><button class="btn btn-q" data-go="perfil">Volver a mi perfil</button></div>` }
+  ];
+  return { cls: 'clear wrapped', html: `
+  <div class="wbars">${SL.map(() => '<i><b></b></i>').join('')}</div>
+  <button class="ib wclose" data-go="perfil" aria-label="Cerrar">${I.x}</button>
+  <div class="wslides">${SL.map((x, i) => `<section class="ws" style="--c1:${x.c1};--c2:${x.c2}" data-i="${i}">${x.h}</section>`).join('')}</div>
+  <button class="wnav wprev" aria-label="Anterior"></button><button class="wnav wnext" aria-label="Siguiente"></button>`,
+  bind(el) { const ws = $$('.ws', el), bars = $$('.wbars i', el); let i = -1, tm; track('mes_visto');
+    const count = s => $$('.wn', s).forEach(b => { const n = +b.dataset.n, t0 = performance.now(); const f = t => { const p = Math.min(1, (t - t0) / 1100); b.textContent = Math.round(n * (1 - Math.pow(1 - p, 3))); if (p < 1 && document.body.contains(b)) requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    const show = k => { if (k < 0) k = 0; if (k >= ws.length) return go('perfil'); i = k; clearTimeout(tm);
+      ws.forEach((s, j) => s.classList.toggle('on', j === i)); el.classList.toggle('last', i === ws.length - 1); bars.forEach((b, j) => { b.className = j < i ? 'done' : j === i ? 'run' : ''; });
+      count(ws[i]); navigator.vibrate && navigator.vibrate(5); if (i < ws.length - 1) tm = setTimeout(() => document.body.contains(el) && show(i + 1), 5200); };
+    $('.wnav.wnext', el).onclick = () => show(i + 1); $('.wnav.wprev', el).onclick = () => show(i - 1);
+    $('#share', el).onclick = () => { track('mes_compartido'); const t = 'Mi mes en Botella: me escucharon personas que no conozco, solo por mi voz.'; navigator.share ? navigator.share({ title: 'Botella', text: t, url: 'https://botella-app.vercel.app' }).catch(() => {}) : (navigator.clipboard && navigator.clipboard.writeText(t + ' https://botella-app.vercel.app').catch(() => {}), toast('Copiado para compartir')); };
+    show(0); } }; };
+
 // Llamada: solo voz, una esfera que respira.
 R.llamada = ({ id = 'leo' }) => { const b = B[id]; return { cls: 'call clear', html: `
   <p class="cap">Llamada de voz</p><h1 class="title">${esc(b.name)}</h1><p class="sub" id="ct">Conectando…</p>
@@ -555,14 +591,14 @@ const friendRow = (c, ic, t, s, attr) => `<button class="frow" style="--c:${c}" 
 R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = myPk();
   const heard = S.sent.reduce((t, x) => t + (x.heard || 0), 0) + 23, ans = S.sent.reduce((t, x) => t + (x.ans || 0), 0) + Object.keys(S.convs).length;
   const notas = S.sent.length + Object.values(S.convs).reduce((t, c) => t + c.msgs.filter(m => m.f === 'me').length, 0) + 9;
-  const mes = new Date().toLocaleDateString('es-PE', { month: 'long', timeZone: 'America/Lima' }), top = MAPA[0];
+  const mes = new Date().toLocaleDateString('es-PE', { month: 'long', timeZone: 'America/Lima' }).toLowerCase(), top = MAPA[0];
   const sent = S.sent.slice(0, 3), lec = S.lec[0], la = S.lec.reduce((t, l) => t + l.ans.length, 0), goOut = S.outs.filter(o => o.go).length;
   return { cls: 'pin', html: `
   ${back('mar')}
   <div class="me-head mt1">${voiceMark('big', pk, cs)}<span><h1 class="title">${esc(S.name || 'Tú')}</h1><span class="tchips">${S.temas.map(t => `<span style="--c:${tc(t)}"><i></i>${esc(t)}</span>`).join('')}</span></span></div>
 
-  <button class="month mt3" data-go="mapa" style="--c1:${cs[0]};--c2:${cs[1]};--c3:${cs[2]}">
-    <span class="mlbl">Tu ${mes[0].toUpperCase() + mes.slice(1)} en Botella</span>
+  <button class="month mt3" data-go="mes" style="--c1:${cs[0]};--c2:${cs[1]};--c3:${cs[2]}">
+    <span class="mlbl">Tu ${mes} en Botella · Toca para verlo</span>
     <b class="mbig">${heard} personas escucharon tu voz.</b>
     <span class="mrow"><span><b>${ans}</b>te respondieron</span><span><b>${notas}</b>notas de voz</span><span><b style="color:${top[2]}">${top[0]}</b>tu tema más escuchado</span></span>
     ${waveLine(pk)}
@@ -782,7 +818,7 @@ R.dos = () => { const d = S.duo; return d ? { html: `
   ${back()}
   <h1 class="title mt1">Botella para dos</h1>
   <div class="pair mt3"><span class="pb1">${voiceBottle(myColors()[0], myPk())}<small>Tu voz</small></span><span class="plus">+</span><span class="pb2">${voiceBottle('#7CC8FF')}<small>La de tu amigo</small></span></div>
-  <ol class="steps mt3"><li><b>1</b>Grabas tu mitad</li><li><b>2</b>Tu amigo graba la suya</li><li><b>3</b>Sale al mar con las dos voces</li></ol>
+  <ol class="dsteps mt3"><li><b>1</b>Grabas tu mitad</li><li><b>2</b>Tu amigo graba la suya</li><li><b>3</b>Sale al mar con las dos voces</li></ol>
   <div class="grow"></div><div class="rec-wrap" id="rw"></div><div class="grow"></div><div id="after"></div>`,
   bind(el) { recUI(el, 'Desliza para invitar', r => { S.duo = { url: r.url, secs: r.secs, friend: false }; saveX(); go('dos'); toast('Enlace copiado. Mándaselo a tu amigo.'); }); } }; };
 
