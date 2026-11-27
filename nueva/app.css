@@ -542,6 +542,12 @@ svg{display:block}
 .anscard .player .pb{background:var(--c);color:#05121F}
 .aact{display:flex;justify-content:flex-end}.aact .chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}
 .mini{padding:12px 14px;border-radius:var(--r-s);background:var(--s1);display:grid;gap:8px}.mini small{font-size:12px;color:var(--fg-3)}
+/* alcance sin tope (Cesar 27/11) */
+.bignum{display:grid;justify-items:center;gap:2px}
+.bignum b{font-size:72px;font-weight:300;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums;color:var(--a)}
+.bignum span{color:var(--fg-2)}
+.rbar{display:block;height:4px;border-radius:2px;background:color-mix(in oklab,var(--c,var(--a)),transparent 75%);overflow:hidden}
+.rbar i{display:block;height:100%;border-radius:2px;background:var(--c,var(--a))}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
