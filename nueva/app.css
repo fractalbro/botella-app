@@ -800,6 +800,20 @@ svg{display:block}
 .cinecv{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
 .cine.opened>.cineimg{opacity:.45;filter:blur(2px)}
 .cine .bignum b{font-size:56px}
+
+/* ===== Texto sobre foto (27/11): zona de lectura, destellos fuera del texto, grises firmes ===== */
+.scr.cine::before{height:66%;background:linear-gradient(to top,#03080F 40%,rgba(3,8,15,.6) 68%,rgba(3,8,15,0))}
+.scr.cine::after{content:"";position:fixed;inset:0 0 auto;height:120px;background:linear-gradient(rgba(3,8,15,.55),rgba(3,8,15,0));pointer-events:none;z-index:0}
+.cinecv{-webkit-mask-image:linear-gradient(#000 38%,transparent 56%);mask-image:linear-gradient(#000 38%,transparent 56%)}
+.cine .cap,.cine .sub,.cine .btn-q{color:rgba(244,239,231,.78)}
+.cine .display,.cine .head,.cine .bignum{text-shadow:0 2px 28px rgba(3,8,15,.7)}
+.cine .rtag{background:rgba(3,8,15,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(244,239,231,.12)}
+.paper .who{color:rgba(42,32,22,.78)}
+.scr.cine:has(#rb)>.cineimg{top:-12vh}
+.cine .bignum span{text-align:center;max-width:290px;margin-inline:auto;text-wrap:balance}
+/* La foto y los botones toman el color de la botella (abrir) o del tema (lanzada) */
+.scr.cine[style*="--a"] .btn-a{background:linear-gradient(180deg,color-mix(in oklab,var(--a),#fff 28%),var(--a));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 12px 30px -12px color-mix(in oklab,var(--a),transparent 40%)}
+.cine>.cineimg{transition:opacity .6s,filter .8s}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}

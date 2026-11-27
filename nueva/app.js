@@ -188,9 +188,26 @@ const CINE = {
   lanzada: { src: 'img/lanzada.jpg', w: 864, h: 1536, glow: [0.385, 0.355, 0.05], band: [0.36, 0.6], bandX: [0.22, 0.6], moon: [0.585, 0.205], stars: 0.22 },
   web: { src: 'img/hero-cine.jpg', w: 1536, h: 864, glow: [0.72, 0.68, 0.09], band: [0.4, 0.66], moon: [0.84, 0.13], stars: 0.35, pos: 'center' }
 };
-const cineLive = (host, key) => {
+// Teñir la foto: solo cambia el turquesa (botella, olas que brillan) al color de la botella; el cielo y la arena quedan igual.
+const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const tintCache = {};
+const tintPhoto = (src, hex) => tintCache[src + hex] || (tintCache[src + hex] = new Promise(ok => { const im = new Image(); im.onload = () => {
+  const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), a = d.data, [tr, tg, tb] = hexRgb(hex);
+  const tmx = Math.max(tr, tg, tb) / 255, tmn = Math.min(tr, tg, tb) / 255; let th = 0; { const r = tr / 255, g = tg / 255, b = tb / 255, dd = tmx - tmn; if (dd) th = tmx === r ? ((g - b) / dd) % 6 : tmx === g ? (b - r) / dd + 2 : (r - g) / dd + 4; th *= 60; if (th < 0) th += 360; }
+  const ts = tmx ? (tmx - tmn) / tmx : 0;
+  for (let i = 0; i < a.length; i += 4) { const r = a[i] / 255, g = a[i + 1] / 255, b = a[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), dl = mx - mn; if (!dl || mx < .08) continue;
+    let h = mx === r ? ((g - b) / dl) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4; h *= 60; if (h < 0) h += 360; const sat = dl / mx;
+    // peso: turquesa puro (175°) pesa 1; se apaga hacia 150° y 200° (el azul de la noche queda fuera)
+    const w = Math.min(1, Math.max(0, 1 - Math.abs(h - 176) / 28) * 2) * Math.min(1, Math.max(0, dl - .04) * 6); if (w < .02) continue;
+    // el color nuevo se calcula entero y se mezcla con el original (así no aparecen tonos intermedios como el verde)
+    const ns = Math.min(sat, ts * .85), v = mx, cc = v * ns, X = cc * (1 - Math.abs((th / 60) % 2 - 1)), m = v - cc, k = Math.floor(th / 60) % 6;
+    const [R, G, Bb] = [[cc, X, 0], [X, cc, 0], [0, cc, X], [0, X, cc], [X, 0, cc], [cc, 0, X]][k]; a[i] = a[i] * (1 - w) + (R + m) * 255 * w; a[i + 1] = a[i + 1] * (1 - w) + (G + m) * 255 * w; a[i + 2] = a[i + 2] * (1 - w) + (Bb + m) * 255 * w; }
+  x.putImageData(d, 0, 0); c.toBlob(b => ok(URL.createObjectURL(b)), 'image/jpeg', .9); }; im.onerror = () => ok(src); im.src = src; }));
+const cineLive = (host, key, tint) => {
   const C = CINE[key], cv = document.createElement('canvas'), cx = cv.getContext('2d'); cv.className = 'cinecv'; host.appendChild(cv);
-  host.style.backgroundImage = `url(${C.src})`; if (C.pos) host.style.backgroundPosition = C.pos;
+  const glowRgb = tint ? hexRgb(tint).join(',') : '127,216,201', sparkRgb = tint ? hexRgb(tint).map(v => Math.min(255, v + 30)).join(',') : '127,232,214';
+  if (tint) { host.style.opacity = 0; tintPhoto(C.src, tint).then(u => { host.style.backgroundImage = `url(${u})`; host.style.opacity = ''; }); } else host.style.backgroundImage = `url(${C.src})`; if (C.pos) host.style.backgroundPosition = C.pos;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches; let raf = 0, P = [], S = [], G = [], boost = 0, flash = 0, W = 0, H = 0, sc = 1, ox = 0, oy = 0;
   const map = (fx, fy) => [ox + fx * C.w * sc, oy + fy * C.h * sc];
   const size = () => { const r = Math.min(devicePixelRatio || 1, 2); W = host.clientWidth; H = host.clientHeight; if (!W) return; cv.width = W * r; cv.height = H * r; cx.setTransform(r, 0, 0, r, 0, 0);
@@ -203,9 +220,9 @@ const cineLive = (host, key) => {
   const draw = t => { t /= 1000; cx.clearRect(0, 0, W, H); cx.globalCompositeOperation = 'lighter';
     for (const q of S) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 6 * .9; if (a < .03) continue; const [x, y] = map(q.fx, q.fy); dot(x, y, 2.2 * q.z, '235,245,255', a); }
     for (const q of G) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 8 * .8; if (a < .03) continue; const [x, y] = map(C.moon[0] + q.dx * (q.fy - C.moon[1]) * 4, q.fy); dot(x, y, 3, '255,236,200', a); }
-    for (const q of P) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 4 * (.55 + boost * .4); if (a < .03) continue; const [x, y] = map(q.fx + Math.sin(t * .4 + q.p) * q.d, q.fy); dot(x, y, 3.2 * q.z, '127,232,214', a); }
+    for (const q of P) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 4 * (.55 + boost * .4); if (a < .03) continue; const [x, y] = map(q.fx + Math.sin(t * .4 + q.p) * q.d, q.fy); dot(x, y, 3.2 * q.z, sparkRgb, a); }
     const [gx, gy] = map(C.glow[0], C.glow[1]), gr = C.glow[2] * C.w * sc, br = .22 + .12 * Math.sin(t * 1.3) + boost * .45 + flash;
-    dot(gx, gy, gr * (1 + boost * .5 + flash * 2), '127,216,201', Math.min(1, br));
+    dot(gx, gy, gr * (1 + boost * .5 + flash * 2), glowRgb, Math.min(1, br));
     if (flash > 0) flash = Math.max(0, flash - .012);
     cx.globalCompositeOperation = 'source-over'; };
   const loop = t => { if (!document.body.contains(cv)) return; if (host.clientWidth !== W || host.clientHeight !== H) size(); if (W) draw(t); raf = still ? 0 : requestAnimationFrame(loop); };
@@ -240,7 +257,7 @@ R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: '
     <p class="cap center mt2">Mantén para abrir</p>
   </div>`,
   bind(el) {
-    const live = cineLive($('.cineimg', el), 'abrir');
+    const live = cineLive($('.cineimg', el), 'abrir', b.c); el.style.setProperty('--a', b.c);
     const h = $('#hold', el), ring = $('circle', h); let t0 = 0, raf, done = false;
     const tick = () => { const p = Math.min(1, (performance.now() - t0) / 900); ring.style.strokeDashoffset = 295 * (1 - p); live.boost(p); el.style.setProperty('--u', p.toFixed(3)); if (p >= 1) return open(); raf = requestAnimationFrame(tick); };
     const down = e => { if (done) return; e.preventDefault(); t0 = performance.now(); tick(); };
@@ -491,10 +508,10 @@ R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: '
   <div class="cineimg" aria-hidden="true"></div>
   <div class="grow"></div>
   <h1 class="display center">Va en camino.</h1>
-  <div class="bignum mt2" aria-live="polite"><b id="rb">0</b><span>personas ya la recibieron</span></div>
-  <p class="sub center mt2">Llega a todas las personas que aman ${esc(AMA[t] || t.toLowerCase())}, y sigue llegando a más hasta que alguien te responda.</p>
+  <div class="bignum mt2" aria-live="polite"><b id="rb">0</b><span>personas que aman ${esc(AMA[t] || t.toLowerCase())} ya la recibieron</span></div>
+  <p class="sub center mt2">Y sigue llegando a más gente hasta que alguien te responda.</p>
   <button class="btn btn-2 mt3" data-go="mar">Volver al mar</button>`,
-  bind(el) { cineLive($('.cineimg', el), 'lanzada'); const b = $('#rb', el), goal = 24 + Math.floor(Math.random() * 14); let n = 0; const t0 = (window.Mar && Mar.ok ? 2400 : 400);
+  bind(el) { const tc = TC[t] || '#7FD8C9'; cineLive($('.cineimg', el), 'lanzada', tc); el.style.setProperty('--a', tc); const b = $('#rb', el), goal = 24 + Math.floor(Math.random() * 14); let n = 0; const t0 = (window.Mar && Mar.ok ? 2400 : 400);
     setTimeout(() => { const iv = setInterval(() => { if (!document.body.contains(b)) return clearInterval(iv); n += n < goal ? 1 : (Math.random() < .04 ? 1 : 0); b.textContent = n; if (S.mine) { S.mine.reached = n; } }, n < goal ? 70 : 70); setTimeout(() => { if (S.mine) { const m = S.sent[0]; if (m) m.reached = n; saveX(); } }, 4000); }, t0); } }; };
 
 // Conversaciones.
