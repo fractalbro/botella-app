@@ -370,6 +370,17 @@ button.mrow:active{background:#F7EFDF}
 .spc .sbot{width:28px;margin-bottom:8px}
 .spc b{font:700 15px/1.24 var(--sans)}.spc small{font-size:13px;color:var(--ink-2);line-height:1.36}
 .spc.lock b,.spc.lock small{color:var(--ink-3)}
+.envio{width:100%;display:flex;flex-direction:column;gap:8px;padding:12px 16px 14px;margin-top:16px}
+.echips{display:flex;flex-wrap:wrap;gap:8px}
+.echips .chip{height:36px;padding:0 10px;font-size:12px}
+.echips .chip.off{opacity:.5}
+.edesc{font-size:13px;line-height:1.36;color:var(--ink-2)}
+.spm{display:flex;align-items:flex-start;gap:12px;padding:16px}
+.spm .sbot{width:26px;flex:none;margin-top:2px}
+.spm .tx{flex:1;display:flex;flex-direction:column;gap:4px}
+.spm b{font:700 15px/1.24 var(--sans)}.spm small{font-size:13px;color:var(--ink-2);line-height:1.36}
+.spm .gana{color:var(--ink-3)}
+.spm .num{font-size:22px;flex:none}
 .today2{display:flex;gap:12px;align-items:center;padding:12px;margin-top:16px}
 .today2 .tx{display:grid;gap:4px}.today2 b{font:700 15px/1.3 var(--sans)}.today2 small{font-size:12px;color:var(--ink-2)}
 .nextg{display:grid;gap:8px;padding:16px;margin-top:16px}
@@ -643,8 +654,21 @@ const CAT = {
   amarilla:{ n:'Aventuras',  g:'Aventuras',   d:'Viajes y anécdotas para contar siempre', c:'#FF8C2B', k:'#B85A12', h:'#FFD58A', on:'#181425' }
 };
 const KEYS = Object.keys(CAT);
-CAT.dorada = { n:'Dorada', g:'Botella dorada', d:'Sale primero en el mar de todos', c:'#FFC93C', k:'#C7891A', h:'#FFF1A6', on:'#181425' };
+CAT.dorada = { n:'Dorada', g:'Botella dorada', d:'Cualquiera puede abrirla, sin importar el tema', c:'#FFC93C', k:'#C7891A', h:'#FFF1A6', on:'#181425' };
 const INK = '#181425';
+// Tipos de botella: la misma definición en la versión elegante y en el servidor (launch_bottle). Ninguna se paga: todas se ganan.
+// Toda botella sigue llegando a más gente hasta que alguien responde; el tipo solo cambia con cuánta gente empieza y dónde se ve.
+const TIPO = {
+  free: ['Normal', 'Empieza con 12 personas que aman tu tema', 12, 'azul'],
+  far: ['Llega lejos', 'Empieza con 30 personas, también de temas cercanos', 30, 'morada'],
+  tide: ['Dorada', 'Además sale en Botellas doradas, donde cualquiera puede abrirla', 12, 'dorada']
+};
+const GANA = {
+  far: 'La ganas al terminar tu primer día y a los 10 días seguidos.',
+  tide: 'La ganas a los 2 días seguidos y cada lunes, si esa semana respondiste a alguien.',
+  gift: 'La ganas a los 5 y a los 21 días seguidos.'
+};
+const haveSp = () => LIVE && R.me ? { far: R.me.far_left, tide: R.me.tide_left, gift: R.me.gifts_left } : Object.assign({ far: 1, tide: 1, gift: 1 }, store.get('sp', {}));
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const quedan = n => n === 1 ? 'Te queda 1 hoy' : `Te quedan ${n} hoy`;
 const IDEAS = {
@@ -1152,13 +1176,12 @@ function renderLanzar(p = {}) {
     $('#v-lanzar').innerHTML = `<div class="top"><button class="push sq" data-go="playa" aria-label="Cerrar">${ico('x')}</button><span class="k mute">Lanzar botella</span><span style="width:48px"></span></div>
       <div class="row" style="gap:8px;margin:24px 0">${KEYS.map(k => `<span style="width:28px">${bottle(k, true)}</span>`).join('')}</div>
       <h1 class="hx">Por hoy lanzaste todas.</h1>
-      <p class="mute" style="margin:12px 0 0;font-size:16px">${LIVE ? 'Mañana te llega una más, y cada vez que respondes a alguien ganas otra. Si no quieres esperar, en el Muelle te damos más, gratis.' : 'Mañana tienes 4 más. Si no quieres esperar, en el Muelle te damos más, gratis.'}</p>
-      <button class="push card dockc" data-go="muelle" style="margin-top:32px"><span class="tile">${ico('dock', INK)}</span><span class="tx"><b>3 botellas más</b><small>Para un día con mucho que decir</small></span>${ico('chev', INK)}</button>
-      <button class="push btn blue" data-go="muelle" style="margin-top:24px">Ir al Muelle</button>
-      <button class="link" data-go="invitar">${LIVE ? 'Invita a alguien a Botella' : 'Invita a un amigo y los dos reciben una'}</button>`;
+      <p class="mute" style="margin:12px 0 0;font-size:16px">Mañana te llega una más. Y cada vez que respondes la botella de alguien, ganas otra.</p>
+      <button class="push btn blue" data-go="mar" style="margin-top:32px">Responder una botella</button>
+      <button class="link" data-go="muelle">Ver mis botellas especiales</button>`;
     return;
   }
-  let cat = p.reply ? p.reply.cat : store.get('lastcat', 'roja'), rec = 0, timer = null, secs = 0;
+  let cat = p.reply ? p.reply.cat : store.get('lastcat', 'roja'), rec = 0, timer = null, secs = 0, tipo = p.dorada ? 'tide' : 'free', myT = S.temas.length ? S.temas : TEMAS.slice(0, 3), tema = myT.includes(store.get('lasttema')) ? store.get('lasttema') : myT[0];
   const v = $('#v-lanzar');
   const draw = () => {
     const C = CAT[cat]; v.setAttribute('style', cvars(C));
@@ -1187,11 +1210,12 @@ function renderLanzar(p = {}) {
       const w = lw || W(secs + 7);
       z.innerHTML = `${p.reply ? '' : `<p class="catline"><span class="dot"></span>Botella de ${C.n.toLowerCase()}</p>`}<div class="box ready" style="width:100%"><span class="k mute3">Escucha cómo quedó</span><div class="wavebox" style="margin:8px 0 0"><button class="push sq play" id="lpl" aria-label="Escuchar lo que grabaste">${ico('play', C.on)}</button><span id="lwv" style="flex:1;display:flex">${wave(w, C.c, 1)}</span><span class="num">${mmss(secs)}</span><button class="push btn sm" id="again">Otra vez</button></div></div>
         ${p.reply ? `<button class="push btn c" id="send" style="margin-top:24px;height:64px">${ico('voz', C.on)} Enviar respuesta</button>` :
-        `<div class="pad" id="pad" style="width:100%"><div class="hint">${ico('up', 'currentColor')}<span>Desliza la botella hacia arriba</span></div><span class="toss" id="toss" role="button" tabindex="0" aria-label="Lanzar al mar">${bottle(cat)}</span></div>
+        `${envio()}<div class="pad" id="pad" style="width:100%"><div class="hint">${ico('up', 'currentColor')}<span>Desliza la botella hacia arriba</span></div><span class="toss" id="toss" role="button" tabindex="0" aria-label="Lanzar al mar">${bottle(cat)}</span></div>
          <button class="push btn c" id="send">${ico('bot', C.on)} Lanzar al mar</button>`}`;
       $('#again').onclick = () => { stop(); rec = 0; drawRec(); };
       $('#lpl').onclick = () => { const b = $('#lpl'); if (playing) { stop(); b.innerHTML = ico('play', C.on); $('#lwv').innerHTML = wave(w, C.c, 1); return; } b.innerHTML = ico('pause', C.on); play({ url, v: 'answer-1', t: secs }, pp => $('#lwv').innerHTML = wave(w, C.c, pp, 9, true, C.h), () => { b.innerHTML = ico('play', C.on); $('#lwv').innerHTML = wave(w, C.c, 1); }); };
-      S.lastUrl = url; S.rec = { blob, secs, w, idea, dorada: !!p.dorada };
+      S.lastUrl = url; S.rec = { blob, secs, w, idea, dorada: tipo === 'tide', tipo, tema };
+      bindEnvio();
       $('#send').onclick = () => {
         if (LIVE && !blob) { toast('No se grabó nada. Graba otra vez.', '#D63434'); return; }
         if (p.onb) { ev('respondio_primera', { secs }); pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'sobre' : 'cuenta', { i: 0 }); return; }
@@ -1201,6 +1225,14 @@ function renderLanzar(p = {}) {
       if (!p.reply) { tossable(cat); scrollTo(0, 0); }
     }
   };
+  // Antes de lanzar: a quién le llega (uno de tus temas) y cómo viaja (normal, que llega lejos o dorada).
+  const envio = () => { const h = haveSp(), T = TIPO[tipo];
+    return `<div class="box envio" id="envio"><span class="k mute3">Llega a quien ama</span><div class="echips" role="radiogroup" aria-label="Tema">${myT.map(t => `<button class="chip" role="radio" aria-checked="${t === tema}" aria-pressed="${t === tema}" data-tm="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      ${p.dorada ? '' : `<span class="k mute3" style="margin-top:12px">Cómo viaja</span><div class="echips" role="radiogroup" aria-label="Cómo viaja">${Object.keys(TIPO).map(k => `<button class="chip${k !== 'free' && !h[k] ? ' off' : ''}" role="radio" style="${cvars(CAT[TIPO[k][3]])}" aria-checked="${k === tipo}" aria-pressed="${k === tipo}" data-tp="${k}"><i></i>${TIPO[k][0]}${k === 'free' ? '' : ` ×${h[k] || 0}`}</button>`).join('')}</div>`}
+      <small class="mute edesc">${T[1]}. Y sigue llegando a más gente hasta que alguien responde.</small></div>`; };
+  const bindEnvio = () => { const e = $('#envio'); if (!e) return;
+    e.querySelectorAll('[data-tm]').forEach(b => b.onclick = () => { tema = b.dataset.tm; store.set('lasttema', tema); if (S.rec) S.rec.tema = tema; e.outerHTML = envio(); bindEnvio(); });
+    e.querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const k = b.dataset.tp; if (k !== 'free' && !haveSp()[k]) { toast(`No te quedan. ${GANA[k]}`, INK); return; } tipo = k; if (S.rec) { S.rec.tipo = k; S.rec.dorada = k === 'tide'; } pop(700); e.outerHTML = envio(); bindEnvio(); }); };
   let real = false, url = null, lw = null, blob = null, idea = null;
   const start = async () => { stop(); const ok = await MIC.start(); if (ok === false) { go('mic'); return; } if (ok === null) return; real = ok === true; rec = 1; secs = 0; drawRec(); timer = setInterval(() => { secs++; const rt = $('#rt'); if (!rt) { clearInterval(timer); if (real) MIC.stop(); return; } rt.textContent = mmss(secs); $('#lf').innerHTML = life(secs / 60); if (secs >= 60) end(); }, 1000); };
   const end = async () => { clearInterval(timer); url = null; lw = null; blob = null; if (real) { const r = await MIC.stop(); if (r) { url = r.url; lw = r.w; blob = r.blob; } } secs = Math.max(secs, 1); rec = 2; R.readyAt = Date.now(); if (!p.reply) ev('grabo', { secs }); drawRec(); };
@@ -1233,10 +1265,12 @@ function renderLanzar(p = {}) {
 }
 function launch(cat) {
   ev('lanzo', { cat, ms: R.readyAt ? Date.now() - R.readyAt : null, h: innerHeight });
-  if (LIVE) { const r = S.rec || {}, k = r.dorada ? 'dorada' : cat;
-    R.launching = (async () => { const path = await upload(r.blob, k); const row = one(await rpc('launch_bottle', { p_kind: KIND[cat] || 'Pregunta', p_body: r.idea || null, p_voice: path, p_secs: Math.max(1, Math.min(60, r.secs || 1)), p_peaks: peaksOf(r.w), p_type: 'free', p_topic: null, p_district: null, p_featured: !!r.dorada })); S.left = row.left_bottles; if (R.me) R.me.bottles = row.left_bottles; loadMine().catch(() => {}); return row.shores; })();
+  const r = S.rec || {}, tp = r.tipo || (r.dorada ? 'tide' : 'free'), k = tp === 'tide' ? 'dorada' : cat;
+  if (LIVE) {
+    R.launching = (async () => { const path = await upload(r.blob, k); const row = one(await rpc('launch_bottle', { p_kind: KIND[cat] || 'Pregunta', p_body: r.idea || null, p_voice: path, p_secs: Math.max(1, Math.min(60, r.secs || 1)), p_peaks: peaksOf(r.w), p_type: tp === 'far' ? 'far' : 'free', p_topic: r.tema ? T2S(r.tema) : null, p_district: null, p_featured: tp === 'tide' })); S.left = row.left_bottles; if (R.me) { R.me.bottles = row.left_bottles; R.me.far_left = row.left_far; R.me.tide_left = row.left_tide; } loadMine().catch(() => {}); return row.shores; })();
     go('lanzada', { cat: k }); return; }
-  S.left = Math.max(0, S.left - 1); store.set('left', S.left);
+  if (tp === 'free') { S.left = Math.max(0, S.left - 1); store.set('left', S.left); } else { const h = haveSp(); h[tp] = Math.max(0, (h[tp] || 0) - 1); store.set('sp', h); }
+  S.base = TIPO[tp][2];
   S.mine.unshift({ cat, q: 'Tu nota de voz de hoy', reach: 0, ans: 0, nuevo: false }); store.set('mine', S.mine); S.urls = [S.lastUrl || null, ...(S.urls || [])];
   go('lanzada', { cat });
 }
@@ -1250,9 +1284,9 @@ function renderLanzada({ cat = store.get('lastcat', 'roja') } = {}) {
     <div class="life box" id="rl" style="margin:16px auto 0">${life(0)}</div>
     <p class="mute" style="max-width:30ch;margin:16px auto 32px">Sigue llegando a más gente que ama lo mismo que tú, hasta que alguien te responda.</p>
     <button class="push btn blue" data-go="playa">Mientras, escucha una botella</button>
-    <button class="push card dockc" data-go="muelle" style="text-align:left"><span class="tile">${ico('dock', INK)}</span><span class="tx"><b id="lzl">${quedan(S.left)}</b><small>¿Quieres lanzar más? Pide botellas en el Muelle</small></span>${ico('chev', INK)}</button>`;
+    <button class="push card dockc" data-go="muelle" style="text-align:left"><span class="tile">${ico('dock', INK)}</span><span class="tx"><b id="lzl">${quedan(S.left)}</b><small>Cada vez que respondes una botella, ganas otra</small></span>${ico('chev', INK)}</button>`;
   setTimeout(() => { const d = $('#drop'); if (!d) return; const [x, y] = center(d); pop(420); burst(x, y + 8, ['#fff', '#BDEBFA', '#63C4F2', C.c, C.h], 48); d.classList.add('bob'); }, RM ? 0 : 760);
-  let n = 0, target = 128; if (LIVE) { target = 0; const pr = R.launching; R.launching = null; if (pr) pr.then(x => { target = x || 0; const l = $('#lzl'); if (l) l.textContent = quedan(S.left); }).catch(e => { toast(errMsg(e, 'Tu botella no salió. Intenta otra vez.'), '#D63434'); setTimeout(() => go('lanzar'), 900); }); }
+  let n = 0, target = S.base || 12; if (LIVE) { target = 0; const pr = R.launching; R.launching = null; if (pr) pr.then(x => { target = x || 0; const l = $('#lzl'); if (l) l.textContent = quedan(S.left); }).catch(e => { toast(errMsg(e, 'Tu botella no salió. Intenta otra vez.'), '#D63434'); setTimeout(() => go('lanzar'), 900); }); }
   const t = setInterval(() => { const c = $('#cnt'); if (!c || cur !== 'lanzada') return clearInterval(t); n = n < target ? Math.min(target, n + Math.ceil((target - n) / 8)) : n + (!LIVE && Math.random() < .3 ? 1 : 0); c.textContent = n; const cl = $('#cntl'); if (cl) cl.textContent = n === 1 ? 'persona ya la recibió' : 'personas ya la recibieron'; $('#rl').innerHTML = life(.12 + .6 * Math.min(1, n / (LIVE ? Math.max(1, target) : 160))); if (!LIVE && n === target && S.mine[0]) { S.mine[0].reach = target; store.set('mine', S.mine); } }, 120);
 }
 
@@ -1260,7 +1294,7 @@ function renderLanzada({ cat = store.get('lastcat', 'roja') } = {}) {
 function renderBotellas() {
   const tot = S.mine.reduce((a, m) => a + m.reach, 0), ans = S.mine.reduce((a, m) => a + m.ans, 0);
   $('#v-botellas').innerHTML = `<h1 class="h1">Mis botellas</h1>
-    <button class="push muellehero" data-go="muelle"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle · gratis</span><b>Pide más botellas</b><small>Paquetes para lanzar más y botellas especiales: doradas, que llegan lejos y de regalo.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ir al Muelle</span></button>
+    <button class="push muellehero" data-go="muelle"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Tus botellas especiales</b><small>Que llegan lejos, doradas y de regalo. Se ganan usando tu voz.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>
     <div class="stats box"><div><span class="num">${S.mine.length}</span><small>${S.mine.length === 1 ? 'botella lanzada' : 'botellas lanzadas'}</small></div><div><span class="num">${tot}</span><small>${tot === 1 ? 'persona las recibió' : 'personas las recibieron'}</small></div><div><span class="num">${ans}</span><small>${ans === 1 ? 'respuesta' : 'respuestas'}</small></div></div>
     <div class="sec"><span class="h2">${quedan(S.left)}</span><span class="k mute3">${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
     <div class="slots">${[0, 1, 2, 3, 4].map(i => bottle(KEYS[i], i >= S.left)).join('')}</div>
@@ -1396,7 +1430,7 @@ function renderTu() {
       <p class="from" style="margin:4px 0 12px">Es lo primero que escucha quien quiere conocerte. En vez de foto.</p>
       ${LIVE && !(R.me && R.me.intro_voice) ? '<p class="from" style="margin:0">Todavía no la grabas. Con 10 segundos basta.</p>' : voiceRow(LIVE ? R.urls.get(R.me.intro_voice) || '' : (S.presUrl || localStorage.getItem('bp.presurl') || 'answer-1'), C, mmss(pres.secs), 0, 33)}
       <button class="push btn" data-go="presenta" data-p='{"edit":1}' style="margin-top:12px;height:48px;font-size:15px">${ico('mic', INK, '#fff')} ${LIVE ? (R.me && R.me.intro_voice ? 'Grabar otra vez' : 'Grabar mi presentación') : (store.get('pres', null) ? 'Grabar otra vez' : 'Grabar mi presentación')}</button></div>
-    <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle · gratis</span><b>Pide más botellas</b><small>Te quedan ${S.left} para lanzar. Aquí pides paquetes y botellas especiales: doradas, que llegan lejos y de regalo.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ir al Muelle</span></button>
+    <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Tus botellas especiales</b><small>Te quedan ${S.left} para lanzar. Aquí ves tus botellas que llegan lejos, doradas y de regalo, y cómo ganar más.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>
     <button class="push mcard" data-go="mes"><span class="k">Tu ${LIVE ? LS.month : 'noviembre'} en Botella</span><b>${LIVE ? (LS.heard ? `${LS.heard} ${LS.heard === 1 ? 'persona escuchó' : 'personas escucharon'} tu voz este mes` : 'Este mes empieza tu voz: lanza una botella') : '36 personas escucharon tu voz este mes'}</b><span class="cbars">${KEYS.map((k, i) => `<i style="--c:${CAT[k].c};flex:${mix[i]}"></i>`).join('')}</span></button>
     <div class="sec"><span class="h2">Tus temas</span><button class="k" data-go="temas" data-p='{"edit":1}' style="height:44px;color:var(--sea)">Cambiar</button></div>
     <div class="tchips">${temas.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
@@ -1408,8 +1442,8 @@ function renderTu() {
       ${menuRow(ico('people', INK), 'Salidas en grupo', LIVE ? 'Planes en lugares públicos' : '3 planes en Lima esta semana', 'salidas')}</div>
     <div class="sec"><span class="h2">Más botellas</span></div>
     <div class="box menu">
-      ${menuRow(`<span style="width:16px;display:block">${bottle('dorada')}</span>`, 'Botellas doradas', 'Salen primero en el mar de todos', 'doradas', '', '#FFF1C2')}
-      ${menuRow(ico('gift', INK), 'Invitar a un amigo', LIVE ? 'Mándale tu enlace para que entre' : 'Los dos reciben una botella más', 'invitar')}
+      ${menuRow(`<span style="width:16px;display:block">${bottle('dorada')}</span>`, 'Botellas doradas', 'Las puede abrir cualquiera, sin importar el tema', 'doradas', '', '#FFF1C2')}
+      ${menuRow(ico('gift', INK), 'Invitar a un amigo', 'Mándale tu enlace para que entre', 'invitar')}
       ${menuRow(ico('star', INK), 'Racha', LIVE ? (LS.streak ? `${LS.streak} ${LS.streak === 1 ? 'día seguido' : 'días seguidos'} grabando` : 'Graba hoy y empieza') : '4 días seguidos grabando', 'racha')}</div>
     <div class="sec"><span class="h2">Lo que nadie ve</span></div>
     <div class="box priv"><div>${ico('lock', INK)}<span>Tu nombre aparece solo cuando los dos deciden compartirlo.</span></div><div>${ico('lock', INK)}<span>Tu distrito nunca se muestra. A la gente la une un tema en común.</span></div><div>${ico('check', INK)}<span>Tu voz llega tal como la grabas. Nunca se modifica.</span></div></div>
@@ -1419,20 +1453,19 @@ function renderTu() {
   bindVoices(v);
   startOrb(v.querySelector('#vorb'));
 }
-const SPECIAL = [['roja', 'De color', 'Llega solo a quienes aman un tema que eliges'], ['morada', 'Que llega lejos', 'También a quienes aman otros temas'], ['dorada', 'Dorada', 'Sale primero en el mar de todos'], ['amarilla', 'De regalo', 'Le das una botella más a alguien con quien conversas']];
-const PACKS = [[3, 'Para un día con mucho que decir'], [10, 'Para toda la semana'], [30, 'Para el mes, con 5 de regalo']];
+// Muelle: tus botellas especiales y cómo se ganan. Nada se compra.
+const SPECIAL = [['far', 'morada', 'Que llega lejos', 'Empieza con 30 personas, también de temas cercanos.'], ['tide', 'dorada', 'Dorada', 'Además sale en Botellas doradas, donde cualquiera puede abrirla.'], ['gift', 'amarilla', 'De regalo', 'Se la mandas a alguien con quien conversas y recibe una botella más.']];
 function renderMuelle() {
-  const v = $('#v-muelle'), have = LIVE && R.me ? { roja: R.me.color_left, morada: R.me.far_left, dorada: R.me.tide_left, amarilla: R.me.gifts_left } : store.get('have', { dorada: 1 });
+  const v = $('#v-muelle'), have = haveSp();
   v.innerHTML = `${topbar('tu', '')}
-    <h1 class="h1">Muelle</h1><p class="mute" style="margin:8px 0 24px">Botellas especiales, gratis. Pide la que quieras.</p>
-    <div class="grid2">${SPECIAL.map(([k, t, d]) => `<div class="box spc" style="${cvars(CAT[k])}"><span class="sbot">${bottle(k)}</span><b>${t}</b><small>${d}</small><span class="row" style="margin-top:auto;padding-top:12px;justify-content:space-between"><button class="push btn c sm" data-sp="${k}">Pedir</button>${have[k] ? `<span class="have">Tienes ${have[k]}</span>` : ''}</span></div>`).join('')}</div>
-    <div class="sec"><span class="h2">Más botellas por día</span></div>
-    <p class="mute" style="margin:-4px 0 12px;font-size:14px">${LIVE ? `Tienes ${S.left} para lanzar. Cada día te llega una más; si quieres lanzar más, pide un paquete.` : 'Cada día puedes lanzar 4. Si quieres lanzar más, pide un paquete.'}</p>
-    <div class="box menu">${PACKS.map(([n, d]) => `<button class="mrow" data-pk="${n}"><span class="mi num" style="font-size:24px;background:#E6F3FF">+${n}</span><span class="tx"><b>${n} botellas más</b><small>${d}</small></span><span class="k" style="color:var(--sea)">Pedir</span></button>`).join('')}</div>`;
-  v.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { const k = b.dataset.sp; if (LIVE) { claim(SPI[k], b).then(ok => { if (ok) { renderMuelle(); pop(); toast('Llegó a tu muelle.', CAT[k].c); } }); return; } have[k] = (have[k] || 0) + 1; store.set('have', have); pop(); burst(...center(b.closest('.spc').querySelector('.sbot')), [CAT[k].c, CAT[k].h, '#fff'], 28); renderMuelle(); toast('Llegó a tu muelle.', CAT[k].c); });
-  v.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => { if (LIVE) { claim('p' + b.dataset.pk, b).then(ok => { if (ok) { pop(); toast(`Llegaron ${b.dataset.pk} botellas. Tienes ${S.left} para lanzar.`, '#368DDB'); } }); return; } S.left += +b.dataset.pk; store.set('left', S.left); pop(); toast(`Llegaron ${b.dataset.pk} botellas a tu muelle.`, '#368DDB'); });
+    <h1 class="h1">Muelle</h1><p class="mute" style="margin:8px 0 24px">Tus botellas especiales. Ninguna se compra: todas se ganan usando tu voz.</p>
+    <div class="vlist">${SPECIAL.map(([k, c, t, d]) => `<div class="box spm" style="${cvars(CAT[c])}"><span class="sbot">${bottle(c, !have[k])}</span><span class="tx"><b>${t}</b><small>${d}</small><small class="gana">${GANA[k]}</small></span><span class="num" aria-label="Tienes ${have[k] || 0}">×${have[k] || 0}</span></div>`).join('')}
+      <div class="box spm" style="${cvars(CAT.azul)}"><span class="sbot">${bottle('azul')}</span><span class="tx"><b>Normales</b><small>Empiezan con 12 personas que aman tu tema.</small><small class="gana">Te llega una cada día y ganas otra cada vez que respondes una botella.</small></span><span class="num" aria-label="Tienes ${S.left}">×${S.left}</span></div></div>
+    <div class="box menu" style="margin-top:16px">${menuRow(`<span style="width:16px;display:block">${bottle('morada')}</span>`, 'Botella para dos', 'Tu voz y la de un amigo. Empieza con 20 personas y usa una normal', 'dos')}</div>
+    <p class="k mute3" style="text-align:center;margin:16px 0 0">Toda botella sigue llegando a más gente hasta que alguien responde.</p>
+    <button class="push btn" data-go="racha" style="margin-top:24px">Ver los regalos por días seguidos</button>`;
 }
-const UNLOCK = [[3, 'Vidrio verde', 'verde'], [7, 'Una que llega lejos', 'morada'], [14, 'Vidrio de color', 'roja'], [30, 'Una dorada por semana', 'dorada']];
+const UNLOCK = [[2, 'Una botella dorada', 'dorada'], [3, 'Vidrio coral', 'roja'], [5, 'Una botella de regalo', 'amarilla'], [7, 'Vidrio violeta', 'morada'], [10, 'Una que llega lejos', 'azul'], [14, 'Vidrio aurora', 'verde'], [21, 'Dos botellas de regalo', 'amarilla'], [30, 'Vidrio de luna', 'dorada']];
 function renderRacha() {
   const LS = LIVE ? liveStats() : null, UL = LIVE ? ULIVE : UNLOCK, n = LIVE ? LS.streak : 4, days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], on = LIVE ? LS.week : [1, 1, 1, 1, 0, 0, 0], nx = UL.find(u => u[0] > n) || UL[UL.length - 1], prev = (UL.filter(u => u[0] <= n).pop() || [0])[0];
   $('#v-racha').innerHTML = `${topbar('tu', 'Racha')}
@@ -1552,7 +1585,7 @@ function renderInvitar() {
   v.innerHTML = `${topbar('tu', 'Invitar')}
     <div class="row" style="gap:8px;margin:8px 0 24px">${KEYS.map(k => `<span style="width:28px">${bottle(k)}</span>`).join('')}</div>
     <h1 class="hx">Invita a alguien que te gustaría escuchar.</h1>
-    <p class="mute" style="margin:12px 0 24px;font-size:16px">${LIVE ? 'Con tu enlace entra directo: el código de invitación ya va adentro.' : 'Cuando entre, los dos reciben una botella más.'}</p>
+    <p class="mute" style="margin:12px 0 24px;font-size:16px">Con tu enlace entra directo: el código de invitación ya va adentro.</p>
     <div class="box linkbox"><span class="num" style="font-size:${LIVE ? 18 : 22}px;flex:1;word-break:break-all;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.1">${esc(LIVE ? invLink().replace(/^https?:\/\//, '') : 'botella.app/i/CESAR-24')}</span><button class="push btn sm" id="cp">${ico('copy', INK)} Copiar</button></div>
     <div class="sp" style="min-height:32px"></div>
     <button class="push btn blue" id="sh">${ico('link', '#fff')} Compartir enlace</button>
@@ -1634,10 +1667,11 @@ function renderDoradas() {
   const C = CAT.dorada, v = $('#v-doradas');
   v.innerHTML = `${topbar('mar', '')}
     <div class="row" style="gap:16px;align-items:flex-end"><span class="gbot">${bottle('dorada')}</span><h1 class="h1">Botellas doradas</h1></div>
-    <p class="mute" style="margin:12px 0 24px">Una dorada sale primero en el mar de todos en cuanto la lanzas, a la hora que quieras. Estas son las de hoy.</p>
+    <p class="mute" style="margin:12px 0 24px">Una dorada llega como cualquier botella y, además, sale aquí, donde cualquiera puede abrirla aunque no comparta tu tema. Estas son las de hoy.</p>
     <div class="vlist">${LIVE && !liveGold().length ? '<div class="box empty"><b>Todavía no hay doradas hoy.</b><small>La primera que se lance sale aquí, para todos.</small></div>' : ''}${(LIVE ? liveGold() : GOLD).map(g => `<div class="box gcard"><p class="q" style="margin:0 0 4px;font-size:16px">${qq(g.q)}</p><p class="from">${g.who}${g.n ? ' · la escucharon ' + g.n : ''}</p>${voiceRow(g.v, C, '', 0, g.s)}</div>`).join('')}</div>
-    <button class="push btn c" style="margin-top:32px;${cvars(C)}" data-go="lanzar" data-p='{"dorada":1}'>${ico('mic', C.on, C.c)} Lanzar una dorada</button>
-    <p class="k mute3" style="text-align:center;margin:12px 0 0">${LIVE ? ((R.me && R.me.tide_left) ? `Tienes ${R.me.tide_left} ${R.me.tide_left === 1 ? 'dorada' : 'doradas'} en tu muelle` : 'Pide una dorada gratis en el Muelle') : 'Tienes 1 dorada en tu muelle'}</p>`;
+    ${haveSp().tide ? `<button class="push btn c" style="margin-top:32px;${cvars(C)}" data-go="lanzar" data-p='{"dorada":1}'>${ico('mic', C.on, C.c)} Lanzar una dorada</button>
+    <p class="k mute3" style="text-align:center;margin:12px 0 0">Tienes ${haveSp().tide} ${haveSp().tide === 1 ? 'dorada' : 'doradas'}</p>` : `<button class="push btn" style="margin-top:32px" data-go="racha">Ver mis días seguidos</button>
+    <p class="k mute3" style="text-align:center;margin:12px 0 0">Todavía no tienes una dorada. ${GANA.tide}</p>`}`;
   bindVoices(v);
 }
 
@@ -1687,7 +1721,7 @@ const AVISOS = [
   { id: 'a4', ic: 'pin', cat: 'amarilla', t: 'Caro confirmó el plan', d: 'Mañana a las 6:00 p. m. · Malecón de Miraflores', ago: 'Hace 1 h', go: 'chat', p: { id: 'caro' } },
   { id: 'a5', ic: 'up', cat: 'azul', t: 'Tu botella ya llegó a 200 personas', d: 'Sigue llegando hasta que alguien responda', ago: 'Hace 2 h', go: 'botellas', p: {} },
   { id: 'a6', ic: 'moon', cat: 'dorada', t: 'Ya está la pregunta de hoy', d: HOY.q, ago: 'Hoy, 8:00 a. m.', go: 'hoy', p: {} },
-  { id: 'a7', ic: 'star', cat: 'morada', t: 'Llevas 4 días seguidos grabando', d: 'Con 7 días te regalamos una botella que llega lejos', ago: 'Ayer', go: 'racha', p: {} }
+  { id: 'a7', ic: 'star', cat: 'morada', t: 'Llevas 4 días seguidos grabando', d: 'Con 5 días te regalamos una botella de regalo', ago: 'Ayer', go: 'racha', p: {} }
 ];
 const unread = () => AVISOS.filter(a => !store.get('read', []).includes(a.id)).length;
 const bellBtn = () => { const n = unread(); return `<button class="push sq bell" data-go="avisos" aria-label="Avisos${n ? ', ' + n + ' sin leer' : ''}">${ico('bell', INK)}${n ? `<span class="nb2">${n}</span>` : ''}</button>`; };
@@ -2243,7 +2277,7 @@ function renderBloqueadosLive() {
 }
 
 const SPI = { roja: 'color', morada: 'far', dorada: 'tide', amarilla: 'gift' };
-const ULIVE = [[2, 'Una botella de color', 'roja'], [3, 'Vidrio coral', 'roja'], [5, 'Una botella de regalo', 'amarilla'], [7, 'Vidrio violeta', 'morada'], [10, 'Una que llega lejos', 'azul'], [14, 'Vidrio aurora', 'verde'], [21, 'Dos botellas de regalo', 'amarilla'], [30, 'Vidrio de luna', 'dorada']];
+const ULIVE = [[2, 'Una botella dorada', 'dorada'], [3, 'Vidrio coral', 'roja'], [5, 'Una botella de regalo', 'amarilla'], [7, 'Vidrio violeta', 'morada'], [10, 'Una que llega lejos', 'azul'], [14, 'Vidrio aurora', 'verde'], [21, 'Dos botellas de regalo', 'amarilla'], [30, 'Vidrio de luna', 'dorada']];
 const invLink = () => LIVE ? `${location.origin}/pixel/?c=${encodeURIComponent((R.me && R.me.code_used) || store.get('code', '') || 'BOTELLA-01')}` : 'https://botella-app.vercel.app';
 function liveStats() {
   const m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
@@ -2304,7 +2338,7 @@ function renderLlamadaLive(id) {
 /* ================= NAVEGACIÓN ================= */
 function toast(t, c) { const r = $('#toast-root'); r.innerHTML = `<div class="toast box" role="status">${sprite(['oooo', 'oooo', 'oooo', 'oooo'], { o: c || INK })}${esc(t)}</div>`; clearTimeout(r._t); r._t = setTimeout(() => r.innerHTML = '', 2800); }
 const VIEWS = { bienvenida: renderBienvenida, primera: renderPrimera, cuenta: renderCuenta, presenta: renderPresenta, sobre: renderSobre, temas: renderTemas, entrar: renderEntrar, olvide: renderOlvide, normas: renderNormas,
-  playa: () => { renderBeach(); renderLegend(); renderPlayer(true); $('#hoyc').innerHTML = hoyCard() + `<button class="push card dockc" data-go="muelle" style="margin-top:16px"><span class="tile">${ico('dock', INK)}</span><span class="tx"><small class="k" style="color:#1F5A9E">Muelle · gratis</small><b>Pide más botellas</b><small>Te quedan ${S.left} para lanzar hoy</small></span>${ico('chev', INK)}</button>`; $('#invn').textContent = '×' + S.left; $('#bellw').innerHTML = bellBtn(); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, llamada: renderLlamada, tu: renderTu, mes: renderMes,
+  playa: () => { renderBeach(); renderLegend(); renderPlayer(true); $('#hoyc').innerHTML = hoyCard() + `<button class="push card dockc" data-go="muelle" style="margin-top:16px"><span class="tile">${ico('dock', INK)}</span><span class="tx"><small class="k" style="color:#1F5A9E">Muelle</small><b>Tus botellas especiales</b><small>Te quedan ${S.left} para lanzar hoy</small></span>${ico('chev', INK)}</button>`; $('#invn').textContent = '×' + S.left; $('#bellw').innerHTML = bellBtn(); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, llamada: renderLlamada, tu: renderTu, mes: renderMes,
   hoy: renderHoy, respondio: renderRespondio, mar: renderMar, doradas: renderDoradas, plan: renderPlan, reportar: renderReportar,
   muelle: renderMuelle, racha: renderRacha, mapa: renderMapa, dos: renderDos, lecturas: renderLecturas, lectura: renderLectura, lecnueva: renderLecnueva, salidas: renderSalidas, proponer: renderProponer, invitar: renderInvitar,
   avisos: renderAvisos, entrante: renderEntrante, calma: renderCalma, sinred: renderSinred, mic: renderMic, ajustes: renderAjustes, bloqueados: renderBloqueados, borrar: renderBorrar };
