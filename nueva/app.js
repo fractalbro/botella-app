@@ -292,6 +292,15 @@ R.grabar = ({ id = 'majo', first = false }) => { const b = B[id]; return { html:
   } }; };
 
 // Bloque de grabación compartido: micrófono → onda en vivo → escuchar → deslizar.
+// Tu presentación: tu voz en vez de foto. Se abre junto con el nombre, cuando los dos deciden compartirlo.
+R.presentacion = () => { const p = S.intro; return { html: `
+  ${back('perfil')}
+  <h1 class="title mt1">Tu presentación</h1>
+  <p class="sub mt1">Tu voz en vez de una foto. Solo la escucha quien comparte su nombre contigo.</p>
+  ${p ? `<div class="half mt3"><p class="cap">La que tienes ahora</p>${player(p.url || 'mine' + p.secs, { mine: true, secs: p.secs })}</div>` : ''}
+  <div class="grow"></div><div class="rec-wrap" id="rw"></div><div class="grow"></div><div id="after"></div>`,
+  bind(el) { recUI(el, 'Desliza para guardarla', r => { S.intro = { url: r.url, secs: r.secs }; saveX(); track('presentacion_grabada', { segundos: r.secs }); go('perfil'); toast('Presentación guardada'); }, `<p class="cap" style="margin:0 0 18px;text-align:center">Una idea: tu apodo y algo que te guste, en unos 15 segundos.</p>`); } }; };
+
 function recUI(el, slideLabel, onSend, hintTop = '') {
   const rw = $('#rw', el), after = $('#after', el); let rec = null;
   const idle = () => { rw.innerHTML = `${hintTop}<button class="mic" id="mic" aria-label="Grabar">${I.mic}</button><p class="cap">Toca para grabar · hasta 60 s</p>`; after.innerHTML = ''; $('#mic', el).onclick = start; };
@@ -642,7 +651,8 @@ S.outs = store.get('outs', [
 ]);
 S.lec = store.get('lec', [{ q: '¿Qué fue lo primero que pensaste de mí?', ans: [['answer-1', 'Andrea'], ['answer-2', 'Pato'], ['answer-3', 'Lu']] }]);
 S.duo = store.get('duo', null);
-const saveX = () => { store.set('x', X); store.set('sent', S.sent); store.set('outs', S.outs); store.set('lec', S.lec); store.set('duo', S.duo); save(); };
+S.intro = store.get('intro', null);
+const saveX = () => { store.set('x', X); store.set('sent', S.sent); store.set('outs', S.outs); store.set('lec', S.lec); store.set('duo', S.duo); store.set('intro', S.intro); save(); };
 Object.assign(I, {
   tide: '<svg viewBox="0 0 24 24"><path d="M3 9c2 0 2-1.5 4.5-1.5S9.5 9 12 9s2-1.5 4.5-1.5S19 9 21 9M3 14c2 0 2-1.5 4.5-1.5S9.5 14 12 14s2-1.5 4.5-1.5S19 14 21 14M3 19c2 0 2-1.5 4.5-1.5S9.5 19 12 19s2-1.5 4.5-1.5S19 19 21 19"/></svg>',
   map: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="2 3"/><circle cx="18" cy="6.5" r="1.4"/><circle cx="5" cy="14" r="1.4"/><circle cx="15" cy="19.5" r="1.4"/></svg>',
@@ -670,7 +680,9 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
   ${back('mar')}
   <div class="me-head mt1">${voiceMark('big', pk, cs)}<span><h1 class="title">${esc(S.name || 'Tú')}</h1><span class="tchips">${S.temas.map(t => `<span style="--c:${tc(t)}"><i></i>${esc(t)}</span>`).join('')}</span></span></div>
 
-  <button class="month mt3" data-go="mes" style="--c1:${cs[0]};--c2:${cs[1]};--c3:${cs[2]}">
+  <div class="fl mt3">${friendRow('#7FD8C9', 'mic', S.intro ? 'Tu presentación' : 'Graba tu presentación', S.intro ? `${S.intro.secs} s · Se escucha al compartir nombres` : 'Tu voz en vez de una foto', 'data-go="presentacion"')}</div>
+
+  <button class="month mt2" data-go="mes" style="--c1:${cs[0]};--c2:${cs[1]};--c3:${cs[2]}">
     <span class="mlbl">Tu ${mes} en Botella · Toca para verlo</span>
     <b class="mbig">${heard} personas escucharon tu voz.</b>
     <span class="mrow"><span><b>${ans}</b>te respondieron</span><span><b>${notas}</b>notas de voz</span><span><b style="color:${top[2]}">${top[0]}</b>tu tema más escuchado</span></span>
