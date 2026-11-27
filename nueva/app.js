@@ -23,7 +23,7 @@ const tc = t => (typeof TC !== 'undefined' && TC[t]) || '#7FD8C9';
 const AMA = { 'Música': 'la música', 'Cine': 'el cine', 'Libros': 'los libros', 'Comida': 'la comida', 'Viajes': 'viajar', 'La ciudad': 'la ciudad', 'Fútbol': 'el fútbol', 'Arte': 'el arte', 'Tecnología': 'la tecnología', 'Filosofía': 'la filosofía', 'Amor': 'el amor', 'Trabajo': 'su trabajo' };
 const IDEAS = { Pregunta: ['¿Qué canción te devuelve a tus 15 años?', '¿Cuál es tu huarique favorito?', '¿Qué harías si mañana no tuvieras que trabajar?'], Confesión: ['Algo que nunca le he dicho a nadie…', 'Lo que más extraño de cuando era niño', 'Una costumbre rara que tengo'], Historia: ['Lo más raro que me pasó en una combi', 'El mejor día de este año', 'Cómo conocí a mi mejor amigo'] };
 const S = {
-  shore: store.get('shore', ['caro', 'ivan']),
+  shore: store.get('shore', ['caro', 'ivan', 'leo', 'belen']),
   name: store.get('name', ''),
   convs: store.get('convs', null) || {
     leo: { stage: 0, unread: true, when: '9:41', msgs: [{ f: 'them', v: 'leo-say' }, { f: 'me', v: 'answer-1' }, { f: 'them', v: 'leo-reply' }] },
@@ -287,6 +287,8 @@ const voiceBottle = (c, peaks) => { const id = 'vb' + (vb++), pk = (peaks || [])
     <rect x="64" y="22" width="32" height="22" rx="5" fill="#9A6A3E"/><rect x="64" y="22" width="32" height="6" rx="3" fill="#B8865A"/>
   </svg>`; };
 R.mar = () => {
+  // El mar nunca se queda vacío: si ya escuchaste todas, llegan otras voces de ejemplo.
+  if (!S.shore.length) { const all = Object.keys(B); let nx = all.filter(id => !S.convs[id]); if (!nx.length) nx = all; S.shore = nx.slice(0, 3); save(); setTimeout(() => toast(S.shore.length === 1 ? 'Llegó una voz nueva' : `Llegaron ${S.shore.length} voces nuevas`), 400); }
   const reels = S.shore.map(id => ({ t: 'voz', id, b: B[id] }));
   reels.push({ t: 'hoy' }); if (S.mine) reels.push({ t: 'mine' });
   const nv = S.shore.length;
