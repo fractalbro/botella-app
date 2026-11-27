@@ -14,7 +14,7 @@ P.actions.toLogin = () => { S.authMode = 'login'; go('account'); };
 
 const SLIDES = [
   { title: 'Graba una pregunta y <b>lánzala al mar</b>.', text: 'O algo que quieras contar. Sin fotos y sin perfil: solo tu voz.' },
-  { title: 'Llega a <b>ocho orillas</b>.', text: 'Cada orilla es una persona con gustos parecidos a los tuyos. Si en 6 horas nadie responde, el mar la lleva a cuatro más. Si alguien responde, se abre una conversación privada, sin nombres hasta que los dos quieran.' },
+  { title: 'Llega a <b>ocho orillas</b>.', text: 'Cada orilla es una persona con gustos parecidos a los tuyos. Tu botella sigue navegando hasta que alguien te responde. Cuando alguien responde, se abre una conversación privada, sin nombres hasta que los dos quieran.' },
   { title: 'Responder te da <b>otra botella</b>.', text: 'Cada respuesta tuya te regala una botella para lanzar, hasta 3 al día. Si nadie la abre, la marea la lleva a otra orilla.' }
 ];
 P.screens.intro = {
@@ -280,7 +280,7 @@ P.actions.recorded = id => { if (id === 'launch' && P.curId === 'launch') { go('
 // qué botella sale ahora, en palabras (la fila plegada de opciones)
 const launchKind = () => (S.duoOn ? 'Botella para dos · 12 personas' : S.btype === 'color' ? 'Botella de color · llega a 8 personas por tema' : S.btype === 'far' ? 'Llega lejos · 20 personas' : 'Botella normal · llega a 8 personas') + (S.featured ? ' · dorada' : '');
 const BT = {
-  free: { name: 'Normal', sub: '8 personas', desc: 'Llega a 8 personas con gustos parecidos, y a 4 más si nadie responde en 6 horas.', col: '127,216,201' },
+  free: { name: 'Normal', sub: '8 personas', desc: 'Llega a 8 personas con gustos parecidos, y a más si hace falta para que alguien te responda.', col: '127,216,201' },
   color: { name: 'De color', sub: 'tú eliges el tema', desc: 'Llega a 8 personas a quienes les gusta el tema que elijas.', col: '255,112,169' },
   far: { name: 'Llega lejos', sub: '20 personas', desc: 'Llega a 20 personas en vez de 8.', col: '255,214,140' }
 };
@@ -340,7 +340,7 @@ P.screens.thrown = {
     P.timers.push(setTimeout(() => set('Buscando', 'Buscamos a quien le guste lo mismo que a ti.', 'Así es más fácil que alguien quiera responderte.'), 1300));
     const final = () => { const n = P.st.shores; if (n == null) { P.timers.push(setTimeout(final, 400)); return; } if (n < 0) return;
       set('En camino', n > 1 ? `Tu botella va hacia ${n} personas.` : n === 1 ? 'Ya le llegó a una persona.' : 'Tu botella flota en el mar.',
-        (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 8 ? (P.st.duo ? 'Lleva las dos voces. Si alguien responde, les llega a los dos. ' : '') + 'Si alguien responde, te avisamos y conversan en privado. Si en 6 horas nadie responde, llega a 4 personas más.' : 'Todavía somos pocos: llegará a más personas a medida que se sumen. Cuando alguien responda, aparece en Conversaciones.')); };
+        (P.st.featured ? 'Además sale en la marea de las 21:00. ' : '') + (n >= 8 ? (P.st.duo ? 'Lleva las dos voces. Si alguien responde, les llega a los dos. ' : '') + 'Si alguien responde, te avisamos y conversan en privado. Y si hace falta, tu botella sigue llegando a más personas.' : 'Todavía somos pocos: llegará a más personas a medida que se sumen. Cuando alguien responda, aparece en Conversaciones.')); };
     P.timers.push(setTimeout(final, 3500));
   }
 };
@@ -646,7 +646,7 @@ P.actions.rules = () => sheet(`${sheetHead('Normas y privacidad')}<div class="ru
   <p><b>Solo mayores de 18.</b> Si alguien parece menor de edad, repórtalo.</p>
   <p><b>Respeto.</b> Coquetear está bien, como en la vida real. Nada de insultos, amenazas, odio ni contenido sexual explícito. Nada de pedir dinero, cuentas o datos personales. Si alguien no responde o dice que no, ahí queda.</p>
   <p><b>Primero tu voz, después tu nombre.</b> Aquí no hay fotos. Antes de saber tu nombre, solo se ve un tema que comparten contigo. Tu distrito nunca se muestra: solo sirve para que tus botellas lleguen cerca. Tu nombre y tu presentación se abren cuando los dos deciden compartirlos.</p>
-  <p><b>Tu voz.</b> Una botella llega a pocas personas con cuenta: 8 (y 4 más si nadie responde en 6 horas), 20 si llega lejos o 12 si es para dos. Una nota de una conversación, solo la otra persona. En Botella no hay botón para descargar ni reenviar audios.</p>
+  <p><b>Tu voz.</b> Una botella llega solo a pocas personas con cuenta: hasta 12, o 20 si llega lejos. Una nota de una conversación, solo la otra persona. En Botella no hay botón para descargar ni reenviar audios.</p>
   <p><b>Para verse en persona,</b> elijan un lugar público, de día o con gente alrededor, y cuéntale a alguien de confianza a dónde vas.</p>
   <p><b>Reportes.</b> Cada reporte bloquea a la persona y lo revisa alguien del equipo. No le avisamos quién fue. Una botella con dos reportes deja de viajar.</p>
   <p><b>Lecturas.</b> Se responden con tu cuenta de Botella. Quien pidió la lectura escucha tu voz primero y después ve tu nombre. Cada respuesta pasa por un filtro automático antes de entregarse, y quien la pidió puede borrar, reportar y bloquear.</p>
