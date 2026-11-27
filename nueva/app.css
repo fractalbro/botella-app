@@ -731,6 +731,32 @@ svg{display:block}
 .gone .rip::after{animation-delay:-1.8s}
 @keyframes goneaway{0%{transform:translateY(30px) rotate(-14deg) scale(1.1);opacity:0}25%{opacity:1}100%{transform:translate(18px,-10px) rotate(-6deg) scale(.82)}}
 @media (prefers-reduced-motion:reduce){.hb,.hq.in,.gone,.pdot{animation:none}.hq{opacity:1}}
+
+/* ===== Lanzar con aire (27/11) ===== */
+.lzhead{display:grid;gap:16px;margin-top:48px}
+.lzhead .title{font-size:clamp(28px,8.4vw,34px)}
+.lzhead #idea{margin-top:-8px}
+.tpill{justify-self:start;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 0;font-size:14px;color:var(--fg-3)}
+.tpill b{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 10px 0 14px;border-radius:999px;font-weight:400;color:var(--fg);background:color-mix(in oklab,var(--c,#7FD8C9),transparent 86%);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c,#7FD8C9),transparent 60%);transition:background .3s,box-shadow .3s}
+.tpill i{width:8px;height:8px;border-radius:50%;background:var(--c,#7FD8C9)}
+.tpill em{font-style:normal}
+.tpill svg{width:14px;height:14px;fill:none;stroke:var(--fg-2);stroke-width:2;transform:rotate(90deg)}
+.sheet .tsec{margin:24px 0 10px}
+.sheet .tchips{gap:10px}
+
+/* ===== Aire en la entrada (27/11) ===== */
+.hb .lbl{opacity:0;transition:opacity .4s}
+.hb.on .lbl{opacity:1}
+.hb .vbot{height:min(11vh,84px)}
+.hb.lead .vbot{height:min(17vh,132px)}
+.tchips{gap:10px}
+.temas .thead .sub{margin-top:12px}
+.pend{padding:16px}
+.field{margin-bottom:18px}
+.onbp{gap:8px}
+.recing #seg,.recing .tpill{display:none}
+.recing .lzhead{margin-top:40px}
+.recing .lzhead .title{color:var(--fg-2)}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}

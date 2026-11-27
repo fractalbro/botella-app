@@ -181,8 +181,8 @@ function check(form) {
   const first = $('[aria-invalid]', form); first && first.focus(); return ok;
 }
 // Bienvenida: el mar de noche con botellas de voces de verdad flotando; una pregunta se ilumina cada vez.
-const HQ = [['majo', '¿Cuál es tu huarique favorito?'], ['leo', '¿Qué canción te devuelve a tus 15 años?'], ['belen', '¿Qué película verías mil veces?'], ['x4', '¿A quién le darías las gracias hoy?'], ['x5', '¿Qué viaje sigues soñando?']];
-R.bienvenida = () => { const C = ['#FF9F7A', '#FF70A9', '#8E8CFF', '#9FE3B0', '#7CC8FF'], T = ['Comida', 'Música', 'Cine', 'Libros', 'Viajes'], spots = [[18, 48, -12], [80, 44, 10], [50, 60, -4], [84, 82, 14], [18, 84, -8]];
+const HQ = [['Cine', '¿Qué película verías mil veces?'], ['Música', '¿Qué canción te devuelve a tus 15 años?'], ['Comida', '¿Cuál es tu huarique favorito?'], ['Cine', '¿Qué serie te hizo desvelarte?'], ['Música', '¿Qué canción pondrías para empezar una fiesta?'], ['Comida', '¿Qué plato te recuerda a tu casa?']];
+R.bienvenida = () => { const C = ['#FF9F7A', '#FF70A9', '#8E8CFF'], T = ['Comida', 'Música', 'Cine'], spots = [[20, 62, -12], [80, 56, 10], [50, 66, -4]];
   return { cls: 'clear hello', html: `
   <canvas class="seacv" aria-hidden="true"></canvas>
   <div class="top"><span class="wm">botella</span></div>
@@ -194,8 +194,8 @@ R.bienvenida = () => { const C = ['#FF9F7A', '#FF70A9', '#8E8CFF', '#9FE3B0', '#
   <button class="btn btn-q" data-go="entrar">Ya tengo cuenta</button></div>`,
   bind(el) { const run = seaWater($('.seacv', el)); run(true); track('bienvenida_vista');
     const hb = $$('.hb', el), q = $('#hq', el); let k = 0; hb[2].classList.add('on');
-    const order = [2, 1, 0, 3, 4]; let n = 0;
-    const iv = setInterval(() => { if (!document.body.contains(el)) return clearInterval(iv); const ord = order.filter(x => hb[x].offsetParent); n = (n + 1) % ord.length; k = ord[n];
+    const order = [2, 1, 0]; let n = 0;
+    const iv = setInterval(() => { if (!document.body.contains(el)) return clearInterval(iv); n = (n + 1) % HQ.length; k = order[n % 3];
       hb.forEach((b, x) => b.classList.toggle('on', x === k)); q.classList.remove('in'); void q.offsetWidth; q.style.setProperty('--qx', hb[k].style.getPropertyValue('--x')); q.style.setProperty('--qy', hb[k].style.getPropertyValue('--y'));
       q.firstElementChild.textContent = HQ[n][1]; q.style.setProperty('--c', hb[k].style.getPropertyValue('--c')); q.classList.add('in'); }, 3200);
     q.style.setProperty('--qx', '50%'); q.style.setProperty('--qy', '46%'); q.style.setProperty('--c', '#8E8CFF'); q.classList.add('in'); } }; };
@@ -272,9 +272,9 @@ function recUI(el, slideLabel, onSend, hintTop = '') {
 R.cuenta = () => { const p = store.get('pending'), b = p && B[p.id]; return { html: `
   ${p ? onbBar(2) : '<div class="top"><span class="wm">botella</span></div>'}
   <h1 class="title mt2">${p ? 'Tu respuesta está lista.' : 'Guarda tu lugar.'}</h1>
-  <p class="sub mt1 mb2">${p ? 'Crea tu cuenta para enviarla.' : 'Crea tu cuenta para lanzar tu primera botella.'} Tu nombre nadie lo ve hasta que tú quieras.</p>
+  <p class="sub mt2 mb3">${p ? 'Crea tu cuenta para enviarla.' : 'Crea tu cuenta para lanzar tu primera botella.'} Tu nombre nadie lo ve hasta que tú quieras.</p>
   ${p ? `<div class="pend" style="--c:${b.c}">${voiceMark('', myPk())}<div><b>Tu respuesta${p.secs ? ` · ${fmt(p.secs)}` : ''}</b><small>Para alguien que ama ${esc(b.theme)}</small></div><span class="pdot" aria-hidden="true"></span></div>` : ''}
-  <form id="f" class="grow mt2" autocomplete="on">
+  <form id="f" class="grow mt4" autocomplete="on">
     <label class="field"><span>Tu nombre</span><input class="inp" name="n" required autocomplete="given-name"></label>
     <label class="field"><span>Correo</span><input class="inp" name="e" type="email" required autocomplete="email"></label>
     <label class="field"><span>Contraseña</span><input class="inp" name="p" type="password" minlength="6" required autocomplete="new-password"></label>
@@ -286,11 +286,11 @@ R.cuenta = () => { const p = store.get('pending'), b = p && B[p.id]; return { ht
 // Temas: lo único que se muestra de ti antes del nombre. Tu voz toma sus colores mientras eliges.
 R.temas = ({ edit = false } = {}) => { const T = TEMAS, pre = edit ? S.temas : []; return { cls: 'temas', html: `
   ${edit ? `<div class="top"><button class="ib edge" data-go="perfil" aria-label="Atrás">${I.back}</button><span></span><span style="width:44px"></span></div>` : onbBar(3)}
-  <div class="thead mt2"><div><h1 class="title">${edit ? 'Tus temas' : '¿Qué te mueve?'}</h1>
+  <div class="thead mt3"><div><h1 class="title">${edit ? 'Tus temas' : '¿Qué te mueve?'}</h1>
     <p class="sub mt1">Elige tres. Tus botellas llegan a quien ama lo mismo.</p></div>
     <div class="tprev" id="tp">${voiceMark('big', myPk(), pre.length ? myColors() : ['#2A3A4A', '#33475A', '#2A3A4A'])}<small id="tpl">${pre.length ? 'Tu voz' : 'Tu voz, sin color aún'}</small></div></div>
-  <div class="chips tchips mt3" id="ch">${T.map(t => `<button class="chip" style="--c:${tc(t)}" aria-pressed="${pre.includes(t)}"><i></i>${t}</button>`).join('')}</div>
-  <label class="field mt3"><span style="display:flex;justify-content:space-between">Tu distrito <i class="lock" style="font-style:normal">${I.lock}Nunca se muestra</i></span>
+  <div class="chips tchips mt4" id="ch">${T.map(t => `<button class="chip" style="--c:${tc(t)}" aria-pressed="${pre.includes(t)}"><i></i>${t}</button>`).join('')}</div>
+  <label class="field mt4"><span style="display:flex;justify-content:space-between">Tu distrito <i class="lock" style="font-style:normal">${I.lock}Nunca se muestra</i></span>
   <select class="inp"><option>Barranco</option><option>Jesús María</option><option>Lince</option><option>Miraflores</option><option>San Isidro</option><option>Surco</option><option>Otro</option></select></label>
   <div class="grow"></div>
   <button class="btn btn-a mt3" id="go"></button>`,
@@ -435,11 +435,12 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   <button class="btn btn-2" data-go="perfil">Invitar a alguien</button>` };
   return { html: `
   <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">${dorada ? 'Dorada · sale primero en el mar' : S.left === 1 ? 'Te queda 1 botella' : `Te quedan ${S.left} botellas`}</span><span style="width:44px"></span></div>
-  <div class="seg mt1" id="seg">${Object.keys(P).map(k => `<button aria-pressed="${k === kind}">${k}</button>`).join('')}</div>
-  <p class="cap mt2" style="margin-bottom:8px">Llega a quienes aman</p>
-  <div class="chips" id="tm" role="radiogroup" aria-label="Llega a quienes aman">${S.temas.map(t => `<button class="chip" role="radio" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}<button class="chip more" id="more">+ Otro tema</button></div>
-  <h1 class="title mt3" id="pq">${P[kind]}</h1>
-  <p class="sub mt1" id="idea" ${idea ? '' : 'hidden'}>${esc(idea)}</p>
+  <div class="seg mt2" id="seg">${Object.keys(P).map(k => `<button aria-pressed="${k === kind}">${k}</button>`).join('')}</div>
+  <div class="lzhead">
+    <h1 class="title" id="pq">${P[kind]}</h1>
+    <p class="sub" id="idea" ${idea ? '' : 'hidden'}>${esc(idea)}</p>
+    <button class="tpill" id="more" aria-label="Cambiar tema"><span>Llega a quienes aman</span><b><i></i><em id="tmn">${esc(tema)}</em>${I.chev}</b></button>
+  </div>
   <div class="grow"></div>
   <div class="rec-wrap" id="rw"></div>
   <div class="grow"></div>
@@ -448,8 +449,9 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   bind(el) {
     $$('#seg button', el).forEach(b => b.onclick = () => { kind = b.textContent; $$('#seg button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#pq', el).textContent = P[kind]; });
     const paintT = () => el.style.setProperty('--c', TC[tema] || '#7FD8C9'); paintT();
-    const wireTm = () => $$('#tm .chip:not(.more)', el).forEach(b => b.onclick = () => { tema = b.textContent; paintT(); $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
-    wireTm(); $('#more', el).onclick = () => sheet(`<h2 class="title">¿Sobre qué tema?</h2><p class="sub">Tu botella llega a quienes lo aman.</p><div class="chips mt2">${TEMAS.map(t => `<button class="chip" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}</div>`, (sh, close) => $$('.chip', sh).forEach(c => c.onclick = () => { tema = c.textContent; if (![...$$('#tm .chip', el)].some(x => x.textContent === tema)) $('#more', el).insertAdjacentHTML('beforebegin', `<button class="chip" role="radio">${esc(tema)}</button>`); $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x.textContent === tema)); paintT(); wireTm(); close(); }));
+    $('#more', el).onclick = () => { const mine = S.temas, rest = TEMAS.filter(t => !mine.includes(t)), ch = t => `<button class="chip" style="--c:${tc(t)}" aria-pressed="${t === tema}"><i></i>${esc(t)}</button>`;
+      sheet(`<h2 class="title">¿Sobre qué tema?</h2><p class="sub">Tu botella llega a todas las personas que lo aman.</p><p class="cap tsec">Tus temas</p><div class="chips tchips">${mine.map(ch).join('')}</div><p class="cap tsec">Otros temas</p><div class="chips tchips">${rest.map(ch).join('')}</div>`,
+        (sh, close) => $$('.chip', sh).forEach(c => c.onclick = () => { tema = c.textContent; $('#tmn', el).textContent = tema; paintT(); navigator.vibrate && navigator.vibrate(5); setTimeout(close, 120); })); };
     const ideas = $('#ideas', el);
     ideas.onclick = () => sheet(`<h2 class="title">Ideas para ${kind === 'Pregunta' ? 'preguntar' : kind === 'Confesión' ? 'confesar' : 'contar'}</h2><p class="sub">Tócala y dila con tus palabras.</p><div class="row-btns" id="il"></div><button class="btn btn-q mt1" id="imore">${I.shuffle}Ver otras ideas</button>`, (s, close) => {
       const fill = () => { const l = $('#il', s); l.classList.remove('in'); void l.offsetWidth; l.innerHTML = nextIdeas(kind, IDEAS[kind]).map(t => `<button class="idea">${esc(t)}</button>`).join(''); l.classList.add('in');
@@ -457,6 +459,7 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
       fill(); $('#imore', s).onclick = () => { fill(); navigator.vibrate && navigator.vibrate(5); }; });
     recUI(el, 'Desliza al mar', () => { const p = $('#idea', el); if (dorada) X.tide = Math.max(0, X.tide - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); track('botella_lanzada', { dorada: !!dorada, tema }); go('lanzada'); });
     new MutationObserver(() => ideas.hidden = !!$('#sl', el)).observe($('#after', el), { childList: true });
+    new MutationObserver(() => el.classList.toggle('recing', !!$('#rtm', el))).observe($('#rw', el), { childList: true });
   } }; };
 
 // Pregunta de hoy: la misma para todos. Respondes con tu voz y se abren las respuestas de los demás.
