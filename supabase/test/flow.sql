@@ -24,7 +24,7 @@ do $$ begin begin insert into profiles(id, name, district, topics, code_used, bo
 do $$ begin begin insert into profiles(id, name, district, code_used, is_sample) values (auth.uid(), 'Ana', 'Lince', 'x', true); raise exception 'debió fallar';
   exception when insufficient_privilege then null; end; end $$;
 insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Ana', 'Lince', '{Música,Cine,Libros}', 'botella-01');
-select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 3 and (select color_left from profiles where id = auth.uid()) = 2 and (select far_left from profiles where id = auth.uid()) = 1, 'regalo de bienvenida: 3 normales, 2 de color, 1 lejos, y el cliente no puede regalarse más');
+select pg_temp.ok((select bottles from profiles where id = auth.uid()) = 3 and (select color_left from profiles where id = auth.uid()) = 0 and (select tide_left from profiles where id = auth.uid()) = 1 and (select far_left from profiles where id = auth.uid()) = 1, 'regalo de bienvenida: 3 normales, 1 lejos, 1 dorada, ninguna de color, y el cliente no puede regalarse más');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Beto', 'Barranco', '{Música,Cine,Libros}', 'BOTELLA-01');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Cami', 'Surco', '{Música,Cine}', 'BOTELLA-01');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Dani', 'Lince', '{Fútbol}', 'BOTELLA-01');
@@ -145,14 +145,14 @@ insert into profiles(id, name, district, code_used) values (auth.uid(), 'Fer', '
 select tide();
 select pg_temp.ok((select count(*) from shore()) >= 1, 'la persona nueva ya tiene botellas en su orilla');
 reset role;
--- botella de color: llega primero a quien tiene ese tema
+-- el tema que eliges al lanzar viaja con la botella: llega primero a quien ama ese tema
+update profiles set bottles = bottles + 1 where id = '00000000-0000-0000-0000-000000000002';
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
-do $$ begin begin perform launch_bottle('Pregunta', null, '00000000-0000-0000-0000-000000000002/c0.m4a', 5, null, 'color'); raise exception 'debió fallar';
-  exception when others then if sqlerrm not like '%Elige%' then raise; end if; end; end $$;
-select pg_temp.ok((select left_color from launch_bottle('Pregunta', null, '00000000-0000-0000-0000-000000000002/c1.m4a', 5, null, 'color', 'Arte')) = 1, 'gasté una de color');
+select pg_temp.ok((select left_color from launch_bottle('Pregunta', null, '00000000-0000-0000-0000-000000000002/c1.m4a', 5, null, 'free', 'Arte')) = 0, 'una normal con tema, sin botellas de color');
 reset role;
-select pg_temp.ok(exists (select 1 from deliveries d join bottles b on b.id = d.bottle_id where b.voice like '%c1.m4a' and d.to_id = '00000000-0000-0000-0000-000000000005'), 'la de color llegó a quien le gusta el Arte');
+select pg_temp.ok((select target_topic = 'Arte' and target_district is null from bottles where voice like '%c1.m4a'), 'la botella guarda su tema y nunca un distrito');
+select pg_temp.ok(exists (select 1 from deliveries d join bottles b on b.id = d.bottle_id where b.voice like '%c1.m4a' and d.to_id = '00000000-0000-0000-0000-000000000005'), 'la botella del Arte llegó a quien le gusta el Arte');
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
 select pg_temp.ok((select left_far from launch_bottle('Historia', null, '00000000-0000-0000-0000-000000000002/f1.m4a', 5, null, 'far')) = 0, 'gasté la que llega lejos');
@@ -210,7 +210,7 @@ select pg_temp.ok((select answers from my_bottles() where body = '¿Qué te hace
 select pg_temp.ok((select openers from my_bottles() where body = '¿Qué te hace feliz?') is null, 'sin "quién la abrió" no veo quién');
 -- muelle
 select pg_temp.ok((select bottles from beta_get('p10')) >= 10, 'pack de 10 botellas');
-select pg_temp.ok((select color_left from beta_get('color')) = 3, 'una de color más');
+select pg_temp.ok((select color_left from beta_get('color')) = 1, 'la app vieja todavía puede pedir una de color');
 select pg_temp.ok((select far_left from beta_get('far')) = 2, 'una que llega lejos más');
 select pg_temp.ok((select tide_left from beta_get('tide')) = 1, 'una marea destacada más');
 select pg_temp.ok((select gifts_left from beta_get('gift')) = 1, 'una botella de regalo más');
@@ -242,7 +242,7 @@ select pg_temp.ok((select count(*) from outings_list() where mine) = 1, 'veo mi 
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
 select outing_join((select id from outings_list() where name = 'Atardecer en Barranco'), true);
 select pg_temp.ok((select taken from outings_list() where name = 'Atardecer en Barranco') = 2, 'alguien se apuntó a mi salida');
-select pg_temp.ok(app_version() = 6, 'versión del servidor');
+select pg_temp.ok(app_version() = 7, 'versión del servidor');
 reset role;
 
 -- ===== volver: avisos, constancia, caducidad, marea, enfriamiento =====
@@ -274,7 +274,7 @@ update profiles set streak = 2, streak_day = lima_today() - 1 where id = '000000
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000009');
 insert into messages(convo_id, sender, voice, voice_secs) values ((select id from my_convos() limit 1), auth.uid(), '00000000-0000-0000-0000-000000000009/r2.m4a', 5);
-select pg_temp.ok((select streak = 3 and 'coral' = any(glasses) and color_left = 3 and unlocks @> array[2,3] from profiles), 'tres días seguidos: vidrio coral y una botella de color');
+select pg_temp.ok((select streak = 3 and 'coral' = any(glasses) and tide_left >= 1 and unlocks @> array[2,3] from profiles), 'tres días seguidos: vidrio coral y una botella dorada');
 select pg_temp.ok((select glass from beta_get('glass:coral')) = 'coral', 'puedo ponerme el vidrio que gané');
 do $$ begin begin perform beta_get('glass:luna'); raise exception 'debió fallar';
   exception when others then if sqlerrm not like '%días seguidos%' then raise; end if; end; end $$;
