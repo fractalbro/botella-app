@@ -681,6 +681,16 @@ begin
 end $$;
 grant execute on function public.block_convo(uuid, text) to authenticated;
 
+-- Mis bloqueos: se ven con un tema en común, nunca con el nombre ni el distrito. Desbloquear no reabre la conversación.
+create or replace function public.my_blocks() returns table (id uuid, label text, at timestamptz) language sql stable security definer set search_path = public as $$
+  select x.b, alguien(auth.uid(), x.b), x.created_at from blocks x where x.a = auth.uid() order by x.created_at desc limit 100;
+$$;
+grant execute on function public.my_blocks() to authenticated;
+create or replace function public.unblock(p_other uuid) returns void language sql security definer set search_path = public as $$
+  delete from blocks where a = auth.uid() and b = p_other;
+$$;
+grant execute on function public.unblock(uuid) to authenticated;
+
 -- Reportar una botella: sale de mi orilla y deja de viajar si junta 2 reportes.
 create or replace function public.report_delivery(p_id uuid, p_reason text) returns void language plpgsql security definer set search_path = public as $$
 declare d deliveries; bo bottles;

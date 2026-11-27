@@ -132,6 +132,15 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
 do $$ begin begin insert into messages(convo_id, sender, voice, voice_secs) values ((select id from my_convos() where closed limit 1), auth.uid(), '00000000-0000-0000-0000-000000000001/z.m4a', 3); raise exception 'debió fallar';
   exception when insufficient_privilege then null; end; end $$;
 
+-- ver y deshacer un bloqueo
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.ok((select count(*) from my_blocks()) = 1 and (select label from my_blocks() limit 1) like 'Alguien%', 'veo a quién bloqueé, sin su nombre');
+select unblock((select id from my_blocks() limit 1));
+select pg_temp.ok((select count(*) from my_blocks()) = 0, 'desbloqueado');
+select pg_temp.ok((select closed from my_convos() limit 1), 'desbloquear no reabre la conversación');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select pg_temp.ok((select count(*) from my_blocks()) = 0, 'el otro no ve el bloqueo');
+
 -- borrar cuenta
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
 select delete_me();
