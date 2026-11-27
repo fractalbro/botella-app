@@ -192,7 +192,7 @@ const CINE = {
 const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 const tintCache = {};
 const tintPhoto = (src, hex) => tintCache[src + hex] || (tintCache[src + hex] = new Promise(ok => { const im = new Image(); im.onload = () => {
-  const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+  try { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
   const d = x.getImageData(0, 0, c.width, c.height), a = d.data, [tr, tg, tb] = hexRgb(hex);
   const tmx = Math.max(tr, tg, tb) / 255, tmn = Math.min(tr, tg, tb) / 255; let th = 0; { const r = tr / 255, g = tg / 255, b = tb / 255, dd = tmx - tmn; if (dd) th = tmx === r ? ((g - b) / dd) % 6 : tmx === g ? (b - r) / dd + 2 : (r - g) / dd + 4; th *= 60; if (th < 0) th += 360; }
   const ts = tmx ? (tmx - tmn) / tmx : 0;
@@ -203,7 +203,7 @@ const tintPhoto = (src, hex) => tintCache[src + hex] || (tintCache[src + hex] = 
     // el color nuevo se calcula entero y se mezcla con el original (así no aparecen tonos intermedios como el verde)
     const ns = Math.min(sat, ts * .85), v = mx, cc = v * ns, X = cc * (1 - Math.abs((th / 60) % 2 - 1)), m = v - cc, k = Math.floor(th / 60) % 6;
     const [R, G, Bb] = [[cc, X, 0], [X, cc, 0], [0, cc, X], [0, X, cc], [X, 0, cc], [cc, 0, X]][k]; a[i] = a[i] * (1 - w) + (R + m) * 255 * w; a[i + 1] = a[i + 1] * (1 - w) + (G + m) * 255 * w; a[i + 2] = a[i + 2] * (1 - w) + (Bb + m) * 255 * w; }
-  x.putImageData(d, 0, 0); c.toBlob(b => ok(URL.createObjectURL(b)), 'image/jpeg', .9); }; im.onerror = () => ok(src); im.src = src; }));
+  x.putImageData(d, 0, 0); c.toBlob(b => ok(b ? URL.createObjectURL(b) : src), 'image/jpeg', .9); } catch (e) { ok(src); } }; im.onerror = () => ok(src); im.src = src; }));
 const cineLive = (host, key, tint) => {
   const C = CINE[key], cv = document.createElement('canvas'), cx = cv.getContext('2d'); cv.className = 'cinecv'; host.appendChild(cv);
   const glowRgb = tint ? hexRgb(tint).join(',') : '127,216,201', sparkRgb = tint ? hexRgb(tint).map(v => Math.min(255, v + 30)).join(',') : '127,232,214';
