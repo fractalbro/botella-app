@@ -165,7 +165,7 @@ insert into auth.users(id) values ('00000000-0000-0000-0000-000000000007');
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000007');
 insert into profiles(id, name, district, topics, code_used) values (auth.uid(), 'Gabi', 'Surco', '{Música,Viajes,Arte}', 'BOTELLA-01');
-select pg_temp.ok((select tide_left from tide()) = 1 and (select gifts_left from profiles) = 1, 'regalo: 1 marea destacada y 1 lacre');
+select pg_temp.ok((select tide_left from tide()) = 1 and (select gifts_left from profiles) = 1, 'regalo: 1 marea destacada y 1 botella de regalo');
 select pg_temp.ok((select count(*) from shore()) >= 3, 'la orilla nueva nunca está vacía: llegan botellas de ejemplo');
 select pg_temp.ok((select bool_and(sample) from shore() where voice like 'seed/%'), 'las de ejemplo vienen marcadas');
 select pg_temp.ok((select rewarded from answer_delivery((select id from shore() where sample limit 1), '00000000-0000-0000-0000-000000000007/a1.m4a', 7)), 'responder una de ejemplo también regala botella');
@@ -183,9 +183,9 @@ select set_reveal((select id from my_convos() limit 1), true);
 select pg_temp.ok((select revealed and intro_voice like 'seed/%' from my_convos() limit 1), 'al compartir mi nombre, la persona de ejemplo comparte el suyo');
 select pg_temp.ok(set_key((select id from my_convos() limit 1)), 'con una persona de ejemplo la llamada se abre al poner mi llave');
 -- regalo y plan
-select pg_temp.ok(send_gift((select id from my_convos() limit 1)) = 0, 'mandé mi botella con lacre');
+select pg_temp.ok(send_gift((select id from my_convos() limit 1)) = 0, 'mandé mi botella de regalo');
 do $$ begin begin perform send_gift((select id from my_convos() limit 1)); raise exception 'debió fallar';
-  exception when others then if sqlerrm not like '%lacre%' then raise; end if; end; end $$;
+  exception when others then if sqlerrm not like '%de regalo%' then raise; end if; end; end $$;
 select send_plan((select id from my_convos() limit 1), 'Un café frente al mar', 'Este sábado, 5 p.m.');
 reset role;
 update messages set created_at = clock_timestamp() where created_at > now();
@@ -213,7 +213,7 @@ select pg_temp.ok((select bottles from beta_get('p10')) >= 10, 'pack de 10 botel
 select pg_temp.ok((select color_left from beta_get('color')) = 3, 'una de color más');
 select pg_temp.ok((select far_left from beta_get('far')) = 2, 'una que llega lejos más');
 select pg_temp.ok((select tide_left from beta_get('tide')) = 1, 'una marea destacada más');
-select pg_temp.ok((select gifts_left from beta_get('gift')) = 1, 'una botella con lacre más');
+select pg_temp.ok((select gifts_left from beta_get('gift')) = 1, 'una botella de regalo más');
 select pg_temp.ok((select glass from beta_get('glass:ambar')) = 'ambar', 'vidrio ámbar');
 select pg_temp.ok((select who_open from beta_get('who')), 'quién la abrió activado');
 select pg_temp.ok(jsonb_array_length((select openers from my_bottles() where body = '¿Qué te hace feliz?')) = 1, 'ahora veo desde qué distrito la abrieron');
@@ -300,7 +300,7 @@ select pg_temp.ok((select cooled from my_convos() limit 1), 'a las 48 horas la c
 do $$ begin begin insert into messages(convo_id, sender, voice, voice_secs) values ((select id from my_convos() limit 1), auth.uid(), '00000000-0000-0000-0000-000000000008/z.m4a', 3); raise exception 'debió fallar';
   exception when insufficient_privilege then null; end; end $$;
 select send_gift((select id from my_convos() limit 1));
-select pg_temp.ok(not (select cooled from my_convos() limit 1), 'una botella con lacre la reaviva');
+select pg_temp.ok(not (select cooled from my_convos() limit 1), 'una botella de regalo la reaviva');
 -- caducidad: lo que no abrí se lo lleva la marea
 reset role;
 update deliveries set expires_at = now() - interval '1 minute' where to_id = '00000000-0000-0000-0000-000000000010' and status = 'waiting';

@@ -142,3 +142,12 @@
 .sheet .faltan + .btn{margin:6px 0 12px!important}
 /* en pantallas bajas (iPhone SE) la fila de la pregunta de hoy no cabe sin tapar las botellas: queda en la tarjeta del día siguiente */
 @media (max-height:600px){.today.mini{display:none}}
+
+/* Mar 3D (tres.js) detrás de los momentos clave: la pantalla se vuelve transparente y su mar 2D se apaga suave */
+.phone>canvas.mar3d{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;opacity:0;transition:opacity 500ms var(--e-out,cubic-bezier(.16,1,.3,1));pointer-events:none}
+html.g3on .phone>canvas.mar3d{opacity:1}
+.phone>#app{z-index:1}
+.screen>canvas.bgc{transition:opacity 500ms var(--e-out,cubic-bezier(.16,1,.3,1))}
+.screen.g3{background:transparent}
+.screen.g3>canvas.bgc{opacity:0}
+@media (prefers-reduced-motion:reduce){.phone>canvas.mar3d,.screen>canvas.bgc{transition:none}}
