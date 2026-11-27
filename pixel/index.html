@@ -557,6 +557,7 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
 .chip[aria-checked=true]{background:var(--ink);color:#fff}
 
 /* conversación: nombre completo y caja de responder con fondo propio */
+.chead small{display:block}
 .chead b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .dock{background:linear-gradient(rgba(250,246,238,0),var(--bg) 24px);margin:0 calc(-1*var(--pad));padding:24px var(--pad) 0;z-index:5}
 .presb{margin:0 0 16px;align-self:stretch}.presb .tile{background:#E6F3FF}
@@ -1319,7 +1320,7 @@ function renderChat({ id = 'leo' } = {}) {
   };
 }
 const presAsk = (msgs, id) => (LIVE ? R.me && !R.me.intro_voice : !store.get('pres', null)) && msgs.some(m => !m.me) && msgs.some(m => m.me)
-  ? `<button class="push card presb" data-go="presenta" data-p='${JSON.stringify({ edit: 1, back: { to: 'chat', p: { id } } })}'><span class="tile">${ico('mic', INK, '#fff')}</span><span class="tx"><b>Alguien ya te escuchó. ¿Grabas tu presentación?</b><small>En vez de foto, tu voz. Es lo primero que escucha quien quiere conocerte.</small></span>${ico('chev', INK)}</button>` : '';
+  ? `<button class="push card presb" data-go="presenta" data-p='${JSON.stringify({ edit: 1, back: { to: 'chat', p: { id } } })}'><span class="tile">${ico('mic', INK, '#fff')}</span><span class="tx"><b>Alguien ya te escuchó. Graba tu presentación</b><small>En vez de foto, tu voz. Es lo primero que escucha quien quiere conocerte.</small></span>${ico('chev', INK)}</button>` : '';
 const bubble = (m, i, C) => `<div class="msg box ${m.me ? 'me' : ''}"><button class="push sq" data-pl="${i}" aria-label="Escuchar">${ico('play')}</button><span id="mw${i}" style="flex:1;display:flex">${wave(m.w, m.me ? INK : C.c, 0, 6).replace('class="px"', 'class="px w"')}</span><span class="num">${mmss(m.t)}</span></div>`;
 function playBubble(i, C) { const m = $('#v-chat')._msgs[i]; play(m, p => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, p, 6, true, m.me ? '#fff' : C.h).replace('class="px"', 'class="px w"'); }, () => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, 1, 6).replace('class="px"', 'class="px w"'); }); }
 
@@ -1394,7 +1395,7 @@ function renderTu() {
     <div class="box pres" style="${cvars(C)}"><span class="k mute">Tu voz de presentación</span>
       <p class="from" style="margin:4px 0 12px">Es lo primero que escucha quien quiere conocerte. En vez de foto.</p>
       ${LIVE && !(R.me && R.me.intro_voice) ? '<p class="from" style="margin:0">Todavía no la grabas. Con 10 segundos basta.</p>' : voiceRow(LIVE ? R.urls.get(R.me.intro_voice) || '' : (S.presUrl || localStorage.getItem('bp.presurl') || 'answer-1'), C, mmss(pres.secs), 0, 33)}
-      <button class="push btn" data-go="presenta" data-p='{"edit":1}' style="margin-top:12px;height:48px;font-size:15px">${ico('mic', INK, '#fff')} Grabar otra vez</button></div>
+      <button class="push btn" data-go="presenta" data-p='{"edit":1}' style="margin-top:12px;height:48px;font-size:15px">${ico('mic', INK, '#fff')} ${LIVE ? (R.me && R.me.intro_voice ? 'Grabar otra vez' : 'Grabar mi presentación') : (store.get('pres', null) ? 'Grabar otra vez' : 'Grabar mi presentación')}</button></div>
     <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle · gratis</span><b>Pide más botellas</b><small>Te quedan ${S.left} para lanzar. Aquí pides paquetes y botellas especiales: doradas, que llegan lejos y de regalo.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ir al Muelle</span></button>
     <button class="push mcard" data-go="mes"><span class="k">Tu ${LIVE ? LS.month : 'noviembre'} en Botella</span><b>${LIVE ? (LS.heard ? `${LS.heard} ${LS.heard === 1 ? 'persona escuchó' : 'personas escucharon'} tu voz este mes` : 'Este mes empieza tu voz: lanza una botella') : '36 personas escucharon tu voz este mes'}</b><span class="cbars">${KEYS.map((k, i) => `<i style="--c:${CAT[k].c};flex:${mix[i]}"></i>`).join('')}</span></button>
     <div class="sec"><span class="h2">Tus temas</span><button class="k" data-go="temas" data-p='{"edit":1}' style="height:44px;color:var(--sea)">Cambiar</button></div>
