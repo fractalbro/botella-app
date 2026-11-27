@@ -331,10 +331,9 @@ R.mar = () => {
           <div class="ract"><button class="btn rbtn" data-go="botellas">${I.bottle}Ver mis botellas</button></div></div></section>`;
   };
   return { cls: 'tabbed reels', html: `
-  <div class="rtop"><span class="wm">botella</span><span class="top-r"><span class="vmode" role="group" aria-label="Cómo ver el mar"><button data-m="uno" aria-pressed="${mode === 'uno'}" aria-label="Una a una">${I.reel}</button><button data-m="todo" aria-pressed="${mode === 'todo'}" aria-label="Todo el mar">${I.sea}</button></span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></span></div>
+  <div class="rtop"><span style="width:44px"></span><span class="vmode" role="tablist" aria-label="Cómo ver el mar"><button role="tab" data-m="uno" aria-pressed="${mode === 'uno'}">Una a una</button><button role="tab" data-m="todo" aria-pressed="${mode === 'todo'}">Todo el mar</button></span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></div>
   <div class="sea" id="sea" aria-label="Todas las botellas del mar">
     <div class="seahead"><h2>${nv === 1 ? '1 botella nueva' : `${nv} botellas nuevas`} flotando</h2><p>Toca una para ver qué dice.</p></div>
-    <div class="far" aria-hidden="true">${Array.from({ length: 14 }, (_, k) => `<i style="--x:${(k * 37 + 11) % 92 + 4}%;--y:${(k * 53 + 7) % 70 + 18}%;--r:${(k * 47) % 60 - 30}deg;--d:${(k % 5) * -.9}s"></i>`).join('')}</div>
     ${(() => { const spots = [[24, 30], [70, 25], [40, 52], [78, 56], [20, 74], [60, 80], [44, 22]]; const all = [...S.shore.map(id => ({ k: 'voz', id, b: B[id] })), { k: 'hoy' }, ...(S.mine ? [{ k: 'mine' }] : [])];
       return all.slice(0, spots.length).map((x, i) => { const [px, py] = spots[i], rot = [-14, 10, -6, 16, -10, 8, -4][i];
         if (x.k === 'hoy') return `<button class="fb moon" style="--x:${px}%;--y:${py};--d:${i * -.7}s" data-k="hoy"><span class="art"><span class="mmoon"></span></span><span class="lbl"><i style="background:#FFE7B0"></i>Pregunta de hoy</span></button>`;
