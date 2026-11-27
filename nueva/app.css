@@ -389,6 +389,118 @@ svg{display:block}
 .moonc .bigmoon{width:min(24vh,170px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 34%,#FFF8E8,#FFE7B0 55%,#C9A86A);box-shadow:0 0 90px 20px rgba(255,231,176,.25)}
 .scr.reels~.tabs,.tabs{z-index:6}
 @media (prefers-reduced-motion:reduce){.vbar,.rhint{animation:none}}
+
+/* ===== Perfil con vida (Cesar 27/11): la forma de tu voz, tu mes, tu racha ===== */
+.vmark{--c1:#7FD8C9;--c2:#8E8CFF;--c3:#FF70A9;width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(from 210deg,var(--c1),var(--c2),var(--c3),var(--c1));box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+.vmark svg{width:100%;height:100%}.vmark rect{fill:rgba(5,18,31,.8)}
+.vmark.big{width:76px;height:76px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 14px 40px -10px color-mix(in oklab,var(--c1),transparent 40%)}
+.vmark.big rect{animation:vbar 1.8s ease-in-out infinite}.vmark.big rect:nth-child(odd){animation-delay:-.6s}.vmark.big rect:nth-child(3n){animation-delay:-1.1s}
+.vmark rect{transform-box:fill-box;transform-origin:center}
+.vmark.sm{width:30px;height:30px;margin-left:-8px;box-shadow:0 0 0 2px #0B1B2B}.vmark.sm:first-child{margin-left:0}
+.me-pill .vmark{width:32px;height:32px}
+.tchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tchips span{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--fg-2);padding:4px 10px 4px 8px;border-radius:999px;background:color-mix(in oklab,var(--c),transparent 86%)}
+.tchips i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+
+.month{position:relative;overflow:hidden;display:grid;gap:10px;text-align:left;width:100%;padding:20px 20px 0;border-radius:24px;color:#05121F;
+  background:linear-gradient(135deg,var(--c1) 0%,color-mix(in oklab,var(--c2),var(--c1) 30%) 55%,var(--c3) 100%);transition:transform .14s var(--in)}
+.month:active{transform:scale(.98)}
+.month .mlbl{font-size:13px;font-weight:500;opacity:.75}
+.month .mbig{font-size:clamp(24px,7vw,30px);line-height:1.08;letter-spacing:-.035em;font-weight:600;text-wrap:balance}
+.month .mrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.month .mrow span{display:grid;gap:2px;font-size:12px;line-height:1.25;opacity:.85}
+.month .mrow b{font-size:20px;font-weight:600;letter-spacing:-.02em;opacity:1}
+.month .mrow b[style]{color:#05121F!important}
+.month .wline{display:block;width:calc(100% + 40px);height:54px;margin:6px -20px 0;opacity:.32}
+.month .wline rect{fill:#05121F}
+
+.streakc{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:14px;row-gap:12px;align-items:center;padding:16px;border-radius:var(--r-m);background:var(--s1);text-align:left;width:100%;transition:transform .12s var(--in)}
+.streakc:active{transform:scale(.98)}
+.streakc .sn{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;align-content:center;background:color-mix(in oklab,var(--a),transparent 82%);color:var(--a)}
+.streakc .sn b{font-size:22px;font-weight:600;line-height:1}.streakc .sn small{font-size:11px;opacity:.8}
+.streakc .tx b{display:block;font-weight:500}.streakc .tx small{display:block;color:var(--fg-3);font-size:13px;margin-top:2px}
+.streakc .wk{grid-column:1/-1;display:flex;justify-content:space-between}
+.streakc .wk span,.week span{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--fg-3)}
+.streakc .wk i{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line-2)}
+.streakc .wk .on i{background:var(--a);box-shadow:none}.streakc .wk .today i{box-shadow:inset 0 0 0 1.5px var(--a)}.streakc .wk .today.on i{box-shadow:0 0 0 3px var(--a-soft)}
+.streakc .wk .today{color:var(--fg)}
+
+.duo2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.vcard{display:grid;gap:4px;padding:14px;border-radius:var(--r-m);background:var(--s1);text-align:left;transition:transform .12s var(--in)}
+.vcard:active{transform:scale(.97)}
+.vcard b{font-weight:500;margin-top:6px}.vcard small{font-size:13px;color:var(--fg-3);line-height:1.3}
+.vart{height:84px;display:flex;align-items:flex-end;gap:2px;position:relative}
+.vart .mb .vbot{height:78px;max-height:none;filter:none;transform:rotate(-6deg)}
+.vart .mb:nth-child(2) .vbot{transform:rotate(4deg) translateY(4px)}.vart .mb:nth-child(3) .vbot{transform:rotate(-2deg)}
+.vart .mb .vbar{animation:none}
+.cst i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);margin:calc(var(--s)/-2);border-radius:50%;background:var(--c);box-shadow:0 0 14px var(--c)}
+.cst em{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:var(--fg)}
+.cst::before{content:"";position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px;border-radius:50%;border:1px dashed var(--line-2)}
+
+.fl{display:grid;gap:8px;margin-top:10px}
+.frow{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--r-m);text-align:left;width:100%;background:linear-gradient(100deg,color-mix(in oklab,var(--c),transparent 86%),var(--s1) 70%);transition:transform .12s var(--in)}
+.frow:active{transform:scale(.98)}
+.frow .fic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:color-mix(in oklab,var(--c),transparent 78%);flex:none}
+.frow .fic svg{width:20px;height:20px;fill:none;stroke:var(--c);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.frow .tx{flex:1;min-width:0}.frow b{display:block;font-weight:500}.frow small{display:block;font-size:13px;color:var(--fg-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow .chev{width:18px;height:18px;fill:none;stroke:var(--fg-3);stroke-width:1.7}
+
+/* Mis botellas */
+.bcards{display:grid;gap:10px}
+.bcard{display:flex;gap:14px;align-items:center;padding:14px 16px 14px 10px;border-radius:var(--r-m);text-align:left;width:100%;background:linear-gradient(110deg,color-mix(in oklab,var(--c),transparent 84%),var(--s1) 60%);transition:transform .12s var(--in)}
+.bcard:active{transform:scale(.98)}
+.bcard .mb .vbot{height:92px;max-height:none;transform:rotate(-8deg)}
+.bcard .tx{flex:1;display:grid;gap:8px;min-width:0}
+.bcard b{font-weight:500;font-size:var(--t3);line-height:1.25;letter-spacing:-.01em;text-wrap:balance}
+.bcard small{font-size:13px;color:var(--fg-3)}
+.btag{display:flex;align-items:center;gap:6px}.btag i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.hasans{font-style:normal;color:var(--c);font-weight:500}
+.reach.tint i.on{background:color-mix(in oklab,var(--c,var(--a)),transparent 55%)}.reach.tint i.heard{background:var(--c,var(--fg))}
+.bempty{display:grid;justify-items:center;gap:12px;text-align:center;padding:24px 8px}.bempty .vbot{height:140px;max-height:none}
+
+/* Racha */
+.rhead{display:flex;align-items:flex-end;gap:14px}
+.rnum{font-size:88px;line-height:.82;font-weight:300;letter-spacing:-.06em;color:var(--a)}
+.rhead .title{padding-bottom:2px}
+.week{justify-content:space-between;gap:0}
+.week i{width:34px;height:34px}
+.week .today i{box-shadow:inset 0 0 0 1.5px var(--a)}.week .today.on i{box-shadow:0 0 0 4px var(--a-soft)}.week .today{color:var(--fg)}
+.todayc{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r-m);background:rgba(255,194,75,.08);box-shadow:inset 0 0 0 1px rgba(255,194,75,.22)}
+.todayc.ok{background:var(--a-soft);box-shadow:inset 0 0 0 1px rgba(127,216,201,.3)}
+.todayc>svg{width:22px;height:22px;fill:none;stroke:var(--fg);stroke-width:1.7;flex:none}
+.todayc span{flex:1;display:grid;gap:2px}.todayc b{font-weight:500}.todayc small{font-size:13px;color:var(--fg-2)}
+.next .bar{height:6px;border-radius:3px;background:var(--line-2);overflow:hidden}.next .bar i{display:block;height:100%;background:var(--a);border-radius:3px}
+.gifts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.gft{display:grid;gap:4px;padding:14px;border-radius:var(--r-m);background:var(--s1);opacity:.62}
+.gft.got{opacity:1;box-shadow:inset 0 0 0 1px rgba(127,216,201,.35)}
+.gft .art .bt{width:70px;transform:rotate(-10deg)}
+.gft b{font-weight:500;font-size:14px;line-height:1.3}.gft small{font-size:12px;color:var(--fg-3)}.gft.got small{color:var(--a)}
+
+/* Salidas: los cupos ya no chocan con los puntos del Mar */
+.out .seats{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.out .seats i{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--fg-3)}.out .seats i.on{background:var(--c,var(--a));box-shadow:none}
+.gobtn{height:44px;min-width:92px;padding:0 18px;border-radius:999px;background:var(--fg);color:var(--bg);font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.gobtn[aria-pressed=true]{background:color-mix(in oklab,var(--c,var(--a)),transparent 70%);color:var(--fg)}
+.gobtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* Qué piensan de ti */
+.lcards{display:grid;gap:10px}
+.lcard{display:grid;gap:14px;padding:18px;border-radius:var(--r-m);text-align:left;width:100%;background:linear-gradient(140deg,rgba(199,184,255,.16),rgba(255,142,158,.08));box-shadow:inset 0 0 0 1px rgba(199,184,255,.2)}
+.lcard b{font-size:var(--t3);font-weight:500;line-height:1.25;letter-spacing:-.01em}
+.lfoot{display:flex;align-items:center;gap:10px}.faces{display:flex}
+
+/* Botella para dos */
+.pair{display:flex;align-items:center;justify-content:center;gap:6px}
+.pair>span:not(.plus){display:grid;justify-items:center;gap:6px}
+.pair .vbot{height:min(18vh,130px);max-height:none}
+.pair.sm .vbot{height:96px}
+.pair small{font-size:13px;color:var(--fg-2)}
+.pair .plus{font-size:28px;font-weight:300;color:var(--fg-3);padding-bottom:24px}
+.pb2.wait .vbot,.pb2 .vbot{opacity:1}.pb2.wait .vbot{opacity:.4;filter:grayscale(.6)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:8px;margin-bottom:12px}
+.steps li{display:flex;align-items:center;gap:12px;color:var(--fg-2);font-size:14px}
+.steps b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--s1);color:var(--fg);font-size:13px;font-weight:500;flex:none}
+@media (prefers-reduced-motion:reduce){.vmark.big rect{animation:none}}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
