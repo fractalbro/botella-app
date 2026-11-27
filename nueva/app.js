@@ -181,7 +181,8 @@ function check(form) {
   const first = $('[aria-invalid]', form); first && first.focus(); return ok;
 }
 // Bienvenida: una frase, un botón. (La imagen se rehace en estilo cinematográfico cuando llegue la referencia.)
-R.bienvenida = () => ({ cls: 'clear', mar: 'hero', html: `
+R.bienvenida = () => ({ cls: 'clear cine', html: `
+  <div class="cineimg" aria-hidden="true"></div>
   <div class="top"><span class="wm">botella</span></div>
   <div class="grow"></div>
   <h1 class="display">Te escuchan<br><span class="light">antes de verte.</span></h1>

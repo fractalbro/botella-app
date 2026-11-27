@@ -789,6 +789,14 @@ svg{display:block}
 .recing .livewave i{flex:0 0 2px;background:color-mix(in oklab,var(--c,#7FD8C9),#fff 20%);opacity:.85;border-radius:1px}
 .recing .rec-wrap{gap:22px}
 .csaved,.csaved-sp{height:40px;margin:32px 0 0}
+
+/* ===== Bienvenida cinematográfica (27/11, imagen propia generada) ===== */
+.scr.cine{background:#03080F}
+.scr.cine::before{z-index:0;height:58%;background:linear-gradient(to top,#03080F 34%,rgba(3,8,15,0))}
+.cine>*{position:relative;z-index:1}
+.cine>.cineimg{position:absolute;inset:0;z-index:0;background:#03080F url(img/hero.jpg) center top/cover no-repeat;animation:kb 24s ease-in-out infinite alternate;transform-origin:45% 30%}
+@keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.09) translateY(-1%)}}
+@media (prefers-reduced-motion:reduce){.cine>.cineimg{animation:none}}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
