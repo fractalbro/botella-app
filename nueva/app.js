@@ -314,7 +314,7 @@ R.mar = () => {
   };
   return { cls: 'tabbed reels', html: `
   <div class="rtop"><span class="wm">botella</span><span class="top-r">${nv ? `<span class="count" id="cnt">${nv === 1 ? '1 voz nueva' : `1 de ${nv} voces`}</span>` : ''}<button class="me-pill" data-go="perfil"><span class="avatar" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span>Tú</button></span></div>
-  <div class="feed" id="feed">${nv ? '' : `<section class="reel calm" style="--c:#7FD8C9"><div class="cover">${voiceBottle('#7FD8C9')}</div><div class="rtx"><h2 class="rq">Todo está en calma.</h2><p class="rmeta">Lanza tu botella y empezarán a llegarte voces.</p><div class="ract"><button class="btn rbtn" data-go="lanzar">${I.mic}Grabar mi botella</button></div></div></section>`}${reels.map(reel).join('')}</div>
+  <div class="feed" id="feed">${nv ? '' : `<section class="reel calm" style="--c:#7FD8C9"><div class="cover">${voiceBottle('#7FD8C9')}</div><div class="rtx"><h2 class="rq">Vienen más voces en camino.</h2><p class="rmeta">Ya escuchaste todas las de ahora. Mientras llegan otras, lanza la tuya: llega a 8 personas.</p><div class="ract"><button class="btn rbtn" data-go="lanzar">${I.mic}Grabar mi botella</button></div></div></section>`}${reels.map(reel).join('')}</div>
   <div class="dots" id="dots">${reels.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`,
   bind(el) {
     const f = $('#feed', el), cnt = $('#cnt', el), ds = $$('#dots i', el), rs = $$('.reel', el);
