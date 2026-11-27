@@ -380,6 +380,7 @@ R.mar = () => {
       const id = b.dataset.id, x = B[id], i = +b.dataset.i, secs = (PK[x.v] || [12])[0];
       sheet(`<p class="rtag" style="--c:${x.c}"><i></i>${esc(x.tag)} · ${esc(x.kind)}</p><h2 class="title mt2">${esc(x.q)}</h2><p class="sub mt1">Alguien que ama ${esc(x.theme)} · ${fmt(secs)}</p><div class="row-btns"><button class="btn btn-a" id="go"><span class="pl">${I.play}</span>Escuchar</button><button class="btn btn-q" id="one">Verla en grande</button></div>`, (s2, close) => { $('#go', s2).onclick = () => { close(); go('abrir', { id }); }; $('#one', s2).onclick = () => { close(); toReel(i); }; }); });
     rs[0] && rs[0].classList.add('on');
+    const fresh = Object.keys(S.convs).find(k => S.convs[k].unread && !S.convs[k].cel); if (fresh) setTimeout(() => curName === 'mar' && go('respondio', { id: fresh }), 900);
     let last = 0; f.addEventListener('scroll', () => { const i = Math.round(f.scrollTop / f.clientHeight); if (i === last) return; last = i;
       rs.forEach((r, k) => r.classList.toggle('on', k === i)); ds.forEach((d, k) => d.classList.toggle('on', k === i));
       if (cnt && nv > 1) cnt.textContent = i < nv ? `${i + 1} de ${nv} botellas` : `${nv} botellas`; navigator.vibrate && navigator.vibrate(4); }, { passive: true });
@@ -449,7 +450,7 @@ R.charlas = () => { const ids = Object.keys(S.convs); return { cls: 'tabbed', ht
     <span class="tx"><b>${c.stage >= 1 && b.name ? esc(b.name) : `Alguien que ama ${esc(b.theme)}`}</b><small>${last.f === 'them' ? 'Te respondió' : 'Esperando su voz'}</small></span>
     <span style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span class="when">${esc(c.when)}</span>${c.unread ? '<i class="unread"></i>' : stepsHTML(c.stage, 'mini')}</span></button>`; }).join('')}</div>`
   : `<p class="sub">Cuando respondas una botella, la conversación aparece aquí.</p>`}
-  ${S.shore.length ? `<div class="grow"></div><button class="item waiting" data-go="mar"><span class="ic">${I.bottle}</span><span class="tx"><b>${S.shore.length === 1 ? 'Una botella te espera' : `${S.shore.length} botellas te esperan`}</b><small>Cada una puede ser tu próxima conversación</small></span>${I.chev}</button>` : ''}` }; };
+  ${S.shore.length ? `<div class="grow"></div><button class="item waiting" data-go="mar"><span class="ic">${I.bottle}</span><span class="tx"><b>${S.shore.length === 1 ? 'Una botella te espera' : `${S.shore.length} botellas te esperan`}</b><small>Escúchalas en el Mar</small></span>${I.chev}</button>` : ''}` }; };
 
 // Chat: la ficha arriba (pregunta y pasos), las voces al medio, el siguiente paso y el micrófono abajo.
 const STEP = ['Voces', 'Nombres', 'Llamada', 'Plan'];
@@ -486,6 +487,30 @@ R.chat = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id]; c.unread = fals
     };
     draw();
   } }; };
+
+
+// "Te respondieron": el momento alto. Botella que sube, corcho que salta, sonido de descorche y vibración.
+const popSound = () => { try { const ac = new (window.AudioContext || window.webkitAudioContext)(), t = ac.currentTime;
+  const n = ac.createBuffer(1, ac.sampleRate * .25, ac.sampleRate), d = n.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 6);
+  const src = ac.createBufferSource(); src.buffer = n; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(1800, t); bp.frequency.exponentialRampToValueAtTime(420, t + .12); bp.Q.value = 3;
+  const g = ac.createGain(); g.gain.setValueAtTime(.9, t); g.gain.exponentialRampToValueAtTime(.001, t + .22); src.connect(bp).connect(g).connect(ac.destination); src.start(t);
+  const o = ac.createOscillator(), og = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(140, t + .09); og.gain.setValueAtTime(.5, t); og.gain.exponentialRampToValueAtTime(.001, t + .1); o.connect(og).connect(ac.destination); o.start(t); o.stop(t + .12);
+  const f = ac.createBuffer(1, ac.sampleRate * 1.2, ac.sampleRate), fd = f.getChannelData(0); for (let i = 0; i < fd.length; i++) fd[i] = (Math.random() < .004 ? (Math.random() * 2 - 1) : 0) * (1 - i / fd.length);
+  const fs = ac.createBufferSource(); fs.buffer = f; const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000; const fg = ac.createGain(); fg.gain.value = .35; fs.connect(hp).connect(fg).connect(ac.destination); fs.start(t + .05);
+  setTimeout(() => ac.close(), 1600); } catch (e) {} };
+R.respondio = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id] || {}; c.cel = true; save(); track('momento_respuesta', { id });
+  return { cls: 'clear moment', html: `
+  <div class="mo" style="--c:${b.c}">
+    <div class="mo-glow"></div><div class="mo-rings"><i></i><i></i><i></i></div>
+    <div class="mo-spark">${Array.from({ length: 18 }, (_, k) => `<i style="--a:${k * 20}deg;--d:${(k % 3) * .06}s;--r:${90 + (k % 4) * 22}px"></i>`).join('')}</div>
+    <div class="mo-bot">${voiceBottle(b.c, PK[b.v] && PK[b.v][1])}<span class="mo-cork"></span></div>
+    <div class="mo-tx"><p class="rtag" style="--c:${b.c}"><i></i>${esc(b.tag)}</p>
+      <h1 class="display">Te respondieron.</h1>
+      <p class="sub">Alguien que ama ${esc(b.theme)} le contestó a tu voz.</p>
+      <div class="row-btns mt3"><button class="btn btn-a" data-go="chat" data-p='{"id":"${id}"}'><span class="pl">${I.play}</span>Escuchar su respuesta</button><button class="btn btn-q" data-go="mar">Después</button></div></div>
+  </div>`,
+  bind(el) { const go1 = () => { el.classList.add('pop'); popSound(); navigator.vibrate && navigator.vibrate([18, 40, 70]); };
+    setTimeout(go1, 950); } }; };
 
 // Llamada: solo voz, una esfera que respira.
 R.llamada = ({ id = 'leo' }) => { const b = B[id]; return { cls: 'call clear', html: `

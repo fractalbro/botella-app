@@ -559,6 +559,35 @@ svg{display:block}
 @media (prefers-reduced-motion:reduce){.fb .rip::before,.fb .rip::after{animation:none;opacity:.4}}
 @keyframes ideaIn{from{opacity:0;transform:translateY(8px)}}#il.in .idea{animation:ideaIn .3s var(--in) both}#il.in .idea:nth-child(2){animation-delay:.04s}#il.in .idea:nth-child(3){animation-delay:.08s}#il.in .idea:nth-child(4){animation-delay:.12s}
 #imore svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+/* ===== "Te respondieron" (Cesar 26/11: animación grande + descorche + vibración) ===== */
+.scr.moment{padding:0;overflow:hidden}
+.mo{--c:#7FD8C9;position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 var(--pad) calc(var(--safe-b) + 28px);overflow:hidden;
+  background:radial-gradient(70% 45% at 50% 34%,color-mix(in oklab,var(--c),transparent 70%),transparent 70%),linear-gradient(180deg,color-mix(in oklab,var(--c),#05121F 80%),#05121F 75%)}
+.mo-glow{position:absolute;left:50%;top:24%;width:30px;height:30px;margin:-15px;border-radius:50%;background:var(--c);filter:blur(30px);opacity:0;transform:scale(1)}
+.pop .mo-glow{animation:moglow 1.4s var(--out) forwards}
+@keyframes moglow{0%{opacity:.9;transform:scale(1)}60%{opacity:.5}100%{opacity:.25;transform:scale(14)}}
+.mo-rings{position:absolute;left:50%;top:calc(var(--safe-t) + 5vh + 3vh);width:0;height:0}
+.mo-rings i{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;border:2px solid var(--c);opacity:0}
+.pop .mo-rings i{animation:moring 1.6s var(--out) forwards}.pop .mo-rings i:nth-child(2){animation-delay:.15s}.pop .mo-rings i:nth-child(3){animation-delay:.3s}
+@keyframes moring{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(3.4)}}
+.mo-spark{position:absolute;left:50%;top:calc(var(--safe-t) + 5vh + 3vh);width:0;height:0}
+.mo-spark i{position:absolute;width:6px;height:6px;margin:-3px;border-radius:50%;background:#fff;box-shadow:0 0 10px var(--c);opacity:0}
+.pop .mo-spark i{animation:spark 1.1s var(--out) forwards;animation-delay:var(--d)}
+@keyframes spark{0%{opacity:1;transform:rotate(var(--a)) translateY(0) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(.4)}}
+.mo-bot{position:absolute;left:50%;top:calc(var(--safe-t) + 5vh);height:min(36vh,290px);aspect-ratio:160/300;transform:translate(-50%,120vh) rotate(-18deg);animation:morise .95s cubic-bezier(.2,.9,.25,1.1) .05s forwards}
+.mo-bot .vbot{width:100%;height:100%;max-height:none;transform:none;display:block}.mo-bot .vbot rect[fill="#9A6A3E"],.mo-bot .vbot rect[fill="#B8865A"]{display:none}
+@keyframes morise{to{transform:translate(-50%,0) rotate(-4deg)}}
+.pop .mo-bot{animation:morise .95s cubic-bezier(.2,.9,.25,1.1) .05s forwards,mojolt .35s ease-out .95s}
+@keyframes mojolt{30%{translate:0 6px}60%{translate:0 -3px}}
+.mo-cork{position:absolute;left:40%;top:7.3%;width:20%;height:7.4%;border-radius:4px;background:linear-gradient(180deg,#B8865A,#9A6A3E)}
+.pop .mo-cork{animation:cork 1.2s cubic-bezier(.15,.7,.35,1) forwards}
+@keyframes cork{0%{transform:none}100%{transform:translate(60px,-46vh) rotate(540deg);opacity:0}}
+.mo-tx{position:relative;width:100%;text-align:center;opacity:0;transform:translateY(16px)}
+.pop .mo-tx{animation:motx .6s var(--in) .35s forwards}
+@keyframes motx{to{opacity:1;transform:none}}
+.mo-tx .rtag{display:inline-flex;margin:0 0 12px}.mo-tx .sub{margin-top:8px}
+.mo-tx .btn-a .pl svg{width:18px;height:18px;fill:currentColor;stroke:none}
+@media (prefers-reduced-motion:reduce){.mo-bot{animation:none;transform:translate(-50%,0) rotate(-4deg)}.pop .mo-cork,.pop .mo-spark i,.pop .mo-rings i,.pop .mo-glow{animation:none}.mo-tx{opacity:1;transform:none}}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
