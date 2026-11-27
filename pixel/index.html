@@ -1084,7 +1084,7 @@ function renderLanzar(p = {}) {
       S.lastUrl = url; S.rec = { blob, secs, w, idea, dorada: !!p.dorada };
       $('#send').onclick = () => {
         if (LIVE && !blob) { toast('No se grabó nada. Graba otra vez.', '#D63434'); return; }
-        if (p.onb) { pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'presenta' : 'cuenta', { i: 0 }); return; }
+        if (p.onb) { pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'presenta' : 'cuenta', { i: 0 }); return; }
         if (p.reply) { if (LIVE) { sendReply(p.reply, { blob, secs, w }, $('#send')); return; } pop(700); burst(...center($('#send')), [C.c, C.h, '#fff'], 32); toast('Tu respuesta va en camino. Si te responde, empieza una conversación.', C.c); setTimeout(() => go('voces'), 400); return; }
         fling(0, -1.6);
       };
@@ -1725,7 +1725,7 @@ async function upload(blob, cat) {
 
 /* ---------- lo que trae el servidor, ya en la forma de las pantallas ---------- */
 function syncMe() { const m = R.me; if (!m) return; S.left = m.bottles; S.temas.length = 0; S.temas.push(...(m.topics || []).map(S2T)); store.set('c.nombre', m.name); const w = toW(m.intro_peaks); if (w) store.set('preswave', w); }
-async function loadMe() { R.me = one(await rpc('tide')); if (R.me && !R.me.id) R.me = null; syncMe(); return R.me; }
+async function loadMe() { R.me = one(await rpc('tide')); if (R.me && !R.me.id) R.me = null; syncMe(); if (R.me && R.me.intro_voice) await signed([R.me.intro_voice]).catch(() => {}); return R.me; }
 async function loadShore() {
   const rows = (await rpc('shore')) || []; await signed(rows.map(r => r.voice)); R.shore = rows;
   const list = rows.map((r, i) => ({ id: r.id, cat: catOf(r.voice, r.kind, r.id), q: r.body || '', who: someone(r.place), ago: agoS(r.arrived), url: R.urls.get(r.voice), voice: r.voice, t: r.voice_secs, wv: toW(r.voice_peaks) || W(hashS(r.id) % 60 + 1), ...POS[i % POS.length], status: r.status }));
@@ -1787,15 +1787,18 @@ async function signUp(email, pass) {
   if (!ses) throw { message: 'No pudimos terminar de crear tu cuenta. Intenta en unos minutos.' };
   R.ses = ses;
 }
+const fromDataURL = async du => { try { return du ? await (await fetch(du)).blob() : null; } catch (e) { return null; } };
 async function createProfile() {
-  const r = R.intro; let path = null;
+  let r = R.intro; if (!r) { const b = await fromDataURL(localStorage.getItem('bp.presurl')); if (b && b.size) r = { blob: b, secs: (store.get('pres', { secs: 5 }).secs) || 5, w: store.get('preswave', null) }; }
+  if (!R.pend) { const pd = store.get('pend', null), b = await fromDataURL(localStorage.getItem('bp.pendurl')); if (pd && b && b.size && WEL[pd.id]) R.pend = { blob: b, secs: pd.secs || 5, w: pd.w, cat: pd.cat, bottle: WEL[pd.id][0] }; }
+  let path = null;
   if (r && r.blob) path = await upload(r.blob, '');
   const { error } = await sb.from('profiles').insert({ id: uid(), name: (store.get('c.nombre', '') || 'Sin nombre').slice(0, 25), district: D2S(store.get('dist', 'Otro')), topics: S.temas.map(T2S), seeks: [], intro_voice: path, intro_secs: path ? Math.min(60, r.secs) : null, intro_peaks: path ? peaksOf(r.w) : null, code_used: store.get('code', '') });
   if (error) { if (/código/i.test(error.message)) { store.set('codeok', false); throw { message: 'Tu código de invitación ya no sirve. Pide otro a quien te invitó.' }; } if (!/duplicate/i.test(error.message)) throw error; }
   R.intro = null;
   let first = null;
   if (R.pend && R.pend.blob) { try { const p = await upload(R.pend.blob, R.pend.cat); const res = one(await rpc('welcome_answer', { p_bottle: R.pend.bottle, p_voice: p, p_secs: R.pend.secs, p_peaks: peaksOf(R.pend.w) })); first = res && res.convo; if (first) { const cc = store.get('ccat', {}); cc[first] = R.pend.cat; store.set('ccat', cc); } } catch (e) { console.warn(e); } }
-  R.pend = null; store.set('pend', null);
+  R.pend = null; store.set('pend', null); localStorage.removeItem('bp.pendurl');
   return first;
 }
 async function enter(to, p = {}) {
@@ -1976,7 +1979,7 @@ async function liveBoot() {
   if (code) { const c = code.trim().toUpperCase(); store.set('code', c); history.replaceState(null, '', location.pathname + location.hash); rpc('check_code', { p_code: c }).then(ok => store.set('codeok', !!ok)).catch(() => {}); }
   sb.auth.onAuthStateChange((ev, ses) => { R.ses = ses; if (ev === 'PASSWORD_RECOVERY') setTimeout(() => go('olvide', { nueva: 1 }), 300); });
   try { const { data } = await sb.auth.getSession(); R.ses = data && data.session; } catch (e) {}
-  if (R.ses) { try { await loadAll(); } catch (e) { show('sinred', {}); return; } if (R.me) { subscribe(); store.set('onb', true); const h = location.hash.slice(1); show(VIEWS[h] && !['bienvenida', 'cuenta', 'entrar', 'primera', 'chat', 'llamada', 'entrante', 'respondio', 'lanzada', 'plan', 'reportar'].includes(h) ? h : 'playa', {}); return; } show('presenta', {}); return; }
+  if (R.ses) { try { await loadAll(); } catch (e) { show('sinred', {}); return; } if (R.me) { subscribe(); store.set('onb', true); const h = location.hash.slice(1); show(VIEWS[h] && !['bienvenida', 'cuenta', 'entrar', 'primera', 'chat', 'llamada', 'entrante', 'respondio', 'lanzada', 'plan', 'reportar'].includes(h) ? h : 'playa', {}); return; } { const h = location.hash.slice(1); show(['sobre', 'temas'].includes(h) && localStorage.getItem('bp.presurl') ? h : 'presenta', {}); } return; }
   const h = location.hash.slice(1); show(['entrar', 'olvide', 'normas'].includes(h) ? h : 'bienvenida', {});
 }
 
