@@ -751,34 +751,38 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
 
   <div class="fl mt3">${friendRow('#7FD8C9', 'mic', S.intro ? 'Tu presentación' : 'Graba tu presentación', S.intro ? `${S.intro.secs} s · Se escucha al compartir nombres` : 'Tu voz en vez de una foto', 'data-go="presentacion"')}</div>
 
-  <button class="dockhero mt3" data-go="muelle">
-    <span class="dhart" aria-hidden="true"><span class="b1">${voiceBottle('#8E8CFF')}</span><span class="b2">${voiceBottle('#FFD27A')}</span><span class="b3">${voiceBottle('#FFB061')}</span></span>
-    <span class="dhtx"><span class="dhk">${I.dock}Muelle</span><b>Que tu voz llegue más lejos</b><small>Tus botellas que llegan lejos, doradas y de regalo. Se ganan usando tu voz.</small></span>
-    <span class="dhcta">${X.far + X.tide ? `Tienes ${n_(X.far + X.tide, 'especial', 'especiales')}` : 'Cómo ganarlas'}${I.chev}</span>
-  </button>
-  <button class="mybot mt2" data-go="botellas"><span class="vart">${sent.length ? sent.map(x => `<span class="mb">${voiceBottle(tc(x.tema))}</span>`).join('') : `<span class="mb">${voiceBottle('#7FD8C9')}</span>`}</span><span class="tx"><b>Mis botellas</b><small>${S.sent.length ? `${n_(S.sent.length, 'botella', 'botellas')} en el mar · ${n_(S.sent.reduce((t, x) => t + (x.ans || 0), 0), 'respuesta', 'respuestas')}` : 'Todavía ninguna'}</small></span>${I.chev}</button>
-
-  <button class="moretg mt3" id="moretg" aria-expanded="false"><span>Más para hacer con tu voz</span><small>Tu mes, mapa, días seguidos, amigos y cuenta</small>${I.chev}</button>
-  <div class="moreb" id="moreb" hidden>
-  <button class="month mt2 slim" data-go="mes" style="--c1:${cs[0]};--c2:${cs[1]};--c3:${cs[2]}">
+  <button class="month mt2" data-go="mes" style="--c1:${cs[0]};--c2:${cs[1]};--c3:${cs[2]}">
     <span class="mlbl">Tu ${mes} en Botella · Toca para verlo</span>
     <b class="mbig">${heard} personas escucharon tu voz.</b>
     <span class="mrow"><span><b>${ans}</b>te respondieron</span><span><b>${notas}</b>notas de voz</span><span><b style="color:${top[2]}">${top[0]}</b>tu tema más escuchado</span></span>
     ${waveLine(pk)}
   </button>
-  <div class="fl mt2">${friendRow('#8E8CFF', 'map', 'Mapa de tu voz', `Conectó con ${n_(MAPA.length, 'tema', 'temas')}`, 'data-go="mapa"')}</div>
+
+  <button class="dockhero mt2" data-go="muelle">
+    <span class="dhart" aria-hidden="true"><span class="b1">${voiceBottle('#8E8CFF')}</span><span class="b2">${voiceBottle('#FFD27A')}</span><span class="b3">${voiceBottle('#FFB061')}</span></span>
+    <span class="dhtx"><span class="dhk">${I.dock}Muelle</span><b>Que tu voz llegue más lejos</b><small>Tus botellas que llegan lejos, doradas y de regalo. Se ganan usando tu voz.</small></span>
+    <span class="dhcta">${X.far + X.tide ? `Tienes ${n_(X.far + X.tide, 'especial', 'especiales')}` : 'Cómo ganarlas'}${I.chev}</span>
+  </button>
+
+  <p class="eyebrow">Tu voz</p>
+  <div class="duo2">
+    <button class="vcard" data-go="botellas"><span class="vart">${sent.length ? sent.map(x => `<span class="mb">${voiceBottle(tc(x.tema))}</span>`).join('') : `<span class="mb">${voiceBottle('#7FD8C9')}</span>`}</span><b>Mis botellas</b><small>${S.sent.length ? `${n_(S.sent.length, 'botella', 'botellas')} · ${n_(S.sent.reduce((t, x) => t + (x.ans || 0), 0), 'respuesta', 'respuestas')}` : 'Todavía ninguna'}</small></button>
+    <button class="vcard" data-go="mapa"><span class="vart cst">${MAPA.map(([t, k, c], i) => `<i style="--c:${c};--s:${8 + k * 3}px;--x:${[18, 62, 34, 76][i]}%;--y:${[30, 22, 70, 66][i]}%"></i>`).join('')}<em></em></span><b>Mapa de tu voz</b><small>Conectó con ${n_(MAPA.length, 'tema', 'temas')}</small></button>
+  </div>
+
   <button class="streakmini mt2" data-go="bitacora"><span class="smn"><b>${n}</b> ${n === 1 ? 'día seguido' : 'días seguidos'} grabando</span><span class="smw" aria-hidden="true">${weekStrip()}</span>${I.chev}</button>
+
   <p class="eyebrow">Con tus amigos</p>
   <div class="fl">
     ${friendRow('#C7B8FF', 'quote', '¿Qué piensan de ti?', la ? `${n_(la, 'amigo respondió', 'amigos respondieron')} “${esc(lec.q)}”` : 'Tus amigos te responden con su voz', 'data-go="lecturas"')}
     ${friendRow('#FF8E9E', 'two', 'Botella para dos', S.duo ? (S.duo.friend ? 'Ya están las dos voces. Falta lanzarla.' : 'Falta la voz de tu amigo') : 'Graba una botella junto a un amigo', 'data-go="dos"')}
     ${friendRow('#FFB061', 'people', 'Salidas en grupo', goOut ? `Vas a ${n_(goOut, 'salida', 'salidas')}` : `${n_(S.outs.length, 'plan', 'planes')} en Lima esta semana`, 'data-go="salidas"')}
   </div>
+
   <div class="list mt3">
     ${row('tide', 'Botellas doradas', 'Las puede abrir cualquiera, sin importar el tema', 'data-go="marea"')}
     ${row('gift', 'Invitar a alguien', 'Comparte Botella con un amigo', 'data-a="inv"')}
     ${row('key', 'Cuenta', 'Tus temas, normas y contraseña', 'data-a="cuenta"')}
-  </div>
   </div>`,
   bind(el) {
     const acts = {
@@ -797,8 +801,6 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
       pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => sheet(`<h2 class="title">¿Cerrar sesión?</h2><p class="sub">Tus botellas y conversaciones te esperan cuando vuelvas a entrar.</p><div class="row-btns mt3"><button class="btn btn-2" id="bye">Cerrar sesión</button><button class="btn btn-q" data-close>Seguir aquí</button></div>`, (sh, close) => $('#bye', sh).onclick = () => { close(); store.set('onb', 0); go('bienvenida'); })
     };
     $$('[data-a]', el).forEach(b => b.onclick = () => acts[b.dataset.a]());
-    const mt = $('#moretg', el), mb = $('#moreb', el), openM = o => { mb.hidden = !o; mt.setAttribute('aria-expanded', o); store.set('pmore', o); if (o) mb.classList.add('cascade'); };
-    openM(!!store.get('pmore', false)); mt.onclick = () => openM(mb.hidden);
   } }; };
 
 // Muelle: tus botellas especiales y cómo se ganan. Nada se compra.
