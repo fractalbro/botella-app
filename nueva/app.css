@@ -394,6 +394,44 @@ svg{display:block}
 .ic.tint svg{stroke:var(--c)}
 @keyframes cardin{from{transform:translateY(18px) scale(.98);opacity:0}}
 @media (prefers-reduced-motion:reduce){.vcard.front{animation:none}}
+/* ===== Solo voz (elegido por Cesar 26/11 21:20) ===== */
+:root{--bg:#03080F}
+.scr:not(.clear){background:radial-gradient(80% 45% at 50% 38%,rgba(127,216,201,.13),transparent 70%),#03080F}
+.orbx{--c:#7FD8C9;display:block;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#fff,var(--c) 46%,color-mix(in oklab,var(--c),#000 62%) 80%);box-shadow:0 0 28px color-mix(in oklab,var(--c),transparent 45%)}
+.orbx.big{width:min(34vw,128px);height:min(34vw,128px);box-shadow:0 0 80px 10px color-mix(in oklab,var(--c),transparent 68%);animation:breathe 5s ease-in-out infinite}
+.orbx.huge{width:min(52vw,200px);height:min(52vw,200px);box-shadow:0 0 90px 16px color-mix(in oklab,var(--c),transparent 62%)}
+.orbit{position:relative;width:min(80vw,40vh,330px);aspect-ratio:1;margin:clamp(4px,3vh,28px) auto 0;flex:none}
+.ringx{position:absolute;border-radius:50%;border:1px solid rgba(127,216,201,.2);pointer-events:none}
+.orbit .r1{inset:9%}.orbit .r2{inset:28%;border-color:rgba(127,216,201,.12)}
+.me-orb{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.sat{position:absolute;transform:translate(-50%,-50%) scale(var(--k));display:flex;flex-direction:column;align-items:center;gap:6px;animation:drift 6s ease-in-out infinite;animation-delay:var(--d)}
+.sat .orbx{width:58px;height:58px}
+.sat span{font-size:13px;color:var(--fg-2);white-space:nowrap}
+.sat:active .orbx{transform:scale(.92)}
+.voz-t{margin-top:auto}
+.voz-t .title{font-weight:300;font-size:clamp(26px,8vw,32px);letter-spacing:-.035em;line-height:1.1}
+.scr.voz .strip{margin-top:auto;padding:10px 14px;border-radius:999px}.scr.voz .strip small{display:none}.scr.voz .strip b{font-size:14px;font-weight:400;color:var(--fg-2)}.scr.voz .strip b span{color:var(--fg)}
+.scr.voz .voz-t{margin-top:4px}
+.vopen{position:fixed;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;padding:calc(var(--safe-t) + 18px) var(--pad) calc(var(--safe-b) + 24px);background:radial-gradient(70% 45% at 50% 32%,color-mix(in oklab,var(--c),transparent 82%),transparent 70%),#03080F;animation:fadein .5s ease both;overflow-y:auto}
+.vopen .vx{align-self:flex-start;width:44px;height:44px;flex:none}
+.vorb{position:relative;margin:clamp(10px,4vh,40px) 0 clamp(18px,4vh,36px);display:grid;place-items:center}
+.vorb .r1{inset:-14px;border-color:color-mix(in oklab,var(--c),transparent 60%)}
+.vorb .r2{inset:-36px;border-color:color-mix(in oklab,var(--c),transparent 80%)}
+.vopen.playing .vorb .orbx{animation:talk .9s ease-in-out infinite}
+.vopen.playing .vorb .ringx{animation:ripple 1.8s ease-out infinite}
+.vq2{margin:8px 0 0;font-weight:300;font-size:clamp(24px,7.4vw,30px);line-height:1.12;letter-spacing:-.03em;text-wrap:balance}
+.vopen .vplay{width:100%;margin-top:clamp(14px,3vh,26px)}
+.vopen .acts3{width:100%;margin-top:auto;padding-top:18px}
+.lc .title{font-weight:300;letter-spacing:-.035em}
+.scr:has(#lc) .mic{background:radial-gradient(circle at 38% 30%,#fff,var(--c,#7FD8C9) 50%,color-mix(in oklab,var(--c,#7FD8C9),#000 45%));box-shadow:0 0 70px 6px color-mix(in oklab,var(--c,#7FD8C9),transparent 65%);color:#03080F;transition:background .4s,box-shadow .4s}
+.ic.tint{border-radius:50%;background:radial-gradient(circle at 36% 30%,color-mix(in oklab,var(--c),#fff 40%),color-mix(in oklab,var(--c),transparent 50%) 70%)}
+.ic.tint svg{stroke:#03080F}
+@keyframes breathe{50%{transform:scale(1.05)}}
+@keyframes drift{50%{translate:0 -8px}}
+@keyframes talk{50%{transform:scale(1.07)}}
+@keyframes ripple{from{transform:scale(1);opacity:1}to{transform:scale(1.18);opacity:0}}
+@keyframes fadein{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.orbx.big,.sat,.vopen.playing .vorb .orbx,.vopen.playing .vorb .ringx{animation:none}}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}

@@ -185,8 +185,13 @@ R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: '
     function open() {
       done = true; track('botella_escuchada', { id, first }); navigator.vibrate && navigator.vibrate(12);
       let c = .7; const pop = () => { c = Math.min(1, c + .03); window.Mar && Mar.uncork(c); if (c < 1) requestAnimationFrame(pop); }; pop();
-      $('#stage', el).innerHTML = `<article class="vcard open in" style="--c:${b.c}"><span class="tagc">${esc(b.tag)}</span><h2 class="vq">${esc(b.q)}</h2><p class="vw">Alguien que ama ${esc(b.theme)}</p><div class="vplay">${player(b.v)}</div></article>
-        <div class="acts3"><button class="a3" id="pass"><span class="circ">${I.x}</span>Devolver</button><button class="a3 main" id="reply"><span class="circ">${I.mic}</span>Responder</button><span class="a3 ghost"></span></div>`;
+      $('#stage', el).innerHTML = `<div class="vopen" style="--c:${b.c}"><button class="ib edge vx" data-go="${first ? 'bienvenida' : 'mar'}" aria-label="Cerrar">${I.x}</button>
+        <div class="vorb"><i class="ringx r1"></i><i class="ringx r2"></i>${orb(b.c, 'huge')}</div>
+        <p class="sub center">Alguien que ama ${esc(b.theme)}</p><h2 class="vq2 center">${esc(b.q)}</h2>
+        <div class="vplay">${player(b.v)}</div>
+        <div class="acts3"><button class="a3" id="pass"><span class="circ">${I.x}</span>Devolver</button><button class="a3 main" id="reply"><span class="circ">${I.mic}</span>Responder</button><span></span></div></div>`;
+      $$('[data-go]', $('#stage', el)).forEach(x => x.addEventListener('click', () => go(x.dataset.go))); setTimeout(() => window.Mar && Mar.set('off'), 700);
+      const au = $('.vopen', el), iv = setInterval(() => { if (!document.body.contains(au)) return clearInterval(iv); au.classList.toggle('playing', !!(curP && au.contains(curP))); }, 200);
       $('#reply', el).onclick = () => go('grabar', { id, first });
       $('#pass', el).onclick = () => { const before = [...S.shore]; S.shore = S.shore.filter(x => x !== id); save(); first ? go('cuenta') : (go('mar'), toast('Volvió al mar. Le llegará a otra persona.', '#7FD8C9', () => { S.shore = before; save(); go('mar'); })); };
       if (first) setTimeout(() => $('.player', el) && $('.player', el).click(), 500);
@@ -272,27 +277,23 @@ R.olvide = () => ({ html: `
   bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; go('entrar'); toast('Listo. Revisa tu correo.'); }; } });
 
 // Mar: lo que te llegó, tu botella y la pregunta de hoy. Nada más.
-let marI = 0;
-R.mar = () => { const n = S.shore.length; if (marI >= n) marI = 0; const id = S.shore[marI], b = id && B[id]; return { cls: 'tabbed sea', html: `
-  <div class="top"><span class="wm">botella</span><span class="top-r">${n > 1 ? `<span class="count">${marI + 1} de ${n}</span>` : ''}<button class="me-pill" data-go="perfil"><span class="avatar" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span>Tú</button></span></div>
-  <div class="seabg" aria-hidden="true"><i class="moon"></i><i class="refl"></i></div>
-  <div class="stack">
-    ${b ? `${S.shore.slice(marI + 1, marI + 3).map((x, i) => `<span class="vcard ghost g${i + 1}" style="--c:${B[x].c}"></span>`).reverse().join('')}
-    <article class="vcard front" style="--c:${b.c}">
-      <span class="tagc">${esc(b.tag)}</span>
-      <div class="art">${bottleSVG('#ffffff')}</div>
-      <p class="vk">${esc(b.kind)} · te llegó hoy</p>
-      <h2 class="vq">${esc(b.q)}</h2>
-      <p class="vw">Alguien que ama ${esc(b.theme)}</p>
-      <div class="vact"><button class="btn btn-ink" data-go="abrir" data-p='{"id":"${id}"}'>${I.play || ''}Escuchar</button>${n > 1 ? `<button class="circ" id="next" aria-label="Ver la siguiente">${I.chev}</button>` : ''}</div>
-    </article>` : `<article class="vcard front calm" style="--c:#7FD8C9"><div class="art">${bottleSVG('#ffffff')}</div><h2 class="vq">El mar está tranquilo.</h2><p class="vw">Lanza tu botella y te llegarán voces nuevas.</p><div class="vact"><button class="btn btn-ink" data-go="lanzar">${I.mic}Grabar mi botella</button></div></article>`}
+const orb = (c, cls = '') => `<span class="orbx ${cls}" style="--c:${c}"></span>`;
+R.mar = () => { const n = S.shore.length; const A = [[-128, 1], [-18, .86], [96, .8]]; return { cls: 'tabbed voz', html: `
+  <div class="top"><span class="wm">botella</span><button class="me-pill" data-go="perfil"><span class="avatar" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span>Tú</button></div>
+  <div class="orbit" aria-label="Voces que te llegaron">
+    <i class="ringx r1"></i><i class="ringx r2"></i>
+    <span class="me-orb">${orb('#7FD8C9', 'big')}</span>
+    ${S.shore.slice(0, 3).map((id, i) => { const [ang, k] = A[i], r = 41, x = 50 + r * Math.cos(ang * Math.PI / 180), y = 50 + r * Math.sin(ang * Math.PI / 180); return `<button class="sat" style="left:${x}%;top:${y}%;--k:${k};--d:${i * -1.7}s" data-go="abrir" data-p='{"id":"${id}"}' aria-label="Escuchar la voz de alguien que ama ${esc(B[id].theme)}">${orb(B[id].c)}<span>${esc(B[id].tag)}</span></button>`; }).join('')}
   </div>
-  ${S.mine ? `<button class="strip" id="mine"><span class="dotc" style="--c:${tc(S.mine.tema)}"></span><span class="tx"><b>Tu ${esc(S.mine.kind.toLowerCase())} sobre ${esc(S.mine.tema.toLowerCase())}</b><small>${S.mine.heard ? `${S.mine.heard} de 8 ya la escucharon` : 'Va en camino a 8 personas'}</small></span>${I.chev}</button>`
-    : `<button class="strip" id="today"><span class="dotc" style="--c:#FFE7B0"></span><span class="tx"><b>Pregunta de hoy</b><small>¿Qué le dirías a tu yo de hace diez años?</small></span>${I.chev}</button>`}`,
+  <div class="center voz-t">
+    <h1 class="title">${n ? (n === 1 ? 'Una voz flota<br>cerca de ti.' : `${n === 2 ? 'Dos' : n === 3 ? 'Tres' : n} voces flotan<br>cerca de ti.`) : 'Todo está en calma.'}</h1>
+    <p class="sub mt1">${n ? 'Toca una para escucharla.' : 'Graba tu voz y te llegarán otras.'}</p>
+  </div>
+  ${S.mine ? `<button class="strip" id="mine"><span class="dotc" style="--c:${tc(S.mine.tema)}"></span><span class="tx"><b>Tu ${esc(S.mine.kind.toLowerCase())}: <span>${S.mine.heard ? `${S.mine.heard} de 8 la escucharon` : 'va hacia 8 personas'}</span></b><small>${S.mine.heard ? `${S.mine.heard} de 8 ya la escucharon` : 'Va en camino a 8 personas'}</small></span>${I.chev}</button>`
+    : `<button class="strip" id="today"><span class="dotc" style="--c:#FFE7B0"></span><span class="tx"><b>Pregunta de hoy: <span>responde con tu voz</span></b><small>¿Qué le dirías a tu yo de hace diez años?</small></span>${I.chev}</button>`}`,
   bind(el) {
     $('#mine', el) && ($('#mine', el).onclick = () => go('botellas'));
     $('#today', el) && ($('#today', el).onclick = () => go('hoy'));
-    const nx = $('#next', el); nx && (nx.onclick = () => { const f = $('.vcard.front', el); f.classList.add('away'); setTimeout(() => { marI = (marI + 1) % n; go('mar', { nohash: true }); }, 260); });
   } }; };
 
 // Lanzar: tipo → grabar (lo principal) → ideas solo si las pides → deslizar.
@@ -306,7 +307,7 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   <div class="seg mt1" id="seg">${Object.keys(P).map(k => `<button aria-pressed="${k === kind}">${k}</button>`).join('')}</div>
   <p class="cap mt2" style="margin-bottom:8px">Llega a quienes aman</p>
   <div class="chips" id="tm" role="radiogroup" aria-label="Llega a quienes aman">${S.temas.map(t => `<button class="chip" role="radio" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}<button class="chip more" id="more">+ Otro tema</button></div>
-  <article class="vcard mini mt2" id="lc" style="--c:${tc(tema)}"><span class="tagc" id="lt">${esc(tema)}</span><h1 class="vq" id="pq">${P[kind]}</h1><p class="vw" id="idea" ${idea ? '' : 'hidden'}>${esc(idea)}</p></article>
+  <div class="lc center mt3" id="lc" style="--c:${tc(tema)}"><span id="lt" hidden>${esc(tema)}</span><h1 class="title" id="pq">${P[kind]}</h1><p class="sub mt1" id="idea" ${idea ? '' : 'hidden'}>${esc(idea)}</p></div>
   <div class="grow"></div>
   <div class="rec-wrap" id="rw"></div>
   <div class="grow"></div>
@@ -314,7 +315,7 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   <button class="btn btn-q" id="ideas">¿Sin ideas?</button>`,
   bind(el) {
     $$('#seg button', el).forEach(b => b.onclick = () => { kind = b.textContent; $$('#seg button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#pq', el).textContent = P[kind]; });
-    const paintT = () => { $('#lc', el).style.setProperty('--c', tc(tema)); $('#lt', el).textContent = tema; };
+    const paintT = () => { el.style.setProperty('--c', tc(tema)); $('#lt', el).textContent = tema; }; paintT();
     const wireTm = () => $$('#tm .chip:not(.more)', el).forEach(b => b.onclick = () => { tema = b.textContent; paintT(); $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
     wireTm(); $('#more', el).onclick = () => sheet(`<h2 class="title">¿Sobre qué tema?</h2><p class="sub">Tu botella llega a quienes lo aman.</p><div class="chips mt2">${TEMAS.map(t => `<button class="chip" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}</div>`, (sh, close) => $$('.chip', sh).forEach(c => c.onclick = () => { tema = c.textContent; if (![...$$('#tm .chip', el)].some(x => x.textContent === tema)) $('#more', el).insertAdjacentHTML('beforebegin', `<button class="chip" role="radio">${esc(tema)}</button>`); $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x.textContent === tema)); paintT(); wireTm(); close(); }));
     const ideas = $('#ideas', el);
