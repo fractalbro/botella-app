@@ -446,15 +446,19 @@ select pg_temp.ok((select count(*) from push_take(500) where endpoint = 'https:/
 update notices set pushed_at = null where to_id = '00000000-0000-0000-0000-000000000008'; update profiles set last_seen = now() - interval '10 minutes' where id = '00000000-0000-0000-0000-000000000008';
 select pg_temp.ok((select count(*) from push_take(500) where endpoint = 'https://push.example/hugo') >= 3, 'con la app cerrada, los avisos salen por push');
 select pg_temp.ok((select count(*) from push_take(500)) = 0, 'y cada aviso sale una sola vez');
--- segunda tanda: si en 6 horas nadie respondió, llega a 4 orillas más (una sola vez)
+-- mientras nadie responda, cada hora suma 6 personas más, hasta el tope
 reset role;
 delete from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
 create temp table w2 as select count(*) n from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
-update bottles set created_at = now() - interval '7 hours' where voice like '%011/l.m4a';
+update bottles set created_at = now() - interval '2 hours', grew_at = null where voice like '%011/l.m4a';
 select tick();
-select pg_temp.ok((select wave2 from bottles where voice like '%011/l.m4a'), 'a las 6 horas sin respuesta sale la segunda tanda');
-select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) between (select n from w2) + 1 and (select n from w2) + 4 and (select n from w2) = 0, 'la segunda tanda suma hasta 4 orillas');
+select pg_temp.ok((select grew_at is not null from bottles where voice like '%011/l.m4a'), 'a la hora sin respuesta la botella suma gente');
+select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) between 1 and 6 and (select n from w2) = 0, 'suma hasta 6 personas por vez');
 create temp table w3 as select count(*) n from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
 select tick();
-select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) = (select n from w3), 'la segunda tanda sale una sola vez');
+select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) = (select n from w3), 'no vuelve a sumar antes de otra hora');
+update bottles set grew_at = now() - interval '2 hours' where voice like '%011/l.m4a';
+delete from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a');
+select tick();
+select pg_temp.ok((select count(*) from deliveries where bottle_id = (select id from bottles where voice like '%011/l.m4a')) >= 1, 'y otra hora después vuelve a sumar');
 \echo 'TODO OK'

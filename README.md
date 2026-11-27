@@ -45,7 +45,7 @@ Desde ahí, cada cambio a `supabase/schema.sql` se aplica solo. Sin el secreto, 
 - **Tu primer día**: escuchar, responder y lanzar. Al completarlo ganas una botella que llega lejos.
 - **La marea de las 21:00**: una pregunta del día para todos. Tu voz sale a las 21:00 y abre las voces de los demás. Las botellas sin abrir se van con la marea.
 - **Constancia**: cada día que usas tu voz suma. Vidrios y regalos se ganan con días seguidos, no se compran (`unlock_plan()` en el schema).
-- **Alcance**: cada botella llega a 8 personas afines; si en 6 horas nadie responde, llega a 4 más (una sola vez). En los textos nunca se menciona la espera: la botella sigue llegando a gente hasta que alguien responde. La que llega lejos va a 20.
+- **Alcance**: cada botella llega a 12 personas afines al lanzarla (30 si llega lejos, 20 si es para dos); mientras nadie responda, cada hora suma 6 más, sin tope. En los textos nunca se menciona la espera.
 - **Un tema en común, nunca el distrito**: antes del nombre se ve "Alguien que ama el cine". El distrito es privado: solo acerca botellas y sugiere lugares para un plan.
 - **Conversaciones por etapas**: Voces → Nombres → Llamada → Plan. La llamada se abre con 2 notas de voz de cada uno; el plan, después de hablar. Sin respuesta en 48 horas la conversación vuelve al mar.
 - **Botella para dos** (`?d=`) y **Pide una lectura** (`?l=`): links para compartir. Las lecturas se responden sin cuenta, solo mayores de 18, con filtro antes de entregar y el dueño puede borrar, reportar (bloquea ese celular) y cerrar. Duran 24 horas.

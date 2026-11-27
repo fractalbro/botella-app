@@ -69,7 +69,7 @@ function todayCard() {
   const q = h.quest;
   if (q && !q.done) {
     const st = [q.heard, q.answered, q.launched], n = st.filter(Boolean).length;
-    const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 20 personas.'];
+    const [t, s] = !q.heard ? ['Escucha una botella', 'Toca una de las que flotan en tu orilla.'] : !q.answered ? ['Responde con tu voz', 'Abre una botella y contéstale.'] : ['Lanza tu primera botella', 'Al lanzarla ganas una que llega a 30 personas.'];
     return `<button class="today quest" data-act="questGo"><span class="qs">${st.map((d, i) => `<i class="${d ? 'on' : ''}">${d ? icon('check', 's') : i + 1}</i>`).join('')}</span><span class="tx"><small>Tu primer día · ${n} de 3</small><b>${t}</b><span>${s}</span></span>${icon('arrow', 's')}</button>${tideMini(h)}`;
   }
   const t = h.tide || {}, left = tideIn();
@@ -199,7 +199,7 @@ P.screens.duowait = {
   render: () => { const d = S.duoWait || {}; return `${sb_()}<div class="top pad">${backBtn()}<span class="title">Botella para dos</span></div><div style="flex:1"></div>
     <div class="pad" style="padding-bottom:22px;background:linear-gradient(transparent,rgba(3,16,28,.94) 30%)">
       <span class="eyebrow a rise">Tu mitad está lista</span><div class="display rise d1" style="margin-top:8px">Falta <b>la otra voz</b>.</div>
-      <p class="lead rise d2">Mándale este link a quien quieras. Escucha tu mitad, graba la suya y la botella sale con las dos voces a 12 personas.</p>
+      <p class="lead rise d2">Mándale este link a quien quieras. Escucha tu mitad, graba la suya y la botella sale con las dos voces a 20 personas.</p>
       <div class="code rise d3"><span>${esc(duoLink(d.token || '').replace(/^https?:\/\//, ''))}</span><button class="btn btn-tonal btn-sm" data-act="duoCopy">${icon('copy', 's')} Copiar</button></div>
       <div class="foot" style="padding-bottom:0"><button class="btn btn-a" data-act="duoShare">${icon('export')} Mandar el link</button><button class="btn btn-ghost" data-act="toMine">Listo, la veo en mis botellas</button></div>
       <p class="small muted" style="margin:4px 0 0;text-align:center">Tiene 3 días. Si nadie graba, te devolvemos tu botella.</p></div>`; }
@@ -224,7 +224,7 @@ P.screens.duojoin = {
       <span class="eyebrow a rise">Botella para dos</span><div class="display rise d1" style="margin-top:8px"><b>${esc(d.name)}</b> quiere lanzar una botella contigo.</div>
       <div class="paper rise d2" style="margin-top:16px"><span class="eyebrow">${esc(d.kind)} · su mitad${d.place ? ' · ' + esc(d.place) : ''}</span><div class="q">${esc(d.body || 'Escucha su voz.')}</div>${vn(d.voice, d.secs, { peaks: d.peaks })}</div>
       <div class="sec"><span class="eyebrow">Tu mitad</span>${recBox('duo2', 'Graba tu mitad. Con 10 segundos basta.')}</div>
-      <p class="small muted">Sale al mar con las dos voces y llega a 12 personas. Si alguien responde, les llega a los dos.</p><div style="height:10px"></div></div>
+      <p class="small muted">Sale al mar con las dos voces y llega a 20 personas. Si alguien responde, les llega a los dos.</p><div style="height:10px"></div></div>
     ${S.rec.duo2 ? `<div class="foot pad"><button class="btn btn-a" data-needs="duo2" data-act="duoJoin">${icon('send')} ${S.me ? 'Lanzar juntos' : 'Crear mi cuenta y lanzar'}</button></div>` : ''}`; },
   async after() { if (S.duoPeek) return; try { S.duoPeek = (await rpc('duo_peek', { p_token: S.link.d })) || { status: 'cancelled' }; } catch (e) { S.duoPeek = { status: 'cancelled' }; } if (P.curId === 'duojoin') rerender(); }
 };
