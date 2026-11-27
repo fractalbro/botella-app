@@ -180,25 +180,14 @@ function check(form) {
   });
   const first = $('[aria-invalid]', form); first && first.focus(); return ok;
 }
-// Bienvenida: el mar de noche con botellas de voces de verdad flotando; una pregunta se ilumina cada vez.
-const HQ = [['Cine', '¿Qué película verías mil veces?'], ['Música', '¿Qué canción te devuelve a tus 15 años?'], ['Comida', '¿Cuál es tu huarique favorito?'], ['Cine', '¿Qué serie te hizo desvelarte?'], ['Música', '¿Qué canción pondrías para empezar una fiesta?'], ['Comida', '¿Qué plato te recuerda a tu casa?']];
-R.bienvenida = () => { const C = ['#FF9F7A', '#FF70A9', '#8E8CFF'], T = ['Comida', 'Música', 'Cine'], spots = [[20, 62, -12], [80, 56, 10], [50, 66, -4]];
-  return { cls: 'clear hello', html: `
-  <canvas class="seacv" aria-hidden="true"></canvas>
+// Bienvenida: una frase, un botón. (La imagen se rehace en estilo cinematográfico cuando llegue la referencia.)
+R.bienvenida = () => ({ cls: 'clear', mar: 'hero', html: `
   <div class="top"><span class="wm">botella</span></div>
-  <div class="hsea" aria-hidden="true">${spots.map(([x, y, r], k) => `<span class="hb${k === 2 ? ' lead' : ''}" style="--x:${x}%;--y:${y}%;--r:${r}deg;--c:${C[k]};--d:${k * -.9}s" data-k="${k}"><span class="rip"></span>${voiceBottle(C[k], fakePeaks(k + 3))}<span class="lbl"><i></i>${T[k]}</span></span>`).join('')}
-    <p class="hq" id="hq"><span>${HQ[0][1]}</span></p></div>
+  <div class="grow"></div>
   <h1 class="display">Te escuchan<br><span class="light">antes de verte.</span></h1>
   <p class="sub mt2 mb3">Graba una pregunta con tu voz y alguien que ama lo mismo que tú te responde.</p>
-  <div class="row-btns"><button class="btn btn-a" data-go="abrir" data-p='{"id":"majo","first":true}'>Escuchar mi primera botella</button>
-  <button class="btn btn-q" data-go="entrar">Ya tengo cuenta</button></div>`,
-  bind(el) { const run = seaWater($('.seacv', el)); run(true); track('bienvenida_vista');
-    const hb = $$('.hb', el), q = $('#hq', el); let k = 0; hb[2].classList.add('on');
-    const order = [2, 1, 0]; let n = 0;
-    const iv = setInterval(() => { if (!document.body.contains(el)) return clearInterval(iv); n = (n + 1) % HQ.length; k = order[n % 3];
-      hb.forEach((b, x) => b.classList.toggle('on', x === k)); q.classList.remove('in'); void q.offsetWidth; q.style.setProperty('--qx', hb[k].style.getPropertyValue('--x')); q.style.setProperty('--qy', hb[k].style.getPropertyValue('--y'));
-      q.firstElementChild.textContent = HQ[n][1]; q.style.setProperty('--c', hb[k].style.getPropertyValue('--c')); q.classList.add('in'); }, 3200);
-    q.style.setProperty('--qx', '50%'); q.style.setProperty('--qy', '46%'); q.style.setProperty('--c', '#8E8CFF'); q.classList.add('in'); } }; };
+  <div class="row-btns"><button class="btn btn-a" data-go="abrir" data-p='{"id":"majo","first":true}'>Abrir mi primera botella</button>
+  <button class="btn btn-q" data-go="entrar">Ya tengo cuenta</button></div>` });
 
 // Los pasos de entrada: los dos primeros ya están hechos cuando llegas a la cuenta (se siente avanzado, porque lo está).
 const ONB = ['Escuchar', 'Responder', 'Tu cuenta', 'Tus temas'];
@@ -268,52 +257,39 @@ function recUI(el, slideLabel, onSend, hintTop = '') {
   idle();
 }
 
-// Cuenta: tu respuesta ya está grabada y espera; solo falta guardarla.
-R.cuenta = () => { const p = store.get('pending'), b = p && B[p.id]; return { html: `
-  ${p ? onbBar(2) : '<div class="top"><span class="wm">botella</span></div>'}
-  <h1 class="title mt2">${p ? 'Tu respuesta está lista.' : 'Guarda tu lugar.'}</h1>
-  <p class="sub mt2 mb3">${p ? 'Crea tu cuenta para enviarla.' : 'Crea tu cuenta para lanzar tu primera botella.'} Tu nombre nadie lo ve hasta que tú quieras.</p>
-  ${p ? `<div class="pend" style="--c:${b.c}">${voiceMark('', myPk())}<div><b>Tu respuesta${p.secs ? ` · ${fmt(p.secs)}` : ''}</b><small>Para alguien que ama ${esc(b.theme)}</small></div><span class="pdot" aria-hidden="true"></span></div>` : ''}
-  <form id="f" class="grow mt4" autocomplete="on">
-    <label class="field"><span>Tu nombre</span><input class="inp" name="n" required autocomplete="given-name"></label>
-    <label class="field"><span>Correo</span><input class="inp" name="e" type="email" required autocomplete="email"></label>
-    <label class="field"><span>Contraseña</span><input class="inp" name="p" type="password" minlength="6" required autocomplete="new-password"></label>
-    <label class="cap age"><input type="checkbox" required> Tengo 18 años o más</label>
+// Cuenta: una pregunta a la vez, en letra grande y sin cajas. Tu respuesta espera guardada.
+const CQ = [
+  { k: 'n', q: '¿Cómo te llamas?', h: 'Nadie lo ve hasta que tú quieras.', t: 'text', ac: 'given-name', ph: 'Tu nombre' },
+  { k: 'e', q: '¿Cuál es tu correo?', h: 'Solo para entrar y avisarte cuando te respondan.', t: 'email', ac: 'email', ph: 'nombre@correo.com' },
+  { k: 'p', q: 'Crea una contraseña.', h: 'Al menos 6 caracteres.', t: 'password', ac: 'new-password', ph: '••••••', min: 6 }];
+R.cuenta = ({ i = 0 } = {}) => { const p = store.get('pending'), f = CQ[i], v = store.get('cta', {}), last = i === CQ.length - 1; return { cls: 'cta', html: `
+  <div class="top"><button class="ib edge" id="bk" aria-label="Atrás">${I.back}</button><span class="cdots" aria-label="Paso ${i + 1} de ${CQ.length}">${CQ.map((_, x) => `<i class="${x <= i ? 'on' : ''}"></i>`).join('')}</span><span style="width:44px"></span></div>
+  ${p && i === 0 ? `<p class="csaved">${I.check}Tu respuesta está guardada. Crea tu cuenta para enviarla.</p>` : '<div class="csaved-sp"></div>'}
+  <form id="f" class="cform" autocomplete="on">
+    <label class="cq" for="ci">${f.q}</label>
+    <input class="cin" id="ci" name="${f.k}" type="${f.t}" autocomplete="${f.ac}" placeholder="${f.ph}" required ${f.min ? `minlength="${f.min}"` : ''} value="${f.t === 'password' ? '' : esc(v[f.k] || '')}">
+    <p class="ch">${f.h}</p>
+    ${last ? `<label class="cage"><input type="checkbox" required><span class="box">${I.check}</span>Tengo 18 años o más</label>` : ''}
   </form>
-  <button class="btn btn-a mt3" form="f">Seguir</button>`,
-  bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; S.name = new FormData(e.target).get('n').trim(); save(); track('cuenta_creada', { con_respuesta: !!p }); go('temas'); }; } }; };
+  <div class="grow"></div>
+  <button class="btn btn-a" form="f">${last ? 'Crear mi cuenta' : 'Seguir'}</button>`,
+  bind(el) { const fm = $('#f', el), inp = $('#ci', el); fm.noValidate = true; setTimeout(() => inp.focus({ preventScroll: true }), 350);
+    $('#bk', el).onclick = () => i ? go('cuenta', { i: i - 1 }) : go(p ? 'grabar' : 'bienvenida', p ? { id: p.id, first: true } : {});
+    fm.onsubmit = e => { e.preventDefault(); if (!check(fm)) return; const nv = { ...v, [f.k]: inp.value.trim() }; if (f.t !== 'password') store.set('cta', nv);
+      if (!last) return go('cuenta', { i: i + 1 }); S.name = nv.n; save(); store.set('cta', null); track('cuenta_creada', { con_respuesta: !!p }); go('temas'); }; } }; };
 
-// Temas: lo único que se muestra de ti antes del nombre. Tu voz toma sus colores mientras eliges.
-R.temas = ({ edit = false } = {}) => { const T = TEMAS, pre = edit ? S.temas : []; return { cls: 'temas', html: `
-  ${edit ? `<div class="top"><button class="ib edge" data-go="perfil" aria-label="Atrás">${I.back}</button><span></span><span style="width:44px"></span></div>` : onbBar(3)}
-  <div class="thead mt3"><div><h1 class="title">${edit ? 'Tus temas' : '¿Qué te mueve?'}</h1>
-    <p class="sub mt1">Elige tres. Tus botellas llegan a quien ama lo mismo.</p></div>
-    <div class="tprev" id="tp">${voiceMark('big', myPk(), pre.length ? myColors() : ['#2A3A4A', '#33475A', '#2A3A4A'])}<small id="tpl">${pre.length ? 'Tu voz' : 'Tu voz, sin color aún'}</small></div></div>
-  <div class="chips tchips mt4" id="ch">${T.map(t => `<button class="chip" style="--c:${tc(t)}" aria-pressed="${pre.includes(t)}"><i></i>${t}</button>`).join('')}</div>
+// Temas: lo único que se muestra de ti antes del nombre.
+R.temas = ({ edit = false } = {}) => { const T = TEMAS; return { html: `
+  <div class="top"><button class="ib edge" data-go="${edit ? 'perfil' : 'cuenta'}" data-p='${edit ? '{}' : '{"i":2}'}' aria-label="Atrás">${I.back}</button><span class="cap">${edit ? '' : 'Último paso'}</span><span style="width:44px"></span></div>
+  <h1 class="title mt2">${edit ? 'Tus temas' : '¿Qué te mueve?'}</h1>
+  <p class="sub mt1 mb3">Elige tres. Tus botellas llegan a quien ama lo mismo.</p>
+  <div class="chips" id="ch">${T.map(t => `<button class="chip" aria-pressed="${edit && S.temas.includes(t)}">${t}</button>`).join('')}</div>
   <label class="field mt4"><span style="display:flex;justify-content:space-between">Tu distrito <i class="lock" style="font-style:normal">${I.lock}Nunca se muestra</i></span>
   <select class="inp"><option>Barranco</option><option>Jesús María</option><option>Lince</option><option>Miraflores</option><option>San Isidro</option><option>Surco</option><option>Otro</option></select></label>
   <div class="grow"></div>
-  <button class="btn btn-a mt3" id="go"></button>`,
-  bind(el) { const chosen = () => $$('.chip[aria-pressed=true]', el).map(c => c.textContent), btn = $('#go', el);
-    const paint = () => { const c = chosen(), n = c.length, cs = c.map(tc); $('#tp', el).firstElementChild.outerHTML = voiceMark('big', myPk(), n ? [cs[0], cs[1] || cs[0], cs[2] || cs[0]] : ['#2A3A4A', '#33475A', '#2A3A4A']);
-      $('#tpl', el).textContent = n === 0 ? 'Tu voz, sin color aún' : n < 3 ? 'Tu voz toma color' : 'Así se ve tu voz';
-      btn.disabled = n !== 3; btn.textContent = n === 3 ? (edit ? 'Guardar' : 'Enviar mi respuesta') : n === 0 ? 'Elige 3 temas' : `Elige ${3 - n} más`; };
-    $$('.chip', el).forEach(c => c.onclick = () => { const on = c.getAttribute('aria-pressed') === 'true'; if (!on && chosen().length >= 3) { c.animate([{ translate: '0' }, { translate: '-4px' }, { translate: '4px' }, { translate: '0' }], 220); return; }
-      c.setAttribute('aria-pressed', !on); navigator.vibrate && navigator.vibrate(5); paint(); });
-    paint();
-    btn.onclick = () => { S.temas = chosen(); save(); if (edit) { go('perfil'); toast('Temas guardados'); return; } const p = store.get('pending'); if (p) { const b = B[p.id]; S.shore = S.shore.filter(x => x !== p.id); S.convs[p.id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: 'answer-1', s: p.secs }] }; store.set('pending', null); save(); } store.set('onb', 1); track('temas_elegidos', { temas: S.temas }); p ? go('enviada', { id: p.id }) : go('mar'); }; } }; };
-
-// Primera respuesta enviada: tu botella, con tu voz y tus colores, se va al mar.
-R.enviada = ({ id = 'majo' }) => { const b = B[id], cs = myColors(); return { cls: 'clear sent1', html: `
-  <canvas class="seacv" aria-hidden="true"></canvas>
-  <div class="grow"></div>
-  <div class="gone" style="--c:${cs[0]}"><span class="rip"></span>${voiceBottle(cs[0], myPk().slice(0, 18))}</div>
-  <div class="grow"></div>
-  <p class="center" style="margin:0"><span class="rtag" style="--c:${b.c}"><i></i>Para alguien que ama ${esc(b.theme)}</span></p>
-  <h1 class="display center mt2">Tu voz va en camino.</h1>
-  <p class="sub center mt2">Te avisamos apenas te responda. Mientras, en el mar te esperan otras botellas.</p>
-  <button class="btn btn-a mt4" data-go="mar">Ir al mar</button>`,
-  bind(el) { const run = seaWater($('.seacv', el)); run(true); navigator.vibrate && navigator.vibrate([10, 30, 10]); } }; };
+  <button class="btn btn-a mt3" id="go" ${edit ? '' : 'disabled style="opacity:.4"'}>${edit ? 'Guardar' : 'Entrar al mar'}</button>`,
+  bind(el) { const sel = () => $$('.chip[aria-pressed=true]', el).length; $$('.chip', el).forEach(c => c.onclick = () => { if (c.getAttribute('aria-pressed') === 'false' && sel() >= 3) return; c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'false'); const ok = sel() === 3; $('#go', el).disabled = !ok; $('#go', el).style.opacity = ok ? 1 : .4; });
+    $('#go', el).onclick = () => { S.temas = $$('.chip[aria-pressed=true]', el).map(c => c.textContent); save(); if (edit) { go('perfil'); toast('Temas guardados'); return; } const p = store.get('pending'); if (p) { const b = B[p.id]; S.shore = S.shore.filter(x => x !== p.id); S.convs[p.id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: 'answer-1', s: p.secs }] }; store.set('pending', null); save(); } store.set('onb', 1); track('temas_elegidos', { temas: S.temas }); go('mar'); toast(p ? 'Tu voz va en camino. Te avisamos cuando te responda.' : 'Bienvenido al mar.'); }; } }; };
 
 // Entrar y recuperar contraseña.
 R.entrar = () => ({ html: `
@@ -439,7 +415,6 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   <div class="lzhead">
     <h1 class="title" id="pq">${P[kind]}</h1>
     <p class="sub" id="idea" ${idea ? '' : 'hidden'}>${esc(idea)}</p>
-    <button class="tpill" id="more" aria-label="Cambiar tema"><span>Llega a quienes aman</span><b><i></i><em id="tmn">${esc(tema)}</em>${I.chev}</b></button>
   </div>
   <div class="grow"></div>
   <div class="rec-wrap" id="rw"></div>
@@ -449,16 +424,18 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   bind(el) {
     $$('#seg button', el).forEach(b => b.onclick = () => { kind = b.textContent; $$('#seg button', el).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#pq', el).textContent = P[kind]; });
     const paintT = () => el.style.setProperty('--c', TC[tema] || '#7FD8C9'); paintT();
-    $('#more', el).onclick = () => { const mine = S.temas, rest = TEMAS.filter(t => !mine.includes(t)), ch = t => `<button class="chip" style="--c:${tc(t)}" aria-pressed="${t === tema}"><i></i>${esc(t)}</button>`;
+    const openTema = () => { const mine = S.temas, rest = TEMAS.filter(t => !mine.includes(t)), ch = t => `<button class="chip" style="--c:${tc(t)}" aria-pressed="${t === tema}"><i></i>${esc(t)}</button>`;
       sheet(`<h2 class="title">¿Sobre qué tema?</h2><p class="sub">Tu botella llega a todas las personas que lo aman.</p><p class="cap tsec">Tus temas</p><div class="chips tchips">${mine.map(ch).join('')}</div><p class="cap tsec">Otros temas</p><div class="chips tchips">${rest.map(ch).join('')}</div>`,
-        (sh, close) => $$('.chip', sh).forEach(c => c.onclick = () => { tema = c.textContent; $('#tmn', el).textContent = tema; paintT(); navigator.vibrate && navigator.vibrate(5); setTimeout(close, 120); })); };
+        (sh, close) => $$('.chip', sh).forEach(c => c.onclick = () => { tema = c.textContent; $('#tmn', el) && ($('#tmn', el).textContent = tema); paintT(); navigator.vibrate && navigator.vibrate(5); setTimeout(close, 120); })); };
     const ideas = $('#ideas', el);
     ideas.onclick = () => sheet(`<h2 class="title">Ideas para ${kind === 'Pregunta' ? 'preguntar' : kind === 'Confesión' ? 'confesar' : 'contar'}</h2><p class="sub">Tócala y dila con tus palabras.</p><div class="row-btns" id="il"></div><button class="btn btn-q mt1" id="imore">${I.shuffle}Ver otras ideas</button>`, (s, close) => {
       const fill = () => { const l = $('#il', s); l.classList.remove('in'); void l.offsetWidth; l.innerHTML = nextIdeas(kind, IDEAS[kind]).map(t => `<button class="idea">${esc(t)}</button>`).join(''); l.classList.add('in');
         $$('.idea', l).forEach(b => b.onclick = () => { const p = $('#idea', el); p.hidden = false; p.textContent = b.textContent; close(); }); };
       fill(); $('#imore', s).onclick = () => { fill(); navigator.vibrate && navigator.vibrate(5); }; });
     recUI(el, 'Desliza al mar', () => { const p = $('#idea', el); if (dorada) X.tide = Math.max(0, X.tide - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); track('botella_lanzada', { dorada: !!dorada, tema }); go('lanzada'); });
-    new MutationObserver(() => ideas.hidden = !!$('#sl', el)).observe($('#after', el), { childList: true });
+    // El tema se elige al final, junto al envío: primero hablas, después decides a quién le llega.
+    new MutationObserver(() => { const sl = $('#sl', el); ideas.hidden = !!sl;
+      if (sl && !$('.dest', el)) { sl.insertAdjacentHTML('beforebegin', `<button class="dest" id="dest"><span class="dl">Llega a quienes aman</span><span class="dv"><i></i><b id="tmn">${esc(tema)}</b></span><span class="dc">Cambiar</span></button>`); $('#dest', el).onclick = openTema; } }).observe($('#after', el), { childList: true });
     new MutationObserver(() => el.classList.toggle('recing', !!$('#rtm', el))).observe($('#rw', el), { childList: true });
   } }; };
 

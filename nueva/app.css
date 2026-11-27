@@ -757,6 +757,38 @@ svg{display:block}
 .recing #seg,.recing .tpill{display:none}
 .recing .lzhead{margin-top:40px}
 .recing .lzhead .title{color:var(--fg-2)}
+
+/* ===== Cuenta: una pregunta a la vez (27/11) ===== */
+.cdots{display:flex;gap:6px}.cdots i{width:6px;height:6px;border-radius:50%;background:var(--line-2);transition:background .3s,width .3s}.cdots i.on{background:var(--fg-2)}.cdots i.on:last-of-type{width:18px;border-radius:3px;background:var(--fg)}
+.csaved{display:flex;align-items:center;gap:8px;margin:32px 0 0;font-size:14px;color:var(--fg-3)}.csaved svg{width:14px;height:14px;fill:none;stroke:var(--a);stroke-width:2.4;flex:none}
+.csaved-sp{height:52px}
+.cform{display:grid;margin-top:48px}
+.cq{font-size:var(--t4);line-height:1.1;letter-spacing:-.03em;font-weight:500;color:var(--fg)}
+.cin{margin-top:28px;width:100%;border:0;background:none;padding:0 0 14px;font:inherit;font-size:24px;font-weight:300;letter-spacing:-.02em;color:var(--fg);outline:none;border-bottom:1px solid var(--line-2);border-radius:0;transition:border-color .25s}
+.cin::placeholder{color:rgba(244,239,231,.24)}
+.cin:focus{border-bottom-color:var(--a)}
+.cin[aria-invalid]{border-bottom-color:#FF8E9E}
+.cform .ferr{margin:10px 0 0;font-size:13px;color:#FF8E9E}
+.ch{margin:12px 0 0;font-size:14px;color:var(--fg-3)}
+.cage{display:flex;align-items:center;gap:12px;margin-top:36px;font-size:15px;color:var(--fg-2);cursor:pointer}
+.cage input{position:absolute;opacity:0;pointer-events:none}
+.cage .box{width:22px;height:22px;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--line-2);display:grid;place-items:center;transition:background .2s,box-shadow .2s}
+.cage .box svg{width:13px;height:13px;fill:none;stroke:var(--on-a);stroke-width:2.6;opacity:0}
+.cage input:checked+.box{background:var(--a);box-shadow:none}.cage input:checked+.box svg{opacity:1}
+.cage input:focus-visible+.box{outline:2px solid var(--a);outline-offset:2px}
+
+/* Lanzar: destino junto al envío; grabando más sobrio (27/11) */
+.dest{display:flex;align-items:center;gap:10px;width:100%;padding:16px 2px;margin-bottom:16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:left;font-size:15px}
+.dest .dl{color:var(--fg-3)}
+.dest .dv{display:inline-flex;align-items:center;gap:8px;flex:1;color:var(--fg)}
+.dest .dv i{width:8px;height:8px;border-radius:50%;background:var(--c,#7FD8C9)}
+.dest .dv b{font-weight:500}
+.dest .dc{font-size:14px;color:var(--fg-2)}
+.recing .timer{font-size:28px;font-weight:300;color:var(--fg-2);letter-spacing:0}
+.recing .livewave{gap:4px;max-width:240px;height:40px}
+.recing .livewave i{flex:0 0 2px;background:color-mix(in oklab,var(--c,#7FD8C9),#fff 20%);opacity:.85;border-radius:1px}
+.recing .rec-wrap{gap:22px}
+.csaved,.csaved-sp{height:40px;margin:32px 0 0}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
