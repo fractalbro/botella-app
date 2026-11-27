@@ -7,206 +7,319 @@
 <meta name="theme-color" content="#FAF6EE">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@500;600;700&family=VT323&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@500;600;700&family=VT323&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
 <style>
 /* VOICE  juguetón pero sereno: un RPG de 16 bits con el orden de una app moderna.
-   IDEA   la orilla de una isla de SNES: botellas de colores que llegan con voces adentro.
-   PICTURE la playa en perspectiva con botellas pixeladas que flotan y saltan al tocarlas.
-   COLOUR crema #FAF6EE, tinta #181425, cinco colores de botella; nada más.
-   TYPE   Press Start 2P solo para títulos cortos y HUD, VT323 para números, Plus Jakarta Sans para leer.
-   LAYOUT una columna con aire: HUD, playa, reproductor, barra de consola abajo. */
+   IDEA   una isla de SNES vista en isométrico: botellas de colores que llegan con voces adentro.
+   PICTURE la orilla en un bloque isométrico con tramas de puntos; las botellas flotan desfasadas.
+   COLOUR crema #FAF6EE, tinta #181425, cinco colores de botella.
+   TYPE   Press Start 2P solo en el logo, Pixelify Sans en etiquetas y botones, VT323 en números, Plus Jakarta Sans para leer.
+   LAYOUT una columna con aire; todas las medidas en múltiplos de 4. */
 :root{
-  --bg:#FAF6EE;--paper:#FFFFFF;--ink:#181425;--ink-2:#5A5468;--ink-3:#8C8698;--line:#E7DFCF;
+  --bg:#FAF6EE;--paper:#FFFFFF;--btn:#F7EFDF;--ink:#181425;--ink-2:#4A4458;--ink-3:#7E788A;--line:#E7DFCF;--bevel:#C3B091;
   --sea:#368DDB;--sand:#F2DDB0;
-  --b:3px;--sh:4px 4px 0 var(--ink);--sh-s:3px 3px 0 var(--ink);
   --px:"Pixelify Sans",ui-monospace,monospace;--px8:"Press Start 2P",ui-monospace,monospace;--num:"VT323",ui-monospace,monospace;
   --sans:"Plus Jakarta Sans",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
   --pad:20px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+  --spring:cubic-bezier(.34,1.56,.64,1);
 }
 *{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body{font:500 15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip;
   background-image:radial-gradient(rgba(24,20,37,.07) 1px,transparent 1.2px);background-size:12px 12px}
-button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-svg.px,.px svg{shape-rendering:crispEdges;display:block}
-:focus-visible{outline:3px solid var(--sea);outline-offset:3px}
-#app{max-width:430px;margin:0 auto;padding:calc(var(--safe-t) + 16px) var(--pad) calc(var(--safe-b) + 120px);min-height:100vh}
-.view{display:none;animation:in .28s steps(4) both}
+button,input{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+svg.px,.px svg{shape-rendering:crispEdges;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+:focus-visible{outline:none}
+#app{max-width:432px;margin:0 auto;padding:calc(var(--safe-t) + 16px) var(--pad) calc(var(--safe-b) + 120px);min-height:100vh}
+#app.bare{padding-bottom:calc(var(--safe-b) + 24px)}
+.view{display:none}
 .view.on{display:block}
-@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.view.full.on{display:flex;flex-direction:column;min-height:calc(100vh - var(--safe-t) - var(--safe-b) - 40px)}
 
-/* ---------- bloques: borde grueso y sombra sólida ---------- */
-.box{background:var(--paper);border:var(--b) solid var(--ink);box-shadow:var(--sh)}
-.push{background:var(--paper);border:var(--b) solid var(--ink);box-shadow:var(--sh);transition:transform .06s steps(1),box-shadow .06s steps(1);user-select:none}
-.push:active,.push.down{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
-.btn{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 18px;font:600 17px/1 var(--px);letter-spacing:.03em;text-transform:uppercase;width:100%}
+/* ---------- bloques: borde grueso, bisel interno de pantalla CRT y sombra sólida ---------- */
+.box{background:var(--paper);border:3px solid var(--ink);box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #E6DAC0,4px 4px 0 var(--ink)}
+.push{position:relative;background:var(--btn);border:3px solid var(--ink);user-select:none;-webkit-user-select:none;
+  box-shadow:inset 2px 2px 0 var(--hl,#fff),inset -2px -2px 0 var(--k,var(--bevel)),4px 4px 0 var(--ink);
+  transform:translate(0,0);transition:transform .05s,box-shadow .05s}
+.push:active,.push.down{transform:translate(3px,3px);box-shadow:inset 2px 2px 0 var(--hl,#fff),inset -2px -2px 0 var(--k,var(--bevel)),1px 1px 0 var(--ink)}
+.push.card{background:var(--paper);--k:#E6DAC0;--hl:#fff}
+.push[disabled]{opacity:.45;cursor:default;transform:none;box-shadow:inset 2px 2px 0 var(--hl,#fff),inset -2px -2px 0 var(--k,var(--bevel)),4px 4px 0 var(--ink)}
+/* puntero ▶ al apuntar o al llegar con el teclado */
+.push::before{content:"";position:absolute;left:-16px;top:50%;width:8px;height:12px;margin-top:-6px;opacity:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 6' shape-rendering='crispEdges'%3E%3Cpath fill='%23181425' d='M0 0h1v6H0zM1 1h1v4H1zM2 2h1v2H2z'/%3E%3C/svg%3E") center/contain no-repeat;
+  animation:nudge .5s steps(2) infinite}
+@media (hover:hover){.push:not([disabled]):hover::before{opacity:1}.push:not([disabled]):hover{border-color:#2E2748}}
+.push:focus-visible::before{opacity:1}
+.push:focus-visible,.chip:focus-visible,.bt:focus-visible{outline:3px dashed var(--sea);outline-offset:4px}
+@keyframes nudge{50%{transform:translateX(-4px)}}
+.btn{display:flex;align-items:center;justify-content:center;gap:12px;height:56px;padding:0 16px;font:600 17px/1 var(--px);letter-spacing:.04em;text-transform:uppercase;width:100%}
 .btn.c{background:var(--c);color:var(--on,#fff)}
-.btn svg{width:18px;height:18px}
+.btn.blue{background:var(--sea);color:#fff;--k:#1F5A9E;--hl:#9ED6FF}
+.btn svg{width:20px;height:20px}
+.link{display:block;margin:16px auto 0;height:44px;font:600 14px/44px var(--sans);color:var(--ink-2);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
 .sq{width:48px;height:48px;display:grid;place-items:center;flex:none}
-.sq svg{width:18px;height:18px}
+.sq svg{width:20px;height:20px}
 .k{font:600 13px/1 var(--px);text-transform:uppercase;letter-spacing:.06em}
-.h1{font:800 clamp(26px,7.6vw,30px)/1.1 var(--sans);letter-spacing:-.03em;margin:0;text-wrap:balance}
+.h1{font:800 clamp(28px,7.6vw,32px)/1.1 var(--sans);letter-spacing:-.03em;margin:0;text-wrap:balance}
+.hx{font:800 clamp(36px,10.4vw,44px)/1.04 var(--sans);letter-spacing:-.04em;margin:0;text-wrap:balance}
 .h2{font:700 18px/1.3 var(--sans);letter-spacing:-.015em;margin:0}
 .mute{color:var(--ink-2)}.mute3{color:var(--ink-3)}
-.num{font-family:var(--num);font-size:26px;line-height:1;letter-spacing:.02em}
+.num{font-family:var(--num);font-size:28px;line-height:1;letter-spacing:.02em}
 .row{display:flex;align-items:center;gap:12px}
 .sp{flex:1}
 
 /* ---------- encabezado HUD ---------- */
-.hud{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-.wm{font:15px/1 var(--px8);letter-spacing:.04em;display:flex}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.wm{font:16px/1 var(--px8);letter-spacing:.04em;display:flex}
 .wm span{display:inline-block;animation:wave 1.6s steps(2) infinite}
-@keyframes wave{50%{transform:translateY(-3px)}}
+.wm.xl{font-size:24px}
+@keyframes wave{50%{transform:translateY(-4px)}}
 .tag-l{font-size:12px;color:var(--ink-2);margin-top:8px}
-.inv{display:flex;align-items:stretch;height:44px}
-.inv>*{display:flex;align-items:center;gap:6px;padding:0 10px}
-.inv>*+*{border-left:var(--b) solid var(--ink)}
-.inv .num{font-size:24px}
-.inv svg{height:22px;width:auto}
+.inv{display:flex;align-items:stretch;height:48px}
+.inv>*{display:flex;align-items:center;gap:8px;padding:0 12px}
+.inv>*+*{border-left:3px solid var(--ink)}
+.inv svg{height:24px;width:auto}
 
-/* ---------- la playa ---------- */
-.beach{position:relative;aspect-ratio:96/66;overflow:hidden;padding:0}
-.beach>svg.scene{position:absolute;inset:0;width:100%;height:100%}
-.bt{position:absolute;transform:translate(-50%,-100%);display:block;padding:6px 4px 0}
-.bt svg{width:var(--w);height:auto;image-rendering:pixelated}
-.bt.sea{animation:bob 2.2s steps(2) infinite}
-.bt.sea:nth-child(odd){animation-delay:-1.1s}
-@keyframes bob{50%{transform:translate(-50%,calc(-100% + 3px))}}
-.bt.hop{animation:hop .5s steps(5)}
-@keyframes hop{30%{transform:translate(-50%,calc(-100% - 16px))}60%{transform:translate(-50%,calc(-100% - 4px))}}
-.bt .mark{position:absolute;left:50%;top:-18px;transform:translateX(-50%);width:18px;height:20px;display:grid;place-items:center;background:var(--paper);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);font:700 12px/1 var(--px);animation:wave 1s steps(2) infinite}
+/* ---------- la isla isométrica ---------- */
+.beach{position:relative;height:clamp(200px,28vh,248px);overflow:hidden;padding:0;background:#F4FBFF}
+.beach,.hero{container-type:size}
+.beach .stage{top:calc(50% + 10px);width:min(100cqw,calc((100cqh - 20px) * 112 / 84))}
+.stage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100cqw,calc(100cqh * 112 / 84));aspect-ratio:112/84}
+.stage>svg{position:absolute;inset:0;width:100%;height:100%}
+.stage .f2{animation:frames 1.2s steps(1) infinite}
+@keyframes frames{50%{opacity:0}}
+.bt{position:absolute;transform:translate(-50%,-100%);display:block;padding:12px 12px 0;min-width:44px;min-height:44px}
+.bt .spr{display:block;width:var(--w);transform-origin:50% 90%}
+.bt.sea .spr{animation:float var(--d,3s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(var(--a,6px)) rotate(3deg)}}
+.bt.hop .spr{animation:hop .56s var(--spring)}
+@keyframes hop{0%{transform:scale(1.15,.8)}35%{transform:translateY(-20px) scale(.9,1.12)}70%{transform:translateY(0) scale(1.1,.9)}100%{transform:none}}
+.bt .mark{position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:20px;height:20px;display:grid;place-items:center;background:var(--paper);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);font:700 12px/1 var(--px);animation:wave 1s steps(2) infinite}
 .bt .mark::after{content:"";position:absolute;bottom:-6px;left:50%;margin-left:-3px;border:3px solid transparent;border-top-color:var(--ink)}
-.bt.sel .mark{background:var(--c);color:#fff}
-.bt.off{opacity:.18;pointer-events:none}
-.bt.heard .mark{display:none}
-.bt.sel .mark{display:grid}
-.cap{position:absolute;left:10px;bottom:10px;background:var(--paper);border:2px solid var(--ink);padding:5px 8px;font:600 13px/1 var(--px)}
+.bt.sel .mark{background:var(--c);color:#fff;display:grid}
+.bt.off{opacity:.2;pointer-events:none}
+.bt.heard:not(.sel) .mark{display:none}
+.cap{position:absolute;left:8px;bottom:8px;background:var(--paper);border:2px solid var(--ink);padding:4px 8px;font:600 13px/1 var(--px);box-shadow:2px 2px 0 var(--ink)}
 
 /* ---------- filtro por color ---------- */
-.legend{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:20px calc(-1*var(--pad)) 0;padding:2px var(--pad) 8px}
+.legend{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:20px calc(-1*var(--pad)) 0;padding:4px var(--pad) 8px}
 .legend::-webkit-scrollbar{display:none}
-.chip{flex:none;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:2px solid var(--ink);background:var(--paper);font:700 13px/1 var(--sans);box-shadow:2px 2px 0 var(--ink)}
-.chip i{width:10px;height:10px;background:var(--c);outline:2px solid var(--ink)}
+.chip{flex:none;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:2px solid var(--ink);background:var(--paper);font:700 13px/1 var(--sans);box-shadow:2px 2px 0 var(--ink);transition:transform .05s,box-shadow .05s}
+.chip:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.chip i{width:12px;height:12px;background:var(--c);outline:2px solid var(--ink)}
 .chip[aria-pressed=true]{background:var(--ink);color:#fff}
 .chip[aria-pressed=true] i{outline-color:#fff}
 
 /* ---------- reproductor ---------- */
-.player{margin-top:18px;padding:18px 18px 16px}
-.badge{display:inline-flex;align-items:center;gap:8px;height:26px;padding:0 9px;background:var(--c);color:var(--on,#fff);border:2px solid var(--ink);font:600 13px/1 var(--px);text-transform:uppercase;letter-spacing:.05em}
-.badge svg{width:9px;height:9px}
-.q{font:700 19px/1.35 var(--sans);letter-spacing:-.02em;margin:14px 0 6px;text-wrap:balance}
+.player{margin-top:16px;padding:16px 16px 16px 20px}
+.pop{animation:rise .42s var(--spring) both}
+@keyframes rise{0%{transform:translateY(32px) scale(.96);opacity:0}60%{transform:translateY(-4px) scale(1.05);opacity:1}100%{transform:none}}
+.badge{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 8px;background:var(--c);color:var(--on,#fff);border:2px solid var(--ink);font:600 13px/1 var(--px);text-transform:uppercase;letter-spacing:.05em}
+.badge svg{width:12px;height:12px}
+.q{font:700 19px/1.36 var(--sans);letter-spacing:-.02em;margin:12px 0 4px;text-wrap:balance;color:var(--ink)}
 .from{font-size:13px;color:var(--ink-3);margin:0}
-.wavebox{margin:18px 0 16px;display:flex;align-items:center;gap:12px}
-.wavebox svg{flex:1;height:36px}
-.wavebox .num{font-size:22px;min-width:42px;text-align:right}
-.ctrls{display:flex;gap:10px;align-items:center}
+.wavebox{margin:16px 0;display:flex;align-items:center;gap:12px}
+.wavebox svg{flex:1;height:40px}
+.wavebox .num{font-size:24px;min-width:44px;text-align:right}
+.ctrls{display:flex;gap:12px;align-items:center}
 .ctrls .play{width:56px;height:56px;background:var(--c);color:var(--on,#fff)}
 .ctrls .resp{flex:1;height:56px;font-size:16px}
-.wavebox.live rect.on{animation:flick .3s steps(1) infinite}
-@keyframes flick{50%{opacity:.55}}
 
 /* ---------- barra de consola ---------- */
-.nav{position:fixed;left:50%;bottom:calc(var(--safe-b) + 14px);transform:translateX(-50%);width:calc(100% - 28px);max-width:400px;display:grid;grid-template-columns:1fr 1fr 84px 1fr 1fr;align-items:end;height:68px;padding:0 6px;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.nav{position:fixed;left:50%;bottom:calc(var(--safe-b) + 16px);transform:translateX(-50%);width:calc(100% - 32px);max-width:400px;display:grid;grid-template-columns:1fr 1fr 88px 1fr 1fr;align-items:end;height:68px;padding:0 4px;z-index:10;background:rgba(255,255,255,.94)}
 .nav[hidden]{display:none}
-.nb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;height:62px;color:var(--ink-3);font:600 12px/1 var(--px);text-transform:uppercase;letter-spacing:.04em}
-.nb svg{width:22px;height:22px}
+.nb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:64px;color:var(--ink-3);font:600 12px/1 var(--px);text-transform:uppercase;letter-spacing:.04em}
+.nb svg{width:24px;height:24px}
 .nb[aria-current=page]{color:var(--ink)}
 .nb[aria-current=page] svg{animation:wave 1.2s steps(2) infinite}
-.launch{justify-self:center;align-self:center;width:72px;height:72px;margin-top:-34px;background:var(--sea);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font:600 12px/1 var(--px);text-transform:uppercase}
+.launch{justify-self:center;align-self:center;width:72px;height:72px;margin-top:-32px;background:var(--sea);color:#fff;--k:#1F5A9E;--hl:#9ED6FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 12px/1 var(--px);text-transform:uppercase}
 .launch svg{width:24px;height:24px}
 
+/* ---------- entrada ---------- */
+.hero{position:relative;height:clamp(240px,46vh,380px);margin:16px calc(-1*var(--pad)) 0}
+.hero .bt{pointer-events:none}
+.steps{display:flex;gap:4px;align-items:center}
+.steps i{width:24px;height:8px;background:var(--line);border:2px solid var(--ink)}
+.steps i.on{background:var(--sea)}
+.ask{margin-top:48px}
+.ask .hint3{font-size:14px;color:var(--ink-2);margin:12px 0 0;display:flex;gap:8px;align-items:center}
+.ask .hint3 svg{width:14px}
+.field{display:block;width:100%;margin-top:32px;font:700 clamp(28px,8vw,32px)/1.2 var(--sans);letter-spacing:-.03em;color:var(--ink);padding:0 0 12px;cursor:text;outline:none;
+  border-bottom:0;background:linear-gradient(90deg,var(--ink) 50%,transparent 0) bottom/8px 3px repeat-x}
+.field::placeholder{color:#C9C1B2}
+.field:focus{background:linear-gradient(90deg,var(--sea) 100%,transparent 0) bottom/8px 3px repeat-x}
+.caret{display:inline-block;width:12px;height:4px;background:var(--ink);margin-left:4px;animation:blink 1s steps(1) infinite}
+.tgrid{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.tgrid .chip{height:44px;padding:0 16px;font-size:14px}
+.tgrid .chip[aria-pressed=true]{background:var(--c);color:var(--on,#fff)}
+.count3{display:flex;gap:8px;margin-top:24px;align-items:center}
+.count3 svg{width:20px}
+
 /* ---------- lanzar ---------- */
-.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;min-height:48px}
 .top .k{color:var(--ink-2)}
-.shelf{position:relative;display:flex;justify-content:space-between;align-items:flex-end;padding:22px 14px 14px;margin-top:24px;background:linear-gradient(180deg,transparent 70%,var(--sand) 70%)}
-.pick{position:relative;padding:4px;transition:transform .12s steps(2)}
-.pick svg{width:36px;height:auto}
-.pick[aria-pressed=true]{transform:translateY(-10px)}
-.pick[aria-pressed=true]::after{content:"";position:absolute;left:50%;top:-12px;width:6px;height:6px;margin-left:-3px;background:var(--c);box-shadow:0 0 0 2px var(--ink);animation:wave .8s steps(2) infinite}
-.catname{margin-top:14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.shelf{position:relative;display:flex;justify-content:space-between;align-items:flex-end;padding:24px 12px 12px;margin-top:24px;background:linear-gradient(180deg,transparent 68%,var(--sand) 68%)}
+.pick{position:relative;padding:4px;transition:transform .2s var(--spring);min-width:44px}
+.pick svg{width:36px;height:auto;margin:0 auto}
+.pick[aria-pressed=true]{transform:translateY(-12px)}
+.pick[aria-pressed=true]::after{content:"";position:absolute;left:50%;top:-12px;width:8px;height:8px;margin-left:-4px;background:var(--c);box-shadow:0 0 0 2px var(--ink);animation:wave .8s steps(2) infinite}
+.catname{margin-top:16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .catname b{font:700 16px/1.2 var(--sans)}
 .catname span{font-size:13px;color:var(--ink-3)}
-.recz{display:flex;flex-direction:column;align-items:center;gap:16px;margin:34px 0 28px}
+.recz{display:flex;flex-direction:column;align-items:center;gap:16px;margin:32px 0 24px}
 .mic{width:104px;height:104px;background:var(--c);color:var(--on,#fff);display:grid;place-items:center}
-.mic svg{width:34px;height:34px}
+.mic svg{width:36px;height:36px}
 .mic.live{animation:pulse .5s steps(2) infinite}
-@keyframes pulse{50%{box-shadow:6px 6px 0 var(--ink)}}
+@keyframes pulse{50%{transform:translate(2px,2px);box-shadow:inset 2px 2px 0 var(--hl,#fff),inset -2px -2px 0 var(--k),2px 2px 0 var(--ink)}}
 .rec-tx{font-size:13px;color:var(--ink-3)}
-.livew{height:28px;width:200px}
+.recchip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;font:28px/1 var(--num)}
+.recchip i{width:12px;height:12px;background:#E03B3B;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.life{display:flex;gap:2px;padding:4px;width:100%;max-width:280px;height:28px}
+.life i{flex:1;background:var(--line)}
+.life i.on{background:var(--c);box-shadow:inset 0 -3px 0 var(--k,rgba(0,0,0,.2))}
+.life i.tip{background:#fff;box-shadow:0 0 0 2px var(--c) inset;animation:blink .25s steps(1) 2}
+.ideas{display:grid;gap:8px;width:100%;margin-top:8px}
+.idea{text-align:left;padding:12px 16px;font:600 14px/1.36 var(--sans);border:2px dashed var(--ink-3);background:transparent;min-height:44px}
+.idea:active{border-style:solid;transform:translate(2px,2px)}
+.pad{position:relative;height:232px;margin-top:8px;touch-action:none;user-select:none;-webkit-user-select:none}
+.pad::before{content:"";position:absolute;left:0;right:0;bottom:0;height:56px;background:var(--sand);border-top:3px solid var(--ink);
+  box-shadow:inset 0 6px 0 #E6CB93}
+.toss{position:absolute;left:50%;bottom:32px;width:72px;margin-left:-36px;cursor:grab;will-change:transform;z-index:3;touch-action:none}
+.toss svg{width:72px}
+.hint{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;gap:8px;font:600 13px/1 var(--px);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+.hint svg{width:16px;animation:up 1s steps(2) infinite}
+@keyframes up{50%{transform:translateY(-6px)}}
 .ready{padding:16px}
-.toast{position:fixed;left:50%;top:calc(var(--safe-t) + 14px);transform:translateX(-50%);z-index:30;padding:12px 14px;max-width:calc(100% - 32px);width:max-content;font-size:14px;font-weight:600;display:flex;gap:10px;align-items:center;animation:tin .3s steps(3) both}
-.toast svg{width:14px;flex:none}
-@keyframes tin{from{opacity:0;transform:translate(-50%,-14px)}}
+.toast{position:fixed;left:50%;top:calc(var(--safe-t) + 16px);transform:translateX(-50%);z-index:40;padding:12px 16px;max-width:calc(100% - 32px);width:max-content;font-size:14px;font-weight:700;display:flex;gap:12px;align-items:center;animation:tin .36s var(--spring) both}
+.toast svg{width:16px;flex:none}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-24px)}}
 
 /* ---------- lanzada ---------- */
 .sent{text-align:center}
-.sent .beach{margin:8px 0 24px}
-.fly{position:absolute;left:50%;top:78%;transform:translate(-50%,-100%);animation:fly 1.4s steps(10) forwards}
-.fly svg{width:36px}
-@keyframes fly{40%{transform:translate(-10%,-260%)}100%{transform:translate(60%,-190%) scale(.66);opacity:.9}}
-.splash{position:absolute;left:66%;top:40%;width:24px;height:10px;opacity:0;animation:spl .6s steps(3) 1.3s both}
-@keyframes spl{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.6)}}
-.big{font-family:var(--num);font-size:72px;line-height:.9;color:var(--c)}
+.sent .beach{margin:4px 0 24px}
+.drop{position:absolute;left:var(--x);top:var(--y);width:28px;transform:translate(-50%,-100%);z-index:2;animation:drop 1s cubic-bezier(.3,0,.7,1) both}
+.drop svg{width:28px}
+@keyframes drop{0%{transform:translate(-50%,-480%) rotate(-200deg) scale(1.6)}70%{transform:translate(-50%,-100%) rotate(-10deg) scale(1)}85%{transform:translate(-50%,-80%) scale(1.1,.85)}100%{transform:translate(-50%,-100%)}}
+.drop.bob{animation:float 3s ease-in-out infinite}
+.big{font-family:var(--num);font-size:80px;line-height:.9;color:var(--c)}
+
+/* ---------- destapar ---------- */
+.uncork{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(250,246,238,.97);
+  background-image:conic-gradient(rgba(24,20,37,.06) 25%,transparent 0 50%,rgba(24,20,37,.06) 0 75%,transparent 0);background-size:4px 4px;cursor:pointer}
+.uc{position:relative;width:144px;height:240px}
+.uc .ub{position:absolute;left:0;bottom:0;width:144px;animation:rise .5s var(--spring) both}
+.uc .cork{position:absolute;left:50%;top:0;width:48px;margin-left:-24px;transform-origin:50% 100%;animation:cork .9s .5s both}
+@keyframes cork{0%{transform:none}12%{transform:scale(1.3,.6)}30%{transform:translateY(-120px) rotate(160deg) scale(.9,1.15)}60%{transform:translate(40px,-200px) rotate(320deg)}100%{transform:translate(80px,-320px) rotate(540deg);opacity:0}}
+.uc .popw{position:absolute;left:-32px;top:-16px;font:700 32px/1 var(--px);color:var(--c);text-shadow:3px 3px 0 var(--ink);animation:popw .5s .56s var(--spring) both}
+@keyframes popw{from{transform:scale(0) rotate(-12deg)}to{transform:scale(1) rotate(-8deg)}}
+.uc .vap{position:absolute;left:50%;top:24px;width:96px;margin-left:-48px;opacity:0;animation:vap 1.2s .7s steps(8) both}
+.uc .vap:nth-of-type(2){animation-delay:.9s;margin-left:-60px}.uc .vap:nth-of-type(3){animation-delay:1.1s;margin-left:-36px}
+@keyframes vap{0%{opacity:0;transform:translateY(0) scaleX(.4)}20%{opacity:1}100%{opacity:0;transform:translateY(-140px) scaleX(1.2)}}
+.uc-tx{position:absolute;bottom:calc(var(--safe-b) + 48px);left:0;right:0;text-align:center;font:600 13px/1 var(--px);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.uc-msg{position:absolute;top:calc(var(--safe-t) + 64px);left:24px;right:24px;text-align:center;font:800 24px/1.2 var(--sans);letter-spacing:-.02em}
+
+/* ---------- cargando ---------- */
+.loader{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--bg)}
+.loader .lw{display:flex;flex-direction:column;align-items:center;gap:16px}
+.loader .lb{width:48px;animation:rock .9s steps(3) infinite alternate;transform-origin:50% 100%}
+@keyframes rock{from{transform:rotate(-12deg) translateY(0)}to{transform:rotate(12deg) translateY(-4px)}}
+.loader .lwave{width:96px}
+.loader .k{color:var(--ink-2)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60;image-rendering:pixelated}
 
 /* ---------- inventario ---------- */
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:22px}
-.stats>div{padding:14px 12px}
-.stats>div+div{border-left:var(--b) solid var(--ink)}
-.stats .num{font-size:34px;display:block}
-.stats small{font-size:12px;color:var(--ink-2);line-height:1.25;display:block;margin-top:4px}
-.slots{display:flex;gap:10px;align-items:flex-end;margin-top:12px}
-.slots svg{width:22px}
-.sec{margin:30px 0 12px;display:flex;align-items:baseline;justify-content:space-between}
-.cards{display:grid;gap:14px}
-.card{display:flex;gap:14px;align-items:center;padding:12px 14px 12px 12px;text-align:left;width:100%}
-.tile{width:56px;height:56px;flex:none;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 22%,#fff);border:2px solid var(--ink)}
-.tile svg{width:22px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:24px}
+.stats>div{padding:16px 12px}
+.stats>div+div{border-left:3px solid var(--ink)}
+.stats .num{font-size:36px;display:block}
+.stats small{font-size:12px;color:var(--ink-2);line-height:1.24;display:block;margin-top:4px}
+.slots{display:flex;gap:12px;align-items:flex-end;margin-top:12px}
+.slots svg{width:24px}
+.sec{margin:32px 0 12px;display:flex;align-items:baseline;justify-content:space-between}
+.cards{display:grid;gap:16px}
+.card{display:flex;gap:16px;align-items:center;padding:12px 16px 12px 12px;text-align:left;width:100%}
+.tile{width:56px;height:56px;flex:none;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 20%,#fff);border:2px solid var(--ink)}
+.tile svg{width:24px}
 .card .tx{flex:1;display:grid;gap:4px}
-.card b{font:700 15px/1.3 var(--sans);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card b{font:700 15px/1.32 var(--sans);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card small{font-size:12px;color:var(--ink-3)}
-.new{font:600 11px/1 var(--px);text-transform:uppercase;background:var(--c);color:var(--on,#fff);border:2px solid var(--ink);padding:4px 5px;flex:none}
-.path{display:flex;gap:3px;margin-top:4px}
-.path i{flex:1;height:6px;background:var(--line);border:1px solid var(--ink-3)}
+.new{font:600 12px/1 var(--px);text-transform:uppercase;background:var(--c);color:var(--on,#fff);border:2px solid var(--ink);padding:4px;flex:none}
+.path{display:flex;gap:4px;margin-top:4px}
+.path i{flex:1;height:8px;background:var(--line);border:1px solid var(--ink-3)}
 .path i.on{background:var(--c);border-color:var(--ink)}
 .plbl{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3)}
 
 /* ---------- chat ---------- */
-.chead{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.chead{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .chead .tile{width:44px;height:44px}
-.chead b{display:block;font:700 15px/1.25 var(--sans)}
+.chead b{display:block;font:700 15px/1.24 var(--sans)}
 .chead small{font-size:12px;color:var(--ink-3)}
-.thread{display:flex;flex-direction:column;gap:14px;margin:20px 0}
-.msg{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;width:min(86%,290px)}
+.thread{display:flex;flex-direction:column;gap:16px;margin:20px 0}
+.msg{display:flex;align-items:center;gap:12px;padding:8px 12px 8px 8px;width:min(88%,296px);animation:rise .4s var(--spring) both}
 .msg.me{align-self:flex-end;background:var(--c)}
-.msg .sq{width:40px;height:40px;box-shadow:var(--sh-s)}
+.msg .sq{width:44px;height:44px}
 .msg svg.w{flex:1;height:24px}
 .msg .num{font-size:20px}
 .sys{align-self:center;text-align:center;font-size:12px;color:var(--ink-3);max-width:30ch}
-.dock{display:flex;gap:12px;align-items:center;position:sticky;bottom:calc(var(--safe-b) + 14px)}
-.dock .hint{flex:1;height:56px;display:grid;place-items:center;font-size:13px;color:var(--ink-2)}
+.dock{display:flex;gap:12px;align-items:center;position:sticky;bottom:calc(var(--safe-b) + 16px)}
+.dock .hint2{flex:1;height:56px;display:grid;place-items:center;font-size:13px;color:var(--ink-2)}
 
-/* ---------- tú ---------- */
+/* ---------- llamada ---------- */
+.call{align-items:center;text-align:center;justify-content:center;gap:16px}
+.orb{position:relative;width:208px;height:208px;margin:24px auto 16px;display:grid;place-items:center}
+.orb i{position:absolute;inset:0;border:4px solid var(--c);animation:ring 1.6s steps(4) infinite}
+.orb i:nth-child(2){animation-delay:.53s}.orb i:nth-child(3){animation-delay:1.06s}
+@keyframes ring{0%{transform:scale(.4);opacity:1}100%{transform:scale(1);opacity:0}}
+.orb .core{width:104px;height:104px;background:var(--c);display:grid;place-items:center}
+.orb .core svg{width:64px;height:40px}
+.hang{width:72px;height:72px;background:#E03B3B;color:#fff;--k:#9E2133;--hl:#FF9A8F;display:grid;place-items:center;margin:24px auto 0}
+.hang svg{width:28px}
+
+/* ---------- perfil y tu mes ---------- */
 .me{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
-.me .vm{width:88px;height:88px;display:grid;place-items:center;background:#fff}
+.me .vm{width:88px;height:88px;display:grid;place-items:center}
 .me .vm svg{width:64px;height:40px}
-.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px;text-align:center;font-size:11px;color:var(--ink-3)}
-.week i{display:block;aspect-ratio:1;border:2px solid var(--ink);margin-bottom:6px;background:#fff}
-.week .on i{background:var(--sea)}
-.priv{display:grid;gap:0}
-.priv>div{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;font-size:14px}
+.mcard{display:block;width:100%;text-align:left;margin-top:24px;padding:16px;background:var(--sea);color:#fff;--k:#1F5A9E;--hl:#9ED6FF}
+.mcard .k{color:#DDF0FF}
+.mcard b{display:block;font:800 22px/1.2 var(--sans);letter-spacing:-.02em;margin:8px 0 12px}
+.cbars{display:flex;gap:4px;height:12px}
+.cbars i{background:var(--c);border:2px solid var(--ink)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px;text-align:center;font-size:11px;color:var(--ink-3)}
+.week i{display:block;aspect-ratio:1;border:2px solid var(--ink);margin-bottom:4px;background:#fff}
+.week .on i{background:var(--sea);box-shadow:inset 2px 2px 0 #9ED6FF,inset -2px -2px 0 #1F5A9E}
+.priv>div{display:flex;gap:12px;align-items:flex-start;padding:16px;font-size:14px;font-weight:600}
 .priv>div+div{border-top:2px dashed var(--line)}
-.priv svg{width:16px;flex:none;margin-top:2px}
+.priv svg{width:16px;flex:none;margin-top:4px}
 .tchips{display:flex;gap:8px;flex-wrap:wrap}
-@media (max-height:700px){#app{padding-top:calc(var(--safe-t) + 12px)}.hud{margin-bottom:12px}.tag-l{display:none}.beach{aspect-ratio:96/50}.legend{margin-top:12px;padding-bottom:4px}.player{margin-top:10px;padding:14px 14px 12px}.q{font-size:16px;margin:10px 0 4px}.wavebox{margin:10px 0}.wavebox svg{height:28px}.ctrls .play,.ctrls .resp{height:50px}.ctrls .play{width:50px}.sq{width:44px;height:44px}.nav{height:62px}.launch{width:64px;height:64px}.recz{margin:24px 0 18px}}
-.ideas{display:grid;gap:10px;margin-top:8px}
-.idea{text-align:left;padding:12px 14px;font:600 14px/1.35 var(--sans);border:2px dashed var(--ink-3);background:transparent}
-.idea:active{border-style:solid}
+.slides{position:relative;flex:1;display:flex;flex-direction:column}
+.bars{display:flex;gap:4px;margin-bottom:24px}
+.bars i{flex:1;height:8px;border:2px solid var(--ink);background:#fff}
+.bars i.on{background:var(--ink)}
+.slide{flex:1;display:none;flex-direction:column;justify-content:center;gap:16px;animation:rise .4s var(--spring) both}
+.slide.on{display:flex}
+.slide .num{font-size:120px;line-height:.8}
+.hbars{display:grid;gap:12px;margin-top:8px}
+.hbars>div{display:grid;grid-template-columns:96px 1fr 40px;gap:12px;align-items:center;font-size:13px;font-weight:700}
+.hbars .life{max-width:none;height:24px}
+.tapzones{position:absolute;inset:0;display:grid;grid-template-columns:1fr 2fr;z-index:2}
+
+@media (max-height:700px){
+  #app{padding-top:calc(var(--safe-t) + 12px)}.hud{margin-bottom:12px}.tag-l{display:none}.inv{height:44px}
+  .beach{height:184px}.legend{margin-top:12px;padding-bottom:4px}
+  .player{margin-top:12px;padding:12px 12px 12px 16px}.q{font-size:16px;margin:8px 0 4px}.wavebox{margin:8px 0 12px}.wavebox svg{height:28px}
+  .ctrls .play,.ctrls .resp{height:48px}.ctrls .play{width:48px}.sq{width:44px;height:44px}.nav{height:64px}.launch{width:64px;height:64px}
+  .recz{margin:24px 0 16px}.pad{height:200px}.hero{height:208px;margin-top:12px}.ask{margin-top:32px}.orb{width:176px;height:176px}
+}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<div class="loader" id="loader" aria-label="Cargando"><div class="lw"><span class="lb" id="lb"></span><span class="lwave" id="lwv"></span><span class="k">Buscando botellas</span></div></div>
 <main id="app">
-  <!-- PLAYA -->
+  <section class="view full" id="v-bienvenida" aria-label="Bienvenida"></section>
+  <section class="view full" id="v-cuenta" aria-label="Tu cuenta"></section>
+  <section class="view full" id="v-temas" aria-label="Tus temas"></section>
   <section class="view" id="v-playa" aria-label="Playa">
     <header class="hud">
       <div><div class="wm" id="wm" aria-label="Botella"></div><div class="tag-l">Voces que llegan a tu orilla</div></div>
@@ -219,20 +332,15 @@ svg.px,.px svg{shape-rendering:crispEdges;display:block}
     <div class="legend" id="legend" role="group" aria-label="Filtrar por color"></div>
     <article class="player box" id="player"></article>
   </section>
-
-  <!-- LANZAR -->
   <section class="view" id="v-lanzar" aria-label="Lanzar una botella"></section>
-  <!-- LANZADA -->
   <section class="view sent" id="v-lanzada" aria-label="Botella lanzada"></section>
-  <!-- INVENTARIO -->
   <section class="view" id="v-botellas" aria-label="Mis botellas"></section>
-  <!-- VOCES -->
   <section class="view" id="v-voces" aria-label="Voces"></section>
   <section class="view" id="v-chat" aria-label="Conversación"></section>
-  <!-- TÚ -->
-  <section class="view" id="v-tu" aria-label="Tú"></section>
+  <section class="view full call" id="v-llamada" aria-label="Llamada"></section>
+  <section class="view" id="v-tu" aria-label="Perfil"></section>
+  <section class="view full" id="v-mes" aria-label="Tu mes"></section>
 </main>
-
 <nav class="nav box" id="nav" aria-label="Navegación">
   <button class="nb" data-go="playa"><span data-ic="playa"></span>Playa</button>
   <button class="nb" data-go="botellas"><span data-ic="bot"></span>Botellas</button>
@@ -240,7 +348,9 @@ svg.px,.px svg{shape-rendering:crispEdges;display:block}
   <button class="nb" data-go="voces"><span data-ic="voz"></span>Voces</button>
   <button class="nb" data-go="tu"><span data-ic="tu"></span>Perfil</button>
 </nav>
+<div id="ov"></div>
 <div id="toast-root"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
 
 <script>
 {
@@ -252,7 +362,9 @@ const CAT = {
   verde:   { n:'Desahogo',  g:'Desahogos y consejos',  d:'Reflexiones, días difíciles y apoyo', c:'#2BA967', k:'#18744A', h:'#97EBB4', on:'#fff' },
   amarilla:{ n:'Aventura',  g:'Aventuras y locuras',   d:'Viajes y anécdotas para contar siempre', c:'#FF8C2B', k:'#B85A12', h:'#FFD58A', on:'#181425' }
 };
+const KEYS = Object.keys(CAT);
 const INK = '#181425';
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const IDEAS = {
   roja: ['Algo que nunca le dijiste a nadie', '¿Te enamoraste alguna vez de una voz?'],
   azul: ['Lo más raro que te pasó esta semana', 'El chisme más inocente que conoces'],
@@ -260,40 +372,25 @@ const IDEAS = {
   verde: ['Algo que te pesa y quieres soltar', 'El mejor consejo que te dieron'],
   amarilla: ['El plan más improvisado que hiciste', 'Un lugar al que volverías mañana']
 };
+const TEMAS = ['Música', 'Cine', 'Libros', 'Comida', 'Viajar', 'La ciudad', 'Fútbol', 'Arte', 'Tecnología', 'Filosofía', 'Amor', 'Trabajo'];
 const $ = s => document.querySelector(s);
 const store = { get(k,d){try{const v=localStorage.getItem('bp.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}}, set(k,v){try{localStorage.setItem('bp.'+k,JSON.stringify(v))}catch(e){}} };
 const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const cvars = C => `--c:${C.c};--k:${C.k};--hl:${C.h};--on:${C.on}`;
 
 /* ================= SPRITES (pixel art en SVG) ================= */
-const BOTTLE = [
-  '....oooo....',
-  '...occcCo...',
-  '...occcCo...',
-  '...oooooo...',
-  '....ohgo....',
-  '....ohgo....',
-  '...ohggGo...',
-  '..ohgggGGo..',
-  '.ohgggggGGo.',
-  '.ohgpppPgGo.',
-  '.ohgpppPgGo.',
-  '.ohgrrrrgGo.',
-  '.ohgpppPgGo.',
-  '.ohgpppPgGo.',
-  '.oggpppPgGo.',
-  '.ogggggggGo.',
-  '.oGgggggGGo.',
-  '..oGGGGGGo..',
-  '...oooooo...'];
-function sprite(map, pal) {
+const BOTTLE = ['....oooo....','...occcCo...','...occcCo...','...oooooo...','....ohgo....','....ohgo....','...ohggGo...','..ohgggGGo..','.ohgggggGGo.','.ohgpppPgGo.','.ohgpppPgGo.','.ohgrrrrgGo.','.ohgpppPgGo.','.ohgpppPgGo.','.oggpppPgGo.','.ogggggggGo.','.oGgggggGGo.','..oGGGGGGo..','...oooooo...'];
+const CORK = ['.oooo.','occcCo','occcCo','oooooo'];
+function sprite(map, pal, cls = '') {
   let r = '';
   map.forEach((row, y) => { let x = 0; while (x < row.length) { const ch = row[x]; let w = 1; while (row[x + w] === ch) w++; if (pal[ch]) r += `<rect x="${x}" y="${y}" width="${w}" height="1" fill="${pal[ch]}"/>`; x += w; } });
-  return `<svg class="px" viewBox="0 0 ${map[0].length} ${map.length}" aria-hidden="true">${r}</svg>`;
+  return `<svg class="px ${cls}" viewBox="0 0 ${map[0].length} ${map.length}" aria-hidden="true">${r}</svg>`;
 }
-const bottle = (cat, empty) => { const C = CAT[cat] || CAT.azul; return sprite(BOTTLE, empty ? { o: '#B9B2A4', c: '#E9E1D2', C: '#D8CFBD' } : { o: INK, c: '#D69A5A', C: '#94602F', h: C.h, g: C.c, G: C.k, p: '#F6EBD0', P: '#D9C49A', r: C.k }); };
+const pal = (cat, empty) => { const C = CAT[cat] || CAT.azul; return empty ? { o: '#B9B2A4', c: '#E9E1D2', C: '#D8CFBD' } : { o: INK, c: '#D69A5A', C: '#94602F', h: C.h, g: C.c, G: C.k, p: '#F6EBD0', P: '#D9C49A', r: C.k }; };
+const bottle = (cat, empty, nocork) => sprite(nocork ? BOTTLE.map((r, i) => i < 3 ? '............' : r) : BOTTLE, pal(cat, empty), 'spr');
 const IC = {
   playa: ['...ooo....','..oyyyo...','..oyyyo...','...ooo....','..........','o..oo..oo.','.oo..oo..o','..........','o..oo..oo.','.oo..oo..o'],
-  bot:   ['...oo.....','...oo.....','..o..o....','.o....o...','.o.oo.o...','.o.oo.o...','.o....o...','.oooooo...','..........','..........'].map(r => '..' + r.slice(0, 8)),
+  bot:   ['....oo....','....oo....','...o..o...','..o....o..','..o.oo.o..','..o.oo.o..','..o....o..','..oooooo..','..........','..........'],
   mic:   ['...oooo...','..oooooo..','..oooooo..','..oooooo..','..oooooo..','o.oooooo.o','o..oooo..o','.o......o.','..oooooo..','....oo....','...oooo...'],
   voz:   ['oooooooooo','o........o','o.oo.oo..o','o........o','o.oooo...o','o........o','oooooooooo','.oo.......','.o........','..........'],
   tu:    ['..........','....o.....','..o.o...o.','..o.o.o.o.','o.o.o.o.o.','o.o.o.o.o.','..o.o.o.o.','..o.o...o.','....o.....','..........'],
@@ -306,108 +403,240 @@ const IC = {
   lock:  ['..ooo...','.o...o..','.o...o..','ooooooo.','ooo.ooo.','ooo.ooo.','ooooooo.'],
   heart: ['.oo.oo.','ooooooo','ooooooo','.ooooo.','..ooo..','...o...'],
   star:  ['...o...','...o...','ooooooo','.ooooo.','..ooo..','.oo.oo.','.o...o.'],
-  check: ['......o','.....oo','o...oo.','oo.oo..','.ooo...','..o....']
+  check: ['......o','.....oo','o...oo.','oo.oo..','.ooo...','..o....'],
+  up:    ['...o...','..ooo..','.ooooo.','ooooooo','..ooo..','..ooo..','..ooo..'],
+  phone: ['oo......','ooo.....','ooo.....','.oo.....','..oo....','...oo.oo','....ooooo','.....ooo.'],
+  arrow: ['....o...','.....o..','oooooooo','.....o..','....o...']
 };
 const ico = (n, col = 'currentColor', x = '#fff') => sprite(IC[n], { o: col, y: '#FFC93C', x });
 
 /* ================= DATOS DE EJEMPLO ================= */
 const W = n => { let s = n * 9301 + 49297; return Array.from({ length: 30 }, (_, i) => { s = (s * 9301 + 49297) % 233280; const v = s / 233280; return .25 + .75 * Math.abs(Math.sin(i * .45 + n)) * (.55 + .45 * v); }); };
+// x, y en unidades de la isla (112 × 84)
 const BOT = [
-  { id:'leo',   cat:'verde',    q:'Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.', who:'Alguien que ama el cine', ago:'hace 12 min', v:'leo-say', t:13, x:30, y:84, sand:1 },
-  { id:'belen', cat:'azul',     q:'El día que me perdí en el Centro y terminó siendo lo mejor de mi semana.', who:'Alguien que ama los libros', ago:'hace 40 min', v:'belen-say', t:17, x:62, y:90, sand:1 },
-  { id:'ivan',  cat:'roja',     q:'¿Qué canción te devuelve a tus 15 años? La mía todavía me da vergüenza.', who:'Alguien que ama la música', ago:'hace 1 h', v:'ivan-say', t:14, x:22, y:52 },
-  { id:'caro',  cat:'amarilla', q:'¿Cuál es el mejor atardecer que has visto? El mío fue en una combi, sin batería.', who:'Alguien que ama viajar', ago:'hace 2 h', v:'caro-say', t:13, x:52, y:47 },
-  { id:'noche', cat:'morada',   q:'Hay una ventana frente a mi cuarto que se prende todas las noches a las 3 de la mañana.', who:'Alguien que ama el misterio', ago:'hace 3 h', v:'majo-say', t:14, x:80, y:56 }
+  { id:'leo',   cat:'verde',    q:'Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.', who:'Alguien que ama el cine', ago:'hace 12 min', v:'leo-say', t:13, x:28, y:36, w:36 },
+  { id:'belen', cat:'azul',     q:'El día que me perdí en el Centro y terminó siendo lo mejor de mi semana.', who:'Alguien que ama los libros', ago:'hace 40 min', v:'belen-say', t:17, x:44, y:23, w:28 },
+  { id:'ivan',  cat:'roja',     q:'¿Qué canción te devuelve a tus 15 años? La mía todavía me da vergüenza.', who:'Alguien que ama la música', ago:'hace 1 h', v:'ivan-say', t:14, x:73, y:25, w:24, sea:1, d:3.4, dl:-1.2, a:'5px' },
+  { id:'caro',  cat:'amarilla', q:'¿Cuál es el mejor atardecer que has visto? El mío fue en una combi, sin batería.', who:'Alguien que ama viajar', ago:'hace 2 h', v:'caro-say', t:13, x:88, y:37, w:24, sea:1, d:2.8, dl:-.4, a:'7px' },
+  { id:'noche', cat:'morada',   q:'Hay una ventana frente a mi cuarto que se prende todas las noches a las 3 de la mañana.', who:'Alguien que ama el misterio', ago:'hace 3 h', v:'majo-say', t:14, x:63, y:48, w:28, sea:1, d:3.8, dl:-2.3, a:'6px' }
 ];
-BOT.forEach((b, i) => b.w = W(i + 1));
-let S = { sel: 'leo', filt: null, heard: store.get('heard', []), mine: store.get('mine', [
-  { cat:'roja', q:'¿Alguna vez te enamoraste de una voz antes que de una cara?', reach:214, ans:2, nuevo:true, ago:'Ayer' },
-  { cat:'amarilla', q:'Cuéntame el viaje más improvisado que hiciste.', reach:96, ans:1, nuevo:false, ago:'Hace 3 días' }]), left: store.get('left', 4) };
+BOT.forEach((b, i) => b.wv = W(i + 1));
+const S = { sel: 'leo', filt: null, heard: store.get('heard', []), temas: store.get('temas', []), mine: store.get('mine', [
+  { cat:'roja', q:'¿Alguna vez te enamoraste de una voz antes que de una cara?', reach:214, ans:2, nuevo:true },
+  { cat:'amarilla', q:'Cuéntame el viaje más improvisado que hiciste.', reach:96, ans:1, nuevo:false }]), left: store.get('left', 4) };
 
-/* ================= ESCENA DE LA PLAYA ================= */
-function scene() {
-  const R = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"/>`;
-  let s = '';
-  // cielo en franjas
-  [['#BFE6FF', 0, 8], ['#D3EEFF', 8, 6], ['#E6F6FF', 14, 6]].forEach(([c, y, h]) => s += R(0, y, 96, h, c));
-  // nubes
-  const cloud = (x, y) => R(x + 2, y, 8, 2, '#fff') + R(x, y + 2, 14, 2, '#fff') + R(x + 1, y + 4, 12, 1, '#BFDDF0');
-  s += `<g class="cl">${cloud(6, 5)}${cloud(62, 9)}${cloud(40, 3).replace(/x="(\d+)"/g, (m, a) => `x="${+a}"`)}</g>`;
-  // mar en franjas, más claro hacia la orilla
-  [['#1F6FB8', 20, 1], ['#2B86D3', 21, 5], ['#3398E0', 26, 6], ['#45ADEB', 32, 6], ['#63C4F2', 38, 8], ['#8AD8F6', 46, 6]].forEach(([c, y, h]) => s += R(0, y, 96, h, c));
-  // espuma que se mueve
-  let f = '';
-  for (let i = 0; i < 7; i++) { const y = 24 + i * 4 + (i > 3 ? 2 : 0), x = (i * 23) % 80; f += R(x, y, 6 + (i % 3) * 2, 1, 'rgba(255,255,255,.75)') + R((x + 40) % 90, y + 2, 4, 1, 'rgba(255,255,255,.5)'); }
-  s += `<g><animateTransform attributeName="transform" type="translate" values="0 0;2 0;0 0" dur="2.4s" calcMode="discrete" repeatCount="indefinite"/>${f}</g>`;
-  // arena en escalera (orilla en diagonal, como en un RPG)
-  let sand = '', wet = '', foam = '';
-  for (let y = 40; y < 66; y++) { const x0 = Math.max(0, Math.round((52 - y) * 7)); sand += R(x0, y, 96 - x0, 1, y < 44 ? '#EBD3A0' : '#F2DDB0'); if (y < 54) { foam += R(Math.max(0, x0 - 3), y, 3, 1, '#fff'); } }
-  s += sand + `<g>${foam}<animate attributeName="opacity" values="1;.4;1" dur="2.4s" calcMode="discrete" repeatCount="indefinite"/></g>`;
-  // detalles: conchas, piedras, pasto
-  s += R(86, 60, 3, 2, '#F4A7A0') + R(87, 59, 1, 1, '#F4A7A0') + R(10, 62, 3, 2, '#fff') + R(11, 61, 1, 1, '#D9D2C2') + R(44, 63, 2, 1, '#B7AFA0') + R(74, 52, 2, 1, '#B7AFA0') + R(92, 46, 1, 3, '#4DAA57') + R(93, 45, 1, 4, '#3D8F48') + R(94, 47, 1, 2, '#4DAA57');
-  return `<svg class="px scene" viewBox="0 0 96 66" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
+/* ================= LA ISLA ISOMÉTRICA (con tramas de puntos) ================= */
+function island(phase = 0, cls = '') {
+  const runs = []; const put = (x, y, c) => runs.push([x, y, c]);
+  const dith = (x, y, d, edge, a, b) => (Math.abs(d - edge) < 1.6 ? ((x + y) % 2 ? a : b) : (d < edge ? a : b));
+  const topCol = (x, y) => {
+    const s = x + 2 * y, d = s - (112 + 3 * Math.sin(x * .28 + phase * 1.6) + (phase ? 1 : 0));
+    if (d < -12) return dith(x, y, d, -22, '#F6E4BC', '#F2DDB0');
+    if (d < -5) return dith(x, y, d, -12, '#F2DDB0', '#E6CB93');
+    if (d < -1) return dith(x, y, d, -5, '#E6CB93', '#D9B57A');
+    if (d < 3) return '#FFFFFF';
+    if (d < 9) return (x + y) % 2 ? '#BDEBFA' : '#FFFFFF';
+    if (d < 22) return dith(x, y, d, 9, '#8ED8F6', '#63C4F2');
+    if (d < 38) return dith(x, y, d, 22, '#63C4F2', '#45ADEB');
+    const crest = ((x * 7 + y * 13 + phase * 11) % 41) < 2 && x % 2 === 0;
+    return crest ? '#FFFFFF' : dith(x, y, d, 38, '#45ADEB', '#2F8FDB');
+  };
+  for (let y = 4; y <= 56; y++) { const hw = y <= 30 ? (y - 4) * 2 : (56 - y) * 2; for (let x = 56 - hw; x < 56 + hw; x++) put(x, y, topCol(x, y)); }
+  for (let x = 4; x < 108; x++) {
+    const left = x < 56, y0 = left ? 31 + Math.floor((x - 4) / 2) : 57 - Math.floor((x - 56) / 2) - 1;
+    const sea = x + 2 * (y0 - 1) - 112 > 0;
+    for (let k = 0; k < 14; k++) {
+      let c;
+      if (sea) c = left ? (k < 5 ? '#3F9FE3' : k < 7 ? ((x + k) % 2 ? '#3F9FE3' : '#2677C2') : '#2677C2') : (k < 5 ? '#2677C2' : k < 7 ? ((x + k) % 2 ? '#2677C2' : '#1A5A99') : '#1A5A99');
+      else c = k < 4 ? '#E3C48A' : k < 6 ? ((x + k) % 2 ? '#E3C48A' : '#D3A96E') : k < 9 ? '#D3A96E' : k < 11 ? ((x + k) % 2 ? '#D3A96E' : '#B88552') : '#B88552';
+      put(x, y0 + k, c);
+    }
+    put(x, y0 + 14, INK);
+  }
+  for (let y = 4; y <= 30; y++) { const hw = (y - 4) * 2; if (hw) { put(56 - hw - 1, y, INK); put(56 - hw - 2, y, INK); put(56 + hw, y, INK); put(56 + hw + 1, y, INK); } }
+  for (let y = 31; y < 45; y++) { put(3, y, INK); put(108, y, INK); }
+  runs.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  let r = '', i = 0;
+  while (i < runs.length) { const [x, y, c] = runs[i]; let w = 1; while (i + w < runs.length && runs[i + w][1] === y && runs[i + w][0] === x + w && runs[i + w][2] === c) w++; r += `<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`; i += w; }
+  return `<g class="${cls}">${r}</g>`;
 }
+const SKY = (() => {
+  const R = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"/>`;
+  const cloud = (x, y) => R(x + 3, y, 8, 2, '#fff') + R(x, y + 2, 15, 2, '#fff') + R(x + 1, y + 4, 13, 1, '#CFE8F5');
+  let s = cloud(4, 6) + cloud(88, 12) + cloud(74, 2);
+  for (let y = 74; y < 80; y++) { const hw = 46 - (y - 74) * 6; for (let x = 56 - hw; x < 56 + hw; x++) if ((x + y) % 2) s += R(x, y, 1, 1, 'rgba(24,20,37,.16)'); }
+  s += R(14, 60, 1, 3, '#FFC93C') + R(13, 61, 3, 1, '#FFC93C') + R(100, 58, 1, 3, '#9ED6FF') + R(99, 59, 3, 1, '#9ED6FF');
+  return s;
+})();
+const ISL = [island(0), island(1, 'f2')];
+const scene = () => `<svg class="px" viewBox="0 0 112 84" aria-hidden="true">${SKY}${ISL[0]}${ISL[1]}</svg>`;
+const bottlesOn = (list, opt = {}) => list.map(b => { const C = CAT[b.cat]; return `<button class="bt ${b.sea ? 'sea' : ''} ${b.id === S.sel && !opt.deco ? 'sel' : ''} ${S.heard.includes(b.id) || opt.deco ? 'heard' : ''} ${S.filt && S.filt !== b.cat ? 'off' : ''}" style="left:${b.x / 112 * 100}%;top:${b.y / 84 * 100}%;--w:${b.w}px;--c:${C.c};--d:${b.d || 3}s;--dl:${b.dl || 0}s;--a:${b.a || '6px'}" ${opt.deco ? 'tabindex="-1" aria-hidden="true"' : `data-b="${b.id}" aria-label="Botella ${C.n}"`}><span class="mark" aria-hidden="true">!</span>${bottle(b.cat)}</button>`; }).join('');
+
 function renderBeach() {
-  const btns = BOT.map(b => `<button class="bt ${b.sand ? '' : 'sea'} ${b.id === S.sel ? 'sel' : ''} ${S.heard.includes(b.id) ? 'heard' : ''} ${S.filt && S.filt !== b.cat ? 'off' : ''}" style="left:${b.x}%;top:${b.y}%;--w:${b.sand ? 36 : 24}px;--c:${CAT[b.cat].c}" data-b="${b.id}" aria-label="Botella ${CAT[b.cat].n}"><span class="mark" aria-hidden="true">!</span>${bottle(b.cat)}</button>`).join('');
   const unheard = BOT.filter(b => !S.heard.includes(b.id)).length;
-  $('#beach').innerHTML = scene() + btns + `<span class="cap">${unheard ? unheard + ' sin escuchar' : 'Todo escuchado'}</span>`;
+  $('#beach').innerHTML = `<div class="stage">${scene()}${bottlesOn(BOT)}</div><span class="cap">${unheard ? unheard + ' sin escuchar' : 'Todo escuchado'}</span>`;
 }
 function renderLegend() {
   $('#legend').innerHTML = `<button class="chip" aria-pressed="${!S.filt}" data-f="">Todas</button>` + Object.entries(CAT).map(([k, c]) => `<button class="chip" style="--c:${c.c}" aria-pressed="${S.filt === k}" data-f="${k}"><i></i>${c.g}</button>`).join('');
 }
 
-/* ================= ONDA PIXELADA ================= */
-function wave(vals, col, p = 0, h = 9) {
-  let r = ''; const n = vals.length;
-  vals.forEach((v, i) => { const blocks = Math.max(1, Math.round(v * h)); const on = i / n < p; for (let k = 0; k < blocks; k++) { const y = (h - blocks) / 2 + k; r += `<rect x="${i * 3}" y="${Math.round(y * 4)}" width="2" height="3" fill="${on ? col : INK}" opacity="${on ? 1 : .28}" class="${on ? 'on' : ''}"/>`; } });
+/* ================= ONDA EN BLOQUES (osciloscopio a 12 cuadros) ================= */
+function wave(vals, col, p = 0, h = 9, live = false, hl = '#fff') {
+  let r = ''; const n = vals.length, head = Math.floor(p * n);
+  vals.forEach((v0, i) => {
+    const v = live ? Math.min(1, Math.max(.12, v0 * (.45 + Math.random() * .85))) : v0;
+    const blocks = Math.max(1, Math.round(v * h)), on = i < head, tip = live && i === head;
+    for (let k = 0; k < blocks; k++) { const y = Math.round(((h - blocks) / 2 + k) * 4); r += `<rect x="${i * 3}" y="${y}" width="2" height="3" fill="${tip ? hl : on ? col : INK}" opacity="${on || tip ? 1 : .28}"/>`; }
+  });
   return `<svg class="px" viewBox="0 0 ${n * 3 - 1} ${h * 4}" preserveAspectRatio="none" aria-hidden="true">${r}</svg>`;
 }
+const life = (p, n = 20) => { const on = Math.round(p * n); return Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''} ${i === on - 1 && p < 1 ? 'tip' : ''}"></i>`).join(''); };
+
+/* ================= SONIDO ================= */
+let AC = null;
+function pop(freq = 900) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), gn = AC.createGain(); o.type = 'square'; o.frequency.setValueAtTime(freq, AC.currentTime); o.frequency.exponentialRampToValueAtTime(140, AC.currentTime + .12); gn.gain.setValueAtTime(.12, AC.currentTime); gn.gain.exponentialRampToValueAtTime(.001, AC.currentTime + .16); o.connect(gn).connect(AC.destination); o.start(); o.stop(AC.currentTime + .18); } catch (e) {} try { navigator.vibrate && navigator.vibrate([12, 30, 18]); } catch (e) {} }
 
 /* ================= AUDIO ================= */
-let audio = null, tick = null, prog = 0, playing = false;
-function stop() { playing = false; clearInterval(tick); if (audio) { audio.pause(); } }
+let audio = null, tick = null, playing = false;
+function stop() { playing = false; clearInterval(tick); if (audio) audio.pause(); }
 function play(b, onp, ondone) {
-  stop(); prog = 0; playing = true;
+  stop(); playing = true;
   audio = new Audio('v/' + b.v + '.mp3');
   const t0 = performance.now(); let real = false;
   audio.play().then(() => real = true).catch(() => {});
   tick = setInterval(() => {
-    const d = real && audio.duration ? audio.duration : b.t;
-    const cur = real ? audio.currentTime : (performance.now() - t0) / 1000;
-    prog = Math.min(1, cur / d); onp(prog, cur, d);
-    if (prog >= 1 || (real && audio.ended)) { stop(); ondone && ondone(); }
-  }, 100);
+    const d = real && audio.duration ? audio.duration : b.t, cur = real ? audio.currentTime : (performance.now() - t0) / 1000, p = Math.min(1, cur / d);
+    onp(p, cur, d);
+    if (p >= 1 || (real && audio.ended)) { stop(); ondone && ondone(); }
+  }, 83);
 }
 const mmss = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 
+/* ================= PARTÍCULAS Y BARRIDO (lienzo a baja resolución, 15 cuadros) ================= */
+const fx = $('#fx'), g = fx.getContext('2d'); const PX = 4; let parts = [], wipeSt = null, raf = 0, acc = 0, last = 0;
+function fit() { fx.width = Math.ceil(innerWidth / PX); fx.height = Math.ceil(innerHeight / PX); g.imageSmoothingEnabled = false; }
+fit(); addEventListener('resize', fit);
+function burst(cx, cy, cols, n = 44) {
+  if (RM) return;
+  for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, sp = 1.2 + Math.random() * 3.4; parts.push({ x: cx / PX, y: cy / PX, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2.4, c: cols[i % cols.length], t: 0, life: 14 + Math.random() * 10, star: i % 7 === 0 }); }
+  loop();
+}
+function wipe(mid) {
+  if (RM) { mid(); return; }
+  const cols = Math.ceil(fx.width / 6), rows = Math.ceil(fx.height / 6), cells = []; for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) cells.push([x, y, Math.random() * .6 + (y / rows) * .4]);
+  wipeSt = { cells, t: 0, mid, done: false }; loop();
+}
+function loop() { if (!raf) { last = performance.now(); acc = 66; raf = requestAnimationFrame(frame); } }
+function frame(now) {
+  acc += now - last; last = now;
+  if (acc >= 66) { acc = 0;
+    parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .5; p.vx *= .96; p.t++; });
+    parts = parts.filter(p => p.t < p.life);
+    if (wipeSt) { wipeSt.t++; if (wipeSt.t === 4 && !wipeSt.done) { wipeSt.done = true; wipeSt.mid(); } if (wipeSt.t > 8) wipeSt = null; }
+    g.clearRect(0, 0, fx.width, fx.height);
+    if (wipeSt) { const t = wipeSt.t, cov = t <= 4 ? t / 4 : 1 - (t - 4) / 4; g.fillStyle = INK; wipeSt.cells.forEach(([x, y, r]) => { if (r < cov) g.fillRect(x * 6, y * 6, 6, 6); }); }
+    parts.forEach(p => { g.fillStyle = p.c; const x = Math.round(p.x), y = Math.round(p.y); if (p.star) { g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); } else g.fillRect(x, y, 1 + (p.t < 4), 1 + (p.t < 4)); });
+  }
+  if (parts.length || wipeSt) raf = requestAnimationFrame(frame); else { raf = 0; g.clearRect(0, 0, fx.width, fx.height); }
+}
+const center = el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+
+/* ================= ENTRADA ================= */
+function renderBienvenida() {
+  const deco = BOT.map(b => ({ ...b }));
+  $('#v-bienvenida').innerHTML = `<div class="wm xl" aria-label="Botella">${[...'BOTELLA'].map((ch, i) => `<span style="animation-delay:${i * .12}s">${ch}</span>`).join('')}</div>
+    <div class="hero"><div class="stage">${scene()}${bottlesOn(deco, { deco: 1 })}</div></div>
+    <div class="sp"></div>
+    <h1 class="hx">Te escuchan antes de verte.</h1>
+    <p class="mute" style="margin:12px 0 24px;font-size:16px;max-width:34ch">Graba una pregunta con tu voz y alguien que ama lo mismo que tú te responde.</p>
+    <button class="push btn blue" id="first">Abrir mi primera botella</button>
+    <button class="link" data-go="playa">Ya tengo cuenta</button>`;
+  $('#first').onclick = () => uncork(BOT[0], () => go('cuenta', { i: 0 }), 'Alguien que ama el cine te dejó una confesión');
+}
+const QS = [
+  { k: 'nombre', q: '¿Cómo te llamas?', ph: 'Tu nombre', h: 'Nadie lo ve hasta que los dos decidan compartirlo.', type: 'text', ac: 'given-name' },
+  { k: 'correo', q: '¿Cuál es tu correo?', ph: 'tu@correo.com', h: 'Solo para entrar. No se muestra a nadie.', type: 'email', ac: 'email' },
+  { k: 'edad', q: '¿Cuántos años tienes?', ph: '24', h: 'Botella es para mayores de 18.', type: 'number', ac: 'off' }
+];
+function renderCuenta({ i = 0 } = {}) {
+  const Q = QS[i], val = store.get('c.' + Q.k, '');
+  const v = $('#v-cuenta');
+  v.innerHTML = `<div class="top"><button class="push sq" id="cb" aria-label="Volver">${ico('back')}</button><span class="steps" aria-label="Paso ${i + 1} de 3">${QS.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</span><span class="k mute3">${i + 1}/3</span></div>
+    <div class="ask pop"><h1 class="hx">${Q.q}</h1>
+    <input class="field" id="fi" type="${Q.type}" inputmode="${Q.type === 'number' ? 'numeric' : Q.type === 'email' ? 'email' : 'text'}" autocomplete="${Q.ac}" placeholder="${Q.ph}" value="${esc(val)}" aria-label="${Q.q}">
+    <p class="hint3">${ico('lock', '#7E788A')}${Q.h}</p></div>
+    <div class="sp" style="min-height:32px"></div>
+    <button class="push btn blue" id="cn">${i < 2 ? 'Seguir' : 'Elegir mis temas'}</button>`;
+  const fi = $('#fi'), ok = () => { const x = fi.value.trim(); return Q.type === 'email' ? /.+@.+\..+/.test(x) : Q.type === 'number' ? +x >= 18 && +x < 100 : x.length > 1; };
+  const upd = () => $('#cn').disabled = !ok(); upd(); fi.oninput = upd;
+  const next = () => { if (!ok()) return; store.set('c.' + Q.k, fi.value.trim()); i < 2 ? go('cuenta', { i: i + 1 }) : go('temas'); };
+  $('#cn').onclick = next; fi.onkeydown = e => { if (e.key === 'Enter') next(); };
+  $('#cb').onclick = () => i ? go('cuenta', { i: i - 1 }) : go('bienvenida');
+}
+function renderTemas() {
+  const v = $('#v-temas');
+  const draw = () => {
+    const sel = S.temas, n = sel.length;
+    v.innerHTML = `<div class="top"><button class="push sq" data-go="cuenta" aria-label="Volver">${ico('back')}</button><span class="k mute">Último paso</span><span class="k mute3">${n}/3</span></div>
+      <h1 class="hx">¿Qué te mueve?</h1>
+      <p class="mute" style="margin:12px 0 0;font-size:16px">Elige tres. Tus botellas llegan a gente que ama lo mismo.</p>
+      <div class="tgrid" role="group" aria-label="Temas">${TEMAS.map((t, i) => { const C = CAT[KEYS[i % 5]]; return `<button class="chip" style="${cvars(C)}" aria-pressed="${sel.includes(t)}" data-t="${t}"><i></i>${t}</button>`; }).join('')}</div>
+      <div class="count3" aria-hidden="true">${[0, 1, 2].map(j => bottle(KEYS[j], j >= n)).join('')}<span class="k mute3" style="margin-left:4px">${n < 3 ? `Faltan ${3 - n}` : 'Listo'}</span></div>
+      <div class="sp" style="min-height:24px"></div>
+      <button class="push btn blue" id="tn" ${n < 3 ? 'disabled' : ''}>Entrar a la playa</button>`;
+    v.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const t = b.dataset.t; if (sel.includes(t)) sel.splice(sel.indexOf(t), 1); else if (sel.length < 3) { sel.push(t); const [x, y] = center(b); burst(x, y, [getComputedStyle(b).getPropertyValue('--c'), '#fff'], 14); } store.set('temas', sel); draw(); });
+    $('#tn').onclick = () => { store.set('onb', true); go('playa'); setTimeout(() => toast('Tu respuesta va en camino. Bienvenida a la playa.', '#368DDB'), 500); };
+  };
+  draw();
+}
+
 /* ================= REPRODUCTOR ================= */
-function renderPlayer() {
+function renderPlayer(anim) {
   const b = BOT.find(x => x.id === S.sel), C = CAT[b.cat];
-  const el = $('#player'); el.style.setProperty('--c', C.c); el.style.setProperty('--on', C.on);
+  const el = $('#player'); el.setAttribute('style', cvars(C));
+  el.classList.remove('pop'); if (anim) { void el.offsetWidth; el.classList.add('pop'); }
   el.innerHTML = `<div class="row"><span class="badge">${ico(b.cat === 'roja' ? 'heart' : 'star', C.on)}${C.n}</span><span class="sp"></span><span class="from">${b.ago}</span></div>
     <p class="q">“${esc(b.q)}”</p><p class="from">${esc(b.who)}</p>
-    <div class="wavebox" id="wb">${wave(b.w, C.c, 0)}<span class="num" id="wt">${mmss(b.t)}</span></div>
+    <div class="wavebox" id="wb">${wave(b.wv, C.c, 0)}<span class="num" id="wt">${mmss(b.t)}</span></div>
     <div class="ctrls">
       <button class="push sq" id="prev" aria-label="Botella anterior">${ico('prev')}</button>
       <button class="push sq play" id="pp" aria-label="Escuchar">${ico('play', C.on)}</button>
       <button class="push sq" id="next" aria-label="Botella siguiente">${ico('next')}</button>
       <button class="push btn resp" id="resp">Responder</button>
     </div>`;
-  $('#pp').onclick = () => {
-    if (playing) { stop(); $('#pp').innerHTML = ico('play', C.on); $('#wb').classList.remove('live'); return; }
-    $('#pp').innerHTML = ico('pause', C.on); $('#wb').classList.add('live');
-    play(b, (p, cur) => { $('#wb').firstElementChild.outerHTML = wave(b.w, C.c, p); $('#wt').textContent = mmss(cur); }, () => {
-      $('#pp').innerHTML = ico('play', C.on); $('#wb').classList.remove('live');
-      if (!S.heard.includes(b.id)) { S.heard.push(b.id); store.set('heard', S.heard); renderBeach(); }
+  const start = () => {
+    $('#pp').innerHTML = ico('pause', C.on);
+    play(b, (p, cur) => { $('#wb').firstElementChild.outerHTML = wave(b.wv, C.c, p, 9, true, C.h); $('#wt').textContent = mmss(cur); }, () => {
+      $('#pp').innerHTML = ico('play', C.on); $('#wb').firstElementChild.outerHTML = wave(b.wv, C.c, 1);
     });
+  };
+  $('#pp').onclick = () => {
+    if (playing) { stop(); $('#pp').innerHTML = ico('play', C.on); return; }
+    if (!S.heard.includes(b.id)) { S.heard.push(b.id); store.set('heard', S.heard); uncork(b, () => { renderBeach(); start(); }); }
+    else start();
   };
   const step = d => { const list = BOT.filter(x => !S.filt || x.cat === S.filt); const i = list.findIndex(x => x.id === S.sel); select(list[(i + d + list.length) % list.length].id); };
   $('#prev').onclick = () => step(-1); $('#next').onclick = () => step(1);
   $('#resp').onclick = () => { stop(); go('lanzar', { reply: b }); };
 }
 function select(id) {
-  stop(); S.sel = id; renderBeach(); renderPlayer();
-  const el = document.querySelector(`.bt[data-b="${id}"]`); if (el) { el.classList.add('hop'); setTimeout(() => el.classList.remove('hop'), 520); }
+  stop(); const changed = S.sel !== id; S.sel = id; renderBeach(); renderPlayer(changed);
+  const el = document.querySelector(`.bt[data-b="${id}"]`); if (el) { el.classList.add('hop'); setTimeout(() => el.classList.remove('hop'), 600); }
+}
+
+/* ================= DESTAPAR ================= */
+function uncork(b, done, msg) {
+  const C = CAT[b.cat], ov = $('#ov');
+  const vap = wave(W(40).slice(0, 12), C.c, 1, 4);
+  ov.innerHTML = `<div class="uncork" id="unc" style="${cvars(C)}" role="dialog" aria-label="Abriendo la botella">${msg ? `<p class="uc-msg">${esc(msg)}</p>` : ''}<div class="uc">
+    <span class="ub">${bottle(b.cat, false, true)}</span><span class="cork">${sprite(CORK, pal(b.cat))}</span>
+    <span class="vap">${vap}</span><span class="vap">${vap}</span><span class="vap">${vap}</span><span class="popw">¡Pop!</span></div>
+    <span class="uc-tx">Toca para escuchar</span></div>`;
+  let closed = false;
+  const close = () => { if (closed) return; closed = true; ov.innerHTML = ''; done(); };
+  setTimeout(() => { const n = $('#unc .cork'); if (!n) return; const [x, y] = center(n); pop(); burst(x, y + 16, [C.c, C.h, C.k, '#FFC93C', '#fff'], 56); }, RM ? 0 : 560);
+  setTimeout(close, RM ? 300 : (msg ? 2600 : 1900));
+  $('#unc').onclick = close;
 }
 
 /* ================= LANZAR ================= */
@@ -415,10 +644,10 @@ function renderLanzar(p = {}) {
   let cat = p.reply ? p.reply.cat : store.get('lastcat', 'roja'), rec = 0, timer = null, secs = 0;
   const v = $('#v-lanzar');
   const draw = () => {
-    const C = CAT[cat]; v.style.setProperty('--c', C.c); v.style.setProperty('--on', C.on);
+    const C = CAT[cat]; v.setAttribute('style', cvars(C));
     v.innerHTML = `<div class="top"><button class="push sq" id="cls" aria-label="Cerrar">${ico('x')}</button><span class="k">${p.reply ? 'Responder' : 'Lanzar botella'}</span><span class="k mute3">×${S.left}</span></div>
       <h1 class="h1">${p.reply ? 'Responde con tu voz' : '¿Qué quieres contar?'}</h1>
-      ${p.reply ? `<p class="mute" style="margin:10px 0 0">“${esc(p.reply.q)}”</p>` : `<div class="shelf" role="radiogroup" aria-label="Color de la botella">${Object.keys(CAT).map(k => `<button class="pick" role="radio" style="--c:${CAT[k].c}" aria-pressed="${k === cat}" aria-checked="${k === cat}" data-c="${k}" aria-label="${CAT[k].g}">${bottle(k)}</button>`).join('')}</div>
+      ${p.reply ? `<p class="mute" style="margin:12px 0 0">“${esc(p.reply.q)}”</p>` : `<div class="shelf" role="radiogroup" aria-label="Color de la botella">${KEYS.map(k => `<button class="pick" role="radio" style="--c:${CAT[k].c}" aria-pressed="${k === cat}" aria-checked="${k === cat}" data-c="${k}" aria-label="${CAT[k].g}">${bottle(k)}</button>`).join('')}</div>
       <div class="catname"><b>${C.g}</b><span>${C.d}</span></div>`}
       <div class="recz" id="recz"></div>`;
     v.querySelectorAll('.pick').forEach(b => b.onclick = () => { if (rec === 1) return; cat = b.dataset.c; store.set('lastcat', cat); draw(); });
@@ -427,37 +656,72 @@ function renderLanzar(p = {}) {
   };
   const drawRec = () => {
     const C = CAT[cat], z = $('#recz');
-    if (rec === 0) { z.innerHTML = `<button class="push mic" id="mic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button><span class="rec-tx">Toca para grabar · hasta 60 s</span>${p.reply ? '' : `<div class="ideas" style="width:100%"><span class="k mute3" style="margin-top:10px">Si no sabes qué decir</span>${IDEAS[cat].map(t => `<button class="idea">${t}</button>`).join('')}</div>`}`; $('#mic').onclick = start; z.querySelectorAll('.idea').forEach(b => b.onclick = start); }
-    if (rec === 1) { z.innerHTML = `<button class="push mic live" id="mic" aria-label="Terminar">${ico('pause', C.on)}</button><span class="num" id="rt" style="font-size:22px;color:var(--ink-2)">0:00</span><div class="livew" id="lw"></div>`; $('#mic').onclick = end; }
+    if (rec === 0) {
+      z.innerHTML = `<button class="push mic" id="mic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button><span class="rec-tx">Toca para grabar · hasta 60 s</span>${p.reply ? '' : `<div class="ideas"><span class="k mute3" style="margin-top:8px">Si no sabes qué decir</span>${IDEAS[cat].map(t => `<button class="idea">${esc(t)}</button>`).join('')}</div>`}`;
+      $('#mic').onclick = start; z.querySelectorAll('.idea').forEach(b => b.onclick = start);
+    }
+    if (rec === 1) {
+      z.innerHTML = `<span class="recchip box"><i></i>REC <span id="rt">0:00</span></span><button class="push mic live" id="mic" aria-label="Terminar">${ico('pause', C.on)}</button><div class="life box" id="lf">${life(0)}</div><span class="rec-tx">Toca para terminar</span>`;
+      $('#mic').onclick = end;
+    }
     if (rec === 2) {
       const w = W(secs + 7);
-      z.innerHTML = `<div class="box ready" style="width:100%"><div class="wavebox" style="margin:0 0 14px">${wave(w, C.c, 1)}<span class="num">${mmss(secs)}</span></div>
-        <div class="row"><button class="push btn" id="again" style="width:auto;flex:1">Otra vez</button></div></div>
-        <button class="push btn c" id="send" style="margin-top:22px;height:64px">${ico(p.reply ? 'voz' : 'bot', C.on)} ${p.reply ? 'Enviar respuesta' : 'Lanzar al mar'}</button>`;
+      z.innerHTML = `<div class="box ready" style="width:100%"><div class="wavebox" style="margin:0 0 12px">${wave(w, C.c, 1)}<span class="num">${mmss(secs)}</span></div><button class="push btn" id="again">Grabar otra vez</button></div>
+        ${p.reply ? `<button class="push btn c" id="send" style="margin-top:24px;height:64px">${ico('voz', C.on)} Enviar respuesta</button>` :
+        `<div class="pad" id="pad" style="width:100%"><div class="hint">${ico('up', 'currentColor')}<span>Desliza la botella hacia arriba</span></div><span class="toss" id="toss" role="button" tabindex="0" aria-label="Lanzar al mar">${bottle(cat)}</span></div>
+         <button class="push btn c" id="send">${ico('bot', C.on)} Lanzar al mar</button>`}`;
       $('#again').onclick = () => { rec = 0; drawRec(); };
-      $('#send').onclick = () => p.reply ? (toast('Tu respuesta va en camino. Si te responde, empieza una conversación.', C.c), go('voces')) : launch(cat);
+      $('#send').onclick = () => p.reply ? (pop(700), burst(...center($('#send')), [C.c, C.h, '#fff'], 32), toast('Tu respuesta va en camino. Si te responde, empieza una conversación.', C.c), setTimeout(() => go('voces'), 400)) : fling(0, -1.6);
+      if (!p.reply) tossable(cat);
     }
-    z.style.setProperty('--c', C.c);
   };
-  const start = () => { rec = 1; secs = 0; drawRec(); timer = setInterval(() => { secs++; $('#rt').textContent = mmss(secs); $('#lw').innerHTML = wave(Array.from({ length: 30 }, () => .2 + Math.random() * .8), CAT[cat].c, 1, 7); if (secs >= 60) end(); }, 1000); $('#lw').innerHTML = wave(Array(30).fill(.15), CAT[cat].c, 1, 7); };
+  const start = () => { rec = 1; secs = 0; drawRec(); timer = setInterval(() => { secs++; const rt = $('#rt'); if (!rt) return clearInterval(timer); rt.textContent = mmss(secs); $('#lf').innerHTML = life(secs / 60); if (secs >= 60) end(); }, 1000); };
   const end = () => { clearInterval(timer); secs = Math.max(secs, 3); rec = 2; drawRec(); };
+  // gesto: la botella sigue al dedo con un resorte (tensión 180, fricción 12) y sale volando si la sueltas rápido hacia arriba
+  let fling = () => {};
+  function tossable(cat) {
+    const el = $('#toss'); let pos = { x: 0, y: 0 }, vel = { x: 0, y: 0 }, tgt = { x: 0, y: 0 }, drag = false, hist = [], run = true, flying = false;
+    const K = 180, F = 12; let lt = performance.now();
+    const step = now => {
+      if (!run || !document.body.contains(el)) return;
+      const dt = Math.min(.032, (now - lt) / 1000); lt = now;
+      if (!flying) { ['x', 'y'].forEach(a => { const f = K * (tgt[a] - pos[a]) - F * vel[a]; vel[a] += f * dt; pos[a] += vel[a] * dt; }); const tilt = Math.max(-25, Math.min(25, vel.x / 20)); el.style.transform = `translate(${pos.x}px,${pos.y}px) rotate(${tilt}deg)`; }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    let ox = 0, oy = 0;
+    el.addEventListener('pointerdown', e => { if (flying) return; drag = true; el.setPointerCapture(e.pointerId); ox = e.clientX - tgt.x; oy = e.clientY - tgt.y; hist = [[e.clientX, e.clientY, performance.now()]]; });
+    el.addEventListener('pointermove', e => { if (!drag) return; tgt = { x: e.clientX - ox, y: Math.min(24, e.clientY - oy) }; hist.push([e.clientX, e.clientY, performance.now()]); if (hist.length > 6) hist.shift(); });
+    const up = () => { if (!drag) return; drag = false; const a = hist[0], b = hist[hist.length - 1], dt = Math.max(16, b[2] - a[2]); const vx = (b[0] - a[0]) / dt, vy = (b[1] - a[1]) / dt; if (vy < -.5 || tgt.y < -110) fling(vx, vy); else tgt = { x: 0, y: 0 }; };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fling(0, -1.6); } });
+    fling = (vx, vy) => {
+      if (flying) return; flying = true; const h = $('.hint'); if (h) h.style.visibility = 'hidden';
+      const x0 = pos.x, y0 = pos.y, VX = vx * 600, VY = Math.min(-900, vy * 700), t0 = performance.now(), Gr = 1600;
+      const fl = now => { const t = (now - t0) / 1000; const x = x0 + VX * t * .6, y = y0 + VY * t + Gr * t * t * .5, s = Math.max(.25, 1 - t * 1.1); el.style.transform = `translate(${x}px,${y}px) rotate(${t * 720}deg) scale(${s})`; if (t < .62 && !RM) requestAnimationFrame(fl); else { run = false; launch(cat); } };
+      pop(500); requestAnimationFrame(fl);
+    };
+  }
   draw();
 }
 function launch(cat) {
-  const C = CAT[cat]; S.left = Math.max(0, S.left - 1); store.set('left', S.left);
-  const reach = [];
-  S.mine.unshift({ cat, q: 'Tu nota de voz', reach: 0, ans: 0, nuevo: false, ago: 'Ahora' }); store.set('mine', S.mine);
+  S.left = Math.max(0, S.left - 1); store.set('left', S.left);
+  S.mine.unshift({ cat, q: 'Tu nota de voz de hoy', reach: 0, ans: 0, nuevo: false }); store.set('mine', S.mine);
   go('lanzada', { cat });
 }
-function renderLanzada({ cat = 'roja' } = {}) {
-  const C = CAT[cat], v = $('#v-lanzada'); v.style.setProperty('--c', C.c);
-  v.innerHTML = `<div class="beach box" style="--c:${C.c}">${scene()}<span class="fly">${bottle(cat)}</span><svg class="px splash" viewBox="0 0 12 5"><rect x="0" y="2" width="2" height="1" fill="#fff"/><rect x="3" y="0" width="2" height="2" fill="#fff"/><rect x="7" y="0" width="2" height="2" fill="#fff"/><rect x="10" y="2" width="2" height="1" fill="#fff"/></svg></div>
+function renderLanzada({ cat = store.get('lastcat', 'roja') } = {}) {
+  const C = CAT[cat], v = $('#v-lanzada'); v.setAttribute('style', cvars(C));
+  const X = 80, Y = 34;
+  v.innerHTML = `<div class="beach box"><div class="stage">${scene()}<span class="drop" id="drop" style="--x:${X / 112 * 100}%;--y:${Y / 84 * 100}%">${bottle(cat)}</span></div></div>
     <span class="k mute">Tu botella ya está en el mar</span>
-    <div class="big" id="cnt" style="margin:18px 0 6px">0</div>
+    <div class="big" id="cnt" style="margin:16px 0 8px">0</div>
     <p class="h2">personas ya la recibieron</p>
-    <p class="mute" style="max-width:30ch;margin:12px auto 30px">Sigue llegando a más gente que ama lo mismo que tú, hasta que alguien te responda.</p>
+    <div class="life box" id="rl" style="margin:16px auto 0">${life(0)}</div>
+    <p class="mute" style="max-width:30ch;margin:16px auto 32px">Sigue llegando a más gente que ama lo mismo que tú, hasta que alguien te responda.</p>
     <button class="push btn" data-go="playa">Volver a la playa</button>`;
-  let n = 0; const target = 128; const t = setInterval(() => { n = Math.min(target, n + Math.ceil((target - n) / 9)); const c = $('#cnt'); if (!c) return clearInterval(t); c.textContent = n; if (n >= target) { clearInterval(t); S.mine[0].reach = target; store.set('mine', S.mine); } }, 90);
+  setTimeout(() => { const d = $('#drop'); if (!d) return; const [x, y] = center(d); pop(420); burst(x, y + 8, ['#fff', '#BDEBFA', '#63C4F2', C.c, C.h], 48); d.classList.add('bob'); }, RM ? 0 : 760);
+  let n = 0; const target = 128;
+  const t = setInterval(() => { const c = $('#cnt'); if (!c || cur !== 'lanzada') return clearInterval(t); n = n < target ? Math.min(target, n + Math.ceil((target - n) / 8)) : n + (Math.random() < .3 ? 1 : 0); c.textContent = n; $('#rl').innerHTML = life(Math.min(1, n / 160)); if (n === target && S.mine[0]) { S.mine[0].reach = target; store.set('mine', S.mine); } }, 120);
 }
 
 /* ================= INVENTARIO ================= */
@@ -466,78 +730,128 @@ function renderBotellas() {
   $('#v-botellas').innerHTML = `<h1 class="h1">Mis botellas</h1>
     <div class="stats box"><div><span class="num">${S.mine.length}</span><small>lanzadas</small></div><div><span class="num">${tot}</span><small>personas las recibieron</small></div><div><span class="num">${ans}</span><small>te respondieron</small></div></div>
     <div class="sec"><span class="h2">Te quedan ${S.left} hoy</span><span class="k mute3">Mañana +5</span></div>
-    <div class="slots">${[0, 1, 2, 3, 4].map(i => bottle(Object.keys(CAT)[i], i >= S.left)).join('')}</div>
+    <div class="slots">${[0, 1, 2, 3, 4].map(i => bottle(KEYS[i], i >= S.left)).join('')}</div>
     <div class="sec"><span class="h2">En el mar</span></div>
     <div class="cards">${S.mine.map((m, i) => { const C = CAT[m.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on}" data-m="${i}"><span class="tile">${bottle(m.cat)}</span><span class="tx"><b>${esc(m.q)}</b><small>${m.reach} personas la recibieron · ${m.ans ? m.ans + (m.ans > 1 ? ' respuestas' : ' respuesta') : 'sigue llegando'}</small></span>${m.nuevo ? '<span class="new">Nueva</span>' : ''}</button>`; }).join('')}</div>`;
-  document.querySelectorAll('[data-m]').forEach(el => el.onclick = () => { const m = S.mine[+el.dataset.m]; if (m.ans) { m.nuevo = false; store.set('mine', S.mine); play({ v: 'answer-1', t: 12 }, () => {}, () => {}); toast('Escuchando la respuesta…', CAT[m.cat].c); renderBotellas(); } else toast('Tu botella sigue llegando a más gente.', CAT[m.cat].c); });
+  document.querySelectorAll('[data-m]').forEach(el => el.onclick = () => {
+    const m = S.mine[+el.dataset.m], C = CAT[m.cat];
+    if (m.ans) { const was = m.nuevo; m.nuevo = false; store.set('mine', S.mine); if (was) { pop(); burst(...center(el.querySelector('.tile')), [C.c, C.h, '#FFC93C', '#fff']); } play({ v: 'answer-1', t: 12 }, () => {}); toast('Escuchando la respuesta', C.c); if (was) setTimeout(renderBotellas, 500); }
+    else toast('Tu botella sigue llegando a más gente.', C.c);
+  });
 }
 
 /* ================= VOCES ================= */
 const CONV = [
-  { id:'leo', cat:'verde', who:'Alguien que ama el cine', last:'Nota de voz nueva · 0:12', st:1, nuevo:true, ago:'9:41' },
+  { id:'leo', cat:'verde', who:'Alguien que ama el cine', last:'Nota de voz nueva · 0:12', st:1, ago:'9:41' },
   { id:'belen', cat:'azul', who:'Alguien que ama los libros', last:'Le respondiste. Esperando su voz', st:1, ago:'Ayer' },
   { id:'caro', cat:'amarilla', who:'Caro', last:'Mañana a las 6 en el malecón', st:4, ago:'Lun' }
 ];
 const STEPS = ['Voces', 'Nombres', 'Llamada', 'Plan'];
+const pathH = st => `<span class="path">${STEPS.map((s, i) => `<i class="${i < st ? 'on' : ''}"></i>`).join('')}</span><span class="plbl">${STEPS.map(s => `<span>${s}</span>`).join('')}</span>`;
 function renderVoces() {
-  $('#v-voces').innerHTML = `<h1 class="h1">Voces</h1><p class="mute" style="margin:8px 0 22px">Cada conversación empezó con una botella.</p>
-    <div class="cards">${CONV.map(c => { const C = CAT[c.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on};align-items:flex-start" data-c="${c.id}"><span class="tile">${bottle(c.cat)}</span><span class="tx"><span class="row" style="gap:8px"><b style="flex:1">${esc(c.who)}</b><small>${c.ago}</small></span><small style="color:var(--ink-2)">${esc(c.last)}</small><span class="path">${STEPS.map((s, i) => `<i class="${i < c.st ? 'on' : ''}"></i>`).join('')}</span><span class="plbl">${STEPS.map(s => `<span>${s}</span>`).join('')}</span></span></button>`; }).join('')}</div>`;
+  $('#v-voces').innerHTML = `<h1 class="h1">Voces</h1><p class="mute" style="margin:8px 0 24px">Cada conversación empezó con una botella.</p>
+    <div class="cards">${CONV.map(c => { const C = CAT[c.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on};align-items:flex-start" data-c="${c.id}"><span class="tile">${bottle(c.cat)}</span><span class="tx"><span class="row" style="gap:8px"><b style="flex:1">${esc(c.who)}</b><small>${c.ago}</small></span><small style="color:var(--ink-2)">${esc(c.last)}</small>${pathH(c.st)}</span></button>`; }).join('')}</div>`;
   document.querySelectorAll('[data-c]').forEach(el => el.onclick = () => go('chat', { id: el.dataset.c }));
 }
 function renderChat({ id = 'leo' } = {}) {
   const c = CONV.find(x => x.id === id) || CONV[0], C = CAT[c.cat], b = BOT.find(x => x.id === id) || BOT[0];
-  const v = $('#v-chat'); v.style.setProperty('--c', C.c); v.style.setProperty('--on', C.on);
-  const msgs = [{ me: 0, v: b.v, t: b.t, w: b.w }, { me: 1, v: 'answer-2', t: 12, w: W(11) }, { me: 0, v: 'leo-reply', t: 9, w: W(12) }];
-  v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><span class="tile">${bottle(c.cat)}</span><div><b>${esc(c.who)}</b><small>Sus nombres aparecen cuando los dos decidan</small></div></div>
-    <div class="box" style="padding:14px 16px;--c:${C.c}"><span class="badge" style="background:${C.c};color:${C.on}">${C.n}</span><p class="q" style="font-size:16px;margin:10px 0 12px">“${esc(b.q)}”</p><span class="path">${STEPS.map((s, i) => `<i class="${i < c.st ? 'on' : ''}"></i>`).join('')}</span><span class="plbl" style="margin-top:6px">${STEPS.map(s => `<span>${s}</span>`).join('')}</span></div>
+  const v = $('#v-chat'); v.setAttribute('style', cvars(C));
+  const msgs = [{ me: 0, v: b.v, t: b.t, w: b.wv }, { me: 1, v: 'answer-2', t: 12, w: W(11) }, { me: 0, v: 'leo-reply', t: 9, w: W(12) }];
+  v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><span class="tile">${bottle(c.cat)}</span><div style="flex:1"><b>${esc(c.who)}</b><small>Sus nombres aparecen cuando los dos decidan</small></div><button class="push sq" id="call" aria-label="Llamar">${ico('phone')}</button></div>
+    <div class="box" style="padding:16px"><span class="badge">${C.n}</span><p class="q" style="font-size:16px;margin:12px 0">“${esc(b.q)}”</p>${pathH(c.st)}</div>
     <div class="thread" id="th">${msgs.map((m, i) => bubble(m, i, C)).join('')}<div class="sys">Una nota más de cada uno y pueden decidir si se dicen sus nombres.</div></div>
-    <div class="dock"><span class="hint box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`;
+    <div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`;
   v._msgs = msgs;
-  v.querySelectorAll('[data-pl]').forEach(el => el.onclick = () => playBubble(+el.dataset.pl, C));
-  $('#cmic').onclick = () => { const m = { me: 1, v: 'answer-1', t: 8, w: W(20) }; msgs.push(m); $('#th').insertAdjacentHTML('beforeend', bubble(m, msgs.length - 1, C)); v.querySelectorAll('[data-pl]').forEach(el => el.onclick = () => playBubble(+el.dataset.pl, C)); toast('Nota de voz enviada', C.c); };
+  const bind = () => v.querySelectorAll('[data-pl]').forEach(el => el.onclick = () => playBubble(+el.dataset.pl, C));
+  bind();
+  $('#call').onclick = () => go('llamada', { id });
+  $('#cmic').onclick = () => { const m = { me: 1, v: 'answer-1', t: 8, w: W(20 + msgs.length) }; msgs.push(m); $('#th').insertAdjacentHTML('beforeend', bubble(m, msgs.length - 1, C)); bind(); pop(800); toast('Nota de voz enviada', C.c); };
 }
 const bubble = (m, i, C) => `<div class="msg box ${m.me ? 'me' : ''}"><button class="push sq" data-pl="${i}" aria-label="Escuchar">${ico('play')}</button><span id="mw${i}" style="flex:1;display:flex">${wave(m.w, m.me ? INK : C.c, 0, 6).replace('class="px"', 'class="px w"')}</span><span class="num">${mmss(m.t)}</span></div>`;
-function playBubble(i, C) { const m = $('#v-chat')._msgs[i]; play(m, p => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, p, 6).replace('class="px"', 'class="px w"'); }); }
+function playBubble(i, C) { const m = $('#v-chat')._msgs[i]; play(m, p => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, p, 6, true, m.me ? '#fff' : C.h).replace('class="px"', 'class="px w"'); }, () => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, 1, 6).replace('class="px"', 'class="px w"'); }); }
 
-/* ================= TÚ ================= */
+/* ================= LLAMADA ================= */
+function renderLlamada({ id = 'leo' } = {}) {
+  const c = CONV.find(x => x.id === id) || CONV[0], C = CAT[c.cat], v = $('#v-llamada'); v.setAttribute('style', cvars(C));
+  let s = 0;
+  v.innerHTML = `<span class="k mute">Llamada de voz</span>
+    <div class="orb"><i></i><i></i><i></i><span class="core box" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
+    <h1 class="h1">${esc(c.who)}</h1>
+    <span class="num" id="ct" style="font-size:36px">0:00</span>
+    <p class="mute" style="max-width:28ch;margin:0 auto">Solo sus voces. Nadie ve una cara hasta que los dos quieran.</p>
+    <button class="push hang" id="hang" aria-label="Colgar">${ico('phone', '#fff')}</button>`;
+  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada') return clearInterval(t); s++; if (s % 12 === 0) ct.textContent = mmss(s / 12); $('#oc').innerHTML = wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6, true); }, 83);
+  $('#hang').onclick = () => { clearInterval(t); go('chat', { id }); };
+}
+
+/* ================= PERFIL ================= */
 function renderTu() {
-  const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], on = [1, 1, 1, 1, 0, 0, 0];
-  $('#v-tu').innerHTML = `<div class="me"><div class="vm box">${wave(W(33).slice(0, 16), '#368DDB', 1, 8)}</div><div><h1 class="h1">Tu voz</h1><p class="mute" style="margin:6px 0 0">Así se ve la forma de tu última nota de voz.</p></div></div>
+  const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], on = [1, 1, 1, 1, 0, 0, 0], temas = S.temas.length ? S.temas : ['Música', 'Cine', 'Viajar'];
+  const mix = [5, 3, 2, 1, 1];
+  $('#v-tu').innerHTML = `<div class="me"><div class="vm box">${wave(W(33).slice(0, 16), '#368DDB', 1, 8)}</div><div><h1 class="h1">Tu voz</h1><p class="mute" style="margin:8px 0 0">Así se ve la forma de tu última nota de voz.</p></div></div>
+    <button class="push mcard" data-go="mes"><span class="k">Tu noviembre en Botella</span><b>36 personas escucharon tu voz este mes</b><span class="cbars">${KEYS.map((k, i) => `<i style="--c:${CAT[k].c};flex:${mix[i]}"></i>`).join('')}</span></button>
     <div class="sec"><span class="h2">4 días seguidos grabando</span><span class="k mute3">Racha</span></div>
     <div class="box" style="padding:16px"><div class="week">${days.map((d, i) => `<span class="${on[i] ? 'on' : ''}"><i></i>${d}</span>`).join('')}</div></div>
     <div class="sec"><span class="h2">Tus temas</span></div>
-    <div class="tchips">${['Música', 'Cine', 'Viajar'].map(t => `<span class="chip">${t}</span>`).join('')}</div>
+    <div class="tchips">${temas.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
     <div class="sec"><span class="h2">Lo que nadie ve</span></div>
     <div class="box priv"><div>${ico('lock', INK)}<span>Tu nombre aparece solo cuando los dos deciden compartirlo.</span></div><div>${ico('lock', INK)}<span>Tu distrito nunca se muestra. A la gente la une un tema en común.</span></div><div>${ico('check', INK)}<span>Tu voz llega tal como la grabas. Nunca se modifica.</span></div></div>`;
 }
+function renderMes() {
+  const v = $('#v-mes'); let i = 0;
+  const mix = [['roja', 12], ['azul', 8], ['amarilla', 5], ['verde', 3], ['morada', 2]];
+  const sl = [
+    `<span class="k mute">Tu noviembre en Botella</span><span class="num" style="color:var(--sea)">36</span><h1 class="hx">personas escucharon tu voz.</h1><p class="mute" style="font-size:16px;margin:0">Ninguna vio tu cara. Les bastó lo que dijiste.</p>`,
+    `<span class="k mute">Tus colores</span><h1 class="hx">Lo que más lanzaste fueron confesiones.</h1><div class="hbars">${mix.map(([k, n]) => `<div><span>${CAT[k].n}</span><span class="life box" style="--c:${CAT[k].c};--k:${CAT[k].k}">${life(n / 12, 12)}</span><span class="num" style="font-size:24px">${n}</span></div>`).join('')}</div>`,
+    `<span class="k mute">Tu mejor momento</span><span class="num" style="color:#E03B3B">4</span><h1 class="hx">personas te respondieron con su voz.</h1><p class="mute" style="font-size:16px;margin:0">Una de ellas ya sabe tu nombre.</p>`,
+    `<span class="k mute">Para diciembre</span><h1 class="hx">Lanza una botella de un color que nunca usaste.</h1><div class="count3">${bottle('morada')}${bottle('verde')}</div><button class="push btn blue" data-go="lanzar" style="margin-top:16px;position:relative;z-index:3">Lanzar una botella</button>`
+  ];
+  const draw = () => {
+    v.innerHTML = `<div class="top"><span class="bars" style="flex:1;margin:0 16px 0 0">${sl.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</span><button class="push sq" data-go="tu" aria-label="Cerrar">${ico('x')}</button></div>
+      <div class="slides"><div class="tapzones"><button aria-label="Anterior" id="mp"></button><button aria-label="Siguiente" id="mn"></button></div>${sl.map((h, j) => `<div class="slide ${j === i ? 'on' : ''}">${h}</div>`).join('')}</div>
+      <p class="k mute3" style="text-align:center;margin:16px 0 0">Toca para seguir</p>`;
+    $('#mp').onclick = () => { if (i) { i--; draw(); } };
+    $('#mn').onclick = () => { if (i < sl.length - 1) { i++; draw(); if (i === sl.length - 1) { const [x, y] = center($('.slide.on')); burst(x, y, KEYS.map(k => CAT[k].c), 60); pop(); } } };
+    if (i === sl.length - 1) $('.tapzones').style.pointerEvents = 'none', $('.tapzones #mp').style.pointerEvents = 'auto';
+  };
+  draw();
+}
 
 /* ================= NAVEGACIÓN ================= */
-function toast(t, c) { const r = $('#toast-root'); r.innerHTML = `<div class="toast box">${sprite(['oooo', 'oooo', 'oooo', 'oooo'], { o: c || INK })}${esc(t)}</div>`; clearTimeout(r._t); r._t = setTimeout(() => r.innerHTML = '', 2600); }
-const VIEWS = { playa: () => { renderBeach(); renderLegend(); renderPlayer(); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, tu: renderTu };
+function toast(t, c) { const r = $('#toast-root'); r.innerHTML = `<div class="toast box" role="status">${sprite(['oooo', 'oooo', 'oooo', 'oooo'], { o: c || INK })}${esc(t)}</div>`; clearTimeout(r._t); r._t = setTimeout(() => r.innerHTML = '', 2800); }
+const VIEWS = { bienvenida: renderBienvenida, cuenta: renderCuenta, temas: renderTemas, playa: () => { renderBeach(); renderLegend(); renderPlayer(true); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, llamada: renderLlamada, tu: renderTu, mes: renderMes };
+const NONAV = ['bienvenida', 'cuenta', 'temas', 'lanzar', 'lanzada', 'chat', 'llamada', 'mes'];
 let cur = '';
-function go(name, p = {}) {
-  if (!VIEWS[name]) name = 'playa';
-  stop(); if (['playa', 'botellas', 'voces', 'tu'].includes(cur)) S.prev = cur;
+function show(name, p) {
+  if (['playa', 'botellas', 'voces', 'tu'].includes(cur)) S.prev = cur;
   cur = name;
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + name));
   VIEWS[name](p);
-  $('#nav').hidden = ['lanzar', 'lanzada', 'chat'].includes(name);
-  document.querySelectorAll('.nb').forEach(b => b.toggleAttribute('aria-current', b.dataset.go === name || (name === 'chat' && b.dataset.go === 'voces')));
-  document.querySelectorAll('.nb[aria-current]').forEach(b => b.setAttribute('aria-current', 'page'));
+  $('#nav').hidden = NONAV.includes(name);
+  $('#app').classList.toggle('bare', NONAV.includes(name));
+  document.querySelectorAll('.nb').forEach(b => { const on = b.dataset.go === name || (name === 'chat' && b.dataset.go === 'voces'); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
   if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
   scrollTo(0, 0);
 }
+function go(name, p = {}) {
+  if (!VIEWS[name]) name = 'playa';
+  stop(); $('#ov').innerHTML = '';
+  if (!cur || name === 'lanzada') show(name, p); else wipe(() => show(name, p));
+}
 document.addEventListener('click', e => {
-  const g = e.target.closest('[data-go]'); if (g) { go(g.dataset.go); return; }
+  const gg = e.target.closest('[data-go]'); if (gg) { go(gg.dataset.go); return; }
   const b = e.target.closest('[data-b]'); if (b) { select(b.dataset.b); return; }
-  const f = e.target.closest('[data-f]'); if (f) { S.filt = f.dataset.f || null; const l = BOT.filter(x => !S.filt || x.cat === S.filt); if (l.length && !l.some(x => x.id === S.sel)) S.sel = l[0].id; renderBeach(); renderLegend(); renderPlayer(); }
+  const f = e.target.closest('[data-f]'); if (f) { S.filt = f.dataset.f || null; const l = BOT.filter(x => !S.filt || x.cat === S.filt); const keep = l.some(x => x.id === S.sel); if (l.length && !keep) S.sel = l[0].id; renderBeach(); renderLegend(); renderPlayer(!keep); }
 });
-/* encabezado e iconos fijos */
 $('#wm').innerHTML = [...'BOTELLA'].map((ch, i) => `<span style="animation-delay:${i * .12}s">${ch}</span>`).join('');
 $('#invb').innerHTML = bottle('azul'); $('#invv').innerHTML = wave(W(33).slice(0, 8), '#368DDB', 1, 5).replace('<svg', '<svg style="width:28px;height:20px"');
 document.querySelectorAll('[data-ic]').forEach(s => s.innerHTML = ico(s.dataset.ic, 'currentColor', s.dataset.ic === 'mic' ? '#368DDB' : '#fff'));
-addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h !== cur) go(h); });
-go(location.hash.slice(1) || 'playa');
+$('#lb').innerHTML = bottle('azul'); $('#lwv').innerHTML = `<svg class="px" viewBox="0 0 24 3"><rect x="0" y="1" width="24" height="2" fill="#63C4F2"/><rect x="3" y="0" width="4" height="1" fill="#fff"/><rect x="14" y="0" width="5" height="1" fill="#fff"/></svg>`;
+addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h !== cur && VIEWS[h]) go(h); });
+const h0 = location.hash.slice(1);
+show(VIEWS[h0] ? h0 : (store.get('onb', false) ? 'playa' : 'bienvenida'), {});
+const ready = (document.fonts && document.fonts.ready) || Promise.resolve();
+Promise.all([ready, new Promise(r => setTimeout(r, RM ? 0 : 700))]).then(() => { const l = $('#loader'); wipe(() => l.remove()); });
 }
 </script>
 </body>
