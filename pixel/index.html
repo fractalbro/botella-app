@@ -515,8 +515,8 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   <section class="view full" id="v-temas" aria-label="Tus temas"></section>
   <section class="view" id="v-playa" aria-label="Playa">
     <header class="hud">
-      <div style="flex:1"><div class="wm" id="wm" aria-label="Botella"></div><div class="tag-l">Voces que llegan a tu orilla</div></div>
-      <button class="push invm" data-go="muelle" aria-label="Te quedan botellas hoy. Pide más en el Muelle"><span id="invb"></span><span class="num" id="invn">×4</span><span class="mlab">Muelle</span></button>
+      <div style="flex:1"><div class="wm" id="wm" aria-label="Botella"></div><div class="tag-l">Voces de gente que ama lo mismo que tú</div></div>
+      <button class="push invm" data-go="muelle" aria-label="Te quedan botellas hoy. Pide más en el Muelle"><span id="invb"></span><span class="num" id="invn">×4</span><span class="plus" aria-hidden="true">+</span></button>
       <span id="bellw"></span>
     </header>
     <div class="beach box" id="beach"></div>
@@ -527,7 +527,7 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   <section class="view" id="v-lanzar" aria-label="Lanzar una botella"></section>
   <section class="view sent" id="v-lanzada" aria-label="Botella lanzada"></section>
   <section class="view" id="v-botellas" aria-label="Mis botellas"></section>
-  <section class="view" id="v-voces" aria-label="Voces"></section>
+  <section class="view" id="v-voces" aria-label="Charlas"></section>
   <section class="view" id="v-chat" aria-label="Conversación"></section>
   <section class="view full call" id="v-llamada" aria-label="Llamada"></section>
   <section class="view" id="v-tu" aria-label="Perfil"></section>
@@ -537,7 +537,7 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   <button class="nb" data-go="playa"><span data-ic="playa"></span>Playa</button>
   <button class="nb" data-go="botellas"><span data-ic="bot"></span>Botellas</button>
   <button class="launch push" data-go="lanzar" aria-label="Lanzar botella"><span data-ic="mic"></span>Lanzar</button>
-  <button class="nb" data-go="voces"><span data-ic="voz"></span>Voces</button>
+  <button class="nb" data-go="voces"><span data-ic="voz"></span>Charlas</button>
   <button class="nb" data-go="tu"><span data-ic="tu"></span>Perfil</button>
 </nav>
 <div id="ov"></div>
@@ -550,16 +550,17 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
 {
 /* ================= SISTEMA: las cinco botellas ================= */
 const CAT = {
-  roja:    { n:'Confesión', g:'Confesiones y corazón', d:'Secretos, confesiones y amor', t:'#D63434', c:'#E03B3B', k:'#9E2133', h:'#FF9A8F', on:'#fff' },
-  azul:    { t:'#2477C4', n:'Anécdota',  g:'Anécdotas y rumores',   d:'Historias del día a día y el chisme del día', c:'#368DDB', k:'#1F5A9E', h:'#9ED6FF', on:'#fff' },
-  morada:  { n:'Misterio',  g:'Misterios y noches',    d:'Suspenso, miedo y secretos de madrugada', c:'#7E49AA', k:'#4E2A75', h:'#CDA6F0', on:'#fff' },
-  verde:   { t:'#21854F', n:'Desahogo',  g:'Desahogos y consejos',  d:'Reflexiones, días difíciles y apoyo', c:'#2BA967', k:'#18744A', h:'#97EBB4', on:'#fff' },
-  amarilla:{ n:'Aventura',  g:'Aventuras y locuras',   d:'Viajes y anécdotas para contar siempre', c:'#FF8C2B', k:'#B85A12', h:'#FFD58A', on:'#181425' }
+  roja:    { n:'Confesiones', g:'Confesiones', d:'Secretos, confesiones y amor', t:'#D63434', c:'#E03B3B', k:'#9E2133', h:'#FF9A8F', on:'#fff' },
+  azul:    { t:'#2477C4', n:'Anécdotas',  g:'Anécdotas',   d:'Historias del día a día y el chisme del día', c:'#368DDB', k:'#1F5A9E', h:'#9ED6FF', on:'#fff' },
+  morada:  { n:'Misterios',  g:'Misterios',    d:'Suspenso, miedo y secretos de madrugada', c:'#7E49AA', k:'#4E2A75', h:'#CDA6F0', on:'#fff' },
+  verde:   { t:'#21854F', n:'Desahogos',  g:'Desahogos',  d:'Reflexiones, días difíciles y apoyo', c:'#2BA967', k:'#18744A', h:'#97EBB4', on:'#fff' },
+  amarilla:{ n:'Aventuras',  g:'Aventuras',   d:'Viajes y anécdotas para contar siempre', c:'#FF8C2B', k:'#B85A12', h:'#FFD58A', on:'#181425' }
 };
 const KEYS = Object.keys(CAT);
 CAT.dorada = { n:'Dorada', g:'Botella dorada', d:'Sale primero en el mar de todos', c:'#FFC93C', k:'#C7891A', h:'#FFF1A6', on:'#181425' };
 const INK = '#181425';
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const quedan = n => n === 1 ? 'Te queda 1 hoy' : `Te quedan ${n} hoy`;
 const IDEAS = {
   roja: ['Algo que nunca le dijiste a nadie', '¿Te enamoraste alguna vez de una voz?'],
   azul: ['Lo más raro que te pasó esta semana', 'El chisme más inocente que conoces'],
@@ -610,7 +611,7 @@ const IC = {
   people:['.oo...oo.','.oo...oo.','.........','oooo.oooo','oooo.oooo','oooo.oooo'],
   chev:  ['o....','.o...','..o..','.o...','o....'],
   expand:['ooo.ooo','o.....o','o.....o','.......','o.....o','o.....o','ooo.ooo'],
-  moon:  ['..ooo..','.oo....','oo.....','oo.....','oo.....','.oo....','..ooo..'],
+  moon:  ['..oooo...','.ooo.....','ooo......','ooo......','ooo......','oooo.....','.ooooo..o','..ooooo..','.........'],
   copy:  ['oooo..','o..o..','o.oooo','o.o..o','ooo..o','..o..o','..oooo'],
   map:   ['o..o..o','.o.o.o.','..ooo..','ooooooo','..ooo..','.o.o.o.','o..o..o'],
   bell:  ['...oo...','..oooo..','.oooooo.','.oooooo.','.oooooo.','.oooooo.','oooooooo','........','...oo...'],
@@ -787,16 +788,20 @@ function renderCuenta({ i = 0 } = {}) {
   const Q = QL[i], val = Q.type === 'password' ? (R.pass || '') : store.get('c.' + Q.k, Q.k === 'codigo' ? store.get('code', '') : ''), n = QL.length;
   const v = $('#v-cuenta'), q = s => v.querySelector(s);
   let okBox = store.get('c.normas', false);
-  v.innerHTML = `<div class="top"><button class="push sq" id="cb" aria-label="Volver">${ico('back')}</button><span class="steps" aria-label="Paso ${i + 1} de ${n}">${QL.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</span><span class="k mute3">${i + 1}/${n}</span></div>
+  v.innerHTML = `<div class="top"><button class="push sq" id="cb" aria-label="Volver">${ico('back')}</button><span class="steps" role="img" aria-label="Paso ${i + 1} de ${n}">${QL.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</span><span class="k mute3">${i + 1}/${n}</span></div>
     ${i === 0 ? pendBanner() : ''}
     <div class="ask pop" ${i === 0 && store.get('pend', null) ? 'style="margin-top:32px"' : ''}><h1 class="hx">${Q.q}</h1>
-    <input class="field" id="fi" type="${Q.type}" inputmode="${Q.type === 'number' ? 'numeric' : Q.type === 'email' ? 'email' : 'text'}" autocomplete="${Q.ac}" ${Q.k === 'codigo' ? 'autocapitalize="characters" spellcheck="false"' : ''} placeholder="${Q.ph}" value="${esc(val)}" aria-label="${Q.q}">
+    <input class="field${Q.type === 'email' ? ' em' : ''}" id="fi" type="${Q.type}" inputmode="${Q.type === 'number' ? 'numeric' : Q.type === 'email' ? 'email' : 'text'}" autocomplete="${Q.ac}" ${Q.k === 'codigo' ? 'autocapitalize="characters" spellcheck="false"' : ''} placeholder="${Q.ph}" value="${esc(val)}" aria-label="${Q.q}">
     <p class="hint3">${ico('lock', '#6B6578')}${Q.h}</p>
+    ${Q.type === 'password' ? '<button class="link eye" id="eye" type="button">Mostrar contraseña</button>' : ''}
     ${Q.k === 'edad' ? `<button class="tick" id="tk" role="checkbox" aria-checked="${okBox}"><span class="tbox">${ico('check', '#fff')}</span><span>Tengo 18 años o más y acepto las normas de Botella.</span></button><button class="link normas-l" data-go="normas" data-p='{"from":"cuenta","i":${i}}'>Leer las normas</button>` : ''}</div>
     <div class="sp" style="min-height:32px"></div>
+    <p class="why" id="why" aria-live="polite"></p>
     <button class="push btn blue" id="cn">${i < n - 1 ? 'Seguir' : 'Crear mi cuenta'}</button>`;
   const fi = q('#fi'), ok = () => { const x = fi.value.trim(); return Q.type === 'email' ? /.+@.+\..+/.test(x) : Q.type === 'number' ? +x >= 18 && +x < 100 && okBox : Q.type === 'password' ? x.length >= 8 : Q.k === 'codigo' ? x.length >= 4 : x.length > 1; };
-  const upd = () => q('#cn').disabled = !ok(); upd(); fi.oninput = upd;
+  const why = () => { const x = fi.value.trim(); if (Q.k === 'edad') return !x ? 'Escribe tu edad para seguir.' : +x < 18 ? 'Botella es solo para mayores de 18.' : !okBox ? 'Marca la casilla para crear tu cuenta.' : ''; if (Q.type === 'password') return x && x.length < 8 ? `Faltan ${8 - x.length} ${8 - x.length === 1 ? 'letra' : 'letras'}.` : ''; if (Q.type === 'email') return x && !ok() ? 'Revisa que el correo esté completo.' : ''; return ''; };
+  const upd = () => { q('#cn').disabled = !ok(); q('#why').textContent = q('#cn').disabled ? why() : ''; }; upd(); fi.oninput = upd;
+  if (q('#eye')) q('#eye').onclick = () => { const sh = fi.type === 'password'; fi.type = sh ? 'text' : 'password'; q('#eye').textContent = sh ? 'Ocultar contraseña' : 'Mostrar contraseña'; fi.focus(); };
   if (q('#tk')) q('#tk').onclick = e => { if (e.target.closest('[data-go]')) return; okBox = !okBox; store.set('c.normas', okBox); q('#tk').setAttribute('aria-checked', okBox); if (okBox) { pop(1200); burst(...center(q('.tbox')), ['#368DDB', '#fff'], 10); } upd(); };
   const next = async () => {
     if (!ok()) return; const x = fi.value.trim();
@@ -808,7 +813,7 @@ function renderCuenta({ i = 0 } = {}) {
       const undo = busyBtn(q('#cn'), 'Creando tu cuenta…');
       try { await signUp(store.get('c.correo', ''), R.pass); } catch (e) { undo(); toast(errMsg(e, 'No pudimos crear tu cuenta. Intenta en unos minutos.'), '#D63434'); if (e.exists || /already|registered/i.test(e.message || '')) setTimeout(() => go('entrar'), 1200); return; }
     }
-    go('presenta');
+    go('sobre');
   };
   q('#cn').onclick = next; fi.onkeydown = e => { if (e.key === 'Enter') next(); };
   q('#cb').onclick = () => i ? go('cuenta', { i: i - 1 }) : go(store.get('pend', null) ? 'primera' : 'bienvenida');
@@ -895,7 +900,7 @@ function renderPrimera({ i = 0, auto } = {}) {
 }
 
 /* ---------- tu voz de presentación: en vez de foto, tu voz ---------- */
-function renderPresenta({ edit } = {}) {
+function renderPresenta({ edit, back } = {}) {
   const v = $('#v-presenta'), C = CAT.azul;
   v.innerHTML = `${edit ? topbar('tu', 'Tu presentación') : `<div class="top"><button class="push sq" data-go="cuenta" data-p='{"i":3}' aria-label="Volver">${ico('back')}</button><span class="k mute">Tu perfil · 1 de 3</span><span class="k mute3">1/3</span></div>`}
     <h1 class="hx">En vez de foto, tu voz.</h1>
@@ -904,7 +909,7 @@ function renderPresenta({ edit } = {}) {
     <div class="sp"></div>
     <div id="prz"></div>
     ${edit ? '' : '<button class="link" id="later">Lo grabo después</button>'}`;
-  recorder(v.querySelector('#prz'), { C, max: 20, seed: 33, cta: 'Guardar mi voz', ico: 'check', tx: 'Toca y preséntate', onSend: async (secs, url, blob, w) => { R.intro = blob ? { blob, secs, w } : null; if (LIVE && edit) { if (!blob) return; try { const path = await upload(blob, ''); const { error } = await sb.from('profiles').update({ intro_voice: path, intro_secs: Math.min(60, secs), intro_peaks: peaksOf(w) }).eq('id', uid()); if (error) throw error; Object.assign(R.me, { intro_voice: path, intro_secs: secs, intro_peaks: peaksOf(w) }); } catch (e) { toast(errMsg(e), '#D63434'); return; } } let du = null; if (blob) du = await toDataURL(blob); store.set('pres', { secs }); if (blob && w) store.set('preswave', w); if (du) try { localStorage.setItem('bp.presurl', du); } catch (e) {} S.presUrl = url; toast('Tu voz de presentación quedó guardada.', C.c); go(edit ? 'tu' : 'sobre'); } });
+  recorder(v.querySelector('#prz'), { C, max: 20, seed: 33, cta: 'Guardar mi voz', ico: 'check', tx: 'Toca y preséntate', onSend: async (secs, url, blob, w) => { R.intro = blob ? { blob, secs, w } : null; if (LIVE && edit) { if (!blob) return; try { const path = await upload(blob, ''); const { error } = await sb.from('profiles').update({ intro_voice: path, intro_secs: Math.min(60, secs), intro_peaks: peaksOf(w) }).eq('id', uid()); if (error) throw error; Object.assign(R.me, { intro_voice: path, intro_secs: secs, intro_peaks: peaksOf(w) }); } catch (e) { toast(errMsg(e), '#D63434'); return; } } let du = null; if (blob) du = await toDataURL(blob); store.set('pres', { secs }); if (blob && w) store.set('preswave', w); if (du) try { localStorage.setItem('bp.presurl', du); } catch (e) {} S.presUrl = url; toast('Tu voz de presentación quedó guardada.', C.c); go(edit ? (back ? back.to : 'tu') : 'sobre', back ? back.p : {}); } });
   const l = v.querySelector('#later'); if (l) l.onclick = () => go('sobre');
 }
 
@@ -913,10 +918,10 @@ const DIST = ['Barranco', 'Jesús María', 'Lince', 'Miraflores', 'Pueblo Libre'
 function renderSobre() {
   const v = $('#v-sobre'); let d = store.get('dist', null);
   const draw = () => {
-    v.innerHTML = `<div class="top"><button class="push sq" data-go="presenta" aria-label="Volver">${ico('back')}</button><span class="k mute">Tu perfil · 2 de 3</span><span class="k mute3">2/3</span></div>
+    v.innerHTML = `<div class="top"><button class="push sq" data-go="${uid() ? 'sobre' : 'cuenta'}" data-p='{"i":3}' aria-label="Volver">${ico('back')}</button><span class="k mute">Tu perfil · 1 de 2</span><span class="k mute3">1/2</span></div>
       <h1 class="hx">¿En qué distrito vives?</h1>
       <p class="hint3" style="font-size:15px;margin-top:16px">${ico('lock', '#4A4458')}<span><b>Nunca se muestra.</b> Solo sirve para que te lleguen voces de gente cerca.</span></p>
-      <div class="tgrid" role="radiogroup" aria-label="Distrito">${DIST.map(t => `<button class="chip" role="radio" style="--c:#181425;--on:#fff" aria-pressed="${d === t}" aria-checked="${d === t}" data-d="${t}">${t}</button>`).join('')}</div>
+      <div class="tgrid" role="radiogroup" aria-label="Distrito">${DIST.map(t => `<button class="chip" role="radio" style="--c:#181425;--on:#fff" aria-checked="${d === t}" data-d="${t}">${t}</button>`).join('')}</div>
       <div class="sp" style="min-height:24px"></div>
       <button class="push btn blue" id="sn" ${d ? '' : 'disabled'}>Seguir</button>`;
     v.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { d = b.dataset.d; store.set('dist', d); draw(); });
@@ -928,7 +933,7 @@ function renderTemas({ edit } = {}) {
   const v = $('#v-temas');
   const draw = () => {
     const sel = S.temas, n = sel.length;
-    v.innerHTML = `<div class="top"><button class="push sq" data-go="${edit ? 'tu' : 'sobre'}" aria-label="Volver">${ico('back')}</button><span class="k mute">${edit ? 'Tus temas' : 'Tu perfil · 3 de 3'}</span><span class="k mute3">${n}/3</span></div>
+    v.innerHTML = `<div class="top"><button class="push sq" data-go="${edit ? 'tu' : 'sobre'}" aria-label="Volver">${ico('back')}</button><span class="k mute">${edit ? 'Tus temas' : 'Tu perfil · 2 de 2'}</span><span class="k mute3">${n}/3</span></div>
       <h1 class="hx">¿Qué te mueve?</h1>
       <p class="mute" style="margin:12px 0 0;font-size:16px">Elige tres. Tus botellas llegan a gente que ama lo mismo.</p>
       <div class="tgrid" role="group" aria-label="Temas">${TEMAS.map((t, i) => { const C = CAT[KEYS[i % 5]]; return `<button class="chip" style="${cvars(C)}" aria-pressed="${sel.includes(t)}" data-t="${t}"><i></i>${t}</button>`; }).join('')}</div>
@@ -955,12 +960,13 @@ function renderEntrar() {
     <p class="mute" style="margin:12px 0 0;font-size:16px">Tus botellas y conversaciones te esperan.</p>
     <label class="lbl">Tu correo<input class="field sm" id="ec" type="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com"></label>
     <label class="lbl">Tu contraseña<input class="field sm" id="ep" type="password" autocomplete="current-password" placeholder="••••••••"></label>
-    <button class="link" style="margin:8px 0 0;text-align:left" data-go="olvide">Olvidé mi contraseña</button>
+    <span class="row" style="justify-content:space-between"><button class="link" style="margin:8px 0 0;text-align:left" data-go="olvide">Olvidé mi contraseña</button><button class="link" style="margin:8px 0 0" id="eye2" type="button">Mostrar</button></span>
     <div class="sp" style="min-height:32px"></div>
     <button class="push btn blue" id="en" disabled>Entrar</button>
     <button class="link" data-go="bienvenida">Todavía no tengo cuenta</button>`;
   const ok = () => /.+@.+\..+/.test(q('#ec').value) && q('#ep').value.length >= 6;
   q('#ec').oninput = q('#ep').oninput = () => q('#en').disabled = !ok();
+  q('#eye2').onclick = () => { const f = q('#ep'), sh = f.type === 'password'; f.type = sh ? 'text' : 'password'; q('#eye2').textContent = sh ? 'Ocultar' : 'Mostrar'; };
   q('#en').onclick = async () => { if (!LIVE) { store.set('onb', true); go('playa'); return; } const undo = busyBtn(q('#en'), 'Entrando…'); const { data, error } = await sb.auth.signInWithPassword({ email: q('#ec').value.trim(), password: q('#ep').value }); if (error) { undo(); toast(errMsg(error), '#D63434'); return; } R.ses = data.session; try { await enter(); } catch (e) { undo(); toast(errMsg(e), '#D63434'); } };
 }
 function renderOlvide({ sent, nueva } = {}) {
@@ -1069,7 +1075,7 @@ function renderLanzar(p = {}) {
     const C = CAT[cat]; v.setAttribute('style', cvars(C));
     v.innerHTML = `<div class="top"><button class="push sq" id="cls" aria-label="Cerrar">${ico('x')}</button><span class="k">${p.reply ? 'Responder' : p.dorada ? 'Botella dorada' : 'Lanzar botella'}</span>${p.reply ? '<span style="width:48px"></span>' : `<button class="leftc" data-go="muelle" aria-label="Te quedan ${S.left}. Pedir más en el Muelle">${bottle(cat)}<span class="num">×${S.left}</span><span class="plus">+</span></button>`}</div>
       <h1 class="h1">${p.reply ? 'Responde con tu voz' : '¿Qué quieres contar o preguntar?'}</h1>
-      ${p.reply ? `<p class="mute" style="margin:12px 0 0">${qq(p.reply.q)}</p>` : `<div class="shelf" role="radiogroup" aria-label="Color de la botella">${KEYS.map(k => `<button class="pick" role="radio" style="--c:${CAT[k].c}" aria-pressed="${k === cat}" aria-checked="${k === cat}" data-c="${k}" aria-label="${CAT[k].g}">${bottle(k)}</button>`).join('')}</div>
+      ${p.reply ? `<p class="mute" style="margin:12px 0 0">${qq(p.reply.q)}</p>` : `<div class="shelf" role="radiogroup" aria-label="Color de la botella">${KEYS.map(k => `<button class="pick" role="radio" style="--c:${CAT[k].c}" aria-checked="${k === cat}" data-c="${k}" aria-label="${CAT[k].g}">${bottle(k)}</button>`).join('')}</div>
       <div class="catname"><b>${C.g}</b><span>${C.d}</span></div>`}
       <div class="recz" id="recz"></div>`;
     v.querySelectorAll('.pick').forEach(b => b.onclick = () => { if (rec === 1) return; cat = b.dataset.c; store.set('lastcat', cat); draw(); });
@@ -1099,7 +1105,7 @@ function renderLanzar(p = {}) {
       S.lastUrl = url; S.rec = { blob, secs, w, idea, dorada: !!p.dorada };
       $('#send').onclick = () => {
         if (LIVE && !blob) { toast('No se grabó nada. Graba otra vez.', '#D63434'); return; }
-        if (p.onb) { pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'presenta' : 'cuenta', { i: 0 }); return; }
+        if (p.onb) { pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'sobre' : 'cuenta', { i: 0 }); return; }
         if (p.reply) { if (LIVE) { sendReply(p.reply, { blob, secs, w }, $('#send')); return; } pop(700); burst(...center($('#send')), [C.c, C.h, '#fff'], 32); toast('Tu respuesta va en camino. Si te responde, empieza una conversación.', C.c); setTimeout(() => go('voces'), 400); return; }
         fling(0, -1.6);
       };
@@ -1150,14 +1156,14 @@ function renderLanzada({ cat = store.get('lastcat', 'roja') } = {}) {
   v.innerHTML = `<div class="beach box"><div class="stage">${scene()}<span class="drop" id="drop" style="--x:${X / 112 * 100}%;--y:${Y / 84 * 100}%">${bottle(cat)}</span></div></div>
     <span class="k mute">Tu botella ya está en el mar</span>
     <div class="big" id="cnt" style="margin:16px 0 8px">0</div>
-    <p class="h2">personas ya la recibieron</p>
+    <p class="h2" id="cntl">personas ya la recibieron</p>
     <div class="life box" id="rl" style="margin:16px auto 0">${life(0)}</div>
     <p class="mute" style="max-width:30ch;margin:16px auto 32px">Sigue llegando a más gente que ama lo mismo que tú, hasta que alguien te responda.</p>
-    <button class="push btn" data-go="playa">Volver a la playa</button>
-    <button class="push card dockc" data-go="muelle" style="text-align:left"><span class="tile">${ico('dock', INK)}</span><span class="tx"><b id="lzl">Te quedan ${S.left} hoy</b><small>¿Quieres lanzar más? Pide botellas en el Muelle</small></span>${ico('chev', INK)}</button>`;
+    <button class="push btn blue" data-go="playa">Mientras, escucha una botella</button>
+    <button class="push card dockc" data-go="muelle" style="text-align:left"><span class="tile">${ico('dock', INK)}</span><span class="tx"><b id="lzl">${quedan(S.left)}</b><small>¿Quieres lanzar más? Pide botellas en el Muelle</small></span>${ico('chev', INK)}</button>`;
   setTimeout(() => { const d = $('#drop'); if (!d) return; const [x, y] = center(d); pop(420); burst(x, y + 8, ['#fff', '#BDEBFA', '#63C4F2', C.c, C.h], 48); d.classList.add('bob'); }, RM ? 0 : 760);
-  let n = 0, target = 128; if (LIVE) { target = 0; const pr = R.launching; R.launching = null; if (pr) pr.then(x => { target = x || 0; const l = $('#lzl'); if (l) l.textContent = `Te quedan ${S.left} hoy`; }).catch(e => { toast(errMsg(e, 'Tu botella no salió. Intenta otra vez.'), '#D63434'); setTimeout(() => go('lanzar'), 900); }); }
-  const t = setInterval(() => { const c = $('#cnt'); if (!c || cur !== 'lanzada') return clearInterval(t); n = n < target ? Math.min(target, n + Math.ceil((target - n) / 8)) : n + (!LIVE && Math.random() < .3 ? 1 : 0); c.textContent = n; $('#rl').innerHTML = life(Math.min(1, n / (LIVE ? Math.max(1, target) : 160))); if (!LIVE && n === target && S.mine[0]) { S.mine[0].reach = target; store.set('mine', S.mine); } }, 120);
+  let n = 0, target = 128; if (LIVE) { target = 0; const pr = R.launching; R.launching = null; if (pr) pr.then(x => { target = x || 0; const l = $('#lzl'); if (l) l.textContent = quedan(S.left); }).catch(e => { toast(errMsg(e, 'Tu botella no salió. Intenta otra vez.'), '#D63434'); setTimeout(() => go('lanzar'), 900); }); }
+  const t = setInterval(() => { const c = $('#cnt'); if (!c || cur !== 'lanzada') return clearInterval(t); n = n < target ? Math.min(target, n + Math.ceil((target - n) / 8)) : n + (!LIVE && Math.random() < .3 ? 1 : 0); c.textContent = n; const cl = $('#cntl'); if (cl) cl.textContent = n === 1 ? 'persona ya la recibió' : 'personas ya la recibieron'; $('#rl').innerHTML = life(.12 + .6 * Math.min(1, n / (LIVE ? Math.max(1, target) : 160))); if (!LIVE && n === target && S.mine[0]) { S.mine[0].reach = target; store.set('mine', S.mine); } }, 120);
 }
 
 /* ================= INVENTARIO ================= */
@@ -1165,11 +1171,11 @@ function renderBotellas() {
   const tot = S.mine.reduce((a, m) => a + m.reach, 0), ans = S.mine.reduce((a, m) => a + m.ans, 0);
   $('#v-botellas').innerHTML = `<h1 class="h1">Mis botellas</h1>
     <button class="push muellehero" data-go="muelle"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle · gratis</span><b>Pide más botellas</b><small>Paquetes para lanzar más y botellas especiales: doradas, que llegan lejos y de regalo.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ir al Muelle</span></button>
-    <div class="stats box"><div><span class="num">${S.mine.length}</span><small>lanzadas</small></div><div><span class="num">${tot}</span><small>personas las recibieron</small></div><div><span class="num">${ans}</span><small>te respondieron</small></div></div>
-    <div class="sec"><span class="h2">Te quedan ${S.left} hoy</span><span class="k mute3">${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
+    <div class="stats box"><div><span class="num">${S.mine.length}</span><small>${S.mine.length === 1 ? 'botella lanzada' : 'botellas lanzadas'}</small></div><div><span class="num">${tot}</span><small>${tot === 1 ? 'persona las recibió' : 'personas las recibieron'}</small></div><div><span class="num">${ans}</span><small>${ans === 1 ? 'respuesta' : 'respuestas'}</small></div></div>
+    <div class="sec"><span class="h2">${quedan(S.left)}</span><span class="k mute3">${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
     <div class="slots">${[0, 1, 2, 3, 4].map(i => bottle(KEYS[i], i >= S.left)).join('')}</div>
     <div class="sec"><span class="h2">En el mar</span></div>
-    <div class="cards">${S.mine.length ? '' : '<div class="box empty"><b>Todavía no lanzas ninguna.</b><small>Toca Lanzar, graba lo que quieras contar y llega a gente que ama lo mismo que tú.</small></div>'}${S.mine.map((m, i) => { const C = CAT[m.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on}" data-m="${i}"><span class="tile">${bottle(m.cat)}</span><span class="tx"><b>${esc(m.q)}</b><small>${m.reach} personas la recibieron · ${m.ans ? m.ans + (m.ans > 1 ? ' respuestas' : ' respuesta') : 'sigue llegando'}</small></span>${m.nuevo ? '<span class="new">Nueva</span>' : ''}</button>`; }).join('')}</div>`;
+    <div class="cards">${S.mine.length ? '' : '<div class="box empty"><b>Todavía no lanzas ninguna.</b><small>Toca Lanzar, graba lo que quieras contar y llega a gente que ama lo mismo que tú.</small></div>'}${S.mine.map((m, i) => { const C = CAT[m.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on}" data-m="${i}"><span class="tile">${bottle(m.cat)}</span><span class="tx"><b>${esc(m.q)}</b><small>${m.reach} ${m.reach === 1 ? 'persona la recibió' : 'personas la recibieron'} · ${m.ans ? m.ans + (m.ans > 1 ? ' respuestas' : ' respuesta') : 'sigue llegando'}</small></span>${m.nuevo ? '<span class="new">Nueva</span>' : ''}</button>`; }).join('')}</div>`;
   document.querySelectorAll('[data-m]').forEach(el => el.onclick = () => {
     const m = S.mine[+el.dataset.m], C = CAT[m.cat];
     if (LIVE) return mineTap(m, +el.dataset.m);
@@ -1188,8 +1194,8 @@ const CONV = [
 const STEPS = ['Voces', 'Nombres', 'Llamada', 'Plan'];
 const pathH = st => `<span class="path">${STEPS.map((s, i) => `<i class="${i < st ? 'on' : ''}"></i>`).join('')}</span><span class="plbl">${STEPS.map(s => `<span>${s}</span>`).join('')}</span>`;
 function renderVoces() {
-  $('#v-voces').innerHTML = `<h1 class="h1">Voces</h1><p class="mute" style="margin:8px 0 24px">Cada conversación empezó con una botella.</p>
-    <div class="cards">${CONV.length ? '' : '<div class="box empty"><b>Todavía no hay conversaciones.</b><small>Responde una botella de tu playa con tu voz y empieza la primera.</small></div>'}${CONV.map(c => { const C = CAT[c.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on};align-items:flex-start" data-c="${c.id}"><span class="tile">${bottle(c.cat)}</span><span class="tx"><span class="row" style="gap:8px"><b style="flex:1">${esc(c.who)}</b><small>${c.ago}</small></span><small style="color:var(--ink-2)">${esc(c.last)}</small>${pathH(c.st)}</span></button>`; }).join('')}</div>`;
+  $('#v-voces').innerHTML = `<h1 class="h1">Charlas</h1><p class="mute" style="margin:8px 0 24px">Cada conversación empezó con una botella.</p>
+    <div class="cards">${CONV.length ? '' : '<div class="box empty"><b>Todavía no hay conversaciones.</b><small>Responde una botella de tu playa con tu voz y empieza la primera.</small></div>'}${CONV.map(c => { const C = CAT[c.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on};align-items:flex-start" data-c="${c.id}"><span class="tile">${bottle(c.cat)}</span><span class="tx"><span class="row" style="gap:8px"><b style="flex:1">${esc(c.who)}</b><small>${c.ago}</small></span>${c.eg ? '<span class="egt">Voz de ejemplo</span>' : ''}<small style="color:var(--ink-2)">${esc(c.last)}</small>${pathH(c.st)}</span></button>`; }).join('')}</div>`;
   document.querySelectorAll('[data-c]').forEach(el => el.onclick = () => go('chat', { id: el.dataset.c }));
 }
 function renderChat({ id = 'leo' } = {}) {
@@ -1207,7 +1213,7 @@ function renderChat({ id = 'leo' } = {}) {
   v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><div style="flex:1"><b>${esc(nm === 2 ? c.name : c.who)}</b><small>${nm === 2 ? 'Ya saben sus nombres' : 'Nombres ocultos por ahora'}</small></div><button class="push sq" id="call" aria-label="Llamar">${ico('phone')}</button><button class="push sq" data-go="reportar" data-p='{"id":"${id}"}' aria-label="Reportar o bloquear">${ico('more')}</button></div>
     <div class="box" style="padding:16px"><span class="badge">${C.n}</span><p class="q" style="font-size:16px;margin:12px 0">${qq(b.q)}</p>${pathH(Math.max(c.st, nm === 2 ? 2 : 1, plan ? 4 : 0))}</div>
     <div class="thread" id="th">${msgs.map((m, i) => bubble(m, i, C)).join('')}${names}${planH}</div>
-    <div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`;
+    ${presAsk(msgs, id)}<div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`;
   v._msgs = msgs;
   const bind = () => v.querySelectorAll('[data-pl]').forEach(el => el.onclick = () => playBubble(+el.dataset.pl, C));
   bind();
@@ -1223,6 +1229,8 @@ function renderChat({ id = 'leo' } = {}) {
     const m = { me: 1, url, v: 'answer-1', t: Math.max(1, cs), w }; msgs.push(m); q('#th').insertAdjacentHTML('beforeend', bubble(m, msgs.length - 1, C)); bind(); pop(800); toast('Nota de voz enviada. Tócala para escucharla.', C.c);
   };
 }
+const presAsk = (msgs, id) => (LIVE ? R.me && !R.me.intro_voice : !store.get('pres', null)) && msgs.some(m => !m.me) && msgs.some(m => m.me)
+  ? `<button class="push card presb" data-go="presenta" data-p='${JSON.stringify({ edit: 1, back: { to: 'chat', p: { id } } })}'><span class="tile">${ico('mic', INK, '#fff')}</span><span class="tx"><b>Alguien ya te escuchó. ¿Grabas tu presentación?</b><small>En vez de foto, tu voz. Es lo primero que escucha quien quiere conocerte.</small></span>${ico('chev', INK)}</button>` : '';
 const bubble = (m, i, C) => `<div class="msg box ${m.me ? 'me' : ''}"><button class="push sq" data-pl="${i}" aria-label="Escuchar">${ico('play')}</button><span id="mw${i}" style="flex:1;display:flex">${wave(m.w, m.me ? INK : C.c, 0, 6).replace('class="px"', 'class="px w"')}</span><span class="num">${mmss(m.t)}</span></div>`;
 function playBubble(i, C) { const m = $('#v-chat')._msgs[i]; play(m, p => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, p, 6, true, m.me ? '#fff' : C.h).replace('class="px"', 'class="px w"'); }, () => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, 1, 6).replace('class="px"', 'class="px w"'); }); }
 
@@ -1232,7 +1240,7 @@ function renderLlamada({ id = 'leo', demo } = {}) {
   const c = (CONV.find(x => x.id === id) || CONV[0] || NOC), C = CAT[c.cat], v = $('#v-llamada'); v.setAttribute('style', cvars(C));
   let s = 0;
   v.innerHTML = `<span class="k mute">Llamada de voz</span>
-    <div class="orb"><i></i><i></i><i></i><span class="core box" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
+    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
     <h1 class="h1">${esc(c.who)}</h1>
     <span class="num" id="ct" style="font-size:36px">0:00</span>
     <p class="mute" style="max-width:28ch;margin:0 auto">Solo sus voces. Nadie ve una cara hasta que los dos quieran.</p>
@@ -1327,7 +1335,7 @@ function renderMuelle() {
   const v = $('#v-muelle'), have = LIVE && R.me ? { roja: R.me.color_left, morada: R.me.far_left, dorada: R.me.tide_left, amarilla: R.me.gifts_left } : store.get('have', { dorada: 1 });
   v.innerHTML = `${topbar('tu', '')}
     <h1 class="h1">Muelle</h1><p class="mute" style="margin:8px 0 24px">Botellas especiales, gratis. Pide la que quieras.</p>
-    <div class="grid2">${SPECIAL.map(([k, t, d]) => `<div class="box spc" style="${cvars(CAT[k])}"><span class="sbot">${bottle(k)}</span><b>${t}</b><small>${d}</small><span class="row" style="margin-top:auto;padding-top:12px;justify-content:space-between"><button class="push btn c sm" data-sp="${k}">Pedir</button>${have[k] ? `<span class="num" style="font-size:22px" aria-label="Tienes ${have[k]}">×${have[k]}</span>` : ''}</span></div>`).join('')}</div>
+    <div class="grid2">${SPECIAL.map(([k, t, d]) => `<div class="box spc" style="${cvars(CAT[k])}"><span class="sbot">${bottle(k)}</span><b>${t}</b><small>${d}</small><span class="row" style="margin-top:auto;padding-top:12px;justify-content:space-between"><button class="push btn c sm" data-sp="${k}">Pedir</button>${have[k] ? `<span class="have">Tienes ${have[k]}</span>` : ''}</span></div>`).join('')}</div>
     <div class="sec"><span class="h2">Más botellas por día</span></div>
     <p class="mute" style="margin:-4px 0 12px;font-size:14px">${LIVE ? `Tienes ${S.left} para lanzar. Cada día te llega una más; si quieres lanzar más, pide un paquete.` : 'Cada día puedes lanzar 4. Si quieres lanzar más, pide un paquete.'}</p>
     <div class="box menu">${PACKS.map(([n, d]) => `<button class="mrow" data-pk="${n}"><span class="mi num" style="font-size:24px;background:#E6F3FF">+${n}</span><span class="tx"><b>${n} botellas más</b><small>${d}</small></span><span class="k" style="color:var(--sea)">Pedir</span></button>`).join('')}</div>`;
@@ -1338,7 +1346,7 @@ const UNLOCK = [[3, 'Vidrio verde', 'verde'], [7, 'Una que llega lejos', 'morada
 function renderRacha() {
   const LS = LIVE ? liveStats() : null, UL = LIVE ? ULIVE : UNLOCK, n = LIVE ? LS.streak : 4, days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], on = LIVE ? LS.week : [1, 1, 1, 1, 0, 0, 0], nx = UL.find(u => u[0] > n) || UL[UL.length - 1], prev = (UL.filter(u => u[0] <= n).pop() || [0])[0];
   $('#v-racha').innerHTML = `${topbar('tu', 'Racha')}
-    <div class="row" style="align-items:flex-end;gap:16px"><span class="num" style="font-size:112px;line-height:.8;color:var(--sea)">${n}</span><h1 class="h1" style="padding-bottom:4px">días seguidos grabando tu voz.</h1></div>
+    <div class="row" style="align-items:flex-end;gap:16px"><span class="num" style="font-size:112px;line-height:.8;color:var(--sea)">${n}</span><h1 class="h1" style="padding-bottom:4px">${n === 1 ? 'día seguido' : 'días seguidos'} grabando tu voz.</h1></div>
     <p class="mute" style="margin:16px 0 0">Cuenta cada día en que grabas algo: una botella, una respuesta o la pregunta de hoy.</p>
     <div class="box" style="padding:16px;margin-top:24px"><div class="week" style="margin:0">${days.map((d, i) => `<span class="${on[i] ? 'on' : ''}"><i></i>${d}</span>`).join('')}</div></div>
     ${LIVE && LS.today ? `<div class="box today2"><span class="tile" style="width:44px;height:44px;background:#E6F3FF">${ico('check', INK)}</span><span class="tx" style="flex:1"><b>Hoy ya grabaste.</b><small>Vuelve mañana y tu racha sigue creciendo.</small></span></div>` : `<div class="box today2"><span class="tile" style="width:44px;height:44px;background:#E6F3FF">${ico('mic', INK, '#E6F3FF')}</span><span class="tx" style="flex:1"><b>Hoy todavía no grabas.</b><small>Si el día termina sin grabar, empiezas desde 0.</small></span><button class="push btn blue sm" data-go="lanzar">Grabar</button></div>`}
@@ -1461,7 +1469,7 @@ function renderInvitar() {
     <p class="k mute3" style="text-align:center;margin:16px 0 0">${LIVE ? 'Tu voz es la mejor invitación' : 'Ya entraron 2 por tu enlace'}</p>`;
   const cp = () => { try { navigator.clipboard.writeText(invLink()); } catch (e) {} pop(1000); toast('Enlace copiado', '#368DDB'); };
   v.querySelector('#cp').onclick = cp;
-  v.querySelector('#sh').onclick = () => navigator.share ? navigator.share({ title: 'Botella', text: 'Te invito a Botella: voces que llegan a tu orilla.', url: invLink() }).catch(() => {}) : cp();
+  v.querySelector('#sh').onclick = () => navigator.share ? navigator.share({ title: 'Botella', text: 'Te invito a Botella: voces de gente que ama lo mismo que tú.', url: invLink() }).catch(() => {}) : cp();
 }
 function renderMes() {
   const v = $('#v-mes'); let i = 0;
@@ -1519,7 +1527,7 @@ function renderMar(p = {}) {
   v.classList.toggle('mapv', mv === 'mapa');
   v.innerHTML = `${topbar('playa', 'Todo el mar')}${seg}` + (mv === 'mapa'
     ? `<div class="beach box big" id="beach2"></div><div class="legend" id="legend2" role="group" aria-label="Filtrar por color"></div><article class="player box" id="player2"></article>`
-    : `<h1 class="h1">Lo que llegó a tu orilla</h1>
+    : `<h1 class="h1">Botellas que te llegaron</h1>
     <p class="mute" style="margin:8px 0 0">${BOT.length ? `${BOT.length} ${BOT.length === 1 ? 'botella' : 'botellas'} de gente que ama lo mismo que tú.` : 'Todavía no llega ninguna. Mientras, lanza la tuya.'}</p>
     <button class="push card gold" data-go="doradas" style="margin-top:24px;${cvars(CAT.dorada)}"><span class="tile">${bottle('dorada')}</span><span class="tx"><b>Botellas doradas</b><small>Salen primero en el mar de todos</small></span>${ico('chev', INK)}</button>
     ${groups.map(([k, l]) => `<div class="sec"><span class="h2 row" style="gap:8px"><i class="dot" style="background:${CAT[k].c}"></i>${CAT[k].g}</span><span class="k mute3">${l.length}</span></div>
@@ -1570,7 +1578,7 @@ function renderReportar({ id = 'leo' } = {}) {
   const draw = () => {
     v.innerHTML = `${topbar('chat', 'Reportar', JSON.stringify({ id }))}
       <h1 class="h1">¿Qué pasó?</h1>
-      <p class="mute" style="margin:8px 0 24px">Nadie se entera de lo que elijas aquí. Lo revisamos hoy.</p>
+      <p class="mute" style="margin:8px 0 24px">Nadie se entera de lo que elijas aquí. Una persona del equipo lo revisa.</p>
       <div class="box menu" role="radiogroup">${REP.map(t => `<button class="mrow orow" role="radio" aria-checked="${sel === t}" data-o="${t}"><span class="rad"></span><span class="tx"><b>${t}</b></span></button>`).join('')}</div>
       <button class="push btn red" id="rs" style="margin-top:32px" ${sel ? '' : 'disabled'}>${ico('flag', '#fff')} Enviar reporte</button>
       <button class="link" id="bl">Bloquear sin reportar</button>`;
@@ -1595,7 +1603,7 @@ const unread = () => AVISOS.filter(a => !store.get('read', []).includes(a.id)).l
 const bellBtn = () => { const n = unread(); return `<button class="push sq bell" data-go="avisos" aria-label="Avisos${n ? ', ' + n + ' sin leer' : ''}">${ico('bell', INK)}${n ? `<span class="nb2">${n}</span>` : ''}</button>`; };
 function renderAvisos() {
   const read = store.get('read', []), v = $('#v-avisos');
-  const row = a => { const C = CAT[a.cat], on = !read.includes(a.id); return `<button class="mrow av ${on ? 'unr' : ''}" data-a="${a.id}"><span class="mi" style="background:color-mix(in srgb,${C.c} 22%,#fff)">${ico(a.ic, C.k)}</span><span class="tx"><b>${esc(a.t)}</b><small>${esc(a.d)}</small><small class="k mute3" style="font-size:11px">${a.ago}</small></span>${on ? '<i class="udot" aria-label="Sin leer"></i>' : ''}</button>`; };
+  const row = a => { const C = CAT[a.cat], on = !read.includes(a.id); return `<button class="mrow av ${on ? 'unr' : ''}" data-a="${a.id}"><span class="mi" style="background:color-mix(in srgb,${C.c} 22%,#fff)">${ico(a.ic, C.k)}</span><span class="tx"><b>${esc(a.t)}</b><small>${esc(a.d)}</small><small class="k mute3" style="font-size:13px">${a.ago}</small></span>${on ? '<i class="udot" aria-label="Sin leer"></i>' : ''}</button>`; };
   v.innerHTML = `${topbar('playa', '', '', unread() ? `<button class="k" id="all" style="height:48px;color:var(--sea)">Marcar leído</button>` : '')}
     <h1 class="h1">Avisos</h1>
     <p class="mute" style="margin:8px 0 0">${unread() ? `Tienes ${unread()} sin leer.` : 'Estás al día.'}</p>
@@ -1637,7 +1645,7 @@ function renderSinred() {
   v.innerHTML = `${topbar('playa', '')}
     <div class="sp"></div>
     <div class="nosig" aria-hidden="true"><span class="nsb">${bottle('azul')}</span>${sprite(['o.......o', '.o.....o.', '..o...o..', '...o.o...', '....o....', '...o.o...', '..o...o..', '.o.....o.', 'o.......o'], { o: '#E03B3B' }, 'nsx')}</div>
-    <h1 class="hx" style="text-align:center">Sin señal en la orilla.</h1>
+    <h1 class="hx" style="text-align:center">Te quedaste sin internet.</h1>
     <p class="mute" style="text-align:center;margin:12px auto 0;max-width:30ch;font-size:16px">Tu grabación quedó guardada en el teléfono. La enviamos apenas vuelva internet.</p>
     <div class="box pend"><span class="tile" style="width:44px;height:44px">${bottle('roja')}</span><span class="tx"><b>1 botella esperando</b><small>Se envía sola, no tienes que hacer nada</small></span><span class="spin" aria-hidden="true"><i></i><i></i><i></i></span></div>
     <div class="sp"></div>
@@ -1662,7 +1670,7 @@ function renderAjustes() {
   v.innerHTML = `${topbar('tu', '')}
     <h1 class="h1">Ajustes</h1>
     <div class="sec"><span class="h2">Avisos</span></div>
-    <div class="box menu">${sw('n.resp', 'Cuando te responden', 'Una botella o una nota de voz')}${sw('n.hoy', 'Pregunta de hoy', 'Una vez al día, a las 8:00 a. m.')}${sw('n.racha', 'Recordatorio de racha', 'Si el día se acaba sin grabar', false)}${sw('n.mail', 'También por correo', 'Solo lo importante', false)}</div>
+    <div class="box menu">${sw('n.resp', 'Cuando te responden', 'Una botella o una nota de voz')}${sw('n.hoy', 'Pregunta de hoy', 'Una vez al día, a las 8 de la mañana')}${sw('n.racha', 'Recordatorio de racha', 'Si el día se acaba sin grabar', false)}${sw('n.mail', 'También por correo', 'Solo lo importante', false)}</div>
     <div class="sec"><span class="h2">Sonido</span></div>
     <div class="box menu">${sw('snd', 'Sonidos de consola', 'Un pequeño “pop” al tocar, lanzar y destapar')}${sw('vib', 'Vibración', 'Al lanzar, enviar y destapar')}</div>
     <div class="sec"><span class="h2">Tu cuenta</span></div>
@@ -1718,7 +1726,7 @@ const KIND = { roja: 'Confesión', azul: 'Historia', morada: 'Pregunta', verde: 
 const catOf = (voice, kind, id) => { const m = /\/(roja|azul|morada|verde|amarilla|dorada)-/.exec(voice || ''); if (m) return m[1]; const h = hashS(id); return kind === 'Confesión' ? ['roja', 'verde'][h % 2] : kind === 'Historia' ? ['azul', 'amarilla'][h % 2] : ['morada', 'azul', 'verde'][h % 3]; };
 const toW = pk => Array.isArray(pk) && pk.length ? Array.from({ length: 30 }, (_, i) => .18 + .82 * Math.min(1, Math.max(0, +pk[Math.floor(i * pk.length / 30)] || .2))) : null;
 const peaksOf = w => (w || []).map(v => Math.round(v * 100) / 100);
-const agoS = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 1 ? 'ahora' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`; };
+const agoS = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 1 ? 'ahora' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} ${Math.round(m / 60) === 1 ? 'hora' : 'horas'}` : `hace ${Math.round(m / 1440)} ${Math.round(m / 1440) === 1 ? 'día' : 'días'}`; };
 const hhmm = iso => { const d = new Date(iso), n = new Date(); if (d.toDateString() === n.toDateString()) return d.toLocaleTimeString('es-PE', { hour: 'numeric', minute: '2-digit' }); if (n - d < 2 * 864e5) return 'Ayer'; return d.toLocaleDateString('es-PE', { weekday: 'short' }).replace('.', ''); };
 const LOVES = { 'Música': 'ama la música', 'Cine': 'ama el cine', 'Libros': 'ama los libros', 'Viajes': 'ama viajar', 'Fútbol': 'ama el fútbol', 'Comida': 'ama comer rico', 'La ciudad': 'ama la ciudad', 'Trabajo': 'vive su trabajo', 'Filosofía': 'ama la filosofía', 'Amor': 'cree en el amor', 'Tecnología': 'ama la tecnología', 'Arte': 'ama el arte' };
 const someone = t => t ? 'Alguien que ' + (LOVES[t] || 'ama ' + String(t).toLowerCase()) : 'Alguien';
@@ -1769,7 +1777,7 @@ async function loadMine() {
 async function loadConvos() {
   const rows = (await rpc('my_convos')) || [], cc = store.get('ccat', {}), seen = store.get('seenc', {}); R.convos = rows;
   CONV.length = 0;
-  rows.forEach(c => CONV.push({ id: c.id, name: c.alias, cat: cc[c.id] || KEYS[hashS(c.id) % 5], who: c.sample ? c.alias + ' · voz de ejemplo' : c.alias, raw: c, ago: hhmm(c.last_at), st: c.my_key && c.other_key ? 3 : c.revealed ? 2 : 1,
+  rows.forEach(c => CONV.push({ id: c.id, name: c.alias, cat: cc[c.id] || KEYS[hashS(c.id) % 5], who: c.alias, eg: !!c.sample, raw: c, ago: hhmm(c.last_at), st: c.my_key && c.other_key ? 3 : c.revealed ? 2 : 1,
     last: c.closed ? 'La conversación terminó' : c.last_mine ? 'Le respondiste. Esperando su voz' : (seen[c.id] || '') >= c.last_at ? 'Te respondió con su voz' : 'Nota de voz nueva' }));
   // las respuestas de las personas de ejemplo llegan a los pocos segundos: se busca otra vez a esa hora
   clearTimeout(R.pt); const nx = rows.map(c => c.next_at ? new Date(c.next_at) - Date.now() : 0).filter(x => x > 0 && x < 3e5);
@@ -1789,8 +1797,8 @@ async function loadNotices() {
   AVISOS.length = 0;
   (data || []).filter(n => NK[n.kind]).forEach(n => { const [ic, cat] = NK[n.kind];
     // sin horas fijas: el mar siempre está trayendo voces
-    const t = n.kind === 'tide' ? 'Llegaron voces nuevas a la pregunta de hoy' : n.kind === 'expiring' ? 'Una botella de tu orilla está por seguir su viaje' : n.title;
-    const d = n.kind === 'tide' || n.kind === 'expiring' ? 'Escúchala antes de que siga a otra orilla' : (n.body || '');
+    const t = n.kind === 'tide' ? 'Llegaron voces nuevas a la pregunta de hoy' : n.kind === 'expiring' ? 'Una botella que te llegó está por seguir su viaje' : n.title;
+    const d = n.kind === 'tide' || n.kind === 'expiring' ? 'Escúchala antes de que siga su viaje' : (n.body || '');
     AVISOS.push({ id: n.id, ic, cat, t: t.replace(/con lacre/g, 'de regalo'), d: d.replace(/con lacre/g, 'de regalo'), ago: agoS(n.at), go: NGO[n.go] || 'playa', p: n.go === 'chat' && n.ref ? { id: n.ref } : {} }); });
 }
 async function loadAll() { await loadMe(); if (!R.me) return; await Promise.all([loadShore(), loadMine(), loadConvos(), loadHome(), loadNotices()].map(p => p.catch(e => console.warn(e)))); }
@@ -1830,7 +1838,7 @@ async function createProfile() {
 }
 async function enter(to, p = {}) {
   await loadAll();
-  if (!R.me) { go('presenta'); return; }
+  if (!R.me) { go('sobre'); return; }
   subscribe(); store.set('onb', true);
   const h = location.hash.slice(1);
   go(to || (NAVV.includes(h) ? h : 'playa'), p);
@@ -1942,11 +1950,11 @@ async function onMsg(m) {
   const L = R.msgs[c.id]; if (L && !L.some(x => x.id === m.id)) L.push(m);
   loadConvos().then(() => { if (cur === 'voces') renderVoces(); }).catch(() => {});
   if (cur === 'chat' && R.chatId === c.id) { if (!MIC.on && !playing) renderChat({ id: c.id }); return; }
-  if (isNew) { loadMine().then(() => { if (cur === 'botellas') renderBotellas(); }).catch(() => {}); toast('¡Te respondieron una botella! Mírala en Voces.', CAT[c.cat].c); pop(); }
+  if (isNew) { loadMine().then(() => { if (cur === 'botellas') renderBotellas(); }).catch(() => {}); toast('¡Te respondieron una botella! Mírala en Charlas.', CAT[c.cat].c); pop(); }
   else if (m.voice) toast(`${c.who} te mandó una nota de voz`, CAT[c.cat].c);
   else if (m.body && m.body.startsWith('#plan|')) toast(`${c.who} te propone un plan`, CAT[c.cat].c);
 }
-async function onDelivery() { const before = BOT.length; await loadShore().catch(() => {}); if (BOT.length > before) { if (cur === 'playa' && !playing && !MIC.on) VIEWS.playa(); else if (!['lanzar', 'llamada', 'entrante'].includes(cur)) toast('Llegó una botella a tu orilla.', '#368DDB'); } }
+async function onDelivery() { const before = BOT.length; await loadShore().catch(() => {}); if (BOT.length > before) { if (cur === 'playa' && !playing && !MIC.on) VIEWS.playa(); else if (!['lanzar', 'llamada', 'entrante'].includes(cur)) toast('Te llegó una botella.', '#368DDB'); } }
 async function onConvo(row) {
   const prev = R.convos.find(x => x.id === row.id), had = prev && prev.my_key && prev.other_key, wasRev = prev && prev.revealed;
   await loadConvos().catch(() => {}); const c = CONV.find(x => x.id === row.id); if (!c) return;
@@ -1977,10 +1985,10 @@ function renderChatLive({ id } = {}) {
   const planH = plan ? `<div class="plan box pop"><span class="tile" style="width:44px;height:44px">${ico('pin', INK)}</span><span class="tx"><span class="k" style="color:var(--k)">${planOk ? 'Plan confirmado' : lp.sender === me ? 'Plan · esperando que confirme' : 'Te propone un plan'}</span><b>${esc(plan)}</b>${!planOk && lp.sender !== me ? '<button class="push btn sm" id="pok" style="margin-top:8px">Me parece bien</button>' : ''}</span></div>`
     : nm === 2 ? `<button class="push card" data-go="plan" data-p='{"id":"${id}"}'><span class="tile">${ico('pin', INK)}</span><span class="tx"><b>Proponer un plan</b><small>Un lugar público, un día y una hora</small></span>${ico('chev', INK)}</button>` : '';
   const st = planOk ? 4 : c.st;
-  v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><div style="flex:1"><b>${esc(c.name)}</b><small>${nm === 2 ? 'Ya saben sus nombres' : 'Nombres ocultos por ahora'}</small></div><button class="push sq" id="call" aria-label="Llamar">${ico('phone')}</button><button class="push sq" data-go="reportar" data-p='{"id":"${id}"}' aria-label="Reportar o bloquear">${ico('more')}</button></div>
+  v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><div style="flex:1"><b>${esc(c.name)}</b><small>${raw.sample ? 'Voz de ejemplo · ' : ''}${nm === 2 ? 'Ya saben sus nombres' : 'Nombres ocultos por ahora'}</small></div><button class="push sq" id="call" aria-label="Llamar">${ico('phone')}</button><button class="push sq" data-go="reportar" data-p='{"id":"${id}"}' aria-label="Reportar o bloquear">${ico('more')}</button></div>
     <div class="box" style="padding:16px"><span class="badge">${C.n}</span><p class="q" style="font-size:16px;margin:12px 0">${qq(qtext)}</p>${pathH(st)}</div>
     <div class="thread" id="th">${L ? msgs.map((m, i) => bubble(m, i, C)).join('') : '<p class="k mute3" style="text-align:center">Trayendo las voces…</p>'}${raw.next_at ? '<p class="k mute3" style="text-align:center;margin:8px 0">Está grabando su respuesta…</p>' : ''}${L ? names + planH : ''}</div>
-    ${raw.closed ? '<div class="dock"><span class="hint2 box">Esta conversación terminó</span></div>' : `<div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`}`;
+    ${raw.closed ? '' : presAsk(msgs, id)}${raw.closed ? '<div class="dock"><span class="hint2 box">Esta conversación terminó</span></div>' : `<div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`}`;
   v._msgs = msgs;
   v.querySelectorAll('[data-pl]').forEach(el => el.onclick = () => playBubble(+el.dataset.pl, C));
   q('#call').onclick = () => callTap(id);
@@ -2006,7 +2014,7 @@ async function liveBoot() {
   if (code) { const c = code.trim().toUpperCase(); store.set('code', c); history.replaceState(null, '', location.pathname + location.hash); rpc('check_code', { p_code: c }).then(ok => store.set('codeok', !!ok)).catch(() => {}); }
   sb.auth.onAuthStateChange((ev, ses) => { R.ses = ses; if (ev === 'PASSWORD_RECOVERY') setTimeout(() => go('olvide', { nueva: 1 }), 300); });
   try { const { data } = await sb.auth.getSession(); R.ses = data && data.session; } catch (e) {}
-  if (R.ses) { try { await loadAll(); } catch (e) { show('sinred', {}); return; } if (R.me) { subscribe(); store.set('onb', true); const h = location.hash.slice(1); show(VIEWS[h] && !['bienvenida', 'cuenta', 'entrar', 'primera', 'chat', 'llamada', 'entrante', 'respondio', 'lanzada', 'plan', 'reportar'].includes(h) ? h : 'playa', {}); return; } { const h = location.hash.slice(1); show(['sobre', 'temas'].includes(h) && localStorage.getItem('bp.presurl') ? h : 'presenta', {}); } return; }
+  if (R.ses) { try { await loadAll(); } catch (e) { show('sinred', {}); return; } if (R.me) { subscribe(); store.set('onb', true); const h = location.hash.slice(1); show(VIEWS[h] && !['bienvenida', 'cuenta', 'entrar', 'primera', 'chat', 'llamada', 'entrante', 'respondio', 'lanzada', 'plan', 'reportar'].includes(h) ? h : 'playa', {}); return; } { const h = location.hash.slice(1); show(['sobre', 'temas'].includes(h) ? h : 'sobre', {}); } return; }
   const h = location.hash.slice(1); show(['entrar', 'olvide', 'normas'].includes(h) ? h : 'bienvenida', {});
 }
 
@@ -2192,7 +2200,7 @@ function renderLlamadaLive(id) {
   if (!CALL) { setTimeout(() => go('chat', { id }), 0); return; }
   const lab = () => !CALL ? '' : CALL.state === 'live' ? mmss((Date.now() - CALL.t0) / 1000) : CALL.state === 'connecting' ? 'Conectando…' : 'Llamando…';
   v.innerHTML = `<span class="k mute">Llamada de voz</span>
-    <div class="orb"><i></i><i></i><i></i><span class="core box" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
+    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
     <h1 class="h1">${esc(c.name)}</h1>
     <span class="num" id="ct" style="font-size:36px">${lab()}</span>
     <p class="mute" style="max-width:28ch;margin:0 auto">Solo sus voces. Nadie ve una cara hasta que los dos quieran.</p>
@@ -2228,7 +2236,7 @@ function show(name, p) {
 function go(name, p = {}) {
   if (!VIEWS[name]) name = 'playa';
   stop(); $('#ov').innerHTML = '';
-  if (!cur || name === 'lanzada') show(name, p); else wipe(() => show(name, p));
+  if (!cur || name === 'lanzada' || (NAVV.includes(cur) && NAVV.includes(name))) show(name, p); else wipe(() => show(name, p));
 }
 document.addEventListener('click', e => {
   const gg = e.target.closest('[data-go]'); if (gg) { e.preventDefault(); go(gg.dataset.go, gg.dataset.p ? JSON.parse(gg.dataset.p) : {}); return; }
