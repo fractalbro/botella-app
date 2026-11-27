@@ -865,3 +865,12 @@ svg{display:block}
 }
 @media (max-height:600px){.mic{width:108px;height:108px}.shore{min-height:180px}:root{--pad:20px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+/* Muelle: cada especial con lo que hace, cómo se gana y cuántas tienes */
+.item.spm{align-items:flex-start}
+.item .ic.art{width:44px;height:44px;flex:none;display:grid;place-items:center;background:none}
+.item .ic.art .bt{width:44px;transform:rotate(-14deg)}
+.item.spm .tx small{line-height:1.4}
+.item.spm .have{flex:none;white-space:nowrap;padding-top:2px}
+.item.spm .have:empty{display:none}
+.item.spm .tx small.gana{color:var(--fg-3);margin-top:6px;font-size:12.5px}
+.item.spm .tx small:not(.gana){color:var(--fg-2)}

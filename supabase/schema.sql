@@ -47,12 +47,16 @@ create table if not exists public.profiles (
   last_seen timestamptz not null default now()
 );
 alter table public.profiles enable row level security;
--- Botellas especiales de regalo para la beta: de color (eliges a quién llega) y que llega lejos (10 orillas).
-alter table public.profiles add column if not exists color_left int not null default 2;
+-- Botellas especiales (27/11): ninguna se paga, todas se ganan. Que llega lejos empieza con 30 personas; la dorada sale
+-- además en Botellas doradas; la de regalo se manda en una conversación. La de color ya no existe: su trabajo lo hace
+-- el tema que toda botella elige al lanzarse (color_left queda solo para la app vieja).
+alter table public.profiles add column if not exists color_left int not null default 0;
 alter table public.profiles add column if not exists far_left int not null default 1;
--- Del muelle (gratis en la beta): marea destacada, botella de regalo, quién la abrió, vidrio y plan Capitán. Las personas de ejemplo llevan is_sample.
+-- Del muelle (todo se gana, nada se paga): dorada, botella de regalo, quién la abrió, vidrio y plan Capitán. Las personas de ejemplo llevan is_sample.
 alter table public.profiles add column if not exists tide_left int not null default 1;
 alter table public.profiles add column if not exists gifts_left int not null default 1;
+-- Las botellas de color que alguien tenía se vuelven doradas: nadie pierde nada.
+update public.profiles set tide_left = least(tide_left + color_left, 10), color_left = 0 where color_left > 0;
 alter table public.profiles add column if not exists who_open boolean not null default false;
 alter table public.profiles add column if not exists glass text;
 alter table public.profiles add column if not exists captain boolean not null default false;
@@ -88,7 +92,7 @@ begin
   end if;
   update codes set uses = uses + 1 where code = upper(trim(new.code_used));
   new.code_used := upper(trim(new.code_used));
-  new.bottles := 3; new.color_left := 2; new.far_left := 1; new.tide_left := 1; new.gifts_left := 1; new.who_open := false; new.glass := null; new.captain := false; new.streak := 0; new.streak_day := null; new.best_streak := 0; new.glasses := '{}'; new.unlocks := '{}'; new.quest_done := false; new.sample_fill := null; new.daily_day := lima_today(); new.earned_day := lima_today(); new.earned := 0; new.paused := false;
+  new.bottles := 3; new.color_left := 0; new.far_left := 1; new.tide_left := 1; new.gifts_left := 1; new.who_open := false; new.glass := null; new.captain := false; new.streak := 0; new.streak_day := null; new.best_streak := 0; new.glasses := '{}'; new.unlocks := '{}'; new.quest_done := false; new.sample_fill := null; new.daily_day := lima_today(); new.earned_day := lima_today(); new.earned := 0; new.paused := false;
   new.created_at := now(); new.last_seen := now();
   return new;
 end $$;
@@ -381,8 +385,8 @@ begin
       and not exists (select 1 from convos c where c.bottle_id = bo.id and c.b = p.id)
     order by -- la pregunta del día llega primero a quienes también dejaron su voz esa noche
              (bo.tide_day is not null and exists (select 1 from bottles x where x.owner = p.id and x.tide_day = bo.tide_day)) desc,
-             -- una botella de color llega primero a quien cumple lo que eligió quien la lanzó
-             ((bo.target_topic is null or bo.target_topic = any(p.topics)) and (bo.target_district is null or p.district = bo.target_district)) desc,
+             -- toda botella llega primero a quien ama el tema que eligió quien la lanzó (el distrito nunca es un destino)
+             (bo.target_topic is null or bo.target_topic = any(p.topics)) desc,
              cardinality(array(select unnest(p.topics) intersect select unnest(mine))) desc,
              -- el distrito nunca se muestra, pero acerca: a igual afinidad, primero alguien cercano
              (p.district = (select q.district from profiles q where q.id = bo.owner)) desc,
@@ -407,7 +411,9 @@ begin
   if me.daily_day is distinct from lima_today() then
     update profiles set daily_day = lima_today(),
       bottles = case when bottles >= (case when captain then 30 else 9 end) then bottles else least(bottles + (case when captain then 3 else 1 end), case when captain then 30 else 9 end) end,
-      far_left = far_left + (captain and extract(isodow from lima_today()) = 1)::int
+      far_left = far_left + (captain and extract(isodow from lima_today()) = 1)::int,
+      -- cada lunes, una dorada para quien respondió al menos una botella en la última semana
+      tide_left = least(tide_left + (extract(isodow from lima_today()) = 1 and exists (select 1 from convos c where c.b = me.id and c.created_at > now() - interval '7 days'))::int, 10)
       where id = me.id returning * into me;
   end if;
   perform tick();
@@ -498,14 +504,14 @@ begin
   if p_type = 'color' and me.color_left < 1 then raise exception 'Ya usaste tus botellas de color. Pide más en el muelle.'; end if;
   if p_type = 'far' and me.far_left < 1 then raise exception 'Ya usaste tu botella que llega lejos. Pide otra en el muelle.'; end if;
   if p_featured and me.tide_left < 1 then raise exception 'Te quedaste sin botellas doradas. Pide otra en el muelle.'; end if;
-  if p_type = 'color' and p_topic is null and p_district is null then raise exception 'Elige a quién quieres que llegue tu botella de color.'; end if;
+  if p_type = 'color' and nullif(trim(p_topic), '') is null then raise exception 'Elige el tema de tu botella.'; end if;
   if p_voice is null or split_part(p_voice, '/', 1) <> me.id::text then raise exception 'Falta tu nota de voz.'; end if;
   if (select count(*) from bottles where owner = me.id and created_at > now() - interval '1 hour') >= 6 then
     raise exception 'Lanzaste muchas botellas seguidas. Espera un rato.';
   end if;
   insert into bottles(owner, kind, body, voice, voice_secs, voice_peaks, btype, target_topic, target_district, featured, glass)
     values (me.id, p_kind, nullif(trim(p_body), ''), p_voice, least(greatest(p_secs, 1), 60), p_peaks, p_type,
-            case when p_type = 'color' then p_topic end, case when p_type = 'color' then p_district end, p_featured, me.glass) returning id into bid;
+            nullif(trim(p_topic), ''), null, p_featured, me.glass) returning id into bid;
   update profiles set bottles = bottles - (p_type = 'free')::int, color_left = color_left - (p_type = 'color')::int, far_left = far_left - (p_type = 'far')::int,
     tide_left = tide_left - p_featured::int
     where id = me.id returning * into me;
@@ -890,7 +896,7 @@ grant execute on function public.outing_boost(uuid) to authenticated;
 -- ========== CONSTANCIA: DÍAS SEGUIDOS Y DESBLOQUEOS ==========
 -- Un día cuenta si usaste tu voz: lanzar, responder, la pregunta de la marea o una nota en una conversación.
 create or replace function public.unlock_plan() returns table (days int, kind text, item text, label text) language sql immutable as $$
-  values (2, 'color', '1', 'una botella de color'), (3, 'glass', 'coral', 'el vidrio coral'), (5, 'gift', '1', 'una botella de regalo'),
+  values (2, 'tide', '1', 'una botella dorada'), (3, 'glass', 'coral', 'el vidrio coral'), (5, 'gift', '1', 'una botella de regalo'),
          (7, 'glass', 'violeta', 'el vidrio violeta'), (10, 'far', '1', 'una botella que llega lejos'), (14, 'glass', 'aurora', 'el vidrio aurora'),
          (21, 'gift', '2', 'dos botellas de regalo'), (30, 'glass', 'luna', 'el vidrio de luna');
 $$;
@@ -904,7 +910,7 @@ begin
   for u in select * from unlock_plan() p where p.days <= n and not (p.days = any(me.unlocks)) order by p.days loop
     update profiles set unlocks = array_append(unlocks, u.days),
       glasses = case when u.kind = 'glass' then array_append(glasses, u.item) else glasses end,
-      color_left = color_left + case when u.kind = 'color' then u.item::int else 0 end,
+      tide_left = tide_left + case when u.kind = 'tide' then u.item::int else 0 end,
       gifts_left = gifts_left + case when u.kind = 'gift' then u.item::int else 0 end,
       far_left = far_left + case when u.kind = 'far' then u.item::int else 0 end
     where id = p_id;
@@ -1406,7 +1412,7 @@ do $$ begin
 end $$;
 
 -- La app pregunta esto al abrir: si el servidor quedó desactualizado, lo dice en vez de fallar en silencio.
-create or replace function public.app_version() returns int language sql immutable as $$ select 6 $$;
+create or replace function public.app_version() returns int language sql immutable as $$ select 7 $$;
 grant execute on function public.app_version() to anon, authenticated;
 
 -- Las funciones de servicio no se exponen.
