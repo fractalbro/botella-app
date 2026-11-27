@@ -697,10 +697,10 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
     ${waveLine(pk)}
   </button>
 
-  <button class="streakc mt2" data-go="bitacora">
-    <span class="sn"><b>${n}</b><small>${n === 1 ? 'día' : 'días'}</small></span>
-    <span class="tx"><b>${n ? `${n === 1 ? '1 día seguido' : `${n} días seguidos`} grabando tu voz` : 'Graba hoy y empieza tu racha'}</b><small>${done ? `Hoy ya grabaste. Mañana llegas a ${n + 1}.` : n ? `Graba algo hoy para llegar a ${n + 1}.` : 'Una botella o una respuesta cuentan.'}</small></span>
-    <span class="wk">${weekStrip()}</span>
+  <button class="dockhero mt2" data-go="muelle">
+    <span class="dhart" aria-hidden="true"><span class="b1">${voiceBottle('#8E8CFF')}</span><span class="b2">${voiceBottle('#FFD27A')}</span><span class="b3">${voiceBottle('#FFB061')}</span></span>
+    <span class="dhtx"><span class="dhk">${I.dock}Muelle · Gratis</span><b>Que tu voz llegue más lejos</b><small>Botellas que llegan lejos, doradas que salen primero, de regalo y de colores.</small></span>
+    <span class="dhcta">${X.far + X.tide ? `Tienes ${n_(X.far + X.tide, 'especial', 'especiales')}` : 'Conseguir botellas'}${I.chev}</span>
   </button>
 
   <p class="eyebrow">Tu voz</p>
@@ -709,7 +709,7 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
     <button class="vcard" data-go="mapa"><span class="vart cst">${MAPA.map(([t, k, c], i) => `<i style="--c:${c};--s:${8 + k * 3}px;--x:${[18, 62, 34, 76][i]}%;--y:${[30, 22, 70, 66][i]}%"></i>`).join('')}<em></em></span><b>Mapa de tu voz</b><small>Conectó con ${n_(MAPA.length, 'tema', 'temas')}</small></button>
   </div>
 
-  <button class="dockcard mt2" data-go="muelle"><span class="dcart">${I.dock}</span><span class="tx"><b>Muelle</b><small>${X.far + X.tide ? `Tienes ${n_(X.far + X.tide, 'botella especial', 'botellas especiales')}. Consigue más, gratis.` : 'Botellas que llegan lejos, doradas y más. Todas gratis.'}</small></span>${I.chev}</button>
+  <button class="streakmini mt2" data-go="bitacora"><span class="smn"><b>${n}</b> ${n === 1 ? 'día seguido' : 'días seguidos'} grabando</span><span class="smw" aria-hidden="true">${weekStrip()}</span>${I.chev}</button>
 
   <p class="eyebrow">Con tus amigos</p>
   <div class="fl">
