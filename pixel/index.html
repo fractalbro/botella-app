@@ -403,6 +403,24 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
 .chead b,.chead small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chead .sq{width:44px;height:44px}
 
+/* ---------- esquinas medio redondeadas (la sombra sólida se mantiene) ---------- */
+:root{--r-l:14px;--r-m:10px;--r-s:6px}
+.box,.push,.card,.player,.beach,.spc,.out,.vrow,.say,.ncard,.plan,.reveal,.banner,.linkbox,.mapbox,.today2,.nextg,.gcard,.pres,.stats,.inv,.priv,.menu,.uncork .uc-msg{border-radius:var(--r-m)}
+.btn,.sq,.msg .sq,.vrow .sq,.chead .sq{border-radius:var(--r-m)}
+.mic,.mcard,.nav,.orb .core{border-radius:var(--r-l)}
+.launch{border-radius:18px}
+.hang{border-radius:50%}
+.chip,.badge,.tile,.mrow .mi,.recchip,.seeall,.cap,.idea,.new,.ml,.toast,.dsteps b,.tbox,.bt .mark,.field.sm{border-radius:var(--r-s)}
+.life{border-radius:var(--r-s)}
+.life i:first-child{border-radius:3px 0 0 3px}.life i:last-child{border-radius:0 3px 3px 0}
+.rad{border-radius:50%}
+.steps i,.bars i,.path i{border-radius:3px}
+.week i,.seats i,.faces i{border-radius:4px}
+.dot,.chip i{border-radius:2px}
+.beach{overflow:hidden}
+.mrow:first-child{border-radius:var(--r-m) var(--r-m) 0 0}.mrow:last-child{border-radius:0 0 var(--r-m) var(--r-m)}
+.push:focus-visible,.chip:focus-visible,.bt:focus-visible{outline-offset:4px}
+
 @media (max-height:700px){
   #app{padding-top:calc(var(--safe-t) + 12px)}.hud{margin-bottom:12px}.tag-l{display:none}.inv{height:44px}
   .beach{height:184px}.legend{margin-top:12px;padding-bottom:4px}
