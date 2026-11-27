@@ -1,4 +1,4 @@
-/* Botella · beta. Lanza tu voz al mar: llega a ocho orillas y quien quiere, te responde. */
+/* Botella · beta. Lanza tu voz al mar: llega a 12 orillas y quien quiere, te responde. */
 'use strict';
 const { createClient } = window.supabase;
 const CFG = window.BOTELLA || {};

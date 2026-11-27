@@ -178,7 +178,11 @@ alter table public.bottles add column if not exists partner uuid references publ
 alter table public.bottles add column if not exists voice2 text;
 alter table public.bottles add column if not exists voice2_secs int;
 alter table public.bottles add column if not exists voice2_peaks jsonb;
-alter table public.bottles add column if not exists wave2 boolean not null default false; -- ya salió la segunda tanda (4 orillas más si nadie respondió en 6 horas)
+alter table public.bottles add column if not exists wave2 boolean not null default false; -- ya no se usa (regla vieja de 8 + 4)
+alter table public.bottles add column if not exists grew_at timestamptz; -- la última vez que la botella sumó gente porque nadie respondía
+-- Alcance: una botella llega a 12 personas al lanzarla (30 si llega lejos, 20 si es para dos) y, mientras nadie responda,
+-- suma 6 más cada hora, sin tope, hasta llegar a todas las personas afines. Así siempre está llegando a gente nueva.
+create or replace function public.bottle_cap(p_btype text) returns int language sql immutable as $$ select 1000000 $$;
 alter table public.bottles drop constraint if exists bottles_kind_check;
 alter table public.bottles add constraint bottles_kind_check check (kind in ('Pregunta','Confesión','Historia','Marea'));
 create index if not exists bottles_tide on public.bottles(tide_day) where tide_day is not null;
@@ -415,8 +419,8 @@ begin
         and (b.tide_day is null or now() >= ((b.tide_day + time '21:00') at time zone 'America/Lima'))
         and not blocked(b.owner, me.id) and not (select is_sample from profiles o where o.id = b.owner)
         and not exists (select 1 from deliveries d where d.bottle_id = b.id and d.to_id = me.id)
-        and (select count(*) from deliveries d where d.bottle_id = b.id and d.status in ('waiting','opened')) < 8
-        and (select count(*) from deliveries d where d.bottle_id = b.id) < 20
+        and (select count(*) from deliveries d where d.bottle_id = b.id and d.status in ('waiting','opened')) < 12
+        and (select count(*) from deliveries d where d.bottle_id = b.id) < bottle_cap(b.btype)
       order by b.created_at desc
       limit greatest(0, 3 - (select count(*) from deliveries d where d.to_id = me.id and d.status in ('waiting','opened')))
     loop
@@ -505,7 +509,7 @@ begin
   update profiles set bottles = bottles - (p_type = 'free')::int, color_left = color_left - (p_type = 'color')::int, far_left = far_left - (p_type = 'far')::int,
     tide_left = tide_left - p_featured::int
     where id = me.id returning * into me;
-  n := deliver(bid, case when p_type = 'far' then 20 else 8 end);
+  n := deliver(bid, case when p_type = 'far' then 30 else 12 end);
   if n < 3 then n := n + sample_answer(bid); end if;
   return query select bid, n, me.bottles, me.color_left, me.far_left, me.tide_left;
 end $$;
@@ -537,7 +541,7 @@ create or replace function public.return_delivery(p_id uuid) returns void langua
 declare d deliveries;
 begin
   update deliveries set status = 'returned' where id = p_id and to_id = auth.uid() and status in ('waiting','opened') returning * into d;
-  if d.id is not null and (select count(*) from deliveries where bottle_id = d.bottle_id) < 20 then perform deliver(d.bottle_id, 1); end if;
+  if d.id is not null and (select count(*) from deliveries where bottle_id = d.bottle_id) < (select bottle_cap(btype) from bottles where id = d.bottle_id) then perform deliver(d.bottle_id, 1); end if;
 end $$;
 grant execute on function public.return_delivery(uuid) to authenticated;
 
@@ -983,7 +987,7 @@ begin
   if exists (select 1 from bottles where owner = me.id and tide_day = d) then raise exception 'Ya dejaste tu voz para la marea de hoy.'; end if;
   insert into bottles(owner, kind, body, voice, voice_secs, voice_peaks, glass, tide_day)
     values (me.id, 'Marea', tide_question(d), p_voice, least(greatest(p_secs, 1), 60), p_peaks, me.glass, d) returning id into bid;
-  if arrived then perform deliver(bid, 8); end if;
+  if arrived then perform deliver(bid, 12); end if;
   return jsonb_build_object('bottle', bid, 'arrived', arrived);
 end $$;
 grant execute on function public.tide_answer(text, int, jsonb) to authenticated;
@@ -1008,11 +1012,11 @@ begin
 end $$;
 grant execute on function public.marea_now() to authenticated;
 
--- A las 21:00 la marea suelta las voces del día: cada una viaja a ocho orillas y todos reciben el aviso.
+-- A las 21:00 la marea suelta las voces del día: cada una viaja a 12 orillas y todos reciben el aviso.
 create or replace function public.tide_release(d date) returns void language plpgsql security definer set search_path = public as $$
 declare r record; n int; q text := tide_question(d);
 begin
-  for r in select id from bottles where tide_day = d and not hidden loop perform deliver(r.id, 8); end loop;
+  for r in select id from bottles where tide_day = d and not hidden loop perform deliver(r.id, 12); end loop;
   select count(*) into n from bottles where tide_day = d and not hidden;
   insert into notices(to_id, kind, title, body, go)
   select p.id, 'tide', 'Llegó la marea de las 21:00',
@@ -1031,27 +1035,27 @@ declare d date := lima_today(); hr int := extract(hour from now() at time zone '
 begin
   -- La marea se lleva lo que nadie abrió (y lo abierto que nadie respondió en 48 horas) hacia otra orilla.
   for r in
-    select x.id, x.bottle_id, b.hidden, b.created_at, o.is_sample from deliveries x join bottles b on b.id = x.bottle_id join profiles o on o.id = b.owner
+    select x.id, x.bottle_id, b.hidden, b.created_at, b.btype, o.is_sample from deliveries x join bottles b on b.id = x.bottle_id join profiles o on o.id = b.owner
     where (x.status = 'waiting' and coalesce(x.expires_at, x.created_at + interval '24 hours') < now())
        or (x.status = 'opened' and x.opened_at < now() - interval '48 hours')
     order by x.created_at limit 40 for update of x skip locked
   loop
     update deliveries set status = 'drifted' where id = r.id;
-    if not r.hidden and not r.is_sample and r.created_at > now() - interval '7 days' and (select count(*) from deliveries where bottle_id = r.bottle_id) < 20 then
+    if not r.hidden and not r.is_sample and r.created_at > now() - interval '7 days' and (select count(*) from deliveries where bottle_id = r.bottle_id) < bottle_cap(r.btype) then
       perform deliver(r.bottle_id, 1);
     end if;
   end loop;
-  -- Segunda tanda: si en 6 horas nadie respondió, la botella llega a 4 orillas más (hasta 20 en total).
+  -- Mientras nadie responda, cada hora la botella suma 6 personas más (sin tope, ver bottle_cap).
   for r in
-    select b.id from bottles b join profiles o on o.id = b.owner
-    where not b.wave2 and not b.hidden and not o.is_sample and b.btype <> 'far'
-      and b.created_at < now() - interval '6 hours' and b.created_at > now() - interval '7 days'
-      and (b.tide_day is null or now() >= ((b.tide_day + time '21:00') at time zone 'America/Lima') + interval '6 hours')
+    select b.id, b.btype from bottles b join profiles o on o.id = b.owner
+    where not b.hidden and not o.is_sample and b.created_at > now() - interval '7 days'
+      and coalesce(b.grew_at, b.created_at) < now() - interval '1 hour'
+      and (b.tide_day is null or now() >= ((b.tide_day + time '21:00') at time zone 'America/Lima') + interval '1 hour')
       and not exists (select 1 from convos c where c.bottle_id = b.id)
-    order by b.created_at limit 40 for update of b skip locked
+    order by coalesce(b.grew_at, b.created_at) limit 40 for update of b skip locked
   loop
-    update bottles set wave2 = true where id = r.id;
-    n := least(4, 20 - (select count(*) from deliveries where bottle_id = r.id)::int);
+    update bottles set grew_at = now() where id = r.id;
+    n := least(6, bottle_cap(r.btype) - (select count(*) from deliveries where bottle_id = r.id)::int);
     if n > 0 then perform deliver(r.id, n); end if;
   end loop;
   -- 19:00: aviso a quien tiene botellas sin abrir que se van esta noche.
@@ -1166,7 +1170,7 @@ begin
   if heard and answered and launched and not me.quest_done then
     update profiles set quest_done = true, far_left = far_left + 1 where id = me.id and not quest_done returning * into me;
     just := me.id is not null;
-    if just then perform notify(me.id, 'quest', 'Completaste tu primer día', 'Ganaste una botella que llega lejos: llega a 20 personas.', 'launch'); end if;
+    if just then perform notify(me.id, 'quest', 'Completaste tu primer día', 'Ganaste una botella que llega lejos: llega a 30 personas.', 'launch'); end if;
     select * into me from profiles where id = auth.uid();
   end if;
   alive := case when me.streak_day >= d - 1 then me.streak else 0 end;
@@ -1232,7 +1236,7 @@ begin
   insert into bottles(owner, partner, kind, body, voice, voice_secs, voice_peaks, voice2, voice2_secs, voice2_peaks, glass)
     values (du.owner, me.id, du.kind, du.body, du.voice, du.voice_secs, du.voice_peaks, p_voice, least(greatest(p_secs, 1), 60), p_peaks, o.glass) returning id into bid;
   update duos set status = 'done', partner = me.id, bottle_id = bid where id = du.id;
-  n := deliver(bid, 12);
+  n := deliver(bid, 20);
   if n < 3 then n := n + sample_answer(bid); end if;
   perform notify(du.owner, 'duo', me.name || ' grabó su mitad', 'Su botella para dos ya está en el mar.', 'mine', bid::text);
   return jsonb_build_object('bottle', bid, 'shores', n);
