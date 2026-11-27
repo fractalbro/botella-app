@@ -40,7 +40,7 @@ Puntaje de oportunidad (importancia vs. satisfacción hoy, [S]): saber qué pasa
 | Llegar | Lee una frase, toca un botón | "Entiendo" | Bienvenida de una frase |
 | Primera voz | Escucha una botella | Curiosidad | El Mar muestra botellas tocables, con etiqueta |
 | Lanzar | Graba y desliza | Nervios → alivio | Grabar, escuchar, deslizar para lanzar |
-| Esperar | Sabe que llega a 8, y a 4 más en 6 h | Calma | Pantalla "lanzada" con la regla clara [R] |
+| Esperar | Sabe que llega a 8 y sigue viajando hasta que alguien responda | Emoción por quién aparecerá | Pantalla "lanzada" con la regla clara [R] |
 | Conversar | Responde con su voz | Cercanía | Chat privado; nombres solo si los dos quieren [R] |
 | Volver | Abre la app al día siguiente | Ganas | Racha, marea de las 21:00, "N botellas te esperan" |
 
@@ -51,7 +51,7 @@ Puntaje de oportunidad (importancia vs. satisfacción hoy, [S]): saber qué pasa
 - **Estrella polar:** conversaciones con al menos 3 notas de voz por semana.
 - **Activación:** % que lanza su primera botella el día 1 (meta 75 %, hoy 65 % [S]).
 - **Retención:** D1 ≥ 35 %, D7 ≥ 20 % (hoy "volver" 19 % [S]).
-- **Salud:** reportes por cada 100 conversaciones; % de botellas sin respuesta a las 6 h.
+- **Salud:** reportes por cada 100 conversaciones; % de botellas sin respuesta a las 6 h (interno; nunca se muestra como espera).
 - **Eventos:** `botella_escuchada`, `botella_lanzada{dorada}`, `respuesta_enviada`, `nombres_compartidos`, `reporte_creado`, `invitacion_copiada`, `sesion_iniciada{dias_desde_ultima}`.
 - **Decisión:** si a las 6 h más del 40 % de botellas no tiene respuesta, subir el alcance antes que agregar funciones.
 

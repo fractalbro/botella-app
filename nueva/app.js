@@ -331,8 +331,8 @@ R.hoy = () => { const done = store.get('hoy'); const A = [['answer-1', 'el cine'
 R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: 'clear', mar: 'away', html: `
   <div class="grow"></div>
   <h1 class="display center">Va en camino.</h1>
-  <div class="reach big mt3" id="rb">${'<i></i>'.repeat(8)}<span class="sep"></span>${'<i class="later"></i>'.repeat(4)}</div>
-  <p class="sub center mt2">Llega a 8 personas que aman ${esc(AMA[t] || t.toLowerCase())}. Si nadie responde en 6 horas, a 4 más.</p>
+  <div class="reach big mt3" id="rb">${'<i></i>'.repeat(8)}</div>
+  <p class="sub center mt2">Llega a 8 personas que aman ${esc(AMA[t] || t.toLowerCase())}, y sigue viajando hasta que alguien te responda.</p>
   <p class="cap center mt2">Las respuestas suelen tardar unas horas. Te avisamos, y cada una abre una conversación privada.</p>
   <button class="btn btn-2 mt4" data-go="mar">Volver al mar</button>`,
   bind(el) { $$('#rb i:not(.later)', el).forEach((d, i) => setTimeout(() => d.classList.add('on'), (window.Mar && Mar.ok ? 2600 : 400) + i * 180)); } }; };
@@ -497,7 +497,7 @@ R.botellas = () => ({ cls: 'pin', html: `
   <div class="grow"></div><button class="btn btn-2 mt3" data-go="lanzar">Lanzar otra</button>`,
   bind(el) { $$('[data-i]', el).forEach(b => b.onclick = () => { const x = S.sent[+b.dataset.i]; sheet(`<h2 class="title">Tu ${esc(x.kind.toLowerCase())}</h2><p class="sub">${x.idea ? `“${esc(x.idea)}” · ` : ''}Para quien ama ${esc(AMA[x.tema] || x.tema.toLowerCase())}</p>
     <div class="facts mt2 mb3"><p><b>8</b><span>personas la recibieron</span></p><p><b>${x.heard}</b><span>ya la escucharon</span></p><p><b>${x.ans || 0}</b><span>${x.ans === 1 ? 'respondió' : 'respondieron'}</span></p></div>
-    ${x.ans ? '' : '<p class="cap mb3">Si en 6 horas nadie responde, llega a 4 personas más.</p>'}
+    ${x.ans ? '' : '<p class="cap mb3">Sigue viajando hasta que alguien te responda.</p>'}
     ${x.ans ? `<button class="btn btn-a" id="toc">Escuchar ${x.ans === 1 ? 'la respuesta' : `las ${x.ans} respuestas`}</button>` : '<button class="btn btn-2" data-close>Listo</button>'}`, (s, close) => { const t = $('#toc', s); t && (t.onclick = () => { close(); go('charlas'); }); }); }); } });
 
 // El mapa de tu voz: los temas con los que conectó.
