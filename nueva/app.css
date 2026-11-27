@@ -509,8 +509,7 @@ svg{display:block}
 .vmode button::after{content:"";position:absolute;left:50%;bottom:6px;width:18px;height:2px;margin-left:-9px;border-radius:1px;background:var(--fg);transform:scaleX(0);transition:transform .25s var(--in)}
 .vmode button[aria-pressed=true]::after{transform:scaleX(1)}
 .me-pill.solo{padding:0 4px;width:44px;justify-content:center;background:transparent}
-.sea{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .35s var(--in);overflow:hidden;
-  background:radial-gradient(120% 70% at 50% 110%,rgba(127,216,201,.16),transparent 60%),radial-gradient(80% 50% at 50% 0%,rgba(142,140,255,.10),transparent 70%),#05121F}
+.sea{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .35s var(--in);overflow:hidden;background:#06192A}
 @keyframes swell{to{transform:translateY(-14px) scale(1.03)}}
 .mapmode .sea{opacity:1;pointer-events:auto}
 .mapmode .feed,.mapmode .dots{opacity:0;pointer-events:none}
@@ -548,6 +547,16 @@ svg{display:block}
 .bignum span{color:var(--fg-2)}
 .rbar{display:block;height:4px;border-radius:2px;background:color-mix(in oklab,var(--c,var(--a)),transparent 75%);overflow:hidden}
 .rbar i{display:block;height:100%;border-radius:2px;background:var(--c,var(--a))}
+/* agua del "todo el mar" (Cesar 27/11): brillos de luna y botellas flotando */
+.seacv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.fb .art{position:relative}
+.fb .vbot{filter:none;-webkit-mask-image:linear-gradient(180deg,#000 66%,rgba(0,0,0,.28) 80%,rgba(0,0,0,.12));mask-image:linear-gradient(180deg,#000 66%,rgba(0,0,0,.28) 80%,rgba(0,0,0,.12))}
+.fb .rip{position:absolute;left:50%;top:calc(min(15vh,118px) * .72);width:88px;height:20px;margin-left:-44px;border-radius:50%;pointer-events:none;z-index:2}
+.fb .rip::before,.fb .rip::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.2px solid rgba(200,236,242,.35);animation:rip 3.6s ease-out infinite;animation-delay:var(--d)}
+.fb .rip::after{animation-delay:calc(var(--d) - 1.8s)}
+@keyframes rip{0%{transform:scale(.45);opacity:0}25%{opacity:.9}100%{transform:scale(1.35);opacity:0}}
+.fb.moon .mmoon{box-shadow:0 0 40px 6px rgba(255,231,176,.25),0 22px 30px -12px rgba(255,231,176,.35)}
+@media (prefers-reduced-motion:reduce){.fb .rip::before,.fb .rip::after{animation:none;opacity:.4}}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}

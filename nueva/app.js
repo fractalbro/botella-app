@@ -333,19 +333,38 @@ R.mar = () => {
   };
   return { cls: 'tabbed reels', html: `
   <div class="rtop"><span style="width:44px"></span><span class="vmode" role="tablist" aria-label="Cómo ver el mar"><button role="tab" data-m="uno" aria-pressed="${mode === 'uno'}">Una a una</button><button role="tab" data-m="todo" aria-pressed="${mode === 'todo'}">Todo el mar</button></span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></div>
-  <div class="sea" id="sea" aria-label="Todas las botellas del mar">
+  <div class="sea" id="sea" aria-label="Todas las botellas del mar"><canvas class="seacv" aria-hidden="true"></canvas>
     <div class="seahead"><h2>${nv === 1 ? '1 botella nueva' : `${nv} botellas nuevas`} flotando</h2><p>Toca una para ver qué dice.</p></div>
     ${(() => { const spots = [[24, 30], [70, 25], [40, 52], [78, 56], [20, 74], [60, 80], [44, 22]]; const all = [...S.shore.map(id => ({ k: 'voz', id, b: B[id] })), { k: 'hoy' }, ...(S.mine ? [{ k: 'mine' }] : [])];
       return all.slice(0, spots.length).map((x, i) => { const [px, py] = spots[i], rot = [-14, 10, -6, 16, -10, 8, -4][i];
         if (x.k === 'hoy') return `<button class="fb moon" style="--x:${px}%;--y:${py};--d:${i * -.7}s" data-k="hoy"><span class="art"><span class="mmoon"></span></span><span class="lbl"><i style="background:#FFE7B0"></i>Pregunta de hoy</span></button>`;
-        if (x.k === 'mine') return `<button class="fb mine" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${tc(S.mine.tema)}" data-k="mine"><span class="art">${voiceBottle(tc(S.mine.tema))}</span><span class="lbl"><i></i>La tuya</span></button>`;
-        return `<button class="fb" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${x.b.c}" data-k="voz" data-id="${x.id}" data-i="${i}"><span class="art">${voiceBottle(x.b.c, PK[x.b.v] && PK[x.b.v][1])}</span><span class="lbl"><i></i>${esc(x.b.tag)}</span></button>`; }).join(''); })()}
+        if (x.k === 'mine') return `<button class="fb mine" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${tc(S.mine.tema)}" data-k="mine"><span class="rip" aria-hidden="true"></span><span class="art">${voiceBottle(tc(S.mine.tema))}</span><span class="lbl"><i></i>La tuya</span></button>`;
+        return `<button class="fb" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${x.b.c}" data-k="voz" data-id="${x.id}" data-i="${i}"><span class="rip" aria-hidden="true"></span><span class="art">${voiceBottle(x.b.c, PK[x.b.v] && PK[x.b.v][1])}</span><span class="lbl"><i></i>${esc(x.b.tag)}</span></button>`; }).join(''); })()}
   </div>
   <div class="feed" id="feed">${nv ? '' : `<section class="reel calm" style="--c:#7FD8C9"><div class="cover">${voiceBottle('#7FD8C9')}</div><div class="rtx"><h2 class="rq">Vienen más botellas en camino.</h2><p class="rmeta">Ya escuchaste todas las de ahora. Mientras llegan otras, lanza la tuya: llega a todas las personas que aman tu tema.</p><div class="ract"><button class="btn rbtn" data-go="lanzar">${I.mic}Grabar mi botella</button></div></div></section>`}${reels.map(reel).join('')}</div>
   <div class="dots" id="dots">${reels.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`,
   bind(el) {
     const f = $('#feed', el), cnt = $('#cnt', el), ds = $$('#dots i', el), rs = $$('.reel', el);
-    const setMode = m => { el.classList.toggle('mapmode', m === 'todo'); $$('.vmode button', el).forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); store.set('marv', m); };
+    const cv = $('.seacv', el), cx = cv.getContext('2d'); let raf = 0, G = [];
+    const spr = (w, h, col) => { const o = document.createElement('canvas'); o.width = w; o.height = h; const x = o.getContext('2d'), g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); x.setTransform(1, 0, 0, h / w, 0, h / 2 - h / 2 * (h / w) * (w / h)); x.fillStyle = g; x.fillRect(0, 0, w, w); return o; };
+    const SG = spr(64, 64, 'rgba(200,238,246,1)'), SG2 = spr(64, 64, 'rgba(255,236,196,1)'), SW = spr(256, 256, 'rgba(120,200,215,1)');
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const size = () => { const r = devicePixelRatio || 1; cv.width = cv.clientWidth * r; cv.height = cv.clientHeight * r; cx.setTransform(r, 0, 0, r, 0, 0);
+      const W = cv.clientWidth, H = cv.clientHeight; G = Array.from({ length: Math.round(W * H / 900) }, () => { const d = Math.random() ** 1.6; return { x: Math.random() * W, y: H * (.12 + d * .9), d, l: 6 + d * 26, p: Math.random() * 6.3, s: .6 + Math.random() * 1.4, v: (Math.random() - .5) * 6 }; }); };
+    const draw = t => { const W = cv.clientWidth, H = cv.clientHeight; t /= 1000;
+      const g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0B2B40'); g.addColorStop(.45, '#082233'); g.addColorStop(1, '#03101A'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+      const m = cx.createRadialGradient(W * .78, -H * .05, 0, W * .78, -H * .05, H * .75); m.addColorStop(0, 'rgba(255,231,176,.20)'); m.addColorStop(1, 'rgba(255,231,176,0)'); cx.fillStyle = m; cx.fillRect(0, 0, W, H);
+      for (let k = 0; k < 7; k++) { const y = H * (.2 + k * .13) + Math.sin(t * .35 + k * 1.7) * 14, x = W * (.5 + Math.sin(t * .12 + k * 2.1) * .35), w = W * (1.1 + k * .12); cx.globalAlpha = .07 + k * .012; cx.drawImage(SW, x - w / 2, y - 26 - k * 3, w, 52 + k * 6); }
+      cx.globalCompositeOperation = 'lighter';
+      for (const q of G) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 3 * (.25 + q.d * .65); if (a < .02) continue;
+        const warm = Math.abs(q.x - W * .78) < W * .2, x = ((q.x + t * q.v) % W + W) % W, y = q.y + Math.sin(t * .8 + q.x * .02) * (1 + q.d * 3), h = 2 + q.d * 4;
+        cx.globalAlpha = Math.min(1, a); cx.drawImage(warm ? SG2 : SG, x - q.l / 2, y - h / 2, q.l, h); }
+      cx.globalCompositeOperation = 'source-over'; cx.globalAlpha = 1;
+      const v = cx.createRadialGradient(W / 2, H * .55, H * .25, W / 2, H * .55, H * .85); v.addColorStop(0, 'rgba(3,16,26,0)'); v.addColorStop(1, 'rgba(3,16,26,.55)'); cx.fillStyle = v; cx.fillRect(0, 0, W, H); };
+    const loop = t => { if (!document.body.contains(el)) return; draw(t); raf = still ? 0 : requestAnimationFrame(loop); };
+    const run = on => { cancelAnimationFrame(raf); raf = 0; if (!on) return; if (!G.length) size(); raf = requestAnimationFrame(loop); };
+    addEventListener('resize', () => { G = []; if (el.classList.contains('mapmode')) run(true); });
+    const setMode = m => { el.classList.toggle('mapmode', m === 'todo'); run(m === 'todo' && document.body.contains(el)); $$('.vmode button', el).forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); store.set('marv', m); };
     setMode(mode); $$('.vmode button', el).forEach(b => b.onclick = () => { setMode(b.dataset.m); track('mar_vista', { vista: b.dataset.m }); navigator.vibrate && navigator.vibrate(6); });
     const toReel = i => { setMode('uno'); f.scrollTo({ top: i * f.clientHeight, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' }); };
     $$('.fb', el).forEach(b => b.onclick = () => { const k = b.dataset.k;
