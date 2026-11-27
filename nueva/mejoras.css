@@ -1,0 +1,218 @@
+/* Mejoras de la evaluación del 27/11: menos piezas de formulario clásico, más aire, movimiento que conecta.
+   Va después de app.css y estilos.css. Las botellas se dejan como están: cada momento tiene su estilo. */
+
+/* ---------- barra de abajo: cápsula de vidrio que flota (como el estilo Aire) ---------- */
+.tabs{left:50%;bottom:calc(var(--safe-b) + 14px);width:calc(100% - 48px);max-width:340px;padding:6px 10px;border-radius:999px;
+  background:rgba(10,24,38,.72);-webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3);
+  box-shadow:inset 0 0 0 1px rgba(244,239,231,.09),0 20px 40px -18px rgba(0,0,0,.8)}
+.tabs[hidden]{transform:translate(-50%,160%)}
+.tab{flex-direction:row;gap:8px;font-size:13px;min-height:52px}
+.tab svg{width:20px;height:20px;stroke-width:1.5}
+.tab-main{width:52px;height:52px;margin:0 10px;box-shadow:none}
+.tab-main svg{width:22px;height:22px}
+.tab .dot{top:12px;right:auto;left:calc(50% - 46px)}
+.scr.tabbed{padding-bottom:calc(var(--safe-b) + 112px)}
+.scr.reels~.tabs{background:rgba(10,24,38,.55)}
+.tab[aria-current=page]::after{content:"";position:absolute;bottom:6px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--fg)}
+.tab:not(.tab-main){transition:color .2s}
+
+/* ---------- marca: la botella con la voz adentro ---------- */
+.wm{display:inline-flex;align-items:center;gap:8px}
+.wm .logo{width:17px;height:23px;color:var(--fg)}
+
+/* ---------- pestañas de texto, sin caja (Lanzar y las que quedan) ---------- */
+.seg{padding:0;background:none;gap:22px;justify-content:flex-start}
+.seg button{flex:none;height:44px;padding:0;border-radius:0;font-size:17px;color:var(--fg-3);position:relative;background:none!important}
+.seg button[aria-pressed=true]{color:var(--fg)}
+.seg button::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:2px;border-radius:2px;background:var(--c,var(--a));transform:scaleX(0);transition:transform .28s var(--in)}
+.seg button[aria-pressed=true]::after{transform:scaleX(1)}
+.lzleft{text-align:center;margin:10px 0 0}
+
+/* ---------- fondo de mar de noche donde grabas ---------- */
+.scr.nightbg::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,var(--bg) 0%,rgba(5,18,31,.82) 38%,rgba(5,18,31,.35) 75%,rgba(5,18,31,.6) 100%),url(img/lanzada.jpg) center 70%/cover no-repeat;opacity:.9}
+.scr.nightbg .cap{color:var(--fg-2)}
+
+/* ---------- entrar y temas: piezas grandes, nada de formulario de siempre ---------- */
+.lnk{background:none;color:var(--fg-2);font-size:15px;padding:12px 0;text-align:left;text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:4px;min-height:44px}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip.tcard{height:auto;min-height:72px;padding:12px;border-radius:18px;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:10px;
+  box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c),transparent 72%);background:color-mix(in oklab,var(--c),transparent 92%);color:var(--fg);
+  animation:rise .5s var(--in) both;animation-delay:var(--d);transition:background .25s,transform .15s,box-shadow .25s}
+.chip.tcard:active{transform:scale(.95)}
+.chip.tcard b{font-weight:500;font-size:15px;letter-spacing:-.01em}
+.chip.tcard .tw{display:flex;align-items:center;gap:2px;height:16px}
+.chip.tcard .tw i{width:3px;border-radius:2px;background:var(--c);opacity:.7}
+.chip.tcard[aria-pressed=true]{background:var(--c);color:#05121F;box-shadow:0 14px 30px -14px var(--c)}
+.chip.tcard[aria-pressed=true] .tw i{background:#05121F;opacity:.55;animation:twv 1s ease-in-out infinite alternate}
+.chip.tcard[aria-pressed=true] .tw i:nth-child(2n){animation-delay:-.4s}
+@keyframes twv{to{transform:scaleY(.45)}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.dsearch{position:relative}
+.dlbl{display:flex;justify-content:space-between;align-items:center;font-size:15px;color:var(--fg-2)}
+.dlbl .lock{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--fg-3)}.dlbl .lock svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8}
+.cin.dq{margin-top:10px;font-size:20px}
+.dsug{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.dsg{height:44px;padding:0 16px;border-radius:999px;background:rgba(244,239,231,.08);font-size:15px;animation:rise .25s var(--in) both}
+
+/* ---------- conversaciones: filas limpias, sin barra de pasos ---------- */
+.conv .cq{font-size:16px;line-height:1.35;color:var(--fg);font-weight:400;letter-spacing:-.01em;-webkit-line-clamp:2}
+.conv .ctop b{font-size:13px;color:var(--fg-2);font-weight:500}
+.conv .clast{margin-top:2px}
+
+/* ---------- chat: ondas anchas sin burbujas, un solo paso a la vista ---------- */
+.chat .msg,.chat .msg.them,.chat .msg.me{background:none;padding:0;max-width:100%;width:100%;border-radius:0}
+.chat .msg .player{width:100%;gap:12px}
+.chat .msg .wave{flex:1;width:auto;height:34px}
+.chat .msg.them .pb{background:var(--c);color:#05121F}
+.chat .msg.them .wave i{background:var(--c);opacity:.5}.chat .msg.them .wave i.on{opacity:1}
+.chat .msg.me{padding-left:18%}
+.chat .msg.me .pb{background:rgba(244,239,231,.12);color:var(--fg)}
+.chat .msg.me .wave i{background:var(--fg)}
+.chat .thread{gap:18px}
+.chat .typing{background:none;padding:6px 0}.chat .typing i{background:var(--c)}
+#st{display:flex;align-items:center;gap:12px;margin-top:4px}
+.sring{position:relative;width:40px;height:40px;flex:none}
+.sring svg{width:40px;height:40px;transform:rotate(-90deg)}
+.sring circle{fill:none;stroke:var(--line-2);stroke-width:3}
+.sring circle.on{stroke:var(--c,var(--a));stroke-linecap:round;transition:stroke-dashoffset .8s var(--in)}
+.sring b{position:absolute;inset:0;display:grid;place-items:center;font-size:14px;font-weight:500}
+.sring b small{display:none}
+.stx{display:grid;gap:2px;font-size:14px;line-height:1.35;color:var(--fg)}
+.stx small{font-size:13px;color:var(--fg-3)}
+.dock .next{background:var(--c,var(--a));color:#05121F;box-shadow:none}
+.dock .next svg{stroke:#05121F}
+.dlive{flex:1;display:flex;align-items:center;gap:10px;min-height:56px}
+.dlive[hidden]{display:none}
+.dlive .rdot{width:10px;height:10px;border-radius:50%;background:var(--danger);animation:blink 1s infinite}
+.dlive b{font-variant-numeric:tabular-nums;font-weight:500}
+.dlive .cap{margin:0}
+.dlive .ib{width:44px;height:44px;flex:none}
+.slide.sm{flex:1;height:56px;margin:0}
+.dock .rec .sq{width:18px;height:18px;border-radius:5px;background:#fff}
+@keyframes blink{50%{opacity:.25}}
+
+/* ---------- llamada: silenciar y altavoz ---------- */
+.cctl{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:30px}
+.cctl .hang{margin-top:0}
+.cbt{display:grid;justify-items:center;gap:8px;font-size:13px;color:var(--fg-2);min-width:64px}
+.cbt span{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:rgba(244,239,231,.1);transition:background .2s}
+.cbt svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.cbt[aria-pressed=true] span{background:var(--fg);color:var(--bg)}
+.call.muted .voiceorb{filter:saturate(.3) brightness(.7)}
+.csafe{display:inline-flex;align-items:center;gap:6px;margin-top:18px}.csafe svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}
+
+/* ---------- reportar ---------- */
+.okmark{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--a-soft);margin:6px 0 14px}
+.okmark svg{width:24px;height:24px;fill:none;stroke:var(--a);stroke-width:2}
+
+/* ---------- mis botellas: un número grande con su frase ---------- */
+.hero-n{display:grid;gap:4px}
+.hero-n b{font-size:clamp(56px,17vw,72px);font-weight:300;letter-spacing:-.05em;line-height:1;color:var(--a);font-variant-numeric:tabular-nums}
+.hero-n p{margin:0;font-size:20px;letter-spacing:-.02em;line-height:1.2}
+.hero-n small{font-size:14px;color:var(--fg-3)}
+.hero-n.sm b{font-size:48px}.hero-n.sm p{font-size:17px}
+.anscard{background:var(--s1);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c),transparent 80%)}
+.aact .chip.sm{height:44px}
+
+/* ---------- muelle: carrusel de piezas grandes ---------- */
+.mcar{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--pad) * -1);padding:4px var(--pad) 6px;scrollbar-width:none}
+.mcar::-webkit-scrollbar{display:none}
+.mc{flex:0 0 78%;scroll-snap-align:start;display:grid;align-content:start;gap:8px;padding:22px 20px 20px;border-radius:26px;text-align:left;min-height:300px;
+  background:radial-gradient(120% 80% at 70% 0%,color-mix(in oklab,var(--c),transparent 74%),transparent 70%),var(--s2);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c),transparent 78%)}
+.mcart{height:110px;display:grid;place-items:center;margin-bottom:6px}
+.mcart .bt{width:150px;transform:rotate(-14deg);filter:drop-shadow(0 18px 24px color-mix(in oklab,var(--c),transparent 60%));animation:bob 4s ease-in-out infinite}
+.mc b{font-size:24px;font-weight:500;letter-spacing:-.03em}
+.mc p{margin:0;font-size:15px;color:var(--fg-2);line-height:1.4}
+.mc small{font-size:13px;color:var(--fg-3);line-height:1.4}
+.mchave{justify-self:start;font-style:normal;font-size:13px;font-weight:500;padding:6px 12px;border-radius:999px;background:color-mix(in oklab,var(--c),transparent 80%);color:var(--c)}
+.mdots{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.mdots i{width:6px;height:6px;border-radius:3px;background:var(--line-2);transition:width .3s,background .3s}
+.mdots i.on{width:18px;background:var(--fg-2)}
+@keyframes bob{50%{transform:rotate(-10deg) translateY(-6px)}}
+
+/* ---------- salidas: postal del lugar, hora grande, voces de quienes van ---------- */
+.outs{display:grid;gap:14px}
+.out2{border-radius:24px;overflow:hidden;background:var(--s2);box-shadow:inset 0 0 0 1px rgba(244,239,231,.06);animation:rise .5s var(--in) both;animation-delay:var(--d)}
+.opost{position:relative;height:96px;background:linear-gradient(180deg,#2B2140 0%,#C0617A 58%,#F2A25C 100%)}
+.out2.night .opost{background:linear-gradient(180deg,#050D1C 0%,#13284A 70%,#2B3F66 100%)}
+.osun{position:absolute;left:62%;top:46px;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle,#FFE7B0,#FFB061 70%);box-shadow:0 0 40px 10px rgba(255,176,97,.45)}
+.out2.night .osun{top:16px;width:26px;height:26px;background:radial-gradient(circle at 40% 35%,#FFF8E8,#CFC6B0);box-shadow:0 0 24px 6px rgba(255,231,176,.25)}
+.osea{position:absolute;inset:auto 0 0;height:34px;background:linear-gradient(180deg,rgba(5,18,31,.35),#0C1E2F),repeating-linear-gradient(180deg,rgba(255,231,176,.25) 0 1px,transparent 1px 7px)}
+.olab{position:absolute;left:16px;bottom:10px;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#fff}
+.olab svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}
+.obody{padding:16px 18px 18px;display:grid;gap:6px}
+.otag{display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--fg-3)}.otag i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.out2 h3{margin:0;font-size:20px;font-weight:500;letter-spacing:-.02em}
+.otime{display:flex;align-items:baseline;gap:8px;margin:2px 0 0}
+.otime b{font-size:30px;font-weight:300;letter-spacing:-.04em}
+.otime span{color:var(--fg-2);font-size:15px}
+.ofoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.ovoices{display:flex;align-items:center}
+.ovoices .vmark.xs{width:28px;height:28px;margin-right:-8px;box-shadow:0 0 0 2px var(--s2);border-radius:50%}
+.ovoices em{font-style:normal;font-size:13px;color:var(--fg-2);margin-left:16px}
+.out2 .gobtn{height:44px;min-width:76px;padding:0 18px;border-radius:999px;background:var(--c);color:#05121F;font-weight:500}
+.out2 .gobtn[aria-pressed=true]{background:rgba(244,239,231,.1);color:var(--fg)}
+.out2 .gobtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* ---------- botella para dos: las dos botellas se juntan ---------- */
+.pair.merge{position:relative;height:min(30vh,200px)}
+.pair.merge .pb1,.pair.merge .pb2{position:absolute;top:0;animation:mL 3.6s var(--in) infinite}
+.pair.merge .pb2{animation-name:mR}
+.pair.merge .vbot{height:min(26vh,170px)}
+.pglow{position:absolute;left:50%;top:45%;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;background:radial-gradient(circle,rgba(255,231,176,.55),transparent 70%);opacity:0;animation:pG 3.6s var(--in) infinite}
+@keyframes mL{0%,12%{transform:translateX(-62px) rotate(-8deg)}55%,78%{transform:translateX(-18px) rotate(-2deg)}100%{transform:translateX(-62px) rotate(-8deg)}}
+@keyframes mR{0%,12%{transform:translateX(62px) rotate(8deg)}55%,78%{transform:translateX(18px) rotate(2deg)}100%{transform:translateX(62px) rotate(8deg)}}
+@keyframes pG{0%,40%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.15)}85%,100%{opacity:0;transform:scale(.8)}}
+.pstep{margin-top:14px}
+
+/* ---------- perfil: tres caminos a la vista, lo demás en "Más" ---------- */
+.mybot{display:flex;align-items:center;gap:16px;width:100%;padding:16px;border-radius:var(--r-m);background:var(--s1);text-align:left}
+.mybot .vart{display:flex;align-items:flex-end;height:54px}.mybot .vbot{height:52px;max-height:none}.mybot .mb+.mb{margin-left:-10px}.mybot .vbar{animation:none}
+.mybot .tx{flex:1;display:grid;gap:3px}.mybot b{font-weight:500}.mybot small{font-size:14px;color:var(--fg-3)}
+.mybot .chev{width:18px;height:18px;fill:none;stroke:var(--fg-3);stroke-width:1.7}
+.moretg{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:2px;width:100%;min-height:60px;padding:8px 2px;text-align:left;border-top:1px solid var(--line)}
+.moretg span{font-weight:500}.moretg small{grid-column:1;font-size:13px;color:var(--fg-3)}
+.moretg .chev{grid-row:1/3;grid-column:2;width:18px;height:18px;fill:none;stroke:var(--fg-3);stroke-width:1.7;transform:rotate(90deg);transition:transform .25s var(--in)}
+.moretg[aria-expanded=true] .chev{transform:rotate(-90deg)}
+.month.slim{padding:16px 18px 0}
+.month.slim .mbig{font-size:22px}
+
+/* ---------- movimiento: listas en cascada y del Reel a Abrir ---------- */
+.scr.enter :is(.list,.fl,.convs,.row-btns,.anscards,.bcards,.moreb.cascade)>*{animation:rise .45s var(--in) both}
+.scr.enter :is(.list,.fl,.convs,.row-btns,.anscards,.bcards,.moreb.cascade)>*:nth-child(2){animation-delay:.05s}
+.scr.enter :is(.list,.fl,.convs,.row-btns,.anscards,.bcards,.moreb.cascade)>*:nth-child(3){animation-delay:.1s}
+.scr.enter :is(.list,.fl,.convs,.row-btns,.anscards,.bcards,.moreb.cascade)>*:nth-child(4){animation-delay:.15s}
+.scr.enter :is(.list,.fl,.convs,.row-btns,.anscards,.bcards,.moreb.cascade)>*:nth-child(n+5){animation-delay:.2s}
+.moreb.cascade>*{animation:rise .4s var(--in) both}
+.reel .cover{transition:transform .3s var(--in),opacity .3s}
+.reel.zoom .cover{transform:scale(1.7) translateY(6%);opacity:0}
+.reel.zoom .rtx{opacity:0;transition:opacity .2s}
+.cine.zin>.cineimg{animation:zin .6s var(--in) both,kb 24s ease-in-out .6s infinite alternate}
+@keyframes zin{from{transform:scale(1.14);opacity:.3}}
+
+/* ---------- lectura: botones claros y del tamaño del dedo ---------- */
+.scr :is(.chip.sm,.dockc){min-height:44px}
+.dockc{height:44px}
+.fb.moon{min-width:44px;min-height:44px}
+.scr [aria-label^="Opciones"]{width:44px;height:44px}
+
+/* ---------- letra mínima de 13 px ---------- */
+.path span,.week span,.streakc .wk span,.onbp span,.tprev small,.streakc .sn small{font-size:13px}
+.ctop2 .chead small,.ficha .fk,.gold small,.month .mrow span,.wrow span,.wcard .wbrand,.mini small,.gft small,.fb .lbl,.hb .lbl,.ficha .lbls{font-size:13px}
+
+@media (prefers-reduced-motion:reduce){.pair.merge .pb1,.pair.merge .pb2,.pglow,.mcart .bt,.chip.tcard,.out2{animation:none}.pair.merge .pb1{transform:translateX(-30px)}.pair.merge .pb2{transform:translateX(30px)}}
+.tipline{display:flex;align-items:center;gap:10px;margin-bottom:0;padding:12px 14px;border-radius:16px;background:rgba(127,216,201,.08);font-size:14px;color:var(--fg-2);line-height:1.4}
+.tipline svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--a);stroke-width:1.7}
+.reveal:not([disabled]){color:var(--ink);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.idea[aria-pressed=true]{box-shadow:0 0 0 2px var(--a)}
+.chat .msg{color:var(--fg)}
+.chat .msg .player .t{opacity:.75;color:var(--fg-2)}
+.dock{justify-content:flex-end}
+#qs .idea[aria-pressed=true]{background:var(--fg);color:var(--bg);box-shadow:none}
+.ovoices em{white-space:nowrap}
+/* aviso: nunca se corta; si no cabe, baja de línea */
+.toast{white-space:normal;width:max-content;max-width:calc(100% - 32px);text-wrap:balance}
+.toast .undo{white-space:nowrap;flex:none}
+.dlbl{gap:12px;flex-wrap:wrap}.dlbl .lock{white-space:nowrap;flex:none}
+.mcar{scroll-padding-inline:var(--pad)}
