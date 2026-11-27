@@ -639,7 +639,7 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   <section class="view" id="v-lanzar" aria-label="Lanzar una botella"></section>
   <section class="view sent" id="v-lanzada" aria-label="Botella lanzada"></section>
   <section class="view" id="v-botellas" aria-label="Mis botellas"></section>
-  <section class="view" id="v-voces" aria-label="Charlas"></section>
+  <section class="view" id="v-voces" aria-label="Voces"></section>
   <section class="view" id="v-chat" aria-label="Conversación"></section>
   <section class="view full call" id="v-llamada" aria-label="Llamada"></section>
   <section class="view" id="v-tu" aria-label="Perfil"></section>
@@ -649,7 +649,7 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   <button class="nb" data-go="playa"><span data-ic="playa"></span>Playa</button>
   <button class="nb" data-go="botellas"><span data-ic="bot"></span>Botellas</button>
   <button class="launch push" data-go="lanzar" aria-label="Lanzar botella"><span data-ic="mic"></span>Lanzar</button>
-  <button class="nb" data-go="voces"><span data-ic="voz"></span>Charlas</button>
+  <button class="nb" data-go="voces"><span data-ic="voz"></span>Voces</button>
   <button class="nb" data-go="tu"><span data-ic="tu"></span>Perfil</button>
 </nav>
 <div id="ov"></div>
@@ -1341,8 +1341,8 @@ const CONV = [
 const STEPS = ['Voces', 'Nombres', 'Llamada', 'Plan'];
 const pathH = st => `<span class="path">${STEPS.map((s, i) => `<i class="${i < st ? 'on' : ''}"></i>`).join('')}</span><span class="plbl">${STEPS.map(s => `<span>${s}</span>`).join('')}</span>`;
 function renderVoces() {
-  $('#v-voces').innerHTML = `<h1 class="h1">Charlas</h1><p class="mute" style="margin:8px 0 24px">Cada conversación empezó con una botella.</p>
-    <div class="cards">${CONV.length ? '' : '<div class="box empty"><b>Todavía no hay conversaciones.</b><small>Responde una botella de tu playa con tu voz y empieza la primera.</small></div>'}${CONV.map(c => { const C = CAT[c.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on};align-items:flex-start" data-c="${c.id}"><span class="tile">${bottle(c.cat)}</span><span class="tx"><span class="row" style="gap:8px"><b style="flex:1">${esc(c.who)}</b><small>${c.ago}</small></span>${c.eg ? '<span class="egt">Voz de ejemplo</span>' : ''}<small style="color:var(--ink-2)">${esc(c.last)}</small>${pathH(c.st)}</span></button>`; }).join('')}</div>`;
+  $('#v-voces').innerHTML = `<h1 class="h1">Voces</h1><p class="mute" style="margin:8px 0 24px">Cada conversación empezó con una botella.</p>
+    <div class="cards">${CONV.length ? '' : '<div class="box empty"><b>Todavía no hay conversaciones.</b><small>Responde una botella de tu playa con tu voz y empieza la primera.</small></div>'}${CONV.map(c => { const C = CAT[c.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on};align-items:flex-start" data-c="${c.id}"><span class="tile">${bottle(c.cat)}</span><span class="tx"><span class="row" style="gap:8px"><b style="flex:1">${esc(c.who)}</b><small>${c.ago}</small></span><small style="color:var(--ink-2)">${esc(c.last)}</small>${pathH(c.st)}</span></button>`; }).join('')}</div>`;
   document.querySelectorAll('[data-c]').forEach(el => el.onclick = () => go('chat', { id: el.dataset.c }));
 }
 function renderChat({ id = 'leo' } = {}) {
@@ -2111,7 +2111,7 @@ async function onMsg(m) {
   const L = R.msgs[c.id]; if (L && !L.some(x => x.id === m.id)) L.push(m);
   loadConvos().then(() => { if (cur === 'voces') renderVoces(); }).catch(() => {});
   if (cur === 'chat' && R.chatId === c.id) { if (!MIC.on && !playing) renderChat({ id: c.id }); return; }
-  if (isNew) { loadMine().then(() => { if (cur === 'botellas') renderBotellas(); }).catch(() => {}); toast('¡Te respondieron una botella! Mírala en Charlas.', CAT[c.cat].c); pop(); }
+  if (isNew) { loadMine().then(() => { if (cur === 'botellas') renderBotellas(); }).catch(() => {}); toast('¡Te respondieron una botella! Mírala en Voces.', CAT[c.cat].c); pop(); }
   else if (m.voice) toast(`${c.who} te mandó una nota de voz`, CAT[c.cat].c);
   else if (m.body && m.body.startsWith('#plan|')) toast(`${c.who} te propone un plan`, CAT[c.cat].c);
 }
