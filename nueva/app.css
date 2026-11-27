@@ -353,6 +353,42 @@ svg{display:block}
 .rec-wrap .mic.live::before,.rec-wrap .mic.live::after{border-color:color-mix(in oklab,var(--k),transparent 50%);animation-duration:1.6s}
 .rec-wrap .mic.live .sq{background:#03080F;border-radius:9px;width:28px;height:28px}
 @media (prefers-reduced-motion:reduce){.rec-wrap .mic.live{transform:none}}
+/* ===== Mar en pantalla completa, como Reels (Cesar 26/11 21:35) ===== */
+.scr.reels{padding:0;overflow:hidden}
+.rtop{position:absolute;left:0;right:0;top:0;z-index:4;display:flex;justify-content:space-between;align-items:center;padding:calc(var(--safe-t) + 16px) var(--pad) 12px;background:linear-gradient(180deg,rgba(5,18,31,.55),transparent);pointer-events:none}
+.rtop>*{pointer-events:auto}
+.top-r{display:flex;align-items:center;gap:10px}
+.count{font-size:13px;color:var(--fg);padding:7px 12px;border-radius:999px;background:rgba(5,18,31,.4);backdrop-filter:blur(10px);font-variant-numeric:tabular-nums}
+.feed{position:absolute;inset:0;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.feed::-webkit-scrollbar{display:none}
+.reel{--c:#7FD8C9;position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;padding:calc(var(--safe-t) + 70px) var(--pad) calc(var(--safe-b) + 112px);overflow:hidden;
+  background:radial-gradient(90% 55% at 50% 30%,color-mix(in oklab,var(--c),transparent 55%),transparent 72%),linear-gradient(180deg,color-mix(in oklab,var(--c),#05121F 72%) 0%,#05121F 78%)}
+.reel::after{content:"";position:absolute;inset:auto 0 0;height:40%;background:linear-gradient(180deg,transparent,rgba(5,18,31,.7));pointer-events:none}
+.reel>*{position:relative;z-index:1}
+.cover{flex:1 1 auto;min-height:0;display:grid;place-items:center}
+.vbot{height:100%;max-height:min(40vh,330px);width:auto;filter:drop-shadow(0 24px 40px color-mix(in oklab,var(--c),transparent 55%));transform:rotate(-6deg);transition:transform .8s var(--in)}
+.reel.on .vbot{transform:rotate(-3deg)}
+.vbar{transform-box:fill-box;transform-origin:center;animation:vbar 1.6s ease-in-out infinite;animation-delay:calc(var(--i) * -.13s);animation-play-state:paused}
+.reel.on .vbar{animation-play-state:running}
+@keyframes vbar{50%{transform:scaleY(.72)}}
+.rtx{flex:none}
+.rtag{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--fg);padding:6px 12px 6px 10px;border-radius:999px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px)}
+.rtag i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+.rq{margin:14px 0 0;font-size:clamp(25px,7.6vw,34px);line-height:1.08;letter-spacing:-.035em;font-weight:500;text-wrap:balance}
+.rmeta{margin:10px 0 0;font-size:15px;color:var(--fg-2)}
+.ract{display:flex;gap:10px;margin-top:18px}
+.rbtn{flex:1;background:var(--fg);color:#05121F;font-weight:500}
+.rbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.rbtn .pl svg{fill:currentColor;stroke:none}.pl{display:grid}
+
+.rhint{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 0;font-size:13px;color:var(--fg-3);animation:hint 2.4s ease-in-out infinite}
+.rhint svg{width:14px;height:14px;transform:rotate(-90deg);fill:none;stroke:currentColor;stroke-width:2}
+@keyframes hint{50%{transform:translateY(-4px)}}
+.dots{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:4;display:grid;gap:6px;pointer-events:none}
+.dots i{width:4px;height:4px;border-radius:2px;background:rgba(255,255,255,.35);transition:height .3s var(--in),background .3s}
+.dots i.on{height:16px;background:#fff}
+.moonc .bigmoon{width:min(24vh,170px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 34%,#FFF8E8,#FFE7B0 55%,#C9A86A);box-shadow:0 0 90px 20px rgba(255,231,176,.25)}
+.scr.reels~.tabs,.tabs{z-index:6}
+@media (prefers-reduced-motion:reduce){.vbar,.rhint{animation:none}}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}

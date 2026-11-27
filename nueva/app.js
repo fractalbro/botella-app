@@ -19,6 +19,7 @@ const B = {
 };
 const TEMAS = ['Música', 'Cine', 'Libros', 'Comida', 'Viajes', 'La ciudad', 'Fútbol', 'Arte', 'Tecnología', 'Filosofía', 'Amor', 'Trabajo'];
 const TC = { 'Música': '#FF70A9', 'Cine': '#8E8CFF', 'Libros': '#9FE3B0', 'Comida': '#FF9F7A', 'Viajes': '#7CC8FF', 'La ciudad': '#FFB061', 'Fútbol': '#9BE38B', 'Arte': '#F59BD5', 'Tecnología': '#7FD8C9', 'Filosofía': '#C7B8FF', 'Amor': '#FF8E9E', 'Trabajo': '#E6D38A' };
+const tc = t => (typeof TC !== 'undefined' && TC[t]) || '#7FD8C9';
 const AMA = { 'Música': 'la música', 'Cine': 'el cine', 'Libros': 'los libros', 'Comida': 'la comida', 'Viajes': 'viajar', 'La ciudad': 'la ciudad', 'Fútbol': 'el fútbol', 'Arte': 'el arte', 'Tecnología': 'la tecnología', 'Filosofía': 'la filosofía', 'Amor': 'el amor', 'Trabajo': 'su trabajo' };
 const IDEAS = { Pregunta: ['¿Qué canción te devuelve a tus 15 años?', '¿Cuál es tu huarique favorito?', '¿Qué harías si mañana no tuvieras que trabajar?'], Confesión: ['Algo que nunca le he dicho a nadie…', 'Lo que más extraño de cuando era niño', 'Una costumbre rara que tengo'], Historia: ['Lo más raro que me pasó en una combi', 'El mejor día de este año', 'Cómo conocí a mi mejor amigo'] };
 const S = {
@@ -271,20 +272,56 @@ R.olvide = () => ({ html: `
   bind(el) { $('#f', el).noValidate = true; $('#f', el).onsubmit = e => { e.preventDefault(); if (!check(e.target)) return; go('entrar'); toast('Listo. Revisa tu correo.'); }; } });
 
 // Mar: lo que te llegó, tu botella y la pregunta de hoy. Nada más.
-R.mar = () => { const n = S.shore.length; const pos = [[6, 6], [52, 30], [30, 17]]; return { cls: 'tabbed', html: `
-  <div class="top"><span class="wm">botella</span><button class="me-pill" data-go="perfil"><span class="avatar" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span>Tú</button></div>
-  <h1 class="title mt2">${n ? `${n === 1 ? 'Llegó una botella' : `Llegaron ${n} botellas`}` : 'El mar está tranquilo'}</h1>
-  <p class="sub mt1">${n ? 'Toca una para abrirla.' : 'Lanza la tuya mientras tanto.'}</p>
-  <div class="shore"><div class="stars"></div><div class="moon"></div>
-    ${S.shore.map((id, i) => `<button class="float" style="left:${pos[i][0]}%;bottom:${pos[i][1]}%" data-go="abrir" data-p='{"id":"${id}"}' aria-label="Abrir botella de ${esc(B[id].tag)}">${bottleSVG(B[id].c)}<span>${esc(B[id].tag)}</span></button>`).join('')}
-  </div>
-  <div class="list mt2">
-    ${S.mine ? `<button class="item" id="mine"><span class="ic">${I.bottle}</span><span class="tx"><b>Tu ${esc(S.mine.kind.toLowerCase())} sobre ${esc(S.mine.tema.toLowerCase())}</b><small>${S.mine.heard ? `${S.mine.heard} de 8 ya la oyeron` : 'En camino a 8 personas'}</small></span><span class="reach sm">${Array.from({ length: 8 }, (_, i) => `<i class="${i < S.mine.heard ? 'heard' : 'on'}"></i>`).join('')}</span></button>` : ''}
-    <button class="item" id="today"><span class="ic">${I.moon}</span><span class="tx"><b>¿Qué le dirías a tu yo de hace diez años?</b><small>${store.get('hoy') ? 'Escucha lo que respondieron otros' : 'Pregunta de hoy · responde con tu voz'}</small></span>${I.chev}</button>
-  </div>`,
+// Mar: voces a pantalla completa, una tras otra hacia arriba (como Reels).
+// Portada = la forma de la voz dentro de la botella + la pregunta grande, en el color del tema.
+let vb = 0;
+const voiceBottle = (c, peaks) => { const id = 'vb' + (vb++), pk = (peaks || []).slice(0, 18), n = pk.length || 18, w = 84 / n;
+  return `<svg class="vbot" viewBox="0 0 160 300" aria-hidden="true"><defs>
+    <clipPath id="${id}c"><path d="M62 70V40h36v30c0 10 26 22 26 52v128c0 14-10 24-24 24H60c-14 0-24-10-24-24V122c0-30 26-42 26-52Z"/></clipPath>
+    <linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".5" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity=".55"/></linearGradient>
+    <linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity=".03"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient></defs>
+    <path d="M62 70V40h36v30c0 10 26 22 26 52v128c0 14-10 24-24 24H60c-14 0-24-10-24-24V122c0-30 26-42 26-52Z" fill="url(#${id}s)"/>
+    <g clip-path="url(#${id}c)">${Array.from({ length: n }, (_, i) => { const h = 26 + (pk[i] ?? Math.abs(Math.sin(i * 1.7))) * 110; return `<rect class="vbar" style="--i:${i}" x="${38 + i * w + w * .22}" y="${200 - h / 2}" width="${w * .56}" height="${h}" rx="${w * .28}" fill="url(#${id}g)"/>`; }).join('')}</g>
+    <path d="M62 70V40h36v30c0 10 26 22 26 52v128c0 14-10 24-24 24H60c-14 0-24-10-24-24V122c0-30 26-42 26-52Z" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/>
+    <path d="M46 132c0-20 12-30 20-38" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+    <rect x="64" y="22" width="32" height="22" rx="5" fill="#9A6A3E"/><rect x="64" y="22" width="32" height="6" rx="3" fill="#B8865A"/>
+  </svg>`; };
+R.mar = () => {
+  const reels = S.shore.map(id => ({ t: 'voz', id, b: B[id] }));
+  reels.push({ t: 'hoy' }); if (S.mine) reels.push({ t: 'mine' });
+  const nv = S.shore.length;
+  const reel = (r, i) => {
+    if (r.t === 'voz') { const b = r.b, secs = (PK[b.v] || [12])[0];
+      return `<section class="reel" style="--c:${b.c}" data-i="${i}">
+        <div class="cover">${voiceBottle(b.c, PK[b.v] && PK[b.v][1])}</div>
+        <div class="rtx"><span class="rtag"><i></i>${esc(b.tag)} · ${esc(b.kind)}</span>
+          <h2 class="rq">${esc(b.q)}</h2>
+          <p class="rmeta">Alguien que ama ${esc(b.theme)} · ${fmt(secs)}</p>
+          <div class="ract"><button class="btn rbtn" data-go="abrir" data-p='{"id":"${r.id}"}'><span class="pl">${I.play}</span>Escuchar</button></div>
+          ${i === 0 && reels.length > 1 ? `<p class="rhint">${I.chev}Desliza hacia arriba</p>` : ''}</div></section>`; }
+    if (r.t === 'hoy') return `<section class="reel" style="--c:#FFE7B0" data-i="${i}">
+        <div class="cover moonc"><span class="bigmoon"></span></div>
+        <div class="rtx"><span class="rtag"><i></i>Pregunta de hoy · para todos</span>
+          <h2 class="rq">¿Qué le dirías a tu yo de hace diez años?</h2>
+          <p class="rmeta">${store.get('hoy') ? 'Ya respondiste. Escucha lo que dijeron otros.' : 'Responde con tu voz y escucha a otros.'}</p>
+          <div class="ract"><button class="btn rbtn" data-go="hoy">${I.mic}${store.get('hoy') ? 'Escuchar respuestas' : 'Responder'}</button></div></div></section>`;
+    return `<section class="reel" style="--c:${tc(S.mine.tema)}" data-i="${i}">
+        <div class="cover">${voiceBottle(tc(S.mine.tema))}</div>
+        <div class="rtx"><span class="rtag"><i></i>Tu ${esc(S.mine.kind.toLowerCase())} · ${esc(S.mine.tema)}</span>
+          <h2 class="rq">${S.mine.heard ? `${S.mine.heard} de 8 ya la escucharon.` : 'Va en camino a 8 personas.'}</h2>
+          <p class="rmeta">Y sigue viajando hasta que alguien te responda.</p>
+          <div class="ract"><button class="btn rbtn" data-go="botellas">${I.bottle}Ver mis botellas</button></div></div></section>`;
+  };
+  return { cls: 'tabbed reels', html: `
+  <div class="rtop"><span class="wm">botella</span><span class="top-r">${nv ? `<span class="count" id="cnt">${nv === 1 ? '1 voz nueva' : `1 de ${nv} voces`}</span>` : ''}<button class="me-pill" data-go="perfil"><span class="avatar" aria-hidden="true">${esc((S.name || 'T')[0].toUpperCase())}</span>Tú</button></span></div>
+  <div class="feed" id="feed">${nv ? '' : `<section class="reel calm" style="--c:#7FD8C9"><div class="cover">${voiceBottle('#7FD8C9')}</div><div class="rtx"><h2 class="rq">Todo está en calma.</h2><p class="rmeta">Lanza tu botella y empezarán a llegarte voces.</p><div class="ract"><button class="btn rbtn" data-go="lanzar">${I.mic}Grabar mi botella</button></div></div></section>`}${reels.map(reel).join('')}</div>
+  <div class="dots" id="dots">${reels.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`,
   bind(el) {
-    $('#mine', el) && ($('#mine', el).onclick = () => go('botellas'));
-    $('#today', el).onclick = () => go('hoy');
+    const f = $('#feed', el), cnt = $('#cnt', el), ds = $$('#dots i', el), rs = $$('.reel', el);
+    rs[0] && rs[0].classList.add('on');
+    let last = 0; f.addEventListener('scroll', () => { const i = Math.round(f.scrollTop / f.clientHeight); if (i === last) return; last = i;
+      rs.forEach((r, k) => r.classList.toggle('on', k === i)); ds.forEach((d, k) => d.classList.toggle('on', k === i));
+      if (cnt && nv > 1) cnt.textContent = i < nv ? `${i + 1} de ${nv} voces` : `${nv} voces`; navigator.vibrate && navigator.vibrate(4); }, { passive: true });
   } }; };
 
 // Lanzar: tipo → grabar (lo principal) → ideas solo si las pides → deslizar.
