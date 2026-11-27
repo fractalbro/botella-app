@@ -427,6 +427,39 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
 .spc .k{white-space:nowrap}
 .spc{gap:6px;padding:16px}
 .ctrls .play,.vrow .play,.wavebox .play{background:var(--cb,var(--c))!important}
+/* ---------- avisos, llamada entrante, estados y ajustes ---------- */
+.hud{gap:8px}
+.bell{position:relative;width:48px;height:48px;background:var(--paper)}
+.bell svg{width:20px;height:22px}
+.nb2{position:absolute;top:-10px;right:-10px;min-width:22px;height:22px;padding:0 4px;display:grid;place-items:center;background:#D63434;color:#fff;border:2px solid var(--ink);border-radius:6px;font:20px/1 var(--num)}
+.av{align-items:flex-start}
+.av.unr{background:#FFFDF7}
+.av .tx small.k{margin-top:2px}
+.udot{width:10px;height:10px;flex:none;background:#D63434;border:2px solid var(--ink);border-radius:2px;margin-top:6px}
+.sw{position:relative;width:56px;height:32px;flex:none;border:3px solid var(--ink);border-radius:8px;background:var(--line);transition:background .1s steps(2)}
+.sw i{position:absolute;top:2px;left:2px;width:22px;height:22px;background:#fff;border:2px solid var(--ink);border-radius:4px;transition:transform .12s steps(3)}
+.sw[aria-checked=true]{background:#21854F}
+.sw[aria-checked=true] i{transform:translateX(24px)}
+.sw:focus-visible{outline:3px dashed var(--sea);outline-offset:3px}
+.callbtns{display:flex;justify-content:center;gap:64px;margin-bottom:24px}
+.callbtns>span{display:flex;flex-direction:column;align-items:center;gap:12px}
+.callbtns .hang{margin:0}
+.callbtns small{font:600 13px/1 var(--px);text-transform:uppercase;color:var(--ink-2)}
+.hang.ok{background:#21854F;--k:#18744A;--hl:#97EBB4}
+.core.ring svg{width:40px;height:40px;animation:shake .4s steps(2) infinite}
+@keyframes shake{50%{transform:rotate(-14deg)}}
+.nosig{position:relative;width:96px;margin:0 auto 32px}
+.nosig .nsb{display:block;width:64px;margin:0 auto;animation:float 3s ease-in-out infinite}
+.nosig .nsx{position:absolute;right:-8px;top:-8px;width:28px;animation:blink 1s steps(1) infinite}
+.pend{display:flex;gap:12px;align-items:center;padding:12px;margin-top:32px}
+.pend .tx{flex:1;display:grid;gap:4px}.pend b{font:700 15px/1.3 var(--sans)}.pend small{font-size:13px;color:var(--ink-2)}
+.spin{display:flex;gap:4px}.spin i{width:6px;height:6px;background:var(--ink);animation:blink .9s steps(1) infinite}.spin i:nth-child(2){animation-delay:.3s}.spin i:nth-child(3){animation-delay:.6s}
+.micart{position:relative;width:104px;margin:16px 0 32px}
+.micart .mic{pointer-events:none}
+.mlock{position:absolute;right:-16px;bottom:-12px;width:44px;height:44px;display:grid;place-items:center}
+.mlock svg{width:18px}
+.empty{padding:24px 16px;text-align:center}.empty b{display:block;font:700 16px/1.3 var(--sans)}.empty small{display:block;margin-top:8px;color:var(--ink-2)}
+
 @media (max-height:700px){
   #app{padding-top:calc(var(--safe-t) + 12px)}.hud{margin-bottom:12px}.tag-l{display:none}.inv{height:44px}
   .beach{height:184px}.legend{margin-top:12px;padding-bottom:4px}
@@ -445,11 +478,12 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   <section class="view full" id="v-temas" aria-label="Tus temas"></section>
   <section class="view" id="v-playa" aria-label="Playa">
     <header class="hud">
-      <div><div class="wm" id="wm" aria-label="Botella"></div><div class="tag-l">Voces que llegan a tu orilla</div></div>
+      <div style="flex:1"><div class="wm" id="wm" aria-label="Botella"></div><div class="tag-l">Voces que llegan a tu orilla</div></div>
       <div class="inv box" aria-label="Tu inventario">
         <div title="Botellas que te quedan hoy"><span id="invb"></span><span class="num" id="invn">×4</span></div>
         <div title="Tu voz"><span id="invv"></span></div>
       </div>
+      <span id="bellw"></span>
     </header>
     <div class="beach box" id="beach"></div>
     <div class="legend" id="legend" role="group" aria-label="Filtrar por color"></div>
@@ -542,6 +576,7 @@ const IC = {
   moon:  ['..ooo..','.oo....','oo.....','oo.....','oo.....','.oo....','..ooo..'],
   copy:  ['oooo..','o..o..','o.oooo','o.o..o','ooo..o','..o..o','..oooo'],
   map:   ['o..o..o','.o.o.o.','..ooo..','ooooooo','..ooo..','.o.o.o.','o..o..o'],
+  bell:  ['...oo...','..oooo..','.oooooo.','.oooooo.','.oooooo.','.oooooo.','oooooooo','........','...oo...'],
   dock:  ['...o...','..ooo..','...o...','ooooooo','o.o.o.o','o.o.o.o','.......','ooooooo']
 };
 const ico = (n, col = 'currentColor', x = '#fff') => sprite(IC[n], { o: col, y: '#FFC93C', x }, 'i-' + n);
@@ -630,7 +665,9 @@ const life = (p, n = 20) => { const on = Math.round(p * n); return Array.from({ 
 
 /* ================= SONIDO ================= */
 let AC = null;
-function pop(freq = 900) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), gn = AC.createGain(); o.type = 'square'; o.frequency.setValueAtTime(freq, AC.currentTime); o.frequency.exponentialRampToValueAtTime(140, AC.currentTime + .12); gn.gain.setValueAtTime(.12, AC.currentTime); gn.gain.exponentialRampToValueAtTime(.001, AC.currentTime + .16); o.connect(gn).connect(AC.destination); o.start(); o.stop(AC.currentTime + .18); } catch (e) {} try { navigator.vibrate && navigator.vibrate([12, 30, 18]); } catch (e) {} }
+function pop(freq = 900) { if (store.get('snd', true)) try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), gn = AC.createGain(); o.type = 'square'; o.frequency.setValueAtTime(freq, AC.currentTime); o.frequency.exponentialRampToValueAtTime(140, AC.currentTime + .12); gn.gain.setValueAtTime(.12, AC.currentTime); gn.gain.exponentialRampToValueAtTime(.001, AC.currentTime + .16); o.connect(gn).connect(AC.destination); o.start(); o.stop(AC.currentTime + .18); } catch (e) {} if (store.get('vib', true)) try { navigator.vibrate && navigator.vibrate([12, 30, 18]); } catch (e) {} }
+function blip() { if (!store.get('snd', true) || !AC) return; try { const o = AC.createOscillator(), gn = AC.createGain(); o.type = 'square'; o.frequency.value = 1500; gn.gain.setValueAtTime(.035, AC.currentTime); gn.gain.exponentialRampToValueAtTime(.001, AC.currentTime + .04); o.connect(gn).connect(AC.destination); o.start(); o.stop(AC.currentTime + .05); } catch (e) {} }
+document.addEventListener('pointerdown', e => { if (e.target.closest('.push,.chip,.nb')) blip(); });
 
 /* ================= AUDIO ================= */
 let audio = null, tick = null, playing = false;
@@ -1096,10 +1133,8 @@ function renderTu() {
     <div class="box priv"><div>${ico('lock', INK)}<span>Tu nombre aparece solo cuando los dos deciden compartirlo.</span></div><div>${ico('lock', INK)}<span>Tu distrito nunca se muestra. A la gente la une un tema en común.</span></div><div>${ico('check', INK)}<span>Tu voz llega tal como la grabas. Nunca se modifica.</span></div></div>
     <div class="box menu" style="margin-top:24px">
       ${menuRow(ico('flag', INK), 'Normas y privacidad', 'Pocas reglas, para que todos hablen', 'normas')}
-      ${menuRow(ico('lock', INK), 'Cambiar contraseña', 'Te mandamos un enlace a tu correo', 'olvide')}</div>
-    <button class="link" id="out">Cerrar sesión</button>`;
+      ${menuRow(ico('more', INK), 'Ajustes', 'Avisos, sonido y tu cuenta', 'ajustes')}</div>`;
   bindVoices(v);
-  v.querySelector('#out').onclick = () => { store.set('onb', false); go('bienvenida'); };
 }
 const SPECIAL = [['roja', 'De color', 'Llega solo a quienes aman un tema que eliges'], ['morada', 'Que llega lejos', 'También a quienes aman otros temas'], ['dorada', 'Dorada', 'Sale primero en el mar de todos'], ['amarilla', 'De regalo', 'Le das una botella más a alguien con quien conversas']];
 const PACKS = [[3, 'Para un día con mucho que decir'], [10, 'Para toda la semana'], [30, 'Para el mes, con 5 de regalo']];
@@ -1349,15 +1384,137 @@ function renderReportar({ id = 'leo' } = {}) {
   draw();
 }
 
+/* ================= AVISOS ================= */
+const AVISOS = [
+  { id: 'a1', ic: 'heart', cat: 'roja', t: 'Alguien que ama la música respondió tu botella', d: '“¿Alguna vez te enamoraste de una voz?”', ago: 'Ahora', go: 'respondio', p: { cat: 'roja', i: 0 } },
+  { id: 'a2', ic: 'phone', cat: 'verde', t: 'Alguien que ama el cine te está llamando', d: 'Solo voz', ago: 'Ahora', go: 'entrante', p: { id: 'leo' } },
+  { id: 'a3', ic: 'lock', cat: 'verde', t: 'Alguien que ama el cine quiere decirte su nombre', d: 'Se muestra si tú también quieres', ago: 'Hace 20 min', go: 'chat', p: { id: 'leo' } },
+  { id: 'a4', ic: 'pin', cat: 'amarilla', t: 'Caro confirmó el plan', d: 'Mañana a las 6:00 p. m. · Malecón de Miraflores', ago: 'Hace 1 h', go: 'chat', p: { id: 'caro' } },
+  { id: 'a5', ic: 'up', cat: 'azul', t: 'Tu botella ya llegó a 200 personas', d: 'Sigue llegando hasta que alguien responda', ago: 'Hace 2 h', go: 'botellas', p: {} },
+  { id: 'a6', ic: 'moon', cat: 'dorada', t: 'Ya está la pregunta de hoy', d: HOY.q, ago: 'Hoy, 8:00 a. m.', go: 'hoy', p: {} },
+  { id: 'a7', ic: 'star', cat: 'morada', t: 'Llevas 4 días seguidos grabando', d: 'Con 7 días te regalamos una botella que llega lejos', ago: 'Ayer', go: 'racha', p: {} }
+];
+const unread = () => AVISOS.filter(a => !store.get('read', []).includes(a.id)).length;
+const bellBtn = () => { const n = unread(); return `<button class="push sq bell" data-go="avisos" aria-label="Avisos${n ? ', ' + n + ' sin leer' : ''}">${ico('bell', INK)}${n ? `<span class="nb2">${n}</span>` : ''}</button>`; };
+function renderAvisos() {
+  const read = store.get('read', []), v = $('#v-avisos');
+  const row = a => { const C = CAT[a.cat], on = !read.includes(a.id); return `<button class="mrow av ${on ? 'unr' : ''}" data-a="${a.id}"><span class="mi" style="background:color-mix(in srgb,${C.c} 22%,#fff)">${ico(a.ic, C.k)}</span><span class="tx"><b>${esc(a.t)}</b><small>${esc(a.d)}</small><small class="k mute3" style="font-size:11px">${a.ago}</small></span>${on ? '<i class="udot" aria-label="Sin leer"></i>' : ''}</button>`; };
+  v.innerHTML = `${topbar('playa', '', '', unread() ? `<button class="k" id="all" style="height:48px;color:var(--sea)">Marcar leído</button>` : '')}
+    <h1 class="h1">Avisos</h1>
+    <p class="mute" style="margin:8px 0 0">${unread() ? `Tienes ${unread()} sin leer.` : 'Estás al día.'}</p>
+    <div class="sec"><span class="h2">Hoy</span></div>
+    <div class="box menu">${AVISOS.slice(0, 6).map(row).join('')}</div>
+    <div class="sec"><span class="h2">Antes</span></div>
+    <div class="box menu">${AVISOS.slice(6).map(row).join('')}</div>
+    <p class="k mute3" style="text-align:center;margin:24px 0 0">Elige qué avisos recibir en <u data-go="ajustes">Ajustes</u></p>`;
+  v.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { const a = AVISOS.find(x => x.id === b.dataset.a), r = store.get('read', []); if (!r.includes(a.id)) { r.push(a.id); store.set('read', r); } go(a.go, a.p); });
+  const all = v.querySelector('#all'); if (all) all.onclick = () => { store.set('read', AVISOS.map(a => a.id)); pop(1100); renderAvisos(); };
+}
+
+/* ================= LLAMADA ENTRANTE ================= */
+function renderEntrante({ id = 'leo' } = {}) {
+  const c = CONV.find(x => x.id === id) || CONV[0], C = CAT[c.cat], v = $('#v-entrante'); v.setAttribute('style', cvars(C));
+  const nm = store.get('nm.' + id, c.st >= 2 ? 2 : 0) === 2;
+  v.innerHTML = `<span class="k mute">Llamada de voz entrante</span>
+    <div class="orb"><i></i><i></i><i></i><span class="core box ring">${ico('phone', C.on)}</span></div>
+    <h1 class="h1">${esc(nm ? c.name : c.who)}</h1>
+    <p class="mute" style="max-width:28ch;margin:0 auto">te está llamando. Solo sus voces, sin cámara.</p>
+    <div class="sp"></div>
+    <div class="callbtns"><span><button class="push hang" id="no" aria-label="Rechazar">${ico('x', '#fff')}</button><small>Ahora no</small></span><span><button class="push hang ok" id="yes" aria-label="Contestar">${ico('phone', '#fff')}</button><small>Contestar</small></span></div>`;
+  let ring = setInterval(() => { if (cur !== 'entrante') return clearInterval(ring); pop(1300); }, 1600);
+  v.querySelector('#yes').onclick = () => { clearInterval(ring); go('llamada', { id }); };
+  v.querySelector('#no').onclick = () => { clearInterval(ring); go('chat', { id }); setTimeout(() => toast('Le avisamos que ahora no puedes. Puede dejarte una nota de voz.', C.c), 400); };
+}
+
+/* ================= ESTADOS: sin botellas, sin internet, micrófono ================= */
+function renderCalma() {
+  $('#v-calma').innerHTML = `${topbar('playa', '')}
+    <div class="beach box" style="margin-top:8px"><div class="stage">${scene()}</div><span class="cap">0 sin escuchar</span></div>
+    <h1 class="hx" style="margin-top:32px">El mar está tranquilo.</h1>
+    <p class="mute" style="margin:12px 0 0;font-size:16px">Ya escuchaste todas las botellas de hoy. Te avisamos cuando llegue otra.</p>
+    <div class="sp" style="min-height:32px"></div>
+    <button class="push btn blue" data-go="lanzar">${ico('mic', '#fff', '#2477C4')} Lanzar la mía</button>
+    <button class="link" data-go="hoy">Responder la pregunta de hoy</button>`;
+}
+function renderSinred() {
+  const v = $('#v-sinred');
+  v.innerHTML = `${topbar('playa', '')}
+    <div class="sp"></div>
+    <div class="nosig" aria-hidden="true"><span class="nsb">${bottle('azul')}</span>${sprite(['o.......o', '.o.....o.', '..o...o..', '...o.o...', '....o....', '...o.o...', '..o...o..', '.o.....o.', 'o.......o'], { o: '#E03B3B' }, 'nsx')}</div>
+    <h1 class="hx" style="text-align:center">Sin señal en la orilla.</h1>
+    <p class="mute" style="text-align:center;margin:12px auto 0;max-width:30ch;font-size:16px">Tu grabación quedó guardada en el teléfono. La enviamos apenas vuelva internet.</p>
+    <div class="box pend"><span class="tile" style="width:44px;height:44px">${bottle('roja')}</span><span class="tx"><b>1 botella esperando</b><small>Se envía sola, no tienes que hacer nada</small></span><span class="spin" aria-hidden="true"><i></i><i></i><i></i></span></div>
+    <div class="sp"></div>
+    <button class="push btn blue" id="rt">Intentar de nuevo</button>`;
+  v.querySelector('#rt').onclick = () => { const b = v.querySelector('#rt'); b.disabled = true; b.textContent = 'Buscando señal…'; setTimeout(() => { if (cur !== 'sinred') return; pop(); toast('Volvió la señal. Tu botella ya salió al mar.', '#2BA967'); go('playa'); }, 1400); };
+}
+function renderMic() {
+  $('#v-mic').innerHTML = `${topbar('playa', '')}
+    <div class="micart" aria-hidden="true"><span class="push mic" style="--c:#E03B3B;--k:#9E2133;--hl:#FF9A8F;background:#D63434">${ico('mic', '#fff', '#D63434')}</span><span class="mlock box">${ico('lock', INK)}</span></div>
+    <h1 class="hx">Botella necesita tu micrófono.</h1>
+    <p class="mute" style="margin:12px 0 0;font-size:16px">Sin micrófono no puedes grabar. Solo se usa cuando tocas el botón de grabar.</p>
+    <ol class="dsteps" style="margin-top:24px"><li><b>1</b>Toca el candado junto a la dirección</li><li><b>2</b>Busca Micrófono y elige Permitir</li><li><b>3</b>Vuelve aquí y graba</li></ol>
+    <div class="sp" style="min-height:32px"></div>
+    <button class="push btn blue" data-go="lanzar">Ya lo permití</button>
+    <button class="link" data-go="playa">Ahora no</button>`;
+}
+
+/* ================= AJUSTES ================= */
+const sw = (k, t, d, def = true) => `<div class="mrow"><span class="tx"><b>${t}</b>${d ? `<small>${d}</small>` : ''}</span><button class="sw" role="switch" aria-checked="${store.get(k, def)}" data-sw="${k}" aria-label="${t}"><i></i></button></div>`;
+function renderAjustes() {
+  const v = $('#v-ajustes');
+  v.innerHTML = `${topbar('tu', '')}
+    <h1 class="h1">Ajustes</h1>
+    <div class="sec"><span class="h2">Avisos</span></div>
+    <div class="box menu">${sw('n.resp', 'Cuando te responden', 'Una botella o una nota de voz')}${sw('n.hoy', 'Pregunta de hoy', 'Una vez al día, a las 8:00 a. m.')}${sw('n.racha', 'Recordatorio de racha', 'Si el día se acaba sin grabar', false)}${sw('n.mail', 'También por correo', 'Solo lo importante', false)}</div>
+    <div class="sec"><span class="h2">Sonido</span></div>
+    <div class="box menu">${sw('snd', 'Sonidos de consola', 'Un pequeño “pop” al tocar, lanzar y destapar')}${sw('vib', 'Vibración', 'Al lanzar, enviar y destapar')}</div>
+    <div class="sec"><span class="h2">Tu cuenta</span></div>
+    <div class="box menu">
+      ${menuRow(ico('lock', INK), 'Cambiar contraseña', 'Te mandamos un enlace a tu correo', 'olvide')}
+      ${menuRow(ico('x', INK), 'Bloqueados', '1 persona', 'bloqueados')}
+      ${menuRow(ico('flag', INK), 'Normas y privacidad', 'Pocas reglas, para que todos hablen', 'normas')}
+      ${menuRow(ico('x', '#D63434'), '<span style="color:#C22E2E">Borrar mi cuenta</span>', 'Se borran tus botellas y tus voces', 'borrar', '', '#FDECEC')}</div>
+    <button class="link" id="out">Cerrar sesión</button>`;
+  v.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { const on = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', on); store.set(b.dataset.sw, on); if (on) pop(1200); });
+  v.querySelector('#out').onclick = () => { store.set('onb', false); go('bienvenida'); };
+}
+function renderBloqueados() {
+  const v = $('#v-bloqueados'), list = store.get('blocked', ['Alguien que ama el fútbol']);
+  v.innerHTML = `${topbar('ajustes', '')}
+    <h1 class="h1">Bloqueados</h1>
+    <p class="mute" style="margin:8px 0 24px">No pueden escucharte ni mandarte botellas. Nadie se entera de que los bloqueaste.</p>
+    ${list.length ? `<div class="box menu">${list.map((w, i) => `<div class="mrow"><span class="mi">${ico('x', INK)}</span><span class="tx"><b>${esc(w)}</b><small>Bloqueado el 20 de noviembre</small></span><button class="push btn sm" data-u="${i}">Desbloquear</button></div>`).join('')}</div>`
+    : `<div class="box empty"><b>No bloqueaste a nadie.</b><small>Si alguien te incomoda, puedes bloquearlo desde la conversación.</small></div>`}`;
+  v.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { list.splice(+b.dataset.u, 1); store.set('blocked', list); renderBloqueados(); toast('Desbloqueado.', INK); });
+}
+function renderBorrar() {
+  const v = $('#v-borrar'); let ok = false;
+  const draw = () => {
+    v.innerHTML = `${topbar('ajustes', '')}
+      <div class="row" style="gap:8px;margin:8px 0 24px">${KEYS.map(k => `<span style="width:24px">${bottle(k, true)}</span>`).join('')}</div>
+      <h1 class="hx">¿Borrar tu cuenta?</h1>
+      <p class="mute" style="margin:12px 0 0;font-size:16px">Se borran tus botellas, tus voces y tus conversaciones. Quienes hablaban contigo ya no podrán escucharte. No se puede deshacer.</p>
+      <button class="tick" id="tk" role="checkbox" aria-checked="${ok}"><span class="tbox" style="${ok ? 'background:#D63434' : ''}">${ico('check', '#fff')}</span><span>Entiendo que no se puede deshacer.</span></button>
+      <div class="sp" style="min-height:32px"></div>
+      <button class="push btn red" id="del" ${ok ? '' : 'disabled'}>Borrar mi cuenta</button>
+      <button class="link" data-go="ajustes">Me quedo</button>`;
+    v.querySelector('#tk').onclick = () => { ok = !ok; draw(); };
+    v.querySelector('#del').onclick = () => { Object.keys(localStorage).filter(k => k.startsWith('bp.')).forEach(k => localStorage.removeItem(k)); go('bienvenida'); setTimeout(() => toast('Tu cuenta se borró. Gracias por tu voz.', INK), 400); };
+  };
+  draw();
+}
+
 /* ================= NAVEGACIÓN ================= */
 function toast(t, c) { const r = $('#toast-root'); r.innerHTML = `<div class="toast box" role="status">${sprite(['oooo', 'oooo', 'oooo', 'oooo'], { o: c || INK })}${esc(t)}</div>`; clearTimeout(r._t); r._t = setTimeout(() => r.innerHTML = '', 2800); }
 const VIEWS = { bienvenida: renderBienvenida, primera: renderPrimera, cuenta: renderCuenta, presenta: renderPresenta, sobre: renderSobre, temas: renderTemas, entrar: renderEntrar, olvide: renderOlvide, normas: renderNormas,
-  playa: () => { renderBeach(); renderLegend(); renderPlayer(true); $('#hoyc').innerHTML = hoyCard(); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, llamada: renderLlamada, tu: renderTu, mes: renderMes,
+  playa: () => { renderBeach(); renderLegend(); renderPlayer(true); $('#hoyc').innerHTML = hoyCard(); $('#bellw').innerHTML = bellBtn(); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, llamada: renderLlamada, tu: renderTu, mes: renderMes,
   hoy: renderHoy, respondio: renderRespondio, mar: renderMar, doradas: renderDoradas, plan: renderPlan, reportar: renderReportar,
-  muelle: renderMuelle, racha: renderRacha, mapa: renderMapa, dos: renderDos, lecturas: renderLecturas, lectura: renderLectura, lecnueva: renderLecnueva, salidas: renderSalidas, proponer: renderProponer, invitar: renderInvitar };
+  muelle: renderMuelle, racha: renderRacha, mapa: renderMapa, dos: renderDos, lecturas: renderLecturas, lectura: renderLectura, lecnueva: renderLecnueva, salidas: renderSalidas, proponer: renderProponer, invitar: renderInvitar,
+  avisos: renderAvisos, entrante: renderEntrante, calma: renderCalma, sinred: renderSinred, mic: renderMic, ajustes: renderAjustes, bloqueados: renderBloqueados, borrar: renderBorrar };
 const NAVV = ['playa', 'botellas', 'voces', 'tu'], NONAV = Object.keys(VIEWS).filter(k => !NAVV.includes(k));
-const FULL = ['primera', 'presenta', 'sobre', 'entrar', 'olvide', 'hoy', 'respondio'];
-Object.keys(VIEWS).forEach(k => { if (!$('#v-' + k)) { const sct = document.createElement('section'); sct.className = 'view' + (FULL.includes(k) ? ' full' : '') + (k === 'respondio' ? ' call' : ''); sct.id = 'v-' + k; $('#app').appendChild(sct); } });
+const FULL = ['primera', 'presenta', 'sobre', 'entrar', 'olvide', 'hoy', 'respondio', 'entrante', 'calma', 'sinred', 'mic', 'borrar'];
+Object.keys(VIEWS).forEach(k => { if (!$('#v-' + k)) { const sct = document.createElement('section'); sct.className = 'view' + (FULL.includes(k) ? ' full' : '') + (['respondio', 'entrante'].includes(k) ? ' call' : ''); sct.id = 'v-' + k; $('#app').appendChild(sct); } });
 let cur = '';
 function show(name, p) {
   if (['playa', 'botellas', 'voces', 'tu'].includes(cur)) S.prev = cur;
