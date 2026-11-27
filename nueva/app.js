@@ -21,7 +21,13 @@ const TEMAS = ['Música', 'Cine', 'Libros', 'Comida', 'Viajes', 'La ciudad', 'F�
 const TC = { 'Música': '#FF70A9', 'Cine': '#8E8CFF', 'Libros': '#9FE3B0', 'Comida': '#FF9F7A', 'Viajes': '#7CC8FF', 'La ciudad': '#FFB061', 'Fútbol': '#9BE38B', 'Arte': '#F59BD5', 'Tecnología': '#7FD8C9', 'Filosofía': '#C7B8FF', 'Amor': '#FF8E9E', 'Trabajo': '#E6D38A' };
 const tc = t => (typeof TC !== 'undefined' && TC[t]) || '#7FD8C9';
 const AMA = { 'Música': 'la música', 'Cine': 'el cine', 'Libros': 'los libros', 'Comida': 'la comida', 'Viajes': 'viajar', 'La ciudad': 'la ciudad', 'Fútbol': 'el fútbol', 'Arte': 'el arte', 'Tecnología': 'la tecnología', 'Filosofía': 'la filosofía', 'Amor': 'el amor', 'Trabajo': 'su trabajo' };
-const IDEAS = { Pregunta: ['¿Qué canción te devuelve a tus 15 años?', '¿Cuál es tu huarique favorito?', '¿Qué harías si mañana no tuvieras que trabajar?'], Confesión: ['Algo que nunca le he dicho a nadie…', 'Lo que más extraño de cuando era niño', 'Una costumbre rara que tengo'], Historia: ['Lo más raro que me pasó en una combi', 'El mejor día de este año', 'Cómo conocí a mi mejor amigo'] };
+const IDEAS = {
+  Pregunta: ['¿Qué canción te devuelve a tus 15 años?', '¿Cuál es tu huarique favorito?', '¿Qué harías si mañana no tuvieras que trabajar?', '¿Qué película verías mil veces?', '¿Cuál fue el mejor consejo que te dieron?', '¿A qué lugar de Lima llevarías a alguien que no la conoce?', '¿Qué te hace reír aunque no quieras?', '¿Qué plato te recuerda a tu casa?', '¿Cuál es tu plan perfecto para un domingo?', '¿Qué aprendiste tarde y te hubiera gustado saber antes?', '¿Qué libro le recomendarías a un desconocido?', '¿A quién le darías las gracias hoy?', '¿Qué te da miedo y lo haces igual?', '¿Cuál es la mejor conversación que tuviste con un extraño?', '¿Qué serie te hizo desvelarte?', '¿Qué sonido te da paz?', '¿Qué harías con un día libre en la playa?', '¿Qué cosa pequeña te alegra el día?', '¿Qué viaje sigues soñando?', '¿Qué canción pondrías para empezar una fiesta?', '¿Cuál es tu mayor manía?', '¿Qué le preguntarías a tu yo de 80 años?', '¿Qué es lo más valiente que has hecho?', '¿Dónde se come el mejor ceviche, según tú?'],
+  Confesión: ['Algo que nunca le he dicho a nadie…', 'Lo que más extraño de cuando era niño', 'Una costumbre rara que tengo', 'Lo que me cuesta pedir', 'Una vez fingí que me gustaba algo y…', 'Lo que hago cuando nadie me ve', 'La última vez que lloré con una película', 'Algo de lo que me arrepiento poco', 'Mi placer culposo musical', 'Lo que más me da vergüenza de mi celular', 'Algo que todavía no sé hacer', 'Un sueño que no le cuento a nadie', 'Lo que me pongo nervioso de decir en voz alta', 'Una mentira piadosa que sigo sosteniendo', 'La persona a la que todavía le debo una disculpa', 'Lo que me hace sentir solo en esta ciudad', 'Algo que me gustaría que alguien me pregunte', 'Lo más raro que he buscado en internet', 'Un miedo que parece tonto pero es real', 'Lo que haría si nadie me juzgara'],
+  Historia: ['Lo más raro que me pasó en una combi', 'El mejor día de este año', 'Cómo conocí a mi mejor amigo', 'La vez que me perdí y terminó bien', 'Mi primer trabajo', 'Un viaje que salió todo mal', 'La noche en que no dormí y valió la pena', 'Un desconocido que me ayudó', 'La comida más rara que probé', 'La vez que dije que sí sin pensarlo', 'Mi peor cita', 'Un concierto que no olvido', 'El día que me mudé', 'La vez que me reí en el peor momento', 'Una tradición de mi familia', 'Lo que aprendí de mi abuela', 'Un verano que recuerdo', 'La vez que llegué tarde a algo importante', 'Algo que encontré en la calle', 'El mejor regalo que me dieron']
+};
+// Muestra 4 ideas a la vez y rota sin repetir hasta agotar; así nunca se ven las mismas.
+const deck = {}; const nextIdeas = (k, pool, n = 4) => { const d = deck[k] = deck[k] && deck[k].length >= n ? deck[k] : [...(deck[k] || []), ...pool.slice().sort(() => Math.random() - .5).filter(x => !(deck[k] || []).includes(x))]; return d.splice(0, n); };
 const S = {
   shore: store.get('shore', ['caro', 'ivan', 'leo', 'belen']),
   name: store.get('name', ''),
@@ -63,6 +69,7 @@ const I = {
 };
 I.reel = '<svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 7.5h6"/></svg>';
 I.sea = '<svg viewBox="0 0 24 24"><path d="M5 8.5v-2l1-1.5v-1h2v1l1 1.5v2M15 13.5v-2l1-1.5v-1h2v1l1 1.5v2M6 8.5h2v3H6zM16 13.5h2v3h-2z"/><path d="M3 19c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1"/></svg>';
+I.shuffle = '<svg viewBox="0 0 24 24"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 3.8c1.1 1.6 2.3 2.6 4.3 2.6H21M17.5 13.5 21 17l-3.5 3.5M3 17h3.5c1.3 0 2.2-.4 3-1.2M13.2 8.2c.8-.8 1.8-1.2 3.3-1.2H21M17.5 3.5 21 7l-3.5 3.5"/></svg>';
 let bn = 0;
 const bottleSVG = c => { const id = 'g' + (bn++); return `<svg class="bt" viewBox="0 0 120 50" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".55"/><stop offset=".55" stop-color="${c}" stop-opacity=".14"/><stop offset="1" stop-color="${c}" stop-opacity=".38"/></linearGradient></defs><path d="M14 6h52c8 0 12 6 18 10h20v18H84c-6 4-10 10-18 10H14C8 44 4 40 4 34V16C4 10 8 6 14 6Z" fill="url(#${id})" stroke="${c}" stroke-opacity=".85" stroke-width="1.6"/><rect x="14" y="17.5" width="46" height="15" rx="7.5" fill="#F3E6C8"/><rect x="104" y="18" width="10" height="14" rx="2" fill="#8A5A33"/><path d="M15 11.5h44" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/></svg>`; };
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -402,7 +409,10 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
     const wireTm = () => $$('#tm .chip:not(.more)', el).forEach(b => b.onclick = () => { tema = b.textContent; paintT(); $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
     wireTm(); $('#more', el).onclick = () => sheet(`<h2 class="title">¿Sobre qué tema?</h2><p class="sub">Tu botella llega a quienes lo aman.</p><div class="chips mt2">${TEMAS.map(t => `<button class="chip" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}</div>`, (sh, close) => $$('.chip', sh).forEach(c => c.onclick = () => { tema = c.textContent; if (![...$$('#tm .chip', el)].some(x => x.textContent === tema)) $('#more', el).insertAdjacentHTML('beforebegin', `<button class="chip" role="radio">${esc(tema)}</button>`); $$('#tm .chip:not(.more)', el).forEach(x => x.setAttribute('aria-pressed', x.textContent === tema)); paintT(); wireTm(); close(); }));
     const ideas = $('#ideas', el);
-    ideas.onclick = () => sheet(`<h2 class="title">Ideas para ${kind === 'Pregunta' ? 'preguntar' : kind === 'Confesión' ? 'confesar' : 'contar'}</h2><p class="sub">Tócala y dila con tus palabras.</p>${IDEAS[kind].map(t => `<button class="idea">${esc(t)}</button>`).join('')}`, (s, close) => $$('.idea', s).forEach(b => b.onclick = () => { const p = $('#idea', el); p.hidden = false; p.textContent = b.textContent; close(); }));
+    ideas.onclick = () => sheet(`<h2 class="title">Ideas para ${kind === 'Pregunta' ? 'preguntar' : kind === 'Confesión' ? 'confesar' : 'contar'}</h2><p class="sub">Tócala y dila con tus palabras.</p><div class="row-btns" id="il"></div><button class="btn btn-q mt1" id="imore">${I.shuffle}Ver otras ideas</button>`, (s, close) => {
+      const fill = () => { const l = $('#il', s); l.classList.remove('in'); void l.offsetWidth; l.innerHTML = nextIdeas(kind, IDEAS[kind]).map(t => `<button class="idea">${esc(t)}</button>`).join(''); l.classList.add('in');
+        $$('.idea', l).forEach(b => b.onclick = () => { const p = $('#idea', el); p.hidden = false; p.textContent = b.textContent; close(); }); };
+      fill(); $('#imore', s).onclick = () => { fill(); navigator.vibrate && navigator.vibrate(5); }; });
     recUI(el, 'Desliza al mar', () => { const p = $('#idea', el); if (dorada) X.tide = Math.max(0, X.tide - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); track('botella_lanzada', { dorada: !!dorada, tema }); go('lanzada'); });
     new MutationObserver(() => ideas.hidden = !!$('#sl', el)).observe($('#after', el), { childList: true });
   } }; };
@@ -699,17 +709,17 @@ R.proponer = () => { const IDE = ['Caminata al atardecer', 'Preguntas frente al 
 
 // ¿Qué piensan de ti?: tus amigos responden con su voz; primero escuchas, después ves quién fue.
 const FC = ['#C7B8FF', '#FF8E9E', '#7CC8FF', '#9FE3B0', '#FFB061'];
-const LQ = ['¿Qué fue lo primero que pensaste de mí?', '¿Qué hago que nadie más hace?', '¿En qué canción me ves?', '¿Qué crees que no me animo a hacer?'];
+const LQ = ['¿Qué fue lo primero que pensaste de mí?', '¿Qué hago que nadie más hace?', '¿En qué canción me ves?', '¿Qué crees que no me animo a hacer?', '¿Qué película te recuerda a mí?', '¿Qué es lo que más te gusta de hablar conmigo?', '¿A qué lugar de Lima me llevarías?', '¿Qué consejo me darías hoy?', '¿Qué te imaginas que hago un domingo?', '¿Cuál es tu recuerdo favorito conmigo?', '¿Qué superpoder crees que tengo?', '¿Qué plato pedirías por mí?', '¿Qué me dirías si fuera mi cumpleaños?', '¿Qué debería animarme a hacer este año?', '¿Cómo me describirías en tres palabras?', '¿Qué canción pondrías en mi viaje?'];
 R.lecturas = () => ({ cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">¿Qué piensan de ti?</h1>
   <p class="sub mt1">Tus amigos te responden con su voz. Primero escuchas y después ves quién fue.</p>
   <div class="lcards mt3">${S.lec.map((l, i) => `<button class="lcard" data-go="lectura" data-p='{"i":${i}}'><b>${esc(l.q)}</b><span class="lfoot">${l.ans.length ? `<span class="faces">${l.ans.map((a, j) => voiceMark('sm', PK[a[0]] ? PK[a[0]][1] : fakePeaks(j), [FC[j % 5], FC[(j + 1) % 5], FC[(j + 2) % 5]])).join('')}</span><span class="cap">${n_(l.ans.length, 'voz', 'voces')} por escuchar</span>` : '<span class="cap">Todavía nadie responde. Te avisamos cuando alguien lo haga.</span>'}</span></button>`).join('')}</div>
   <p class="eyebrow">Otras preguntas para tus amigos</p>
-  <div class="row-btns">${LQ.filter(q => !S.lec.some(l => l.q === q)).map(q => `<button class="idea" data-go="lecnueva" data-p='${JSON.stringify({ q }).replace(/'/g, '&#39;')}'>${esc(q)}</button>`).join('')}</div>
+  <div class="row-btns">${nextIdeas('lq', LQ.filter(q => !S.lec.some(l => l.q === q)), 3).map(q => `<button class="idea" data-go="lecnueva" data-p='${JSON.stringify({ q }).replace(/'/g, '&#39;')}'>${esc(q)}</button>`).join('')}</div>
   <div class="grow"></div>
   <button class="btn btn-a mt3" data-go="lecnueva">${I.mic}Grabar una pregunta</button>` });
-R.lecnueva = ({ q: q0 } = {}) => { const Q = LQ; let q = Q.includes(q0) ? q0 : Q[0];
+R.lecnueva = ({ q: q0 } = {}) => { let q = LQ.includes(q0) ? q0 : null; const Q = [...(q ? [q] : []), ...nextIdeas('lqn', LQ.filter(x => x !== q), q ? 3 : 4)]; q = q || Q[0];
   return { html: `
   ${back('lecturas')}
   <p class="eyebrow" style="margin-top:4px">Elige la pregunta</p>
