@@ -838,6 +838,23 @@ svg{display:block}
 .dest.sp{margin-top:-17px}
 .spo[aria-pressed="true"] b{color:var(--a)}.spo:disabled{opacity:.45}.spo>svg{width:18px;height:18px;fill:none;stroke:var(--a);stroke-width:2.2}
 .btn-2 svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;margin-right:8px;vertical-align:-3px}
+/* Perfil (27/11): el Muelle con peso de protagonista; la racha, una fila discreta */
+.dockhero{position:relative;display:grid;grid-template-columns:1fr auto;gap:18px 12px;width:100%;padding:22px 22px 18px;border-radius:var(--r-m);text-align:left;overflow:hidden;background:radial-gradient(120% 90% at 100% 0%,rgba(255,210,122,.30),rgba(255,210,122,0) 60%),linear-gradient(160deg,#2A2416,#141A20 70%);box-shadow:inset 0 0 0 1px rgba(255,210,122,.28),0 24px 50px -30px rgba(255,190,90,.45)}
+.dockhero:active{transform:scale(.985)}
+.dhart{grid-column:2;grid-row:1;display:flex;align-items:flex-end;gap:2px;height:80px;margin:-8px -6px 0 0}
+.dhart>span{display:block;width:28px;height:68px}.dhart .b2{width:34px;height:80px}.dhart .b3{height:58px}
+.dhart svg{width:100%;height:100%}
+.dhtx{display:contents}
+.dhk{grid-column:1;grid-row:1;align-self:start;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#FFD27A;letter-spacing:.01em;white-space:nowrap}.dhk svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.dhtx b{grid-column:1/-1;margin-top:-30px;font-size:26px;line-height:1.1;letter-spacing:-.03em;font-weight:500;color:var(--fg);text-wrap:balance;max-width:15ch}
+.dhtx small{grid-column:1/-1;margin-top:-8px;font-size:14px;line-height:1.45;color:rgba(244,239,231,.72);max-width:32ch}
+.dhcta{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 14px 0 18px;border-radius:999px;background:linear-gradient(180deg,#FFE2A3,#F5C25E);color:#2A2016;font-weight:500;font-size:15px}
+.dhcta svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
+.streakmini{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 4px;border-bottom:1px solid var(--line);text-align:left;color:var(--fg-2);font-size:14px}
+.streakmini .smn{flex:1}.streakmini .smn b{color:var(--fg);font-weight:500}
+.streakmini .smw{display:flex;gap:5px}.streakmini .smw span{font-size:0;gap:0}.streakmini .smw i{display:block;width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line-2)}
+.streakmini .smw .on i{background:var(--a);box-shadow:none}.streakmini .smw .today i{box-shadow:inset 0 0 0 1.5px var(--a)}
+.streakmini>svg{width:16px;height:16px;fill:none;stroke:var(--fg-3);stroke-width:1.8}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}
