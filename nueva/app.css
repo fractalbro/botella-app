@@ -533,6 +533,15 @@ svg{display:block}
 @keyframes bob{50%{translate:0 -8px}}
 .sheet .rtag{margin:6px 0 0;display:inline-flex}
 @media (prefers-reduced-motion:reduce){.fb,.far i,.sea::before{animation:none}}
+
+/* Mis botellas: respuestas primero (Cesar 27/11) */
+.anscards{display:grid;gap:10px;margin-top:10px}
+.anscard{padding:16px;border-radius:var(--r-m);background:linear-gradient(140deg,color-mix(in oklab,var(--c),transparent 78%),color-mix(in oklab,var(--c),transparent 94%));box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c),transparent 70%);display:grid;gap:12px}
+.awho{margin:0;display:flex;gap:8px;align-items:baseline;font-size:14px;line-height:1.35;color:var(--fg)}
+.awho i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none;transform:translateY(-1px)}
+.anscard .player .pb{background:var(--c);color:#05121F}
+.aact{display:flex;justify-content:flex-end}.aact .chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}
+.mini{padding:12px 14px;border-radius:var(--r-s);background:var(--s1);display:grid;gap:8px}.mini small{font-size:12px;color:var(--fg-3)}
 /* pantallas altas: el contenido se agrupa al centro en vez de dejar un bloque vacío */
 @media (min-height:760px){
   .scr:not(.clear):not(.tabbed):not(.chat):not(.pin)>.grow:empty{flex:0 0 clamp(28px,6vh,64px)}

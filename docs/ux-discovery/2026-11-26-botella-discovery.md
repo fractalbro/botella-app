@@ -42,7 +42,7 @@ Puntaje de oportunidad (importancia vs. satisfacción hoy, [S]): saber qué pasa
 | Lanzar | Graba y desliza | Nervios → alivio | Grabar, escuchar, deslizar para lanzar |
 | Esperar | Sabe que llega a 8 y sigue viajando hasta que alguien responda | Emoción por quién aparecerá | Pantalla "lanzada" con la regla clara [R] |
 | Conversar | Responde con su voz | Cercanía | Chat privado; nombres solo si los dos quieren [R] |
-| Volver | Abre la app al día siguiente | Ganas | Racha, marea de las 21:00, "N botellas te esperan" |
+| Volver | Abre la app al día siguiente | Ganas | Racha, botellas doradas, "N botellas te esperan" |
 
 **Brecha principal:** el paso Esperar → Volver. Ahí se pierde la mayoría.
 
@@ -69,7 +69,7 @@ Puntaje de oportunidad (importancia vs. satisfacción hoy, [S]): saber qué pasa
 |---|---|---|
 | La gente se anima a grabar su voz | [S] 65 % lanza | Mar vacío |
 | 8 + 4 personas bastan para recibir respuesta | [H] | Espera sin respuesta, abandono |
-| La racha y la marea traen de vuelta | [H] | Volver se queda en ~19 % |
+| La racha y las doradas traen de vuelta | [H] | Volver se queda en ~19 % |
 | Sin precios en la beta no asusta | [S] Julio temía cobros | Bajo |
 | Moderación de voz a escala | [H] | Seguridad baja del 93 % |
 

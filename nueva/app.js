@@ -366,7 +366,7 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
   <div class="grow"></div><h1 class="title">Por hoy lanzaste todas.</h1><p class="sub mt1">Mañana tienes 4 más. Si invitas a alguien, te damos una ahora.</p><div class="grow"></div>
   <button class="btn btn-2" data-go="perfil">Invitar a alguien</button>` };
   return { html: `
-  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">${dorada ? 'Dorada · sale a las 21:00' : S.left === 1 ? 'Te queda 1 botella' : `Te quedan ${S.left} botellas`}</span><span style="width:44px"></span></div>
+  <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span class="cap">${dorada ? 'Dorada · sale primero en el mar' : S.left === 1 ? 'Te queda 1 botella' : `Te quedan ${S.left} botellas`}</span><span style="width:44px"></span></div>
   <div class="seg mt1" id="seg">${Object.keys(P).map(k => `<button aria-pressed="${k === kind}">${k}</button>`).join('')}</div>
   <p class="cap mt2" style="margin-bottom:8px">Llega a quienes aman</p>
   <div class="chips" id="tm" role="radiogroup" aria-label="Llega a quienes aman">${S.temas.map(t => `<button class="chip" role="radio" aria-pressed="${t === tema}">${esc(t)}</button>`).join('')}<button class="chip more" id="more">+ Otro tema</button></div>
@@ -534,7 +534,7 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
 
   <div class="list mt3">
     ${row('dock', 'Muelle', 'Botellas especiales, gratis', 'data-go="muelle"')}
-    ${row('tide', 'La marea de las 21:00', 'Botellas doradas de todo Lima', 'data-go="marea"')}
+    ${row('tide', 'Botellas doradas', 'Salen primero en el mar de todos', 'data-go="marea"')}
     ${row('gift', 'Invitar a alguien', 'Los dos reciben una botella extra', 'data-a="inv"')}
     ${row('key', 'Cuenta', 'Tus temas, normas y contraseña', 'data-a="cuenta"')}
   </div>`,
@@ -553,7 +553,7 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
 const SPECIAL = [
   ['color', 'De color', 'Llega solo a quienes aman un tema que eliges', '#FF70A9'],
   ['far', 'Que llega lejos', 'A 20 personas en vez de 8', '#8E8CFF'],
-  ['tide', 'Dorada', 'Sale primera en la marea de las 21:00', '#FFC24B'],
+  ['tide', 'Dorada', 'Sale primero en el mar de todos en cuanto la lanzas', '#FFC24B'],
   ['gift', 'De regalo', 'Para alguien con quien conversas: le das una botella más', '#FFB061']
 ];
 const GLASS = [['Claro', '#CFE9F2'], ['Verde', '#7FD8A0'], ['Ámbar', '#FFB061'], ['Esmerilado', '#B9C6D3']];
@@ -591,17 +591,32 @@ R.muelle = () => ({ cls: 'pin', html: `
 
 // Mis botellas: a cuántas llegó cada una y quién respondió.
 const reachRow = (heard, cls = 'sm') => `<span class="reach ${cls} tint">${Array.from({ length: 8 }, (_, i) => `<i class="${i < heard ? 'heard' : 'on'}"></i>`).join('')}</span>`;
+// Respuestas de ejemplo para tus botellas (voz + quién respondió, sin nombre ni distrito).
+const ANS = [['caro-reply', 'la ciudad', '#FFB061'], ['ivan-reply', 'la música', '#FFC24B'], ['majo-reply', 'la música', '#FF70A9'], ['belen-reply', 'los libros', '#9FE3B0']];
+const ansOf = (x, i) => x.ans ? Array.from({ length: x.ans }, (_, k) => ANS[(i * 2 + k) % ANS.length]) : [];
 R.botellas = () => { const heard = S.sent.reduce((t, x) => t + (x.heard || 0), 0), ans = S.sent.reduce((t, x) => t + (x.ans || 0), 0);
+  const pend = S.sent.flatMap((x, i) => ansOf(x, i).map(a => ({ a, x, i }))).filter(p => !(X.heardAns || []).includes(p.a[0] + p.i));
   return { cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">Mis botellas</h1>
-  ${S.sent.length ? `<div class="facts mt2"><p><b>${S.sent.length}</b><span>${S.sent.length === 1 ? 'lanzada' : 'lanzadas'}</span></p><p><b>${heard}</b><span>personas te escucharon</span></p><p><b>${ans}</b><span>${ans === 1 ? 'te respondió' : 'te respondieron'}</span></p></div>` : ''}
-  <div class="bcards mt3">${S.sent.length ? S.sent.map((x, i) => `<button class="bcard" style="--c:${tc(x.tema)}" data-i="${i}"><span class="mb">${voiceBottle(tc(x.tema))}</span><span class="tx"><small class="btag"><i></i>Tu ${esc(x.kind.toLowerCase())} · ${esc(x.tema)} · ${esc(x.when)}</small><b>${x.idea ? esc(x.idea) : `Una ${esc(x.kind.toLowerCase())} solo con tu voz`}</b>${reachRow(x.heard)}<small>${x.ans ? `<em class="hasans">${n_(x.ans, 'respuesta', 'respuestas')} para escuchar</em>` : x.heard ? `${x.heard} de 8 ya la escucharon` : 'Va en camino a 8 personas'}</small></span></button>`).join('') : `<div class="bempty"><span class="mb">${voiceBottle('#7FD8C9')}</span><p class="sub">Todavía no lanzas ninguna. Graba una pregunta y llega a 8 personas que aman lo mismo que tú.</p></div>`}</div>
+  ${pend.length ? `<p class="eyebrow" style="margin-top:20px">${pend.length === 1 ? 'Te respondieron. Escucha.' : `${pend.length} respuestas por escuchar`}</p>
+  <div class="anscards">${pend.map(({ a: [v, th, c], x, i }) => `<div class="anscard" style="--c:${c}" data-v="${v}${i}"><p class="awho"><i></i>Alguien que ama ${esc(th)} respondió a tu ${esc(x.kind.toLowerCase())}${x.idea ? `: “${esc(x.idea)}”` : ''}</p>${player(v, { real: true })}<div class="aact"><button class="chip sm" data-go="charlas">${I.mic}Responder</button></div></div>`).join('')}</div>` : ''}
+  ${S.sent.length ? `<div class="facts mt3"><p><b>${S.sent.length}</b><span>${S.sent.length === 1 ? 'lanzada' : 'lanzadas'}</span></p><p><b>${heard}</b><span>personas te escucharon</span></p><p><b>${ans}</b><span>${ans === 1 ? 'te respondió' : 'te respondieron'}</span></p></div>` : ''}
+  <p class="eyebrow" style="margin-top:24px">Tus botellas en el mar</p>
+  <div class="bcards">${S.sent.length ? S.sent.map((x, i) => `<button class="bcard" style="--c:${tc(x.tema)}" data-i="${i}"><span class="mb">${voiceBottle(tc(x.tema))}</span><span class="tx"><small class="btag"><i></i>Tu ${esc(x.kind.toLowerCase())} · ${esc(x.tema)} · ${esc(x.when)}</small><b>${x.idea ? esc(x.idea) : `Una ${esc(x.kind.toLowerCase())} solo con tu voz`}</b>${reachRow(x.heard)}<small>${x.ans ? `<em class="hasans">${n_(x.ans, 'respuesta', 'respuestas')}</em> · ` : ''}${x.far ? 'Con empujón: llega a 20 · ' : ''}${x.heard ? `${x.heard} de ${x.far ? 20 : 8} ya la escucharon` : `Va en camino a ${x.far ? 20 : 8} personas`}</small></span></button>`).join('') : `<div class="bempty"><span class="mb">${voiceBottle('#7FD8C9')}</span><p class="sub">Todavía no lanzas ninguna. Graba una pregunta y llega a 8 personas que aman lo mismo que tú.</p></div>`}</div>
   <div class="grow"></div><button class="btn btn-a mt3" data-go="lanzar">${I.mic}Lanzar otra</button>`,
-  bind(el) { $$('[data-i]', el).forEach(b => b.onclick = () => { const x = S.sent[+b.dataset.i]; sheet(`<h2 class="title">Tu ${esc(x.kind.toLowerCase())}</h2><p class="sub">${x.idea ? `“${esc(x.idea)}” · ` : ''}Para quien ama ${esc(AMA[x.tema] || x.tema.toLowerCase())}</p>
-    <div class="facts mt2 mb3"><p><b>8</b><span>personas la recibieron</span></p><p><b>${x.heard}</b><span>ya la escucharon</span></p><p><b>${x.ans || 0}</b><span>${x.ans === 1 ? 'respondió' : 'respondieron'}</span></p></div>
-    ${x.ans ? '' : '<p class="cap mb3">Sigue viajando hasta que alguien te responda.</p>'}
-    ${x.ans ? `<button class="btn btn-a" id="toc">Escuchar ${x.ans === 1 ? 'la respuesta' : `las ${x.ans} respuestas`}</button>` : '<button class="btn btn-2" data-close>Listo</button>'}`, (s, close) => { const t = $('#toc', s); t && (t.onclick = () => { close(); go('charlas'); }); }); }); } }; };
+  bind(el) {
+    $$('.anscard', el).forEach(c => $('.player', c).addEventListener('click', () => { const k = c.dataset.v; X.heardAns = [...new Set([...(X.heardAns || []), k])]; saveX(); }));
+    $$('[data-i]', el).forEach(b => b.onclick = () => { const i = +b.dataset.i, x = S.sent[i], reach = x.far ? 20 : 8, as = ansOf(x, i);
+      sheet(`<p class="btag" style="--c:${tc(x.tema)};margin:6px 0 0"><i></i>Tu ${esc(x.kind.toLowerCase())} · ${esc(x.tema)}</p><h2 class="title mt1">${x.idea ? esc(x.idea) : `Una ${esc(x.kind.toLowerCase())} solo con tu voz`}</h2>
+      <div class="facts mt2"><p><b>${reach}</b><span>personas la recibieron</span></p><p><b>${x.heard}</b><span>ya la escucharon</span></p><p><b>${x.ans || 0}</b><span>${x.ans === 1 ? 'respondió' : 'respondieron'}</span></p></div>
+      ${as.length ? `<div class="row-btns mt2">${as.map(([v, th]) => `<div class="mini"><small>Alguien que ama ${esc(th)}</small>${player(v, { real: true })}</div>`).join('')}</div>` : '<p class="cap mt2">Sigue viajando hasta que alguien te responda.</p>'}
+      <div class="row-btns mt3">${x.far ? '' : `<button class="btn btn-a" id="push">${I.bottle}Empujarla a 20 personas</button>`}<button class="btn btn-q" id="del">Retirarla del mar</button></div>`, (s2, close) => {
+        const p = $('#push', s2); p && (p.onclick = () => { close(); if (X.far > 0) { X.far--; x.far = true; saveX(); go('botellas', { nohash: true }); track('botella_empujada', { tema: x.tema }); toast('Listo. Ahora llega a 20 personas.', tc(x.tema)); } else setTimeout(() => sheet(`<h2 class="title">Te falta una botella que llega lejos</h2><p class="sub">En el muelle te damos una, gratis.</p><div class="row-btns mt3"><button class="btn btn-a" id="gm">Ir al muelle</button><button class="btn btn-q" data-close>Ahora no</button></div>`, (s3, c3) => $('#gm', s3).onclick = () => { c3(); muelleTab = 0; go('muelle'); }), 220); });
+        $('#del', s2).onclick = () => { close(); const was = S.sent.splice(i, 1)[0], mine = S.mine; if (S.mine && S.mine.idea === was.idea && S.mine.tema === was.tema) S.mine = null; saveX(); go('botellas', { nohash: true }); track('botella_retirada', { tema: was.tema });
+          toast('La retiraste del mar. Ya nadie más la recibe.', '#FFE7B0', () => { S.sent.splice(i, 0, was); S.mine = mine; saveX(); go('botellas', { nohash: true }); }); };
+      }); });
+  } }; };
 
 // El mapa de tu voz: los temas con los que conectó.
 R.mapa = () => { const P = MAPA; const tot = P.reduce((a, p) => a + p[1], 0);
@@ -629,15 +644,15 @@ R.bitacora = () => { const n = streak(), done = recToday(), nx = UNLOCK.find(u =
   <p class="eyebrow">Regalos por días seguidos</p>
   <div class="gifts">${UNLOCK.map(([d, t, c]) => `<div class="gft${d <= n ? ' got' : ''}"><span class="art">${bottleSVG(c)}</span><b>${t}</b><small>${d <= n ? 'Ya es tuyo' : `A los ${d} días`}</small></div>`).join('')}</div>` }; };
 
-// La marea de las 21:00: botellas doradas de todo Lima.
-R.marea = () => { const h = +new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour: 'numeric', hour12: false }); const L = ['majo', 'leo', 'belen'];
+// Botellas doradas: salen primero en el mar de todos, en cuanto se lanzan. Sin horarios.
+R.marea = () => { const L = ['majo', 'leo', 'belen'];
   return { cls: 'pin', html: `
   ${back()}
-  <h1 class="title mt1">${h >= 21 ? 'La marea llegó.' : 'La marea de anoche.'}</h1>
-  <p class="sub mt1">Cada noche a las 9 llegan botellas doradas de todo Lima.${h >= 21 ? '' : ` La próxima, en ${Math.max(1, 21 - h)} h.`}</p>
+  <h1 class="title mt1">Botellas doradas</h1>
+  <p class="sub mt1">Una dorada sale primero en el mar de todos en cuanto la lanzas, a la hora que quieras. Estas son las de hoy.</p>
   <div class="row-btns mt3">${L.map(id => { const b = B[id]; return `<button class="gold" data-go="abrir" data-p='{"id":"${id}"}'><span class="art">${bottleSVG('#FFC24B')}</span><span class="tx"><small><i class="orb" style="background:${b.c}"></i>Alguien que ama ${esc(b.theme)}</small><b>${esc(b.q)}</b></span></button>`; }).join('')}</div>
   <div class="grow"></div>
-  <button class="btn btn-2 mt3" id="mine">${I.tide}Que la mía salga en la marea</button>`,
+  <button class="btn btn-2 mt3" id="mine">${I.mic}Lanzar una dorada</button>`,
   bind(el) { $('#mine', el).onclick = () => X.tide > 0 ? go('lanzar', { dorada: true }) : sheet(`<h2 class="title">Necesitas una dorada</h2><p class="sub">En el muelle te damos una, gratis.</p><div class="row-btns mt3"><button class="btn btn-a" id="gm">Ir al muelle</button><button class="btn btn-q" data-close>Ahora no</button></div>`, (s, close) => $('#gm', s).onclick = () => { close(); go('muelle'); }); } }; };
 
 // Salidas en grupo: planes en lugares públicos.
