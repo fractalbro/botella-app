@@ -180,6 +180,39 @@ function check(form) {
   });
   const first = $('[aria-invalid]', form); first && first.focus(); return ok;
 }
+// Foto viva: sobre una imagen fija se animan solo las luces (olas bioluminiscentes, estrellas, brillo de la luna y la luz dentro de la botella).
+// Las posiciones van en fracciones de la imagen; se recalculan con background-size: cover anclado arriba.
+const CINE = {
+  hero: { src: 'img/hero.jpg', w: 864, h: 1536, glow: [0.46, 0.39, 0.13], band: [0.23, 0.37], moon: [0.81, 0.105], stars: 0.2 },
+  abrir: { src: 'img/abrir.jpg', w: 864, h: 1536, glow: [0.44, 0.35, 0.12], band: [0.22, 0.44], moon: [0.81, 0.085], stars: 0.19 },
+  lanzada: { src: 'img/lanzada.jpg', w: 864, h: 1536, glow: [0.385, 0.355, 0.05], band: [0.36, 0.6], bandX: [0.22, 0.6], moon: [0.585, 0.205], stars: 0.22 },
+  web: { src: 'img/hero-cine.jpg', w: 1536, h: 864, glow: [0.72, 0.68, 0.09], band: [0.4, 0.66], moon: [0.84, 0.13], stars: 0.35, pos: 'center' }
+};
+const cineLive = (host, key) => {
+  const C = CINE[key], cv = document.createElement('canvas'), cx = cv.getContext('2d'); cv.className = 'cinecv'; host.appendChild(cv);
+  host.style.backgroundImage = `url(${C.src})`; if (C.pos) host.style.backgroundPosition = C.pos;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches; let raf = 0, P = [], S = [], G = [], boost = 0, flash = 0, W = 0, H = 0, sc = 1, ox = 0, oy = 0;
+  const map = (fx, fy) => [ox + fx * C.w * sc, oy + fy * C.h * sc];
+  const size = () => { const r = Math.min(devicePixelRatio || 1, 2); W = host.clientWidth; H = host.clientHeight; if (!W) return; cv.width = W * r; cv.height = H * r; cx.setTransform(r, 0, 0, r, 0, 0);
+    sc = Math.max(W / C.w, H / C.h); ox = (W - C.w * sc) / 2; oy = C.pos === 'center' ? (H - C.h * sc) / 2 : 0;
+    const bx = C.bandX || [0, 1], rnd = (a, b) => a + Math.random() * (b - a);
+    P = Array.from({ length: Math.round(W * (C.band[1] - C.band[0]) * C.h * sc / 900) + 40 }, () => ({ fx: rnd(bx[0], bx[1]), fy: rnd(C.band[0], C.band[1]), p: Math.random() * 6.3, s: .6 + Math.random() * 1.6, z: .6 + Math.random() * 1.8, d: (Math.random() - .5) * .012 }));
+    S = Array.from({ length: 70 }, () => ({ fx: Math.random(), fy: Math.random() * C.stars, p: Math.random() * 6.3, s: .3 + Math.random() * .9, z: .4 + Math.random() }));
+    G = Array.from({ length: 26 }, () => ({ dx: (Math.random() - .5) * .05, fy: rnd(C.moon[1] + .1, Math.min(C.band[1] + .05, C.moon[1] + .5)), p: Math.random() * 6.3, s: 1 + Math.random() * 2 })); };
+  const dot = (x, y, r, col, a) => { const g = cx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); cx.fillStyle = g; cx.fillRect(x - r, y - r, r * 2, r * 2); };
+  const draw = t => { t /= 1000; cx.clearRect(0, 0, W, H); cx.globalCompositeOperation = 'lighter';
+    for (const q of S) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 6 * .9; if (a < .03) continue; const [x, y] = map(q.fx, q.fy); dot(x, y, 2.2 * q.z, '235,245,255', a); }
+    for (const q of G) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 8 * .8; if (a < .03) continue; const [x, y] = map(C.moon[0] + q.dx * (q.fy - C.moon[1]) * 4, q.fy); dot(x, y, 3, '255,236,200', a); }
+    for (const q of P) { const a = Math.max(0, Math.sin(t * q.s + q.p)) ** 4 * (.55 + boost * .4); if (a < .03) continue; const [x, y] = map(q.fx + Math.sin(t * .4 + q.p) * q.d, q.fy); dot(x, y, 3.2 * q.z, '127,232,214', a); }
+    const [gx, gy] = map(C.glow[0], C.glow[1]), gr = C.glow[2] * C.w * sc, br = .22 + .12 * Math.sin(t * 1.3) + boost * .45 + flash;
+    dot(gx, gy, gr * (1 + boost * .5 + flash * 2), '127,216,201', Math.min(1, br));
+    if (flash > 0) flash = Math.max(0, flash - .012);
+    cx.globalCompositeOperation = 'source-over'; };
+  const loop = t => { if (!document.body.contains(cv)) return; if (host.clientWidth !== W || host.clientHeight !== H) size(); if (W) draw(t); raf = still ? 0 : requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
+  return { boost: v => { boost = v; }, flash: () => { flash = .9; } };
+};
+
 // Bienvenida: una frase, un botón. (La imagen se rehace en estilo cinematográfico cuando llegue la referencia.)
 R.bienvenida = () => ({ cls: 'clear cine', html: `
   <div class="cineimg" aria-hidden="true"></div>
@@ -188,14 +221,16 @@ R.bienvenida = () => ({ cls: 'clear cine', html: `
   <h1 class="display">Te escuchan<br><span class="light">antes de verte.</span></h1>
   <p class="sub mt2 mb3">Graba una pregunta con tu voz y alguien que ama lo mismo que tú te responde.</p>
   <div class="row-btns"><button class="btn btn-a" data-go="abrir" data-p='{"id":"majo","first":true}'>Abrir mi primera botella</button>
-  <button class="btn btn-q" data-go="entrar">Ya tengo cuenta</button></div>` });
+  <button class="btn btn-q" data-go="entrar">Ya tengo cuenta</button></div>`,
+  bind(el) { cineLive($('.cineimg', el), 'hero'); } });
 
 // Los pasos de entrada: los dos primeros ya están hechos cuando llegas a la cuenta (se siente avanzado, porque lo está).
 const ONB = ['Escuchar', 'Responder', 'Tu cuenta', 'Tus temas'];
 const onbBar = now => `<div class="onbp" aria-label="Paso ${now + 1} de ${ONB.length}">${ONB.map((t, i) => `<span class="${i < now ? 'done' : i === now ? 'now' : ''}"><i></i>${i < now ? I.check : ''}${t}</span>`).join('')}</div>`;
 
 // Abrir: mantener para descorchar → papel crema con la voz.
-R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: 'clear', mar: 'open', html: `
+R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: 'clear cine', html: `
+  <div class="cineimg" aria-hidden="true"></div>
   <div class="top"><button class="ib edge" data-go="${first ? 'bienvenida' : 'mar'}" aria-label="Cerrar">${I.x}</button><span class="cap">${esc(b.kind)}</span><span style="width:44px"></span></div>
   <div class="grow center" id="fallback"></div>
   <div id="stage">
@@ -205,15 +240,15 @@ R.abrir = ({ id = 'majo', first = false }) => { const b = B[id]; return { cls: '
     <p class="cap center mt2">Mantén para abrir</p>
   </div>`,
   bind(el) {
-    if (!window.Mar || !Mar.ok) { el.classList.add('flat'); el.style.setProperty('--c', b.c); $('#fallback', el).innerHTML = `<div class="obot"><span class="rip"></span>${voiceBottle(b.c, PK[b.v] && PK[b.v][1])}</div>`; }
+    const live = cineLive($('.cineimg', el), 'abrir');
     const h = $('#hold', el), ring = $('circle', h); let t0 = 0, raf, done = false;
-    const tick = () => { const p = Math.min(1, (performance.now() - t0) / 900); ring.style.strokeDashoffset = 295 * (1 - p); window.Mar && Mar.uncork(p * .7); el.style.setProperty('--u', p.toFixed(3)); if (p >= 1) return open(); raf = requestAnimationFrame(tick); };
+    const tick = () => { const p = Math.min(1, (performance.now() - t0) / 900); ring.style.strokeDashoffset = 295 * (1 - p); live.boost(p); el.style.setProperty('--u', p.toFixed(3)); if (p >= 1) return open(); raf = requestAnimationFrame(tick); };
     const down = e => { if (done) return; e.preventDefault(); t0 = performance.now(); tick(); };
-    const up = () => { if (done) return; cancelAnimationFrame(raf); ring.style.transition = 'stroke-dashoffset .3s'; ring.style.strokeDashoffset = 295; setTimeout(() => ring.style.transition = '', 300); window.Mar && Mar.uncork(0); };
+    const up = () => { if (done) return; cancelAnimationFrame(raf); ring.style.transition = 'stroke-dashoffset .3s'; ring.style.strokeDashoffset = 295; setTimeout(() => ring.style.transition = '', 300); live.boost(0); };
     h.addEventListener('pointerdown', down); h.addEventListener('pointerup', up); h.addEventListener('pointerleave', up);
     h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
     function open() {
-      done = true; track('botella_escuchada', { id, first }); navigator.vibrate && navigator.vibrate(12); el.classList.add('opened'); if (el.classList.contains('flat')) popSound();
+      done = true; track('botella_escuchada', { id, first }); navigator.vibrate && navigator.vibrate(12); el.classList.add('opened'); live.flash(); live.boost(0); popSound();
       let c = .7; const pop = () => { c = Math.min(1, c + .03); window.Mar && Mar.uncork(c); if (c < 1) requestAnimationFrame(pop); }; pop();
       $('#stage', el).innerHTML = `<article class="paper in" style="--c:${b.c}"><p class="who"><i class="orb" style="background:${b.c}"></i>Alguien que ama ${esc(b.theme)} · ${esc(b.kind)}</p><p class="q">${esc(b.q)}</p>${player(b.v)}</article>
         <div class="row-btns mt2"><button class="btn btn-a" id="reply">${I.mic}Responder con mi voz</button><button class="btn btn-q" id="pass">Devolverla al mar</button></div>`;
@@ -452,14 +487,14 @@ R.hoy = () => { const done = store.get('hoy'); const A = [['answer-1', 'el cine'
   bind(el) { if (!done) recUI(el, 'Desliza para enviar', () => { store.set('hoy', 1); go('hoy'); toast('Respuesta enviada'); }); } }; };
 
 // Lanzada: el momento alto. El número de personas que la reciben sube en vivo.
-R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: 'clear', mar: 'away', html: `
+R.lanzada = () => { const t = S.mine ? S.mine.tema : S.temas[0]; return { cls: 'clear cine', html: `
+  <div class="cineimg" aria-hidden="true"></div>
   <div class="grow"></div>
   <h1 class="display center">Va en camino.</h1>
-  <div class="bignum mt3" aria-live="polite"><b id="rb">0</b><span>personas ya la recibieron</span></div>
+  <div class="bignum mt2" aria-live="polite"><b id="rb">0</b><span>personas ya la recibieron</span></div>
   <p class="sub center mt2">Llega a todas las personas que aman ${esc(AMA[t] || t.toLowerCase())}, y sigue llegando a más hasta que alguien te responda.</p>
-  <p class="cap center mt2">Te avisamos apenas alguien responda. Cada respuesta abre una conversación privada.</p>
-  <button class="btn btn-2 mt4" data-go="mar">Volver al mar</button>`,
-  bind(el) { const b = $('#rb', el), goal = 24 + Math.floor(Math.random() * 14); let n = 0; const t0 = (window.Mar && Mar.ok ? 2400 : 400);
+  <button class="btn btn-2 mt3" data-go="mar">Volver al mar</button>`,
+  bind(el) { cineLive($('.cineimg', el), 'lanzada'); const b = $('#rb', el), goal = 24 + Math.floor(Math.random() * 14); let n = 0; const t0 = (window.Mar && Mar.ok ? 2400 : 400);
     setTimeout(() => { const iv = setInterval(() => { if (!document.body.contains(b)) return clearInterval(iv); n += n < goal ? 1 : (Math.random() < .04 ? 1 : 0); b.textContent = n; if (S.mine) { S.mine.reached = n; } }, n < goal ? 70 : 70); setTimeout(() => { if (S.mine) { const m = S.sent[0]; if (m) m.reached = n; saveX(); } }, 4000); }, t0); } }; };
 
 // Conversaciones.
