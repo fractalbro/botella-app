@@ -1283,8 +1283,8 @@ function renderTu() {
       <p class="from" style="margin:4px 0 12px">Es lo primero que escucha quien quiere conocerte. En vez de foto.</p>
       ${LIVE && !(R.me && R.me.intro_voice) ? '<p class="from" style="margin:0">Todavía no la grabas. Con 10 segundos basta.</p>' : voiceRow(LIVE ? R.urls.get(R.me.intro_voice) || '' : (S.presUrl || localStorage.getItem('bp.presurl') || 'answer-1'), C, mmss(pres.secs), 0, 33)}
       <button class="push btn" data-go="presenta" data-p='{"edit":1}' style="margin-top:12px;height:48px;font-size:15px">${ico('mic', INK, '#fff')} Grabar otra vez</button></div>
+    <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle · gratis</span><b>Pide más botellas</b><small>Te quedan ${S.left} para lanzar. Aquí pides paquetes y botellas especiales: doradas, que llegan lejos y de regalo.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ir al Muelle</span></button>
     <button class="push mcard" data-go="mes"><span class="k">Tu ${LIVE ? LS.month : 'noviembre'} en Botella</span><b>${LIVE ? (LS.heard ? `${LS.heard} ${LS.heard === 1 ? 'persona escuchó' : 'personas escucharon'} tu voz este mes` : 'Este mes empieza tu voz: lanza una botella') : '36 personas escucharon tu voz este mes'}</b><span class="cbars">${KEYS.map((k, i) => `<i style="--c:${CAT[k].c};flex:${mix[i]}"></i>`).join('')}</span></button>
-    <button class="push card" data-go="racha" style="margin-top:24px;display:block;padding:16px"><span class="row"><span class="h2" style="flex:1">${LIVE ? (LS.streak ? `${LS.streak} ${LS.streak === 1 ? 'día seguido' : 'días seguidos'} grabando` : 'Graba hoy y empieza tu racha') : '4 días seguidos grabando'}</span><span class="k mute3">Racha</span>${ico('chev', INK)}</span><span class="week">${days.map((d, i) => `<span class="${on[i] ? 'on' : ''}"><i></i>${d}</span>`).join('')}</span></button>
     <div class="sec"><span class="h2">Tus temas</span><button class="k" data-go="temas" data-p='{"edit":1}' style="height:44px;color:var(--sea)">Cambiar</button></div>
     <div class="tchips">${temas.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
     ${LIVE ? '' : `<div class="sec"><span class="h2">Tu voz en Botella</span></div>
@@ -1295,9 +1295,9 @@ function renderTu() {
       ${menuRow(ico('people', INK), 'Salidas en grupo', '3 planes en Lima esta semana', 'salidas')}</div>`}
     <div class="sec"><span class="h2">Más botellas</span></div>
     <div class="box menu">
-      ${menuRow(ico('dock', INK), 'Muelle', 'Botellas especiales, gratis', 'muelle')}
       ${menuRow(`<span style="width:16px;display:block">${bottle('dorada')}</span>`, 'Botellas doradas', 'Salen primero en el mar de todos', 'doradas', '', '#FFF1C2')}
-      ${menuRow(ico('gift', INK), 'Invitar a un amigo', LIVE ? 'Mándale tu enlace para que entre' : 'Los dos reciben una botella más', 'invitar')}</div>
+      ${menuRow(ico('gift', INK), 'Invitar a un amigo', LIVE ? 'Mándale tu enlace para que entre' : 'Los dos reciben una botella más', 'invitar')}
+      ${menuRow(ico('star', INK), 'Racha', LIVE ? (LS.streak ? `${LS.streak} ${LS.streak === 1 ? 'día seguido' : 'días seguidos'} grabando` : 'Graba hoy y empieza') : '4 días seguidos grabando', 'racha')}</div>
     <div class="sec"><span class="h2">Lo que nadie ve</span></div>
     <div class="box priv"><div>${ico('lock', INK)}<span>Tu nombre aparece solo cuando los dos deciden compartirlo.</span></div><div>${ico('lock', INK)}<span>Tu distrito nunca se muestra. A la gente la une un tema en común.</span></div><div>${ico('check', INK)}<span>Tu voz llega tal como la grabas. Nunca se modifica.</span></div></div>
     <div class="box menu" style="margin-top:24px">
@@ -2042,7 +2042,7 @@ function renderLlamadaLive(id) {
 /* ================= NAVEGACIÓN ================= */
 function toast(t, c) { const r = $('#toast-root'); r.innerHTML = `<div class="toast box" role="status">${sprite(['oooo', 'oooo', 'oooo', 'oooo'], { o: c || INK })}${esc(t)}</div>`; clearTimeout(r._t); r._t = setTimeout(() => r.innerHTML = '', 2800); }
 const VIEWS = { bienvenida: renderBienvenida, primera: renderPrimera, cuenta: renderCuenta, presenta: renderPresenta, sobre: renderSobre, temas: renderTemas, entrar: renderEntrar, olvide: renderOlvide, normas: renderNormas,
-  playa: () => { renderBeach(); renderLegend(); renderPlayer(true); $('#hoyc').innerHTML = hoyCard(); $('#invn').textContent = '×' + S.left; $('#bellw').innerHTML = bellBtn(); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, llamada: renderLlamada, tu: renderTu, mes: renderMes,
+  playa: () => { renderBeach(); renderLegend(); renderPlayer(true); $('#hoyc').innerHTML = hoyCard() + `<button class="push card dockc" data-go="muelle" style="margin-top:16px"><span class="tile">${ico('dock', INK)}</span><span class="tx"><small class="k" style="color:#1F5A9E">Muelle · gratis</small><b>Pide más botellas</b><small>Te quedan ${S.left} para lanzar hoy</small></span>${ico('chev', INK)}</button>`; $('#invn').textContent = '×' + S.left; $('#bellw').innerHTML = bellBtn(); }, lanzar: renderLanzar, lanzada: renderLanzada, botellas: renderBotellas, voces: renderVoces, chat: renderChat, llamada: renderLlamada, tu: renderTu, mes: renderMes,
   hoy: renderHoy, respondio: renderRespondio, mar: renderMar, doradas: renderDoradas, plan: renderPlan, reportar: renderReportar,
   muelle: renderMuelle, racha: renderRacha, mapa: renderMapa, dos: renderDos, lecturas: renderLecturas, lectura: renderLectura, lecnueva: renderLecnueva, salidas: renderSalidas, proponer: renderProponer, invitar: renderInvitar,
   avisos: renderAvisos, entrante: renderEntrante, calma: renderCalma, sinred: renderSinred, mic: renderMic, ajustes: renderAjustes, bloqueados: renderBloqueados, borrar: renderBorrar };
