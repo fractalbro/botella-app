@@ -60,6 +60,8 @@ const I = {
   dock: '<svg viewBox="0 0 24 24"><path d="M3 18h18M5 18V9l7-5 7 5v9M9 18v-5h6v5"/></svg>',
   knob: '<svg viewBox="0 0 48 48"><path d="M10 18h18c3 0 5 3 8 3h4v6h-4c-3 0-5 3-8 3H10a4 4 0 0 1-4-4v-4a4 4 0 0 1 4-4Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><rect x="11" y="21.5" width="13" height="5" rx="2.5" fill="currentColor" opacity=".5"/></svg>'
 };
+I.reel = '<svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 7.5h6"/></svg>';
+I.sea = '<svg viewBox="0 0 24 24"><path d="M5 8.5v-2l1-1.5v-1h2v1l1 1.5v2M15 13.5v-2l1-1.5v-1h2v1l1 1.5v2M6 8.5h2v3H6zM16 13.5h2v3h-2z"/><path d="M3 19c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1"/></svg>';
 let bn = 0;
 const bottleSVG = c => { const id = 'g' + (bn++); return `<svg class="bt" viewBox="0 0 120 50" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".55"/><stop offset=".55" stop-color="${c}" stop-opacity=".14"/><stop offset="1" stop-color="${c}" stop-opacity=".38"/></linearGradient></defs><path d="M14 6h52c8 0 12 6 18 10h20v18H84c-6 4-10 10-18 10H14C8 44 4 40 4 34V16C4 10 8 6 14 6Z" fill="url(#${id})" stroke="${c}" stroke-opacity=".85" stroke-width="1.6"/><rect x="14" y="17.5" width="46" height="15" rx="7.5" fill="#F3E6C8"/><rect x="104" y="18" width="10" height="14" rx="2" fill="#8A5A33"/><path d="M15 11.5h44" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/></svg>`; };
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -303,7 +305,7 @@ const voiceBottle = (c, peaks) => { const id = 'vb' + (vb++), pk = (peaks || [])
 R.mar = () => {
   // El mar nunca se queda vacío: si ya escuchaste todas, llegan otras voces de ejemplo.
   if (!S.shore.length) { const all = Object.keys(B); let nx = all.filter(id => !S.convs[id]); if (!nx.length) nx = all; S.shore = nx.slice(0, 3); save(); setTimeout(() => toast(S.shore.length === 1 ? 'Llegó una botella nueva' : `Llegaron ${S.shore.length} botellas nuevas`), 400); }
-  const reels = S.shore.map(id => ({ t: 'voz', id, b: B[id] }));
+  const reels = S.shore.map(id => ({ t: 'voz', id, b: B[id] })); const mode = store.get('marv', 'uno');
   reels.push({ t: 'hoy' }); if (S.mine) reels.push({ t: 'mine' });
   const nv = S.shore.length;
   const reel = (r, i) => {
@@ -329,11 +331,28 @@ R.mar = () => {
           <div class="ract"><button class="btn rbtn" data-go="botellas">${I.bottle}Ver mis botellas</button></div></div></section>`;
   };
   return { cls: 'tabbed reels', html: `
-  <div class="rtop"><span class="wm">botella</span><span class="top-r">${nv ? `<span class="count" id="cnt">${nv === 1 ? '1 botella nueva' : `1 de ${nv} botellas`}</span>` : ''}<button class="me-pill" data-go="perfil">${voiceMark()}Tú</button></span></div>
+  <div class="rtop"><span class="wm">botella</span><span class="top-r"><span class="vmode" role="group" aria-label="Cómo ver el mar"><button data-m="uno" aria-pressed="${mode === 'uno'}" aria-label="Una a una">${I.reel}</button><button data-m="todo" aria-pressed="${mode === 'todo'}" aria-label="Todo el mar">${I.sea}</button></span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></span></div>
+  <div class="sea" id="sea" aria-label="Todas las botellas del mar">
+    <div class="seahead"><h2>${nv === 1 ? '1 botella nueva' : `${nv} botellas nuevas`} flotando</h2><p>Toca una para ver qué dice.</p></div>
+    <div class="far" aria-hidden="true">${Array.from({ length: 14 }, (_, k) => `<i style="--x:${(k * 37 + 11) % 92 + 4}%;--y:${(k * 53 + 7) % 70 + 18}%;--r:${(k * 47) % 60 - 30}deg;--d:${(k % 5) * -.9}s"></i>`).join('')}</div>
+    ${(() => { const spots = [[24, 30], [70, 25], [40, 52], [78, 56], [20, 74], [60, 80], [44, 22]]; const all = [...S.shore.map(id => ({ k: 'voz', id, b: B[id] })), { k: 'hoy' }, ...(S.mine ? [{ k: 'mine' }] : [])];
+      return all.slice(0, spots.length).map((x, i) => { const [px, py] = spots[i], rot = [-14, 10, -6, 16, -10, 8, -4][i];
+        if (x.k === 'hoy') return `<button class="fb moon" style="--x:${px}%;--y:${py};--d:${i * -.7}s" data-k="hoy"><span class="art"><span class="mmoon"></span></span><span class="lbl"><i style="background:#FFE7B0"></i>Pregunta de hoy</span></button>`;
+        if (x.k === 'mine') return `<button class="fb mine" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${tc(S.mine.tema)}" data-k="mine"><span class="art">${voiceBottle(tc(S.mine.tema))}</span><span class="lbl"><i></i>La tuya</span></button>`;
+        return `<button class="fb" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${x.b.c}" data-k="voz" data-id="${x.id}" data-i="${i}"><span class="art">${voiceBottle(x.b.c, PK[x.b.v] && PK[x.b.v][1])}</span><span class="lbl"><i></i>${esc(x.b.tag)}</span></button>`; }).join(''); })()}
+  </div>
   <div class="feed" id="feed">${nv ? '' : `<section class="reel calm" style="--c:#7FD8C9"><div class="cover">${voiceBottle('#7FD8C9')}</div><div class="rtx"><h2 class="rq">Vienen más botellas en camino.</h2><p class="rmeta">Ya escuchaste todas las de ahora. Mientras llegan otras, lanza la tuya: llega a 8 personas.</p><div class="ract"><button class="btn rbtn" data-go="lanzar">${I.mic}Grabar mi botella</button></div></div></section>`}${reels.map(reel).join('')}</div>
   <div class="dots" id="dots">${reels.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`,
   bind(el) {
     const f = $('#feed', el), cnt = $('#cnt', el), ds = $$('#dots i', el), rs = $$('.reel', el);
+    const setMode = m => { el.classList.toggle('mapmode', m === 'todo'); $$('.vmode button', el).forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); store.set('marv', m); };
+    setMode(mode); $$('.vmode button', el).forEach(b => b.onclick = () => { setMode(b.dataset.m); track('mar_vista', { vista: b.dataset.m }); navigator.vibrate && navigator.vibrate(6); });
+    const toReel = i => { setMode('uno'); f.scrollTo({ top: i * f.clientHeight, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' }); };
+    $$('.fb', el).forEach(b => b.onclick = () => { const k = b.dataset.k;
+      if (k === 'hoy') return toReel(nv);
+      if (k === 'mine') return toReel(nv + 1);
+      const id = b.dataset.id, x = B[id], i = +b.dataset.i, secs = (PK[x.v] || [12])[0];
+      sheet(`<p class="rtag" style="--c:${x.c}"><i></i>${esc(x.tag)} · ${esc(x.kind)}</p><h2 class="title mt2">${esc(x.q)}</h2><p class="sub mt1">Alguien que ama ${esc(x.theme)} · ${fmt(secs)}</p><div class="row-btns"><button class="btn btn-a" id="go"><span class="pl">${I.play}</span>Escuchar</button><button class="btn btn-q" id="one">Verla en grande</button></div>`, (s2, close) => { $('#go', s2).onclick = () => { close(); go('abrir', { id }); }; $('#one', s2).onclick = () => { close(); toReel(i); }; }); });
     rs[0] && rs[0].classList.add('on');
     let last = 0; f.addEventListener('scroll', () => { const i = Math.round(f.scrollTop / f.clientHeight); if (i === last) return; last = i;
       rs.forEach((r, k) => r.classList.toggle('on', k === i)); ds.forEach((d, k) => d.classList.toggle('on', k === i));
