@@ -92,3 +92,11 @@ Margen lateral de 20 px, columna máxima de 430 px. Entre bloques, 18 a 30 px. E
 - La voz nunca se modifica.
 - La botella sigue llegando a más gente hasta que alguien responde. No se habla de esperas ni de horas.
 - No se usa "lacre".
+
+## Ajustes de la evaluación (27/11)
+- **Nombres de las botellas:** un nombre corto en toda la app (Confesiones, Anécdotas, Misterios, Desahogos, Aventuras). La descripción larga solo aparece al elegir.
+- **Peso visual:** el bisel y la sombra de tinta de 4 px son para lo que se toca. La información usa borde de 2 px y sombra suave `#D9CDB4`.
+- **Color:** el color es solo el tipo de botella. Los temas van en tinta neutra.
+- **Letra pixel:** solo en etiquetas de 1 o 2 palabras. Si una etiqueta tiene más de 18 letras, pasa a la letra de lectura (clase `.lg`).
+- **Movimiento:** cambiar de pestaña es instantáneo. El barrido de bloques queda para los momentos grandes.
+- **Pantallas bajas (≤ 700 px):** la Playa se compacta para que Escuchar y Responder queden sobre la barra. En Lanzar, al terminar de grabar se ocultan los colores y se ven la botella y el botón.

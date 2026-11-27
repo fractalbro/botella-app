@@ -472,5 +472,6 @@ set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000008');
 select tide();
 select pg_temp.ok((select featured from shore() limit 1), 'la dorada llegó a otra orilla y sale primero');
+select pg_temp.ok((select topic from shore() limit 1) = 'Música', 'la botella trae su tema, que decide su color');
 reset role;
 \echo 'TODO OK'

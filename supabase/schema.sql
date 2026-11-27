@@ -535,11 +535,13 @@ drop function if exists public.shore();
 create or replace function public.shore() returns table (
   id uuid, status text, arrived timestamptz, kind text, body text, voice text, voice_secs int, voice_peaks jsonb, place text, btype text,
   featured boolean, glass text, sample boolean, expires_at timestamptz, tide_day date,
-  voice2 text, voice2_secs int, voice2_peaks jsonb, place2 text
+  voice2 text, voice2_secs int, voice2_peaks jsonb, place2 text, topic text
 ) language sql stable security definer set search_path = public as $$
   select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, vibe(auth.uid(), b.owner), b.btype, b.featured, b.glass, p.is_sample,
     case when d.status = 'waiting' then coalesce(d.expires_at, d.created_at + interval '24 hours') else d.opened_at + interval '48 hours' end,
-    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (case when b.voice2 is not null then vibe(auth.uid(), b.partner) end)
+    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (case when b.voice2 is not null then vibe(auth.uid(), b.partner) end),
+    -- El tema decide el color de la botella en las dos versiones: el que eligió quien la lanzó o el que tienen en común.
+    coalesce(b.target_topic, vibe(auth.uid(), b.owner))
   from deliveries d join bottles b on b.id = d.bottle_id join profiles p on p.id = b.owner
   where d.to_id = auth.uid() and d.status in ('waiting','opened') and not b.hidden and not blocked(b.owner, auth.uid())
     and (d.status <> 'waiting' or coalesce(d.expires_at, d.created_at + interval '24 hours') > now())
@@ -1532,3 +1534,21 @@ insert into public.outings(id, owner, name, place, starts_at, cap, descr, weekly
 insert into public.outings(id, owner, name, place, starts_at, cap, descr, weekly) values ('5a5a0e00-0000-4000-8000-000000000002', '5a5a0000-0000-4000-8000-000000000003', 'Preguntas frente al mar', 'Bajada de Baños, Barranco', ((date_trunc('week', now() at time zone 'America/Lima') + interval '4 days' + time '18:00') at time zone 'America/Lima'), 8, 'Cada uno trae una pregunta que lanzó esta semana y la contestamos en voz alta.', true) on conflict (id) do update set name = excluded.name, place = excluded.place, descr = excluded.descr;
 insert into public.outings(id, owner, name, place, starts_at, cap, descr, weekly) values ('5a5a0e00-0000-4000-8000-000000000003', '5a5a0000-0000-4000-8000-000000000002', 'Cine y conversa', 'Un cine en Lince, luego café', ((date_trunc('week', now() at time zone 'America/Lima') + interval '2 days' + time '20:00') at time zone 'America/Lima'), 6, 'Vemos la película de la semana y la comentamos a la salida.', true) on conflict (id) do update set name = excluded.name, place = excluded.place, descr = excluded.descr;
 -- ========== FIN PERSONAS DE EJEMPLO ==========
+
+-- ========== MEDICIÓN (27/11) ==========
+-- Eventos de uso del pixel para medir el recorrido (destapar, responder, crear cuenta, grabar, lanzar).
+-- La app solo puede escribir; nadie los lee por la API (se consultan desde el panel de Supabase).
+create table if not exists public.events (
+  id bigserial primary key,
+  user_id uuid default auth.uid() references auth.users on delete cascade,
+  name text not null check (length(name) between 1 and 40),
+  props jsonb check (props is null or length(props::text) < 2000),
+  app text not null default 'pixel' check (length(app) <= 20),
+  at timestamptz not null default now()
+);
+alter table public.events enable row level security;
+drop policy if exists events_insert on public.events;
+create policy events_insert on public.events for insert to anon, authenticated with check (user_id is null or user_id = auth.uid());
+grant insert on public.events to anon, authenticated;
+grant usage on sequence public.events_id_seq to anon, authenticated;
+create index if not exists events_name_at on public.events (name, at);
