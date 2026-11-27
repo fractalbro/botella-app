@@ -7,6 +7,17 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.__bip = e; });
 const track = (ev, props = {}) => { try { const k = 'bn.ev', a = JSON.parse(localStorage.getItem(k) || '[]'); a.push({ ev, t: Date.now(), ...props }); localStorage.setItem(k, JSON.stringify(a.slice(-500))); } catch (e) {} };
 (() => { try { const l = +localStorage.getItem('bn.last') || 0, now = Date.now(); track('sesion_iniciada', { dias_desde_ultima: l ? Math.floor((now - l) / 864e5) : null }); localStorage.setItem('bn.last', now); } catch (e) {} })();
+const AUD = (() => { const mem = {}; let dbp;
+  const db = () => dbp || (dbp = new Promise((ok, ko) => { try { const q = indexedDB.open('bn-voz', 1); q.onupgradeneeded = () => q.result.createObjectStore('a'); q.onsuccess = () => ok(q.result); q.onerror = () => ko(q.error); } catch (e) { ko(e); } }));
+  const tx = (m, f) => db().then(d => new Promise((ok, ko) => { const t = d.transaction('a', m), r = f(t.objectStore('a')); t.oncomplete = () => ok(r && r.result); t.onerror = () => ko(t.error); }));
+  return {
+    async put(blob) { const k = 'idb:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); mem[k] = URL.createObjectURL(blob); try { await tx('readwrite', st => st.put(blob, k)); } catch (e) {} return k; },
+    now: k => mem[k] || null,
+    async url(k) { if (mem[k]) return mem[k]; try { const b = await tx('readonly', st => st.get(k)); if (b) return mem[k] = URL.createObjectURL(b); } catch (e) {} return null; },
+    // al abrir la app se cargan todas, para que el play responda al instante
+    warm() { return tx('readonly', st => st.getAllKeys()).then(ks => Promise.all((ks || []).map(k => this.url(k)))).catch(() => {}); },
+    wipe() { try { indexedDB.deleteDatabase('bn-voz'); } catch (e) {} } }; })();
+AUD.warm();
 const store = { get(k, d) { try { const v = localStorage.getItem('bn.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('bn.' + k, JSON.stringify(v)); } catch (e) {} } };
 
 // ---------- datos de ejemplo (voces sintéticas) ----------
@@ -88,9 +99,11 @@ document.addEventListener('click', e => {
   const p = e.target.closest('.player'); if (!p) return;
   if (curP === p) { stopAudio(); return; }
   stopAudio(); curP = p; p.querySelector('.pb').innerHTML = I.pause; const s = +p.dataset.s; const v = p.dataset.v;
-  const src = v.startsWith('blob:') ? v : (PK[v] && (!v.startsWith('answer') || p.dataset.r) ? `v/${v}.mp3` : null);
+  const src = v.startsWith('blob:') || v.startsWith('idb:') ? v : (PK[v] && (!v.startsWith('answer') || p.dataset.r) ? `v/${v}.mp3` : null);
   const fake = () => { if (curP !== p || fakeT) return; let t = 0; fakeT = setInterval(() => { t += .1; paint(p, t / s); p.querySelector('.t').textContent = fmt(t); if (t >= s) stopAudio(); }, 100); };
-  if (src && !window.__noAudio) { audio.src = src; audio.play().catch(e => { if (e && e.name !== 'AbortError') fake(); }); audio.onerror = fake; audio.ontimeupdate = () => { if (curP !== p) return; paint(p, audio.currentTime / (audio.duration || s)); p.querySelector('.t').textContent = fmt(audio.currentTime); }; audio.onended = () => curP === p && stopAudio(); }
+  const real = src && src.startsWith('idb:') ? AUD.now(src) : src;
+  if (src && !real && !window.__noAudio) AUD.url(src).then(u => { if (curP !== p) return; if (!u) return fake(); audio.src = u; audio.play().catch(fake); });
+  else if (real && !window.__noAudio) { audio.src = real; audio.play().catch(e => { if (e && e.name !== 'AbortError') fake(); }); audio.onerror = fake; audio.ontimeupdate = () => { if (curP !== p) return; paint(p, audio.currentTime / (audio.duration || s)); p.querySelector('.t').textContent = fmt(audio.currentTime); }; audio.onended = () => curP === p && stopAudio(); }
   else fake();
 });
 
@@ -105,7 +118,7 @@ function recorder(onTick) {
         const loop = () => { an.getByteFrequencyData(d); onTick((performance.now() - t0) / 1000, [...d].slice(2, 30).map(x => x / 255)); raf = requestAnimationFrame(loop); }; loop();
       } catch (e) { sim = true; const loop = () => { const t = (performance.now() - t0) / 1000; onTick(t, Array.from({ length: 28 }, (_, i) => .2 + Math.abs(Math.sin(t * 6 + i * .8)) * (.4 + .4 * Math.sin(t * 2.3 + i)))); raf = requestAnimationFrame(loop); }; loop(); }
     },
-    stop() { cancelAnimationFrame(raf); const secs = (performance.now() - t0) / 1000; return new Promise(res => { if (sim || !mr) return res({ secs, url: null }); mr.onstop = () => { url = URL.createObjectURL(new Blob(chunks, { type: mr.mimeType })); stream.getTracks().forEach(t => t.stop()); res({ secs, url }); }; mr.stop(); }); }
+    stop() { cancelAnimationFrame(raf); const secs = (performance.now() - t0) / 1000; return new Promise(res => { if (sim || !mr) return res({ secs, url: null }); mr.onstop = async () => { stream.getTracks().forEach(t => t.stop()); url = await AUD.put(new Blob(chunks, { type: mr.mimeType })); res({ secs, url }); }; mr.stop(); }); }
   };
 }
 
@@ -135,14 +148,14 @@ function sheet(html, bind) {
 let tt; function toast(t, c = '#7FD8C9', undo) { $$('.toast').forEach(x => x.remove()); const d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.innerHTML = `<i class="orb" style="background:${c}"></i>${esc(t)}${undo ? '<button class="undo">Deshacer</button>' : ''}`; document.body.append(d); const bye = () => { d.classList.add('out'); setTimeout(() => d.remove(), 220); }; if (undo) $('.undo', d).onclick = () => { clearTimeout(tt); bye(); undo(); }; clearTimeout(tt); tt = setTimeout(bye, undo ? 5000 : 2600); }
 
 // ---------- navegación ----------
-const R = {}; let cur = null, curName = '';
+const R = {}; let cur = null, curName = '', curPar = {};
 const TABBED = { mar: 'mar', charlas: 'charlas' };
 function go(name, p = {}) {
   if (!R[name]) name = 'mar';
   stopAudio(); const old = cur;
   const el = document.createElement('section'); el.className = 'scr enter'; el.dataset.s = name;
   const r = R[name](p); el.innerHTML = r.html; if (r.cls) el.className += ' ' + r.cls;
-  app.append(el); cur = el; curName = name;
+  app.append(el); cur = el; curName = name; curPar = p; window.__snap = null;
   if (old) { old.classList.add('leave'); setTimeout(() => old.remove(), 190); }
   tabs.hidden = !TABBED[name]; $$('.tab', tabs).forEach(t => t.dataset.go === TABBED[name] ? t.setAttribute('aria-current', 'page') : t.removeAttribute('aria-current'));
   $('#unread').hidden = !Object.values(S.convs).some(c => c.unread);
@@ -150,7 +163,10 @@ function go(name, p = {}) {
   $$('[data-go]', el).forEach(b => b.addEventListener('click', () => go(b.dataset.go, b.dataset.p ? JSON.parse(b.dataset.p) : {})));
   r.bind && r.bind(el);
   if (location.hash.slice(1) !== name && !p.nohash) history.replaceState(null, '', '#' + name);
+  const { nohash, ...keep } = p; store.set('route', { n: name, p: keep });
 }
+const snap = () => { try { window.__snap && window.__snap(); } catch (e) {} };
+addEventListener('pagehide', snap); document.addEventListener('visibilitychange', () => document.hidden && snap());
 $$('.tab', tabs).forEach(t => t.onclick = () => go(t.dataset.go));
 
 
@@ -287,7 +303,7 @@ R.grabar = ({ id = 'majo', first = false }) => { const b = B[id]; return { html:
   bind(el) {
     $('#x', el).onclick = () => go(first ? 'abrir' : 'mar', { id, first });
     recUI(el, 'Desliza para enviar', r => { track('respuesta_enviada', { id, first, segundos: r.secs });
-      if (first) { store.set('pending', { id, secs: r.secs }); go('cuenta'); }
+      if (first) { store.set('pending', { id, secs: r.secs, url: r.url }); go('cuenta'); }
       else { S.shore = S.shore.filter(x => x !== id); S.convs[id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: r.url || 'mine', s: r.secs }] }; save(); go('mar'); toast('Enviada. Te avisamos cuando responda.'); }
     });
   } }; };
@@ -311,13 +327,15 @@ function recUI(el, slideLabel, onSend, hintTop = '') {
     const mic = $('#mic', el); const acc = new Array(28).fill(0); let cnt = 0; rec = recorder((t, lv) => { lv.forEach((v, i) => { if (i < 28) acc[i] += v; }); cnt++; el._pk = acc.map(x => x / Math.max(cnt, 1)); $('#rtm', el).textContent = fmt(t); bars.forEach((b, i) => b.style.height = (4 + (lv[i] || 0) * 40) + 'px'); const a = lv.length ? lv.reduce((x, y) => x + y, 0) / lv.length : 0; mic.style.setProperty('--lv', (1 + Math.min(a, 1) * .14).toFixed(3)); if (t >= 60) stop(); });
     $('#mic', el).onclick = stop; await rec.start();
   };
+  const dk = el.dataset.s + JSON.stringify(curPar);
   const stop = async () => {
-    if (!rec) return; const r = await rec.stop(); rec = null; const secs = Math.max(3, Math.round(r.secs));
+    if (!rec) return; const r = await rec.stop(); rec = null; show(r); };
+  const show = r => { const secs = Math.max(3, Math.round(r.secs)); store.set('draft', { k: dk, url: r.url, secs: r.secs });
     rw.innerHTML = `<div style="width:100%;padding:14px 16px;border-radius:22px;background:rgba(244,239,231,.06)">${player(r.url || 'mine' + secs, { mine: true, secs })}</div><button class="btn btn-q" id="again">Grabar otra vez</button>`;
-    $('#again', el).onclick = idle;
-    after.innerHTML = `<div class="slide" id="sl"></div>`; slider($('#sl', el), slideLabel, () => { const pk = el._pk; if (pk && Math.max(...pk) > .02) { const m = Math.max(...pk); store.set('mypk', pk.map(x => +(x / m).toFixed(2))); } markDay(); onSend({ url: r.url, secs }); });
+    $('#again', el).onclick = () => { store.set('draft', null); idle(); };
+    after.innerHTML = `<div class="slide" id="sl"></div>`; slider($('#sl', el), slideLabel, () => { const pk = el._pk; if (pk && Math.max(...pk) > .02) { const m = Math.max(...pk); store.set('mypk', pk.map(x => +(x / m).toFixed(2))); } markDay(); store.set('draft', null); onSend({ url: r.url, secs }); });
   };
-  idle();
+  const dr = store.get('draft'); if (dr && dr.k === dk && (!dr.url || !dr.url.startsWith('blob:'))) show(dr); else idle();
 }
 
 // Cuenta: una pregunta a la vez, en letra grande y sin cajas. Tu respuesta espera guardada.
@@ -336,7 +354,7 @@ R.cuenta = ({ i = 0 } = {}) => { const p = store.get('pending'), f = CQ[i], v = 
   </form>
   <div class="grow"></div>
   <button class="btn btn-a" form="f">${last ? 'Crear mi cuenta' : 'Seguir'}</button>`,
-  bind(el) { const fm = $('#f', el), inp = $('#ci', el); fm.noValidate = true; setTimeout(() => inp.focus({ preventScroll: true }), 350);
+  bind(el) { const fm = $('#f', el), inp = $('#ci', el); fm.noValidate = true; setTimeout(() => inp.focus({ preventScroll: true }), 350); if (f.t !== 'password') inp.oninput = () => store.set('cta', { ...store.get('cta', {}), [f.k]: inp.value });
     $('#bk', el).onclick = () => i ? go('cuenta', { i: i - 1 }) : go(p ? 'grabar' : 'bienvenida', p ? { id: p.id, first: true } : {});
     fm.onsubmit = e => { e.preventDefault(); if (!check(fm)) return; const nv = { ...v, [f.k]: inp.value.trim() }; if (f.t !== 'password') store.set('cta', nv);
       if (!last) return go('cuenta', { i: i + 1 }); S.name = nv.n; save(); store.set('cta', null); track('cuenta_creada', { con_respuesta: !!p }); go('temas'); }; } }; };
@@ -352,7 +370,7 @@ R.temas = ({ edit = false } = {}) => { const T = TEMAS; return { html: `
   <div class="grow"></div>
   <button class="btn btn-a mt3" id="go" ${edit ? '' : 'disabled style="opacity:.4"'}>${edit ? 'Guardar' : 'Entrar al mar'}</button>`,
   bind(el) { const sel = () => $$('.chip[aria-pressed=true]', el).length; $$('.chip', el).forEach(c => c.onclick = () => { if (c.getAttribute('aria-pressed') === 'false' && sel() >= 3) return; c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'false'); const ok = sel() === 3; $('#go', el).disabled = !ok; $('#go', el).style.opacity = ok ? 1 : .4; });
-    $('#go', el).onclick = () => { S.temas = $$('.chip[aria-pressed=true]', el).map(c => c.textContent); save(); if (edit) { go('perfil'); toast('Temas guardados'); return; } const p = store.get('pending'); if (p) { const b = B[p.id]; S.shore = S.shore.filter(x => x !== p.id); S.convs[p.id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: 'answer-1', s: p.secs }] }; store.set('pending', null); save(); } store.set('onb', 1); track('temas_elegidos', { temas: S.temas }); go('mar'); toast(p ? 'Tu voz va en camino. Te avisamos cuando te responda.' : 'Bienvenido al mar.'); }; } }; };
+    $('#go', el).onclick = () => { S.temas = $$('.chip[aria-pressed=true]', el).map(c => c.textContent); save(); if (edit) { go('perfil'); toast('Temas guardados'); return; } const p = store.get('pending'); if (p) { const b = B[p.id]; S.shore = S.shore.filter(x => x !== p.id); S.convs[p.id] = { stage: 0, when: 'Ahora', msgs: [{ f: 'them', v: b.v }, { f: 'me', v: p.url || 'answer-1', s: p.secs }] }; store.set('pending', null); save(); } store.set('onb', 1); track('temas_elegidos', { temas: S.temas }); go('mar'); toast(p ? 'Tu voz va en camino. Te avisamos cuando te responda.' : 'Bienvenido al mar.'); }; } }; };
 
 // Entrar y recuperar contraseña.
 R.entrar = () => ({ html: `
@@ -467,7 +485,7 @@ const seaWater = cv => {
   run.reset = () => { G = []; }; return run; };
 
 // Lanzar: tipo → grabar (lo principal) → ideas solo si las pides → deslizar.
-R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema = S.temas[0]; const P = { Pregunta: '¿Qué quieres preguntar?', Confesión: '¿Qué quieres confesar?', Historia: '¿Qué quieres contar?' };
+R.lanzar = ({ idea = '', dorada = false } = {}) => { const LZ = store.get('lzd', {}); let kind = LZ.kind || 'Pregunta', tema = S.temas.includes(LZ.tema) ? LZ.tema : S.temas[0]; idea = idea || LZ.idea || ''; const P = { Pregunta: '¿Qué quieres preguntar?', Confesión: '¿Qué quieres confesar?', Historia: '¿Qué quieres contar?' };
   if (S.left <= 0) return { html: `
   <div class="top"><button class="ib edge" data-go="mar" aria-label="Cerrar">${I.x}</button><span></span><span style="width:44px"></span></div>
   <div class="grow"></div><h1 class="title">Por hoy lanzaste todas.</h1><p class="sub mt1">Mañana tienes 4 más. En el Muelle te damos más ahora mismo, gratis.</p><div class="grow"></div>
@@ -500,7 +518,8 @@ R.lanzar = ({ idea = '', dorada = false } = {}) => { let kind = 'Pregunta', tema
       const fill = () => { const l = $('#il', s); l.classList.remove('in'); void l.offsetWidth; l.innerHTML = nextIdeas(kind, IDEAS[kind]).map(t => `<button class="idea">${esc(t)}</button>`).join(''); l.classList.add('in');
         $$('.idea', l).forEach(b => b.onclick = () => { const p = $('#idea', el); p.hidden = false; p.textContent = b.textContent; close(); }); };
       fill(); $('#imore', s).onclick = () => { fill(); navigator.vibrate && navigator.vibrate(5); }; });
-    recUI(el, 'Desliza al mar', () => { const p = $('#idea', el), dor = kindSp === 'tide', far = kindSp === 'far'; if (dor) X.tide = Math.max(0, X.tide - 1); else if (far) X.far = Math.max(0, X.far - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada: dor, far }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); track('botella_lanzada', { dorada: dor, far, tema }); go('lanzada'); });
+    window.__snap = () => { const q = $('#idea', el); store.set('lzd', { kind, tema, idea: q && !q.hidden ? q.textContent : '' }); }; 
+    recUI(el, 'Desliza al mar', r => { store.set('lzd', null); const p = $('#idea', el), dor = kindSp === 'tide', far = kindSp === 'far'; if (dor) X.tide = Math.max(0, X.tide - 1); else if (far) X.far = Math.max(0, X.far - 1); else S.left = Math.max(0, S.left - 1); S.mine = { kind, tema, idea: p.hidden ? '' : p.textContent, heard: 0, dorada: dor, far, url: r.url, secs: r.secs }; S.sent.unshift({ ...S.mine, ans: 0, when: 'Ahora' }); saveX(); track('botella_lanzada', { dorada: dor, far, tema }); go('lanzada'); });
     // El tema se elige al final, junto al envío: primero hablas, después decides a quién le llega.
     new MutationObserver(() => { const sl = $('#sl', el); ideas.hidden = !!sl;
       if (sl && !$('.dest', el)) { sl.insertAdjacentHTML('beforebegin', `<button class="dest" id="dest"><span class="dl">Llega a quienes aman</span><span class="dv"><i></i><b id="tmn">${esc(tema)}</b></span><span class="dc">Cambiar</span></button>`); $('#dest', el).onclick = openTema; sl.insertAdjacentHTML('beforebegin', `<button class="dest sp" id="spb"><span class="dl">Botella</span><span class="dv"><b id="spv">${spName(kindSp)}</b></span><span class="dc">${X.far + X.tide ? `Tienes ${X.far + X.tide} especiales` : 'Cambiar'}</span></button>`); $('#spb', el).onclick = openSp; } }).observe($('#after', el), { childList: true });
@@ -735,7 +754,7 @@ R.perfil = () => { const n = streak(), done = recToday(), cs = myColors(), pk = 
             toast(k === 'pausa' ? (set.pausa ? 'En pausa. No te llegan botellas nuevas.' : 'Listo. Vuelven a llegarte botellas.') : (set.avisos ? 'Avisos activados' : 'Avisos apagados')); });
           wire(); $$('[data-a]', s).forEach(b => b.onclick = () => { const k = b.dataset.a; if (k === 'rules') return acts.rules(); close(); setTimeout(acts[k], 210); }); }); },
       inst: () => sheet(`<h2 class="title">Botella en tu inicio</h2><p class="sub">Se abre como una app, a pantalla completa y sin la barra del navegador.</p><ol class="dsteps mt2"><li><b>1</b>En iPhone, toca Compartir en Safari. En Android, abre el menú de Chrome.</li><li><b>2</b>Elige “Agregar a inicio”.</li><li><b>3</b>Abre Botella desde el ícono nuevo.</li></ol><div class="row-btns mt3">${window.__bip ? '<button class="btn btn-a" id="ins">Instalar ahora</button>' : ''}<button class="btn btn-q" data-close>Listo</button></div>`, (s, close) => $('#ins', s) && ($('#ins', s).onclick = () => { close(); window.__bip.prompt(); window.__bip = null; })),
-      del: () => sheet(`<h2 class="title">¿Borrar tu cuenta?</h2><p class="sub">Se borran tu voz, tus botellas y tus conversaciones. No se puede deshacer.</p><div class="row-btns mt3"><button class="btn btn-2 danger" id="bye">Borrar para siempre</button><button class="btn btn-q" data-close>Me quedo</button></div>`, (sh, close) => $('#bye', sh).onclick = () => { close(); track('cuenta_borrada', { dias_de_uso: DAYS.length }); Object.keys(localStorage).filter(k => k.startsWith('bn.') && k !== 'bn.ev').forEach(k => localStorage.removeItem(k)); location.hash = ''; location.reload(); }),
+      del: () => sheet(`<h2 class="title">¿Borrar tu cuenta?</h2><p class="sub">Se borran tu voz, tus botellas y tus conversaciones. No se puede deshacer.</p><div class="row-btns mt3"><button class="btn btn-2 danger" id="bye">Borrar para siempre</button><button class="btn btn-q" data-close>Me quedo</button></div>`, (sh, close) => $('#bye', sh).onclick = () => { close(); track('cuenta_borrada', { dias_de_uso: DAYS.length }); Object.keys(localStorage).filter(k => k.startsWith('bn.') && k !== 'bn.ev').forEach(k => localStorage.removeItem(k)); AUD.wipe(); location.hash = ''; location.reload(); }),
       fb: () => sheet(`<h2 class="title">¿Qué tal Botella?</h2><p class="sub">Lo que te gusta, lo que te confunde o lo que te falta.</p><div class="chips mt2" id="fbm">${['Me encanta', 'Me confunde algo', 'Me falta gente'].map(t => `<button class="chip" aria-pressed="false">${t}</button>`).join('')}</div><textarea class="inp mt2" id="fbt" rows="3" placeholder="Escribe aquí (opcional)" style="height:auto;padding-top:12px;resize:none"></textarea><div class="row-btns mt2"><button class="btn btn-a" id="fbs">Enviar</button></div>`, (sh, close) => { $$('#fbm .chip', sh).forEach(c => c.onclick = () => $$('#fbm .chip', sh).forEach(x => x.setAttribute('aria-pressed', x === c))); $('#fbs', sh).onclick = () => { const m = $('#fbm [aria-pressed=true]', sh); track('comentario', { animo: m ? m.textContent : null, texto: $('#fbt', sh).value.slice(0, 500) }); close(); toast('Gracias por contarnos.'); }; }),
       pw: () => go('olvide'), temas: () => go('temas', { edit: true }), out: () => sheet(`<h2 class="title">¿Cerrar sesión?</h2><p class="sub">Tus botellas y conversaciones te esperan cuando vuelvas a entrar.</p><div class="row-btns mt3"><button class="btn btn-2" id="bye">Cerrar sesión</button><button class="btn btn-q" data-close>Seguir aquí</button></div>`, (sh, close) => $('#bye', sh).onclick = () => { close(); store.set('onb', 0); go('bienvenida'); })
     };
@@ -928,7 +947,7 @@ R.dos = () => { const d = S.duo; return d ? { html: `
   bind(el) { recUI(el, 'Desliza para invitar', r => { S.duo = { url: r.url, secs: r.secs, friend: false }; saveX(); go('dos'); toast('Enlace copiado. Mándaselo a tu amigo.'); }); } }; };
 
 // ---------- arranque ----------
-const start = () => { const h = location.hash.slice(1); go(R[h] ? h : (store.get('onb') ? 'mar' : 'bienvenida')); };
+const start = () => { const h = location.hash.slice(1), rt = store.get('route'); go(R[h] ? h : (store.get('onb') ? 'mar' : 'bienvenida'), rt && rt.n === h ? rt.p : {}); };
 if (window.Mar) start(); else { let started = false; const s = () => { if (!started) { started = true; start(); } }; addEventListener('mar-ready', s, { once: true }); setTimeout(() => { if (!window.Mar) document.documentElement.classList.add("no3d"); s(); }, 2500); }
 addEventListener('hashchange', () => { const h = location.hash.slice(1); if (R[h] && h !== curName) go(h, { nohash: true }); });
 window.__go = go;
