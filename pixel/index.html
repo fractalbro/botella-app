@@ -542,6 +542,8 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   #v-playa .from{font-size:12px}
   #v-playa .ctrls .play,#v-playa .ctrls .resp{height:48px}#v-playa .ctrls .play{width:48px}
 }
+@media (max-width:360px){#v-playa .ctrls{gap:8px}#v-playa .ctrls .resp{font-size:14px;letter-spacing:.02em;padding:0 8px}
+}
 @media (max-height:600px){#v-playa .beach{height:128px}#v-playa .q{font-size:15px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}}
 .invm .plus,.leftc .plus{display:grid;place-items:center;width:20px;height:20px;background:var(--sea);color:#fff;border:2px solid var(--ink);border-radius:4px;font:700 14px/1 var(--px)}
 
@@ -883,7 +885,7 @@ function renderCuenta({ i = 0 } = {}) {
     <p class="why" id="why" aria-live="polite"></p>
     <button class="push btn blue" id="cn">${i < n - 1 ? 'Seguir' : 'Crear mi cuenta'}</button>`;
   const fi = q('#fi'), ok = () => { const x = fi.value.trim(); return Q.type === 'email' ? /.+@.+\..+/.test(x) : Q.type === 'number' ? +x >= 18 && +x < 100 && okBox : Q.type === 'password' ? x.length >= 8 : Q.k === 'codigo' ? x.length >= 4 : x.length > 1; };
-  const why = () => { const x = fi.value.trim(); if (Q.k === 'edad') return !x ? 'Escribe tu edad para seguir.' : +x < 18 ? 'Botella es solo para mayores de 18.' : !okBox ? 'Marca la casilla para crear tu cuenta.' : ''; if (Q.type === 'password') return x && x.length < 8 ? `Faltan ${8 - x.length} ${8 - x.length === 1 ? 'letra' : 'letras'}.` : ''; if (Q.type === 'email') return x && !ok() ? 'Revisa que el correo esté completo.' : ''; return ''; };
+  const why = () => { const x = fi.value.trim(); if (Q.k === 'edad') return !x ? 'Escribe tu edad para seguir.' : +x < 18 ? 'Botella es solo para mayores de 18.' : !okBox ? 'Marca la casilla para seguir.' : ''; if (Q.type === 'password') return x && x.length < 8 ? `Faltan ${8 - x.length} ${8 - x.length === 1 ? 'letra' : 'letras'}.` : ''; if (Q.type === 'email') return x && !ok() ? 'Revisa que el correo esté completo.' : ''; return ''; };
   const upd = () => { q('#cn').disabled = !ok(); q('#why').textContent = q('#cn').disabled ? why() : ''; }; upd(); fi.oninput = upd;
   if (q('#gg')) q('#gg').onclick = async () => { const undo = busyBtn(q('#gg'), 'Abriendo Google…'); ev('google'); const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/pixel/#sobre' } }); if (error) { undo(); toast(errMsg(error), '#D63434'); } };
   if (q('#eye')) q('#eye').onclick = () => { const sh = fi.type === 'password'; fi.type = sh ? 'text' : 'password'; q('#eye').textContent = sh ? 'Ocultar contraseña' : 'Mostrar contraseña'; fi.focus(); };
