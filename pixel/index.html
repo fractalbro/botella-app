@@ -35,6 +35,8 @@ svg.px,.px svg{shape-rendering:crispEdges;image-rendering:pixelated;image-render
 .view{display:none}
 .view.on{display:block}
 .view.full.on{display:flex;flex-direction:column;min-height:calc(100vh - var(--safe-t) - var(--safe-b) - 40px)}
+@supports (height:100svh){.view.full.on{min-height:calc(100svh - var(--safe-t) - var(--safe-b) - 40px)}}
+#v-bienvenida .sp{flex:0 0 24px}
 
 /* ---------- bloques: borde grueso, bisel interno de pantalla CRT y sombra sólida ---------- */
 .box{background:var(--paper);border:3px solid var(--ink);box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #E6DAC0,4px 4px 0 var(--ink)}
@@ -328,7 +330,16 @@ button.mrow:active{background:#F7EFDF}
 .expand{position:absolute;right:8px;bottom:8px;width:36px;height:36px;z-index:3;background:var(--paper);border-width:2px;box-shadow:2px 2px 0 var(--ink)}.expand svg{width:14px}
 #beach{cursor:zoom-in}
 .seg{display:flex;gap:8px;margin:-8px 0 20px}.seg button{flex:1;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--ink);background:var(--paper);box-shadow:2px 2px 0 var(--ink);font:700 14px/1 var(--sans);border-radius:var(--r-s)}.seg button svg{width:14px}.seg button[aria-selected=true]{background:var(--ink);color:#fff}
-.beach.big{height:clamp(220px,40svh,420px)}.beach.big .stage{top:calc(50% + 12px)}
+.beach.big{height:clamp(240px,52svh,560px)}
+#v-mar.mapv .seg{margin-bottom:12px}#v-mar.mapv .top{margin-bottom:12px}#v-mar.mapv .legend{margin-top:12px;padding-bottom:0}
+.player.mini{margin-top:12px;padding:12px;display:grid;gap:10px}
+.player.mini .mq{display:flex;gap:10px;align-items:flex-start;min-width:0}.player.mini .mq .dot{margin-top:6px;flex:none}
+.player.mini .mtx{min-width:0;flex:1}.player.mini .mtx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:700 15px/1.3 var(--sans);letter-spacing:-.01em}
+.player.mini .mtx small{display:block;margin-top:2px;font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player.mini .mctl{display:flex;align-items:center;gap:6px;min-width:0}.player.mini .mctl .sq{width:40px;height:40px}.player.mini .mctl .sq svg{width:16px;height:16px}
+.player.mini .mctl .play{background:var(--cb,var(--c));color:var(--on,#fff)}
+.player.mini .wavebox{flex:1;margin:0 0 0 4px;gap:6px;min-width:0}.player.mini .wavebox svg{height:24px;min-width:0}.player.mini .wavebox .num{font-size:15px;min-width:34px}
+.player.mini .resp{height:36px;padding:0 10px;font-size:11px;flex:none;width:auto}.beach.big .stage{top:calc(50% + 12px)}
 .seeall{position:absolute;right:8px;top:8px;display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;background:var(--paper);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);font:600 13px/1 var(--px);z-index:3}
 .seeall::after{content:"";position:absolute;inset:-8px}
 .seeall svg{width:6px}
@@ -795,6 +806,7 @@ function renderBienvenida() {
     <p class="mute" style="margin:12px 0 24px;font-size:16px;max-width:34ch">Graba una pregunta con tu voz y alguien que ama lo mismo que tú te responde.</p>
     <button class="push btn blue" id="first">Abrir mi primera botella</button>
     <button class="link" data-go="entrar">Ya tengo cuenta</button>`;
+  fitHero();
   $('#first').onclick = () => uncork(WB[0], () => go('primera', { i: 0 }), 'Alguien que ama el cine te dejó una botella');
 }
 const QCODE = { k: 'codigo', q: 'Tu código de invitación', ph: 'BOTELLA-01', h: 'Por ahora se entra con invitación. Te lo pasa quien te invitó.', type: 'text', ac: 'off' };
@@ -1027,7 +1039,10 @@ function renderPlayer(anim) {
   if (!b) { el.removeAttribute('style'); el.innerHTML = `<p class="q" style="margin-top:0">El mar está tranquilo.</p><p class="from">Te avisamos cuando llegue una botella. Mientras, lanza la tuya.</p><button class="push btn blue" data-go="lanzar" style="margin-top:16px">${ico('mic', '#fff', '#2477C4')} Lanzar una botella</button>`; return; }
   S.sel = b.id; const C = CAT[b.cat]; el.setAttribute('style', cvars(C));
   el.classList.remove('pop'); if (anim) { void el.offsetWidth; el.classList.add('pop'); }
-  el.innerHTML = `<div class="row"><span class="badge">${ico(b.cat === 'roja' ? 'heart' : 'star', C.on)}${C.n}</span><span class="sp"></span><span class="from">${b.ago}</span></div>
+  if (k) el.classList.add('mini'); else el.classList.remove('mini');
+  el.innerHTML = k ? `<div class="mq"><i class="dot" style="background:var(--c)"></i><span class="mtx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span><button class="push btn sm resp" id="resp${k}">Responder</button></div>
+    <div class="mctl"><button class="push sq" id="prev${k}" aria-label="Botella anterior">${ico('prev')}</button><button class="push sq play" id="pp${k}" aria-label="Escuchar">${ico('play', C.on)}</button><button class="push sq" id="next${k}" aria-label="Botella siguiente">${ico('next')}</button>
+      <div class="wavebox" id="wb${k}">${wave(b.wv, C.c, 0, 6)}<span class="num" id="wt${k}">${mmss(b.t)}</span></div></div>` : `<div class="row"><span class="badge">${ico(b.cat === 'roja' ? 'heart' : 'star', C.on)}${C.n}</span><span class="sp"></span><span class="from">${b.ago}</span></div>
     <p class="q">${qq(b.q)}</p><p class="from">${esc(b.who)}</p>
     <div class="wavebox" id="wb${k}">${wave(b.wv, C.c, 0)}<span class="num" id="wt${k}">${mmss(b.t)}</span></div>
     <div class="ctrls">
@@ -1038,8 +1053,8 @@ function renderPlayer(anim) {
     </div>`;
   const start = () => {
     E('pp').innerHTML = ico('pause', C.on);
-    play(b, (p, cur) => { E('wb').firstElementChild.outerHTML = wave(b.wv, C.c, p, 9, true, C.h); E('wt').textContent = mmss(cur); }, () => {
-      E('pp').innerHTML = ico('play', C.on); E('wb').firstElementChild.outerHTML = wave(b.wv, C.c, 1);
+    play(b, (p, cur) => { E('wb').firstElementChild.outerHTML = wave(b.wv, C.c, p, k ? 6 : 9, true, C.h); E('wt').textContent = mmss(cur); }, () => {
+      E('pp').innerHTML = ico('play', C.on); E('wb').firstElementChild.outerHTML = wave(b.wv, C.c, 1, k ? 6 : 9);
     });
   };
   E('pp').onclick = () => {
@@ -1541,6 +1556,19 @@ function renderRespondio({ cat = 'roja', i = 0 } = {}) {
     <button class="link" data-go="botellas">Después</button>`;
   setTimeout(() => { if (cur !== 'respondio') return; const [x, y] = center(v.querySelector('.ob')); pop(); burst(x, y, [C.c, C.h, '#FFC93C', '#fff'], 64); }, RM ? 0 : 380);
 }
+// la orilla grande llena lo que queda de pantalla sobre los filtros y el reproductor mini
+function fitShore() {
+  const bz = $('#beach2'); if (!bz || cur !== 'mar') return;
+  const top = bz.getBoundingClientRect().top + scrollY, rest = $('#legend2').offsetHeight + $('#player2').offsetHeight + 12 + 12 + 16;
+  bz.style.height = Math.max(240, Math.min(560, innerHeight - top - rest)) + 'px';
+}
+addEventListener('resize', () => { fitShore(); fitHero(); });
+// la escena de la bienvenida ocupa el alto libre, sin dejar un hueco entre la isla y el título
+function fitHero() {
+  const v = $('#v-bienvenida'), h = v && v.querySelector('.hero'); if (!h || cur !== 'bienvenida') return;
+  let rest = 0; for (let n = h.nextElementSibling; n; n = n.nextElementSibling) { const cs = getComputedStyle(n); rest += n.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom); }
+  h.style.height = Math.max(200, Math.min(520, innerHeight - (h.getBoundingClientRect().top + scrollY) - rest - 32)) + 'px';
+}
 function renderMar(p = {}) {
   if (p.v) S.marV = p.v; const mv = S.marV || 'mapa', v = $('#v-mar');
   const groups = KEYS.map(k => [k, BOT.filter(b => b.cat === k)]).filter(g => g[1].length);
@@ -1553,7 +1581,7 @@ function renderMar(p = {}) {
     <button class="push card gold" data-go="doradas" style="margin-top:24px;${cvars(CAT.dorada)}"><span class="tile">${bottle('dorada')}</span><span class="tx"><b>Botellas doradas</b><small>Salen primero en el mar de todos</small></span>${ico('chev', INK)}</button>
     ${groups.map(([k, l]) => `<div class="sec"><span class="h2 row" style="gap:8px"><i class="dot" style="background:${CAT[k].c}"></i>${CAT[k].g}</span><span class="k mute3">${l.length}</span></div>
       <div class="cards">${l.map(b => `<button class="card push" style="${cvars(CAT[k])}" data-pick="${b.id}"><span class="tile">${bottle(k)}</span><span class="tx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span>${S.heard.includes(b.id) ? '' : '<span class="new">Nueva</span>'}</button>`).join('')}</div>`).join('')}`);
-  if (mv === 'mapa') { renderBeach(); renderLegend(); renderPlayer(true); }
+  if (mv === 'mapa') { renderBeach(); renderLegend(); renderPlayer(true); fitShore(); }
   v.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { if (b.dataset.mv === mv) return; stop(); S.marV = b.dataset.mv; renderMar(); });
   v.querySelectorAll('[data-pick]').forEach(el => el.onclick = () => { S.sel = el.dataset.pick; S.filt = null; S.marV = 'mapa'; renderMar(); scrollTo(0, 0); });
 }
@@ -2274,7 +2302,7 @@ addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h !
 const h0 = location.hash.slice(1);
 const booted = LIVE ? liveBoot().catch(e => { console.error(e); show('bienvenida', {}); }) : (show(VIEWS[h0] ? h0 : (store.get('onb', false) ? 'playa' : 'bienvenida'), {}), null);
 const ready = (document.fonts && document.fonts.ready) || Promise.resolve();
-Promise.all([ready, booted, new Promise(r => setTimeout(r, RM ? 0 : 700))]).then(() => { const l = $('#loader'); wipe(() => l.remove()); });
+Promise.all([ready, booted, new Promise(r => setTimeout(r, RM ? 0 : 700))]).then(() => { fitHero(); fitShore(); const l = $('#loader'); wipe(() => l.remove()); });
 }
 </script>
 </body>
