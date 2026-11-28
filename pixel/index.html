@@ -35,6 +35,8 @@ svg.px,.px svg{shape-rendering:crispEdges;image-rendering:pixelated;image-render
 .view{display:none}
 .view.on{display:block}
 .view.full.on{display:flex;flex-direction:column;min-height:calc(100vh - var(--safe-t) - var(--safe-b) - 40px)}
+@supports (height:100svh){.view.full.on{min-height:calc(100svh - var(--safe-t) - var(--safe-b) - 40px)}}
+#v-bienvenida .sp{flex:0 0 24px}
 
 /* ---------- bloques: borde grueso, bisel interno de pantalla CRT y sombra sólida ---------- */
 .box{background:var(--paper);border:3px solid var(--ink);box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #E6DAC0,4px 4px 0 var(--ink)}
@@ -161,8 +163,8 @@ svg.px,.px svg{shape-rendering:crispEdges;image-rendering:pixelated;image-render
 .shelf{position:relative;display:flex;justify-content:space-between;align-items:flex-end;padding:24px 12px 12px;margin-top:24px;background:linear-gradient(180deg,transparent 68%,var(--sand) 68%)}
 .pick{position:relative;padding:4px;transition:transform .2s var(--spring);min-width:44px}
 .pick svg{width:36px;height:auto;margin:0 auto}
-.pick[aria-pressed=true]{transform:translateY(-12px)}
-.pick[aria-pressed=true]::after{content:"";position:absolute;left:50%;top:-12px;width:8px;height:8px;margin-left:-4px;background:var(--c);box-shadow:0 0 0 2px var(--ink);animation:wave .8s steps(2) infinite}
+.pick[aria-checked=true]{transform:translateY(-12px)}
+.pick[aria-checked=true]::after{content:"";position:absolute;left:50%;top:-12px;width:8px;height:8px;margin-left:-4px;background:var(--c);box-shadow:0 0 0 2px var(--ink);animation:wave .8s steps(2) infinite}
 .catname{margin-top:16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .catname b{font:700 16px/1.2 var(--sans)}
 .catname span{font-size:13px;color:var(--ink-3)}
@@ -325,6 +327,19 @@ button.mrow:active{background:#F7EFDF}
 .vrow .sq{width:44px;height:44px}
 .vrow .vw svg{flex:1;height:28px}
 .vrow .vl{font:22px/1 var(--num)}
+.expand{position:absolute;right:8px;bottom:8px;width:36px;height:36px;z-index:3;background:var(--paper);border-width:2px;box-shadow:2px 2px 0 var(--ink)}.expand svg{width:14px}
+#beach{cursor:zoom-in}
+.seg{display:flex;gap:8px;margin:-8px 0 20px}.seg button{flex:1;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--ink);background:var(--paper);box-shadow:2px 2px 0 var(--ink);font:700 14px/1 var(--sans);border-radius:var(--r-s)}.seg button svg{width:14px}.seg button[aria-selected=true]{background:var(--ink);color:#fff}
+.beach.big{height:clamp(240px,52svh,560px)}
+#v-mar.mapv .seg{margin-bottom:12px}#v-mar.mapv .top{margin-bottom:12px}#v-mar.mapv .legend{margin-top:12px;padding-bottom:0}
+.player.mini{margin-top:12px;padding:12px;display:grid;gap:10px}
+.player.mini .mq{display:flex;gap:10px;align-items:flex-start;min-width:0}.player.mini .mq .dot{margin-top:6px;flex:none}
+.player.mini .mtx{min-width:0;flex:1}.player.mini .mtx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:700 15px/1.3 var(--sans);letter-spacing:-.01em}
+.player.mini .mtx small{display:block;margin-top:2px;font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player.mini .mctl{display:flex;align-items:center;gap:6px;min-width:0}.player.mini .mctl .sq{width:40px;height:40px}.player.mini .mctl .sq svg{width:16px;height:16px}
+.player.mini .mctl .play{background:var(--cb,var(--c));color:var(--on,#fff)}
+.player.mini .wavebox{flex:1;margin:0 0 0 4px;gap:6px;min-width:0}.player.mini .wavebox svg{height:24px;min-width:0}.player.mini .wavebox .num{font-size:15px;min-width:34px}
+.player.mini .resp{height:36px;padding:0 10px;font-size:11px;flex:none;width:auto}.beach.big .stage{top:calc(50% + 12px)}
 .seeall{position:absolute;right:8px;top:8px;display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;background:var(--paper);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);font:600 13px/1 var(--px);z-index:3}
 .seeall::after{content:"";position:absolute;inset:-8px}
 .seeall svg{width:6px}
@@ -367,6 +382,9 @@ button.mrow:active{background:#F7EFDF}
 .spc b{font:700 15px/1.24 var(--sans)}.spc small{font-size:13px;color:var(--ink-2);line-height:1.36}
 .spc.lock b,.spc.lock small{color:var(--ink-3)}
 .envio{width:100%;display:flex;flex-direction:column;gap:8px;padding:12px 16px 14px;margin-top:16px}
+.envio.mini{flex-direction:row;align-items:center;gap:12px;text-align:left;padding:10px 12px 10px 16px;margin-top:12px}
+.envio.mini .tx{flex:1;display:grid;gap:4px}.envio.mini b{font:700 15px/1.2 var(--sans)}
+.envio.mini .chg{font:700 14px/1 var(--sans);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;color:var(--ink-2)}
 .echips{display:flex;flex-wrap:wrap;gap:8px}
 .echips .chip{height:36px;padding:0 10px;font-size:12px}
 .echips .chip.off{opacity:.5}
@@ -512,6 +530,93 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   .recz{margin:24px 0 16px}.pad{height:200px}.hero{height:208px;margin-top:12px}.ask{margin-top:32px}.orb,.orb.big{width:176px;height:176px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ================= mejoras de la evaluación (27/11) ================= */
+/* lanzar: al terminar de grabar, la botella para deslizar y el botón quedan a la vista */
+#v-lanzar.ready2 .shelf,#v-lanzar.ready2 .catname{display:none}
+#v-lanzar.ready2 .top{margin-bottom:12px}
+#v-lanzar.ready2 .recz{margin:16px 0 0;gap:12px}
+#v-lanzar.ready2 .pad{height:196px}
+.catline{display:flex;gap:8px;align-items:center;align-self:flex-start;margin:0;font:700 14px/1 var(--sans);color:var(--ink-2)}
+.catline .dot{background:var(--c)}
+#v-lanzar .ready .wavebox .btn.sm{flex:none;width:auto}
+@media (max-height:600px){#v-lanzar.ready2 .pad{height:148px}#v-lanzar.ready2 .hint{flex-direction:row;justify-content:center}#v-lanzar.ready2 .toss{width:56px;margin-left:-28px;bottom:28px}#v-lanzar.ready2 .toss svg{width:56px}#v-lanzar.ready2 .recz{margin-top:12px}#v-lanzar.ready2 .h1{font-size:24px}}
+
+/* la información pesa menos que lo que se toca: borde fino y sombra suave; el bisel queda para los botones */
+.box{border-width:2px;box-shadow:3px 3px 0 #D9CDB4}
+.nav.box{border-width:3px;box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #E6DAC0,4px 4px 0 var(--ink)}
+.toast.box{border-width:3px;box-shadow:4px 4px 0 var(--ink)}
+.say.box{box-shadow:none}
+.stats>div+div{border-color:var(--line)}
+
+/* botón desactivado: se ve en pausa, no roto, y debajo se dice qué falta */
+.push[disabled]{opacity:1;background:#ECE5D7!important;color:#8C8698!important;border-color:#B9AE98;--hl:#F7F2E8;--k:#DCD2BF;
+  box-shadow:inset 2px 2px 0 var(--hl),inset -2px -2px 0 var(--k),3px 3px 0 #C9BDA6}
+.why{min-height:20px;margin:0 0 12px;font-size:14px;color:var(--ink-2);text-align:center}
+
+/* los avisos aparecen debajo del botón Volver */
+.toast{top:calc(var(--safe-t) + 76px)}
+
+/* barra de abajo en pantallas angostas: etiquetas que no chocan */
+@media (max-width:360px){.nav{grid-template-columns:1fr 1fr 72px 1fr 1fr}.nb{font-size:10px;letter-spacing:0;gap:6px}.launch{width:64px;height:64px}.hud .wm{font-size:13px}}
+
+/* Playa: el mar casi cuadrado, como una ventana al mar (pedido de Cesar 27/11) */
+#v-playa .beach{height:auto;aspect-ratio:20/17;max-height:56svh}
+/* Playa compacta en pantallas bajas: Escuchar y Responder quedan sobre la barra */
+@media (max-height:700px){
+  #v-playa .player{margin-top:8px}
+  #v-playa .from{font-size:12px}
+  #v-playa .ctrls .play,#v-playa .ctrls .resp{height:48px}#v-playa .ctrls .play{width:48px}
+}
+@media (max-width:360px){#v-playa .ctrls{gap:8px}#v-playa .ctrls .resp{font-size:14px;letter-spacing:.02em;padding:0 8px}
+}
+@media (max-height:600px){#v-playa .q{font-size:15px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}}
+.invm .plus,.leftc .plus{display:grid;place-items:center;width:20px;height:20px;background:var(--sea);color:#fff;border:2px solid var(--ink);border-radius:4px;font:700 14px/1 var(--px)}
+
+/* filtros y toques de 44 px */
+.legend .chip{height:44px}
+.sw{position:relative}.sw::after{content:"";position:absolute;inset:-8px -4px}
+
+/* temas en tinta neutra: el color queda solo para el tipo de botella */
+#v-temas .chip i{display:none}
+#v-temas .tgrid .chip[aria-pressed=true]{background:var(--ink);color:#fff}
+.chip[aria-checked=true]{background:var(--ink);color:#fff}
+
+/* conversación: nombre completo y caja de responder con fondo propio */
+.chead small{display:block}
+.chead b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.dock{background:linear-gradient(rgba(250,246,238,0),var(--bg) 24px);margin:0 calc(-1*var(--pad));padding:24px var(--pad) 0;z-index:5}
+.presb{margin:0 0 16px;align-self:stretch}.presb .tile{background:#E6F3FF}
+
+/* Mis botellas: un dato por fila */
+.stats{grid-template-columns:1fr}
+.stats>div{display:flex;align-items:baseline;gap:12px;padding:12px 16px}
+.stats>div+div{border-left:0;border-top:2px dashed var(--line)}
+.stats .num{font-size:32px;min-width:48px}
+.stats small{margin:0;font-size:15px}
+
+/* voces de ejemplo */
+.eg{margin:4px 0 0;font-size:13px;color:var(--ink-3)}
+.egt{display:inline-block;justify-self:start;margin-top:4px;padding:3px 6px;border:2px dashed var(--ink-3);border-radius:6px;font:600 12px/1 var(--px);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+
+/* cuenta */
+.tbox{width:32px;height:32px}.tick{min-height:48px;align-items:center}
+.normas-l{margin:4px 0 0 44px;text-align:left}
+.eye{margin:8px 0 0;text-align:left}
+.field.em{font-size:clamp(20px,6vw,24px);letter-spacing:-.02em}
+.have{font:600 12px/1 var(--px);text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)}
+
+/* llamada: la forma de la voz, sin cuadro */
+.orb .core.voice{background:none;border:0;box-shadow:none;width:160px}
+.orb .core.voice svg{width:128px;height:48px}
+
+/* contraste */
+.new{background:var(--ink)!important;color:#fff!important}
+.mcard .k{color:#fff}
+
+/* la letra pixel queda para etiquetas cortas; las frases largas van en la letra de lectura */
+.btn.lg{font:700 16px/1.2 var(--sans);text-transform:none;letter-spacing:-.01em}
+.k.lg{font-family:var(--sans);font-weight:700;letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -522,8 +627,8 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
   <section class="view full" id="v-temas" aria-label="Tus temas"></section>
   <section class="view" id="v-playa" aria-label="Playa">
     <header class="hud">
-      <div style="flex:1"><div class="wm" id="wm" aria-label="Botella"></div><div class="tag-l">Voces que llegan a tu orilla</div></div>
-      <button class="push invm" data-go="muelle" aria-label="Te quedan botellas hoy. Pide más en el Muelle"><span id="invb"></span><span class="num" id="invn">×4</span><span class="mlab">Muelle</span></button>
+      <div style="flex:1"><div class="wm" id="wm" aria-label="Botella"></div><div class="tag-l">Voces de gente que ama lo mismo que tú</div></div>
+      <button class="push invm" data-go="muelle" aria-label="Te quedan botellas hoy. Pide más en el Muelle"><span id="invb"></span><span class="num" id="invn">×4</span><span class="plus" aria-hidden="true">+</span></button>
       <span id="bellw"></span>
     </header>
     <div class="beach box" id="beach"></div>
@@ -557,11 +662,11 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
 {
 /* ================= SISTEMA: las cinco botellas ================= */
 const CAT = {
-  roja:    { n:'Confesión', g:'Confesiones y corazón', d:'Secretos, confesiones y amor', t:'#D63434', c:'#E03B3B', k:'#9E2133', h:'#FF9A8F', on:'#fff' },
-  azul:    { t:'#2477C4', n:'Anécdota',  g:'Anécdotas y rumores',   d:'Historias del día a día y el chisme del día', c:'#368DDB', k:'#1F5A9E', h:'#9ED6FF', on:'#fff' },
-  morada:  { n:'Misterio',  g:'Misterios y noches',    d:'Suspenso, miedo y secretos de madrugada', c:'#7E49AA', k:'#4E2A75', h:'#CDA6F0', on:'#fff' },
-  verde:   { t:'#21854F', n:'Desahogo',  g:'Desahogos y consejos',  d:'Reflexiones, días difíciles y apoyo', c:'#2BA967', k:'#18744A', h:'#97EBB4', on:'#fff' },
-  amarilla:{ n:'Aventura',  g:'Aventuras y locuras',   d:'Viajes y anécdotas para contar siempre', c:'#FF8C2B', k:'#B85A12', h:'#FFD58A', on:'#181425' }
+  roja:    { n:'Confesiones', g:'Confesiones', d:'Secretos, confesiones y amor', t:'#D63434', c:'#E03B3B', k:'#9E2133', h:'#FF9A8F', on:'#fff' },
+  azul:    { t:'#2477C4', n:'Anécdotas',  g:'Anécdotas',   d:'Historias del día a día y el chisme del día', c:'#368DDB', k:'#1F5A9E', h:'#9ED6FF', on:'#fff' },
+  morada:  { n:'Misterios',  g:'Misterios',    d:'Suspenso, miedo y secretos de madrugada', c:'#7E49AA', k:'#4E2A75', h:'#CDA6F0', on:'#fff' },
+  verde:   { t:'#21854F', n:'Desahogos',  g:'Desahogos',  d:'Reflexiones, días difíciles y apoyo', c:'#2BA967', k:'#18744A', h:'#97EBB4', on:'#fff' },
+  amarilla:{ n:'Aventuras',  g:'Aventuras',   d:'Viajes y anécdotas para contar siempre', c:'#FF8C2B', k:'#B85A12', h:'#FFD58A', on:'#181425' }
 };
 const KEYS = Object.keys(CAT);
 CAT.dorada = { n:'Dorada', g:'Botella dorada', d:'Cualquiera puede abrirla, sin importar el tema', c:'#FFC93C', k:'#C7891A', h:'#FFF1A6', on:'#181425' };
@@ -580,6 +685,7 @@ const GANA = {
 };
 const haveSp = () => LIVE && R.me ? { far: R.me.far_left, tide: R.me.tide_left, gift: R.me.gifts_left } : Object.assign({ far: 1, tide: 1, gift: 1 }, store.get('sp', {}));
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const quedan = n => n === 1 ? 'Te queda 1 hoy' : `Te quedan ${n} hoy`;
 const IDEAS = {
   roja: ['Algo que nunca le dijiste a nadie', '¿Te enamoraste alguna vez de una voz?'],
   azul: ['Lo más raro que te pasó esta semana', 'El chisme más inocente que conoces'],
@@ -629,7 +735,8 @@ const IC = {
   flag:  ['oooooo.','o.....o','o....o.','o.....o','oooooo.','o......','o......'],
   people:['.oo...oo.','.oo...oo.','.........','oooo.oooo','oooo.oooo','oooo.oooo'],
   chev:  ['o....','.o...','..o..','.o...','o....'],
-  moon:  ['..ooo..','.oo....','oo.....','oo.....','oo.....','.oo....','..ooo..'],
+  expand:['ooo.ooo','o.....o','o.....o','.......','o.....o','o.....o','ooo.ooo'],
+  moon:  ['..oooo...','.ooo.....','ooo......','ooo......','ooo......','oooo.....','.ooooo..o','..ooooo..','.........'],
   copy:  ['oooo..','o..o..','o.oooo','o.o..o','ooo..o','..o..o','..oooo'],
   map:   ['o..o..o','.o.o.o.','..ooo..','ooooooo','..ooo..','.o.o.o.','o..o..o'],
   bell:  ['...oo...','..oooo..','.oooooo.','.oooooo.','.oooooo.','.oooooo.','oooooooo','........','...oo...'],
@@ -704,12 +811,17 @@ const ISL = [island(0), island(1, 'f2')];
 const scene = () => `<svg class="px" viewBox="0 0 112 84" aria-hidden="true">${SKY}${ISL[0]}${ISL[1]}</svg>`;
 const bottlesOn = (list, opt = {}) => list.map(b => { const C = CAT[b.cat]; return `<button class="bt ${b.sea ? 'sea' : ''} ${b.id === S.sel && !opt.deco ? 'sel' : ''} ${S.heard.includes(b.id) || opt.deco ? 'heard' : ''} ${S.filt && S.filt !== b.cat ? 'off' : ''}" style="left:${b.x / 112 * 100}%;top:${b.y / 84 * 100}%;--w:${b.w}px;--c:${C.c};--d:${b.d || 3}s;--dl:${b.dl || 0}s;--a:${b.a || '6px'}" ${opt.deco ? 'tabindex="-1" aria-hidden="true"' : `data-b="${b.id}" aria-label="Botella ${C.n}"`}><span class="mark" aria-hidden="true">!</span>${bottle(b.cat)}</button>`; }).join('');
 
+// la orilla vive en la Playa y, en grande, en Todo el mar (mismos ids con un 2)
+const BIG = () => cur === 'mar', E = id => $('#' + id + (BIG() ? '2' : ''));
+const MAPN = 9, MAPX = [{ x: 14, y: 43, w: 22 }, { x: 38, y: 48, w: 24 }, { x: 101, y: 40, w: 22, sea: 1, d: 3.2, dl: -.6 }, { x: 81, y: 48, w: 22, sea: 1, d: 3.6, dl: -2 }, { x: 49, y: 58, w: 22, sea: 1, d: 3.1, dl: -1.4 }];
 function renderBeach() {
   const unheard = BOT.filter(b => !S.heard.includes(b.id)).length;
-  $('#beach').innerHTML = `<div class="stage">${scene()}${bottlesOn(BOT.slice(0, 5))}</div><span class="cap">${unheard ? unheard + ' sin escuchar' : 'Todo escuchado'}</span><button class="seeall" data-go="mar">Todo el mar ${ico('chev', INK)}</button>`;
+  if (BIG()) { const PS = [...WB.slice(0, 5).map(b => ({ x: b.x, y: b.y, w: b.w, sea: b.sea, d: b.d, dl: b.dl, a: b.a })), ...MAPX].map(q => ({ ...q, w: Math.round(q.w * 1.2) })), more = BOT.length - MAPN;
+    E('beach').innerHTML = `<div class="stage">${scene()}${bottlesOn(BOT.slice(0, MAPN).map((b, i) => ({ ...b, ...PS[i] })))}</div><span class="cap">${unheard ? unheard + ' sin escuchar' : 'Todo escuchado'}${more > 0 ? ` · ${more} más en la lista` : ''}</span>`; return; }
+  $('#beach').innerHTML = `<div class="stage">${scene()}${bottlesOn(BOT.slice(0, 5))}</div><span class="cap">${unheard ? unheard + ' sin escuchar' : 'Todo escuchado'}</span><button class="seeall" data-go="mar" data-p='{"v":"lista"}'>Todo el mar ${ico('chev', INK)}</button><button class="push sq expand" data-go="mar" data-p='{"v":"mapa"}' aria-label="Ver la orilla en grande">${ico('expand', INK)}</button>`;
 }
 function renderLegend() {
-  $('#legend').innerHTML = `<button class="chip" aria-pressed="${!S.filt}" data-f="">Todas</button>` + KEYS.map(k => [k, CAT[k]]).map(([k, c]) => `<button class="chip" style="--c:${c.c}" aria-pressed="${S.filt === k}" data-f="${k}"><i></i>${c.g}</button>`).join('');
+  E('legend').innerHTML = `<button class="chip" aria-pressed="${!S.filt}" data-f="">Todas</button>` + KEYS.map(k => [k, CAT[k]]).map(([k, c]) => `<button class="chip" style="--c:${c.c}" aria-pressed="${S.filt === k}" data-f="${k}"><i></i>${c.g}</button>`).join('');
 }
 
 /* ================= ONDA EN BLOQUES (osciloscopio a 12 cuadros) ================= */
@@ -781,18 +893,19 @@ function renderBienvenida() {
   $('#v-bienvenida').innerHTML = `<div class="wm xl" aria-label="Botella">${[...'BOTELLA'].map((ch, i) => `<span style="animation-delay:${i * .12}s">${ch}</span>`).join('')}</div>
     <div class="hero"><div class="stage">${scene()}${bottlesOn(deco, { deco: 1 })}</div></div>
     <div class="sp"></div>
-    <h1 class="hx">Te escuchan antes de verte.</h1>
-    <p class="mute" style="margin:12px 0 24px;font-size:16px;max-width:34ch">Graba una pregunta con tu voz y alguien que ama lo mismo que tú te responde.</p>
+    <h1 class="hx">Aquí la gente te escucha antes de verte.</h1>
+    <p class="mute" style="margin:12px 0 24px;font-size:16px;max-width:34ch">Graba algo que quieras contar o preguntar. Tu voz llega a gente que ama lo mismo que tú, y alguien responde.</p>
     <button class="push btn blue" id="first">Abrir mi primera botella</button>
     <button class="link" data-go="entrar">Ya tengo cuenta</button>`;
-  $('#first').onclick = () => uncork(WB[0], () => go('primera', { i: 0 }), 'Alguien que ama el cine te dejó una botella');
+  fitHero();
+  $('#first').onclick = () => ev('destapo') || uncork(WB[0], tap => go('primera', { i: 0, auto: tap }), 'Alguien que ama el cine te dejó una botella');
 }
 const QCODE = { k: 'codigo', q: 'Tu código de invitación', ph: 'BOTELLA-01', h: 'Por ahora se entra con invitación. Te lo pasa quien te invitó.', type: 'text', ac: 'off' };
 const QS = [
   { k: 'nombre', q: '¿Cómo te llamas?', ph: 'Tu nombre', h: 'Nadie lo ve hasta que los dos decidan compartirlo.', type: 'text', ac: 'given-name' },
+  { k: 'edad', q: '¿Cuántos años tienes?', ph: '24', h: 'Botella es para mayores de 18.', type: 'number', ac: 'off' },
   { k: 'correo', q: '¿Cuál es tu correo?', ph: 'tu@correo.com', h: 'Solo para entrar y avisarte cuando te respondan.', type: 'email', ac: 'email' },
-  { k: 'clave', q: 'Crea una contraseña', ph: 'Mínimo 8 letras', h: 'Solo tú la sabes.', type: 'password', ac: 'new-password' },
-  { k: 'edad', q: '¿Cuántos años tienes?', ph: '24', h: 'Botella es para mayores de 18.', type: 'number', ac: 'off' }
+  { k: 'clave', q: 'Crea una contraseña', ph: 'Mínimo 8 letras', h: 'Solo tú la sabes.', type: 'password', ac: 'new-password' }
 ];
 const pendBanner = () => store.get('pend', null) ? `<div class="banner box" style="${cvars(CAT[store.get('pend').cat])}"><span class="tile">${bottle(store.get('pend').cat)}</span><span><b>Tu respuesta está guardada.</b><small>Crea tu cuenta y la enviamos.</small></span></div>` : '';
 function renderCuenta({ i = 0 } = {}) {
@@ -801,16 +914,22 @@ function renderCuenta({ i = 0 } = {}) {
   const Q = QL[i], val = Q.type === 'password' ? (R.pass || '') : store.get('c.' + Q.k, Q.k === 'codigo' ? store.get('code', '') : ''), n = QL.length;
   const v = $('#v-cuenta'), q = s => v.querySelector(s);
   let okBox = store.get('c.normas', false);
-  v.innerHTML = `<div class="top"><button class="push sq" id="cb" aria-label="Volver">${ico('back')}</button><span class="steps" aria-label="Paso ${i + 1} de ${n}">${QL.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</span><span class="k mute3">${i + 1}/${n}</span></div>
+  v.innerHTML = `<div class="top"><button class="push sq" id="cb" aria-label="Volver">${ico('back')}</button><span class="steps" role="img" aria-label="Paso ${i + 1} de ${n}">${QL.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</span><span class="k mute3">${i + 1}/${n}</span></div>
     ${i === 0 ? pendBanner() : ''}
     <div class="ask pop" ${i === 0 && store.get('pend', null) ? 'style="margin-top:32px"' : ''}><h1 class="hx">${Q.q}</h1>
-    <input class="field" id="fi" type="${Q.type}" inputmode="${Q.type === 'number' ? 'numeric' : Q.type === 'email' ? 'email' : 'text'}" autocomplete="${Q.ac}" ${Q.k === 'codigo' ? 'autocapitalize="characters" spellcheck="false"' : ''} placeholder="${Q.ph}" value="${esc(val)}" aria-label="${Q.q}">
+    <input class="field${Q.type === 'email' ? ' em' : ''}" id="fi" type="${Q.type}" inputmode="${Q.type === 'number' ? 'numeric' : Q.type === 'email' ? 'email' : 'text'}" autocomplete="${Q.ac}" ${Q.k === 'codigo' ? 'autocapitalize="characters" spellcheck="false"' : ''} placeholder="${Q.ph}" value="${esc(val)}" aria-label="${Q.q}">
     <p class="hint3">${ico('lock', '#6B6578')}${Q.h}</p>
-    ${Q.k === 'edad' ? `<button class="tick" id="tk" role="checkbox" aria-checked="${okBox}"><span class="tbox">${ico('check', '#fff')}</span><span>Tengo 18 años o más y acepto las <u data-go="normas" data-p='{"from":"cuenta","i":3}'>normas de Botella</u>.</span></button>` : ''}</div>
+    ${Q.type === 'password' ? '<button class="link eye" id="eye" type="button">Mostrar contraseña</button>' : ''}
+    ${Q.type === 'email' && LIVE && CFG.google ? '<button class="push btn" id="gg" type="button" style="margin-top:32px">Seguir con Google</button>' : ''}
+    ${Q.k === 'edad' ? `<button class="tick" id="tk" role="checkbox" aria-checked="${okBox}"><span class="tbox">${ico('check', '#fff')}</span><span>Tengo 18 años o más y acepto las normas de Botella.</span></button><button class="link normas-l" data-go="normas" data-p='{"from":"cuenta","i":${i}}'>Leer las normas</button>` : ''}</div>
     <div class="sp" style="min-height:32px"></div>
+    <p class="why" id="why" aria-live="polite"></p>
     <button class="push btn blue" id="cn">${i < n - 1 ? 'Seguir' : 'Crear mi cuenta'}</button>`;
   const fi = q('#fi'), ok = () => { const x = fi.value.trim(); return Q.type === 'email' ? /.+@.+\..+/.test(x) : Q.type === 'number' ? +x >= 18 && +x < 100 && okBox : Q.type === 'password' ? x.length >= 8 : Q.k === 'codigo' ? x.length >= 4 : x.length > 1; };
-  const upd = () => q('#cn').disabled = !ok(); upd(); fi.oninput = upd;
+  const why = () => { const x = fi.value.trim(); if (Q.k === 'edad') return !x ? 'Escribe tu edad para seguir.' : +x < 18 ? 'Botella es solo para mayores de 18.' : !okBox ? 'Marca la casilla para seguir.' : ''; if (Q.type === 'password') return x && x.length < 8 ? `Faltan ${8 - x.length} ${8 - x.length === 1 ? 'letra' : 'letras'}.` : ''; if (Q.type === 'email') return x && !ok() ? 'Revisa que el correo esté completo.' : ''; return ''; };
+  const upd = () => { q('#cn').disabled = !ok(); q('#why').textContent = q('#cn').disabled ? why() : ''; }; upd(); fi.oninput = upd;
+  if (q('#gg')) q('#gg').onclick = async () => { const undo = busyBtn(q('#gg'), 'Abriendo Google…'); ev('google'); const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/pixel/#sobre' } }); if (error) { undo(); toast(errMsg(error), '#D63434'); } };
+  if (q('#eye')) q('#eye').onclick = () => { const sh = fi.type === 'password'; fi.type = sh ? 'text' : 'password'; q('#eye').textContent = sh ? 'Ocultar contraseña' : 'Mostrar contraseña'; fi.focus(); };
   if (q('#tk')) q('#tk').onclick = e => { if (e.target.closest('[data-go]')) return; okBox = !okBox; store.set('c.normas', okBox); q('#tk').setAttribute('aria-checked', okBox); if (okBox) { pop(1200); burst(...center(q('.tbox')), ['#368DDB', '#fff'], 10); } upd(); };
   const next = async () => {
     if (!ok()) return; const x = fi.value.trim();
@@ -820,9 +939,9 @@ function renderCuenta({ i = 0 } = {}) {
     if (LIVE && !uid()) {
       if (!R.pass) { toast('Vuelve a escribir tu contraseña.', '#D63434'); go('cuenta', { i: QL.findIndex(y => y.k === 'clave') }); return; }
       const undo = busyBtn(q('#cn'), 'Creando tu cuenta…');
-      try { await signUp(store.get('c.correo', ''), R.pass); } catch (e) { undo(); toast(errMsg(e, 'No pudimos crear tu cuenta. Intenta en unos minutos.'), '#D63434'); if (e.exists || /already|registered/i.test(e.message || '')) setTimeout(() => go('entrar'), 1200); return; }
+      try { await signUp(store.get('c.correo', ''), R.pass); ev('cuenta_creada'); } catch (e) { undo(); toast(errMsg(e, 'No pudimos crear tu cuenta. Intenta en unos minutos.'), '#D63434'); if (e.exists || /already|registered/i.test(e.message || '')) setTimeout(() => go('entrar'), 1200); return; }
     }
-    go('presenta');
+    go('sobre');
   };
   q('#cn').onclick = next; fi.onkeydown = e => { if (e.key === 'Enter') next(); };
   q('#cb').onclick = () => i ? go('cuenta', { i: i - 1 }) : go(store.get('pend', null) ? 'primera' : 'bienvenida');
@@ -888,26 +1007,28 @@ function bindVoices(v, onDone) {
 }
 
 /* ---------- tu primera botella: escúchala y respóndela antes de crear la cuenta ---------- */
-function renderPrimera({ i = 0 } = {}) {
+function renderPrimera({ i = 0, auto } = {}) {
   const b = WB[i % WB.length], C = CAT[b.cat], v = $('#v-primera'), q = s => v.querySelector(s);
   v.setAttribute('style', cvars(C));
   v.innerHTML = `${topbar('bienvenida', 'Tu primera botella')}
     <div class="firstb pop"><span class="fbot">${bottle(b.cat, false, true)}</span></div>
     <div class="box player" style="margin-top:0"><div class="row"><span class="badge">${ico(b.cat === 'roja' ? 'heart' : 'star', C.on)}${C.n}</span><span class="sp"></span><span class="from">${esc(b.who)}</span></div>
       <p class="q">${qq(b.q)}</p>
+      <p class="eg">Voz de ejemplo: así suena una botella.</p>
       <div class="wavebox" style="margin-bottom:0"><button class="push sq play" id="fp" aria-label="Escuchar" style="background:var(--c);color:var(--on)">${ico('play', C.on)}</button><span id="fw" style="flex:1;display:flex">${wave(b.wv, C.c, 0)}</span><span class="num" id="ft">${mmss(b.t)}</span></div></div>
     <div class="sp" style="min-height:24px"></div>
     <p class="mute" style="text-align:center;font-size:14px;margin:0 0 16px">Si le respondes, empieza una conversación solo con voces.</p>
     <button class="push btn c" id="fr">${ico('mic', C.on, C.c)} Responder con mi voz</button>
     <button class="link" id="fd">Devolverla al mar</button>`;
   const btn = q('#fp');
-  btn.onclick = () => { if (playing) { stop(); btn.innerHTML = ico('play', C.on); return; } btn.innerHTML = ico('pause', C.on); play(b, (p, cur) => { q('#fw').innerHTML = wave(b.wv, C.c, p, 9, true, C.h); q('#ft').textContent = mmss(cur); }, () => { btn.innerHTML = ico('play', C.on); q('#fw').innerHTML = wave(b.wv, C.c, 1); }); };
+  btn.onclick = () => { if (playing) { stop(); btn.innerHTML = ico('play', C.on); return; } btn.innerHTML = ico('pause', C.on); play(b, (p, cur) => { q('#fw').innerHTML = wave(b.wv, C.c, p, 9, true, C.h); q('#ft').textContent = mmss(cur); }, () => { ev('escucho_primera'); btn.innerHTML = ico('play', C.on); q('#fw').innerHTML = wave(b.wv, C.c, 1); }); };
   q('#fr').onclick = () => go('lanzar', { reply: b, onb: 1, i });
+  if (auto) setTimeout(() => { if (cur === 'primera' && !playing) btn.click(); }, RM ? 0 : 320);
   q('#fd').onclick = () => { stop(); const el = q('.fbot'); el.classList.add('away'); pop(420); setTimeout(() => { burst(...center(el), ['#fff', '#BDEBFA', '#63C4F2', C.c], 30); toast('Volvió al mar. Llega otra.', C.c); go('primera', { i: i + 1 }); }, RM ? 0 : 420); };
 }
 
 /* ---------- tu voz de presentación: en vez de foto, tu voz ---------- */
-function renderPresenta({ edit } = {}) {
+function renderPresenta({ edit, back } = {}) {
   const v = $('#v-presenta'), C = CAT.azul;
   v.innerHTML = `${edit ? topbar('tu', 'Tu presentación') : `<div class="top"><button class="push sq" data-go="cuenta" data-p='{"i":3}' aria-label="Volver">${ico('back')}</button><span class="k mute">Tu perfil · 1 de 3</span><span class="k mute3">1/3</span></div>`}
     <h1 class="hx">En vez de foto, tu voz.</h1>
@@ -916,7 +1037,7 @@ function renderPresenta({ edit } = {}) {
     <div class="sp"></div>
     <div id="prz"></div>
     ${edit ? '' : '<button class="link" id="later">Lo grabo después</button>'}`;
-  recorder(v.querySelector('#prz'), { C, max: 20, seed: 33, cta: 'Guardar mi voz', ico: 'check', tx: 'Toca y preséntate', onSend: async (secs, url, blob, w) => { R.intro = blob ? { blob, secs, w } : null; if (LIVE && edit) { if (!blob) return; try { const path = await upload(blob, ''); const { error } = await sb.from('profiles').update({ intro_voice: path, intro_secs: Math.min(60, secs), intro_peaks: peaksOf(w) }).eq('id', uid()); if (error) throw error; Object.assign(R.me, { intro_voice: path, intro_secs: secs, intro_peaks: peaksOf(w) }); } catch (e) { toast(errMsg(e), '#D63434'); return; } } let du = null; if (blob) du = await toDataURL(blob); store.set('pres', { secs }); if (blob && w) store.set('preswave', w); if (du) try { localStorage.setItem('bp.presurl', du); } catch (e) {} S.presUrl = url; toast('Tu voz de presentación quedó guardada.', C.c); go(edit ? 'tu' : 'sobre'); } });
+  recorder(v.querySelector('#prz'), { C, max: 20, seed: 33, cta: 'Guardar mi voz', ico: 'check', tx: 'Toca y preséntate', onSend: async (secs, url, blob, w) => { R.intro = blob ? { blob, secs, w } : null; if (LIVE && edit) { if (!blob) return; try { const path = await upload(blob, ''); const { error } = await sb.from('profiles').update({ intro_voice: path, intro_secs: Math.min(60, secs), intro_peaks: peaksOf(w) }).eq('id', uid()); if (error) throw error; Object.assign(R.me, { intro_voice: path, intro_secs: secs, intro_peaks: peaksOf(w) }); } catch (e) { toast(errMsg(e), '#D63434'); return; } } let du = null; if (blob) du = await toDataURL(blob); store.set('pres', { secs }); if (blob && w) store.set('preswave', w); if (du) try { localStorage.setItem('bp.presurl', du); } catch (e) {} S.presUrl = url; toast('Tu voz de presentación quedó guardada.', C.c); go(edit ? (back ? back.to : 'tu') : 'sobre', back ? back.p : {}); } });
   const l = v.querySelector('#later'); if (l) l.onclick = () => go('sobre');
 }
 
@@ -925,10 +1046,10 @@ const DIST = ['Barranco', 'Jesús María', 'Lince', 'Miraflores', 'Pueblo Libre'
 function renderSobre() {
   const v = $('#v-sobre'); let d = store.get('dist', null);
   const draw = () => {
-    v.innerHTML = `<div class="top"><button class="push sq" data-go="presenta" aria-label="Volver">${ico('back')}</button><span class="k mute">Tu perfil · 2 de 3</span><span class="k mute3">2/3</span></div>
+    v.innerHTML = `<div class="top">${uid() ? '<span style="width:48px"></span>' : `<button class="push sq" data-go="cuenta" data-p='{"i":3}' aria-label="Volver">${ico('back')}</button>`}<span class="k mute">Tu perfil · 1 de 2</span><span class="k mute3">1/2</span></div>
       <h1 class="hx">¿En qué distrito vives?</h1>
       <p class="hint3" style="font-size:15px;margin-top:16px">${ico('lock', '#4A4458')}<span><b>Nunca se muestra.</b> Solo sirve para que te lleguen voces de gente cerca.</span></p>
-      <div class="tgrid" role="radiogroup" aria-label="Distrito">${DIST.map(t => `<button class="chip" role="radio" style="--c:#181425;--on:#fff" aria-pressed="${d === t}" aria-checked="${d === t}" data-d="${t}">${t}</button>`).join('')}</div>
+      <div class="tgrid" role="radiogroup" aria-label="Distrito">${DIST.map(t => `<button class="chip" role="radio" style="--c:#181425;--on:#fff" aria-checked="${d === t}" data-d="${t}">${t}</button>`).join('')}</div>
       <div class="sp" style="min-height:24px"></div>
       <button class="push btn blue" id="sn" ${d ? '' : 'disabled'}>Seguir</button>`;
     v.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { d = b.dataset.d; store.set('dist', d); draw(); });
@@ -940,7 +1061,7 @@ function renderTemas({ edit } = {}) {
   const v = $('#v-temas');
   const draw = () => {
     const sel = S.temas, n = sel.length;
-    v.innerHTML = `<div class="top"><button class="push sq" data-go="${edit ? 'tu' : 'sobre'}" aria-label="Volver">${ico('back')}</button><span class="k mute">${edit ? 'Tus temas' : 'Tu perfil · 3 de 3'}</span><span class="k mute3">${n}/3</span></div>
+    v.innerHTML = `<div class="top"><button class="push sq" data-go="${edit ? 'tu' : 'sobre'}" aria-label="Volver">${ico('back')}</button><span class="k mute">${edit ? 'Tus temas' : 'Tu perfil · 2 de 2'}</span><span class="k mute3">${n}/3</span></div>
       <h1 class="hx">¿Qué te mueve?</h1>
       <p class="mute" style="margin:12px 0 0;font-size:16px">Elige tres. Tus botellas llegan a gente que ama lo mismo.</p>
       <div class="tgrid" role="group" aria-label="Temas">${TEMAS.map((t, i) => { const C = CAT[KEYS[i % 5]]; return `<button class="chip" style="${cvars(C)}" aria-pressed="${sel.includes(t)}" data-t="${t}"><i></i>${t}</button>`; }).join('')}</div>
@@ -967,12 +1088,13 @@ function renderEntrar() {
     <p class="mute" style="margin:12px 0 0;font-size:16px">Tus botellas y conversaciones te esperan.</p>
     <label class="lbl">Tu correo<input class="field sm" id="ec" type="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com"></label>
     <label class="lbl">Tu contraseña<input class="field sm" id="ep" type="password" autocomplete="current-password" placeholder="••••••••"></label>
-    <button class="link" style="margin:8px 0 0;text-align:left" data-go="olvide">Olvidé mi contraseña</button>
+    <span class="row" style="justify-content:space-between"><button class="link" style="margin:8px 0 0;text-align:left" data-go="olvide">Olvidé mi contraseña</button><button class="link" style="margin:8px 0 0" id="eye2" type="button">Mostrar</button></span>
     <div class="sp" style="min-height:32px"></div>
     <button class="push btn blue" id="en" disabled>Entrar</button>
     <button class="link" data-go="bienvenida">Todavía no tengo cuenta</button>`;
   const ok = () => /.+@.+\..+/.test(q('#ec').value) && q('#ep').value.length >= 6;
   q('#ec').oninput = q('#ep').oninput = () => q('#en').disabled = !ok();
+  q('#eye2').onclick = () => { const f = q('#ep'), sh = f.type === 'password'; f.type = sh ? 'text' : 'password'; q('#eye2').textContent = sh ? 'Ocultar' : 'Mostrar'; };
   q('#en').onclick = async () => { if (!LIVE) { store.set('onb', true); go('playa'); return; } const undo = busyBtn(q('#en'), 'Entrando…'); const { data, error } = await sb.auth.signInWithPassword({ email: q('#ec').value.trim(), password: q('#ep').value }); if (error) { undo(); toast(errMsg(error), '#D63434'); return; } R.ses = data.session; try { await enter(); } catch (e) { undo(); toast(errMsg(e), '#D63434'); } };
 }
 function renderOlvide({ sent, nueva } = {}) {
@@ -1013,37 +1135,42 @@ function renderNormas({ from = 'tu', i } = {}) {
 
 /* ================= REPRODUCTOR ================= */
 function renderPlayer(anim) {
-  const b = BOT.find(x => x.id === S.sel) || BOT[0], el = $('#player');
+  const b = BOT.find(x => x.id === S.sel) || BOT[0], el = E('player'), k = BIG() ? '2' : '';
   if (!b) { el.removeAttribute('style'); el.innerHTML = `<p class="q" style="margin-top:0">El mar está tranquilo.</p><p class="from">Te avisamos cuando llegue una botella. Mientras, lanza la tuya.</p><button class="push btn blue" data-go="lanzar" style="margin-top:16px">${ico('mic', '#fff', '#2477C4')} Lanzar una botella</button>`; return; }
   S.sel = b.id; const C = CAT[b.cat]; el.setAttribute('style', cvars(C));
   el.classList.remove('pop'); if (anim) { void el.offsetWidth; el.classList.add('pop'); }
-  el.innerHTML = `<div class="row"><span class="badge">${ico(b.cat === 'roja' ? 'heart' : 'star', C.on)}${C.n}</span><span class="sp"></span><span class="from">${b.ago}</span></div>
+  if (k) el.classList.add('mini'); else el.classList.remove('mini');
+  el.innerHTML = k ? `<div class="mq"><i class="dot" style="background:var(--c)"></i><span class="mtx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span><button class="push btn sm resp" id="resp${k}">Responder</button></div>
+    <div class="mctl"><button class="push sq" id="prev${k}" aria-label="Botella anterior">${ico('prev')}</button><button class="push sq play" id="pp${k}" aria-label="Escuchar">${ico('play', C.on)}</button><button class="push sq" id="next${k}" aria-label="Botella siguiente">${ico('next')}</button>
+      <div class="wavebox" id="wb${k}">${wave(b.wv, C.c, 0, 6)}<span class="num" id="wt${k}">${mmss(b.t)}</span></div></div>` : `<div class="row"><span class="badge">${ico(b.cat === 'roja' ? 'heart' : 'star', C.on)}${C.n}</span><span class="sp"></span><span class="from">${b.ago}</span></div>
     <p class="q">${qq(b.q)}</p><p class="from">${esc(b.who)}</p>
-    <div class="wavebox" id="wb">${wave(b.wv, C.c, 0)}<span class="num" id="wt">${mmss(b.t)}</span></div>
+    <div class="wavebox" id="wb${k}">${wave(b.wv, C.c, 0)}<span class="num" id="wt${k}">${mmss(b.t)}</span></div>
     <div class="ctrls">
-      <button class="push sq" id="prev" aria-label="Botella anterior">${ico('prev')}</button>
-      <button class="push sq play" id="pp" aria-label="Escuchar">${ico('play', C.on)}</button>
-      <button class="push sq" id="next" aria-label="Botella siguiente">${ico('next')}</button>
-      <button class="push btn resp" id="resp">Responder</button>
+      <button class="push sq" id="prev${k}" aria-label="Botella anterior">${ico('prev')}</button>
+      <button class="push sq play" id="pp${k}" aria-label="Escuchar">${ico('play', C.on)}</button>
+      <button class="push sq" id="next${k}" aria-label="Botella siguiente">${ico('next')}</button>
+      <button class="push btn resp" id="resp${k}">Responder</button>
     </div>`;
   const start = () => {
-    $('#pp').innerHTML = ico('pause', C.on);
-    play(b, (p, cur) => { $('#wb').firstElementChild.outerHTML = wave(b.wv, C.c, p, 9, true, C.h); $('#wt').textContent = mmss(cur); }, () => {
-      $('#pp').innerHTML = ico('play', C.on); $('#wb').firstElementChild.outerHTML = wave(b.wv, C.c, 1);
+    E('pp').innerHTML = ico('pause', C.on);
+    play(b, (p, cur) => { E('wb').firstElementChild.outerHTML = wave(b.wv, C.c, p, k ? 6 : 9, true, C.h); E('wt').textContent = mmss(cur); }, () => {
+      E('pp').innerHTML = ico('play', C.on); E('wb').firstElementChild.outerHTML = wave(b.wv, C.c, 1, k ? 6 : 9);
     });
   };
-  $('#pp').onclick = () => {
-    if (playing) { stop(); $('#pp').innerHTML = ico('play', C.on); return; }
+  E('pp').onclick = () => {
+    if (!playing) ev('escucha_playa', { h: innerHeight });
+    if (playing) { stop(); E('pp').innerHTML = ico('play', C.on); return; }
     if (!S.heard.includes(b.id)) { S.heard.push(b.id); store.set('heard', S.heard); if (LIVE) rpc('open_delivery', { p_id: b.id }).catch(() => {}); uncork(b, () => { renderBeach(); start(); }); }
     else start();
   };
   const step = d => { const list = BOT.filter(x => !S.filt || x.cat === S.filt); const i = list.findIndex(x => x.id === S.sel); select(list[(i + d + list.length) % list.length].id); };
-  $('#prev').onclick = () => step(-1); $('#next').onclick = () => step(1);
-  $('#resp').onclick = () => { stop(); go('lanzar', { reply: b }); };
+  E('prev').onclick = () => step(-1); E('next').onclick = () => step(1);
+  E('resp').onclick = () => { stop(); go('lanzar', { reply: b }); };
 }
 function select(id) {
   stop(); const changed = S.sel !== id; S.sel = id; renderBeach(); renderPlayer(changed);
-  const el = document.querySelector(`.bt[data-b="${id}"]`); if (el) { el.classList.add('hop'); setTimeout(() => el.classList.remove('hop'), 600); }
+  if (BIG()) { const pl = E('player').getBoundingClientRect(); if (pl.bottom > innerHeight) scrollBy({ top: pl.bottom - innerHeight + 16, behavior: RM ? 'auto' : 'smooth' }); }
+  const el = E('beach').querySelector(`.bt[data-b="${id}"]`); if (el) { el.classList.add('hop'); setTimeout(() => el.classList.remove('hop'), 600); }
 }
 
 /* ================= DESTAPAR ================= */
@@ -1053,12 +1180,12 @@ function uncork(b, done, msg) {
   ov.innerHTML = `<div class="uncork" id="unc" style="${cvars(C)}" role="dialog" aria-label="Abriendo la botella">${msg ? `<p class="uc-msg">${esc(msg)}</p>` : ''}<div class="uc">
     <span class="ub">${bottle(b.cat, false, true)}</span><span class="cork">${sprite(CORK, pal(b.cat))}</span>
     <span class="vap">${vap}</span><span class="vap">${vap}</span><span class="vap">${vap}</span><span class="popw">¡Pop!</span></div>
-    <span class="uc-tx">Toca para escuchar</span></div>`;
+    <span class="uc-tx">Toca y escucha su voz</span></div>`;
   let closed = false;
-  const close = () => { if (closed) return; closed = true; ov.innerHTML = ''; done(); };
+  const close = tap => { if (closed) return; closed = true; ov.innerHTML = ''; done(tap === true); };
   setTimeout(() => { const n = $('#unc .cork'); if (!n) return; const [x, y] = center(n); pop(); burst(x, y + 16, [C.c, C.h, C.k, '#FFC93C', '#fff'], 56); }, RM ? 0 : 560);
   setTimeout(close, RM ? 300 : (msg ? 2600 : 1900));
-  $('#unc').onclick = close;
+  $('#unc').onclick = () => close(true);
 }
 
 /* ================= LANZAR ================= */
@@ -1078,8 +1205,8 @@ function renderLanzar(p = {}) {
   const draw = () => {
     const C = CAT[cat]; v.setAttribute('style', cvars(C));
     v.innerHTML = `<div class="top"><button class="push sq" id="cls" aria-label="Cerrar">${ico('x')}</button><span class="k">${p.reply ? 'Responder' : p.dorada ? 'Botella dorada' : 'Lanzar botella'}</span>${p.reply ? '<span style="width:48px"></span>' : `<button class="leftc" data-go="muelle" aria-label="Te quedan ${S.left}. Pedir más en el Muelle">${bottle(cat)}<span class="num">×${S.left}</span><span class="plus">+</span></button>`}</div>
-      <h1 class="h1">${p.reply ? 'Responde con tu voz' : '¿Qué quieres contar?'}</h1>
-      ${p.reply ? `<p class="mute" style="margin:12px 0 0">${qq(p.reply.q)}</p>` : `<div class="shelf" role="radiogroup" aria-label="Color de la botella">${KEYS.map(k => `<button class="pick" role="radio" style="--c:${CAT[k].c}" aria-pressed="${k === cat}" aria-checked="${k === cat}" data-c="${k}" aria-label="${CAT[k].g}">${bottle(k)}</button>`).join('')}</div>
+      <h1 class="h1">${p.reply ? 'Responde con tu voz' : '¿Qué quieres contar o preguntar?'}</h1>
+      ${p.reply ? `<p class="mute" style="margin:12px 0 0">${qq(p.reply.q)}</p>` : `<div class="shelf" role="radiogroup" aria-label="Color de la botella">${KEYS.map(k => `<button class="pick" role="radio" style="--c:${CAT[k].c}" aria-checked="${k === cat}" data-c="${k}" aria-label="${CAT[k].g}">${bottle(k)}</button>`).join('')}</div>
       <div class="catname"><b>${C.g}</b><span>${C.d}</span></div>`}
       <div class="recz" id="recz"></div>`;
     v.querySelectorAll('.pick').forEach(b => b.onclick = () => { if (rec === 1) return; cat = b.dataset.c; store.set('lastcat', cat); draw(); });
@@ -1087,7 +1214,9 @@ function renderLanzar(p = {}) {
     drawRec();
   };
   const drawRec = () => {
-    const C = CAT[cat], z = $('#recz');
+    const C = CAT[cat], z = $('#recz'), ready = rec === 2 && !p.reply;
+    v.classList.toggle('ready2', ready);
+    if (!p.reply) { const h = v.querySelector('h1'); if (h) h.textContent = ready ? 'Tu botella está lista' : '¿Qué quieres contar o preguntar?'; }
     if (rec === 0) {
       z.innerHTML = `<button class="push mic" id="mic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button><span class="rec-tx">Toca para grabar · hasta 60 s</span>${p.reply ? '' : `<div class="ideas"><span class="k mute3" style="margin-top:8px">Si no sabes qué decir</span>${IDEAS[cat].map(t => `<button class="idea">${esc(t)}</button>`).join('')}</div>`}`;
       $('#mic').onclick = () => { idea = null; start(); }; z.querySelectorAll('.idea').forEach(b => b.onclick = () => { idea = b.textContent.trim(); start(); });
@@ -1098,7 +1227,7 @@ function renderLanzar(p = {}) {
     }
     if (rec === 2) {
       const w = lw || W(secs + 7);
-      z.innerHTML = `<div class="box ready" style="width:100%"><span class="k mute3">Escucha cómo quedó</span><div class="wavebox" style="margin:8px 0 12px"><button class="push sq play" id="lpl" aria-label="Escuchar lo que grabaste">${ico('play', C.on)}</button><span id="lwv" style="flex:1;display:flex">${wave(w, C.c, 1)}</span><span class="num">${mmss(secs)}</span></div><button class="push btn" id="again">Grabar otra vez</button></div>
+      z.innerHTML = `${p.reply ? '' : `<p class="catline"><span class="dot"></span>Botella de ${C.n.toLowerCase()}</p>`}<div class="box ready" style="width:100%"><span class="k mute3">Escucha cómo quedó</span><div class="wavebox" style="margin:8px 0 0"><button class="push sq play" id="lpl" aria-label="Escuchar lo que grabaste">${ico('play', C.on)}</button><span id="lwv" style="flex:1;display:flex">${wave(w, C.c, 1)}</span><span class="num">${mmss(secs)}</span><button class="push btn sm" id="again">Otra vez</button></div></div>
         ${p.reply ? `<button class="push btn c" id="send" style="margin-top:24px;height:64px">${ico('voz', C.on)} Enviar respuesta</button>` :
         `${envio()}<div class="pad" id="pad" style="width:100%"><div class="hint">${ico('up', 'currentColor')}<span>Desliza la botella hacia arriba</span></div><span class="toss" id="toss" role="button" tabindex="0" aria-label="Lanzar al mar">${bottle(cat)}</span></div>
          <button class="push btn c" id="send">${ico('bot', C.on)} Lanzar al mar</button>`}`;
@@ -1108,24 +1237,28 @@ function renderLanzar(p = {}) {
       bindEnvio();
       $('#send').onclick = () => {
         if (LIVE && !blob) { toast('No se grabó nada. Graba otra vez.', '#D63434'); return; }
-        if (p.onb) { pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'presenta' : 'cuenta', { i: 0 }); return; }
+        if (p.onb) { ev('respondio_primera', { secs }); pop(700); store.set('pend', { cat: p.reply.cat, id: p.reply.id, secs, w }); if (LIVE && blob) toDataURL(blob).then(du => { if (du) try { localStorage.setItem('bp.pendurl', du); } catch (e) {} }); if (LIVE) R.pend = { blob, secs, w, cat: p.reply.cat, bottle: (WEL[p.reply.id] || [])[0] }; go(LIVE && uid() ? 'sobre' : 'cuenta', { i: 0 }); return; }
         if (p.reply) { if (LIVE) { sendReply(p.reply, { blob, secs, w }, $('#send')); return; } pop(700); burst(...center($('#send')), [C.c, C.h, '#fff'], 32); toast('Tu respuesta va en camino. Si te responde, empieza una conversación.', C.c); setTimeout(() => go('voces'), 400); return; }
         fling(0, -1.6);
       };
-      if (!p.reply) tossable(cat);
+      if (!p.reply) { tossable(cat); scrollTo(0, 0); }
     }
   };
   // Antes de lanzar: a quién le llega (uno de tus temas) y cómo viaja (normal, que llega lejos o dorada).
+  // Para que la botella y el botón se vean sin bajar, la elección va resumida en una línea y se abre con Cambiar.
+  let envOpen = false;
   const envio = () => { const h = haveSp(), T = TIPO[tipo];
+    if (!envOpen) return `<button class="box envio mini" id="envio" aria-expanded="false"><span class="tx"><small class="k mute3">Llega a quien ama</small><b>${esc(tema)} · ${TIPO[tipo][0]}</b></span><span class="chg">Cambiar</span></button>`;
     return `<div class="box envio" id="envio"><span class="k mute3">Llega a quien ama</span><div class="echips" role="radiogroup" aria-label="Tema">${myT.map(t => `<button class="chip" role="radio" aria-checked="${t === tema}" aria-pressed="${t === tema}" data-tm="${esc(t)}">${esc(t)}</button>`).join('')}</div>
       ${p.dorada ? '' : `<span class="k mute3" style="margin-top:12px">Cómo viaja</span><div class="echips" role="radiogroup" aria-label="Cómo viaja">${Object.keys(TIPO).map(k => `<button class="chip${k !== 'free' && !h[k] ? ' off' : ''}" role="radio" style="${cvars(CAT[TIPO[k][3]])}" aria-checked="${k === tipo}" aria-pressed="${k === tipo}" data-tp="${k}"><i></i>${TIPO[k][0]}${k === 'free' ? '' : ` ×${h[k] || 0}`}</button>`).join('')}</div>`}
       <small class="mute edesc">${T[1]}. Y sigue llegando a más gente hasta que alguien responde.</small></div>`; };
   const bindEnvio = () => { const e = $('#envio'); if (!e) return;
+    if (!envOpen) { e.onclick = () => { envOpen = true; e.outerHTML = envio(); bindEnvio(); }; return; }
     e.querySelectorAll('[data-tm]').forEach(b => b.onclick = () => { tema = b.dataset.tm; store.set('lasttema', tema); if (S.rec) S.rec.tema = tema; e.outerHTML = envio(); bindEnvio(); });
     e.querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const k = b.dataset.tp; if (k !== 'free' && !haveSp()[k]) { toast(`No te quedan. ${GANA[k]}`, INK); return; } tipo = k; if (S.rec) { S.rec.tipo = k; S.rec.dorada = k === 'tide'; } pop(700); e.outerHTML = envio(); bindEnvio(); }); };
   let real = false, url = null, lw = null, blob = null, idea = null;
   const start = async () => { stop(); const ok = await MIC.start(); if (ok === false) { go('mic'); return; } if (ok === null) return; real = ok === true; rec = 1; secs = 0; drawRec(); timer = setInterval(() => { secs++; const rt = $('#rt'); if (!rt) { clearInterval(timer); if (real) MIC.stop(); return; } rt.textContent = mmss(secs); $('#lf').innerHTML = life(secs / 60); if (secs >= 60) end(); }, 1000); };
-  const end = async () => { clearInterval(timer); url = null; lw = null; blob = null; if (real) { const r = await MIC.stop(); if (r) { url = r.url; lw = r.w; blob = r.blob; } } secs = Math.max(secs, 1); rec = 2; drawRec(); };
+  const end = async () => { clearInterval(timer); url = null; lw = null; blob = null; if (real) { const r = await MIC.stop(); if (r) { url = r.url; lw = r.w; blob = r.blob; } } secs = Math.max(secs, 1); rec = 2; R.readyAt = Date.now(); if (!p.reply) ev('grabo', { secs }); drawRec(); };
   // gesto: la botella sigue al dedo con un resorte (tensión 180, fricción 12) y sale volando si la sueltas rápido hacia arriba
   let fling = () => {};
   function tossable(cat) {
@@ -1154,6 +1287,7 @@ function renderLanzar(p = {}) {
   draw();
 }
 function launch(cat) {
+  ev('lanzo', { cat, ms: R.readyAt ? Date.now() - R.readyAt : null, h: innerHeight });
   const r = S.rec || {}, tp = r.tipo || (r.dorada ? 'tide' : 'free'), k = tp === 'tide' ? 'dorada' : cat;
   if (LIVE) {
     R.launching = (async () => { const path = await upload(r.blob, k); const row = one(await rpc('launch_bottle', { p_kind: KIND[cat] || 'Pregunta', p_body: r.idea || null, p_voice: path, p_secs: Math.max(1, Math.min(60, r.secs || 1)), p_peaks: peaksOf(r.w), p_type: tp === 'far' ? 'far' : 'free', p_topic: r.tema ? T2S(r.tema) : null, p_district: null, p_featured: tp === 'tide' })); S.left = row.left_bottles; if (R.me) { R.me.bottles = row.left_bottles; R.me.far_left = row.left_far; R.me.tide_left = row.left_tide; } loadMine().catch(() => {}); return row.shores; })();
@@ -1169,14 +1303,14 @@ function renderLanzada({ cat = store.get('lastcat', 'roja') } = {}) {
   v.innerHTML = `<div class="beach box"><div class="stage">${scene()}<span class="drop" id="drop" style="--x:${X / 112 * 100}%;--y:${Y / 84 * 100}%">${bottle(cat)}</span></div></div>
     <span class="k mute">Tu botella ya está en el mar</span>
     <div class="big" id="cnt" style="margin:16px 0 8px">0</div>
-    <p class="h2">personas ya la recibieron</p>
+    <p class="h2" id="cntl">personas ya la recibieron</p>
     <div class="life box" id="rl" style="margin:16px auto 0">${life(0)}</div>
     <p class="mute" style="max-width:30ch;margin:16px auto 32px">Sigue llegando a más gente que ama lo mismo que tú, hasta que alguien te responda.</p>
-    <button class="push btn" data-go="playa">Volver a la playa</button>
-    <button class="push card dockc" data-go="muelle" style="text-align:left"><span class="tile">${ico('dock', INK)}</span><span class="tx"><b id="lzl">Te quedan ${S.left} hoy</b><small>Cada vez que respondes una botella, ganas otra</small></span>${ico('chev', INK)}</button>`;
+    <button class="push btn blue" data-go="playa">Mientras, escucha una botella</button>
+    <button class="push card dockc" data-go="muelle" style="text-align:left"><span class="tile">${ico('dock', INK)}</span><span class="tx"><b id="lzl">${quedan(S.left)}</b><small>Cada vez que respondes una botella, ganas otra</small></span>${ico('chev', INK)}</button>`;
   setTimeout(() => { const d = $('#drop'); if (!d) return; const [x, y] = center(d); pop(420); burst(x, y + 8, ['#fff', '#BDEBFA', '#63C4F2', C.c, C.h], 48); d.classList.add('bob'); }, RM ? 0 : 760);
-  let n = 0, target = S.base || 12; if (LIVE) { target = 0; const pr = R.launching; R.launching = null; if (pr) pr.then(x => { target = x || 0; const l = $('#lzl'); if (l) l.textContent = `Te quedan ${S.left} hoy`; }).catch(e => { toast(errMsg(e, 'Tu botella no salió. Intenta otra vez.'), '#D63434'); setTimeout(() => go('lanzar'), 900); }); }
-  const t = setInterval(() => { const c = $('#cnt'); if (!c || cur !== 'lanzada') return clearInterval(t); n = n < target ? Math.min(target, n + Math.ceil((target - n) / 8)) : n + (!LIVE && Math.random() < .3 ? 1 : 0); c.textContent = n; $('#rl').innerHTML = life(Math.min(1, n / (LIVE ? Math.max(1, target) : 160))); if (!LIVE && n === target && S.mine[0]) { S.mine[0].reach = target; store.set('mine', S.mine); } }, 120);
+  let n = 0, target = S.base || 12; if (LIVE) { target = 0; const pr = R.launching; R.launching = null; if (pr) pr.then(x => { target = x || 0; const l = $('#lzl'); if (l) l.textContent = quedan(S.left); }).catch(e => { toast(errMsg(e, 'Tu botella no salió. Intenta otra vez.'), '#D63434'); setTimeout(() => go('lanzar'), 900); }); }
+  const t = setInterval(() => { const c = $('#cnt'); if (!c || cur !== 'lanzada') return clearInterval(t); n = n < target ? Math.min(target, n + Math.ceil((target - n) / 8)) : n + (!LIVE && Math.random() < .3 ? 1 : 0); c.textContent = n; const cl = $('#cntl'); if (cl) cl.textContent = n === 1 ? 'persona ya la recibió' : 'personas ya la recibieron'; $('#rl').innerHTML = life(.12 + .6 * Math.min(1, n / (LIVE ? Math.max(1, target) : 160))); if (!LIVE && n === target && S.mine[0]) { S.mine[0].reach = target; store.set('mine', S.mine); } }, 120);
 }
 
 /* ================= INVENTARIO ================= */
@@ -1184,11 +1318,11 @@ function renderBotellas() {
   const tot = S.mine.reduce((a, m) => a + m.reach, 0), ans = S.mine.reduce((a, m) => a + m.ans, 0);
   $('#v-botellas').innerHTML = `<h1 class="h1">Mis botellas</h1>
     <button class="push muellehero" data-go="muelle"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Tus botellas especiales</b><small>Que llegan lejos, doradas y de regalo. Se ganan usando tu voz.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>
-    <div class="stats box"><div><span class="num">${S.mine.length}</span><small>lanzadas</small></div><div><span class="num">${tot}</span><small>personas las recibieron</small></div><div><span class="num">${ans}</span><small>te respondieron</small></div></div>
-    <div class="sec"><span class="h2">Te quedan ${S.left} hoy</span><span class="k mute3">${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
+    <div class="stats box"><div><span class="num">${S.mine.length}</span><small>${S.mine.length === 1 ? 'botella lanzada' : 'botellas lanzadas'}</small></div><div><span class="num">${tot}</span><small>${tot === 1 ? 'persona las recibió' : 'personas las recibieron'}</small></div><div><span class="num">${ans}</span><small>${ans === 1 ? 'respuesta' : 'respuestas'}</small></div></div>
+    <div class="sec"><span class="h2">${quedan(S.left)}</span><span class="k mute3">${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
     <div class="slots">${[0, 1, 2, 3, 4].map(i => bottle(KEYS[i], i >= S.left)).join('')}</div>
     <div class="sec"><span class="h2">En el mar</span></div>
-    <div class="cards">${S.mine.length ? '' : '<div class="box empty"><b>Todavía no lanzas ninguna.</b><small>Toca Lanzar, graba lo que quieras contar y llega a gente que ama lo mismo que tú.</small></div>'}${S.mine.map((m, i) => { const C = CAT[m.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on}" data-m="${i}"><span class="tile">${bottle(m.cat)}</span><span class="tx"><b>${esc(m.q)}</b><small>${m.reach} personas la recibieron · ${m.ans ? m.ans + (m.ans > 1 ? ' respuestas' : ' respuesta') : 'sigue llegando'}</small></span>${m.nuevo ? '<span class="new">Nueva</span>' : ''}</button>`; }).join('')}</div>`;
+    <div class="cards">${S.mine.length ? '' : '<div class="box empty"><b>Todavía no lanzas ninguna.</b><small>Toca Lanzar, graba lo que quieras contar y llega a gente que ama lo mismo que tú.</small></div>'}${S.mine.map((m, i) => { const C = CAT[m.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on}" data-m="${i}"><span class="tile">${bottle(m.cat)}</span><span class="tx"><b>${esc(m.q)}</b><small>${m.reach} ${m.reach === 1 ? 'persona la recibió' : 'personas la recibieron'} · ${m.ans ? m.ans + (m.ans > 1 ? ' respuestas' : ' respuesta') : 'sigue llegando'}</small></span>${m.nuevo ? '<span class="new">Nueva</span>' : ''}</button>`; }).join('')}</div>`;
   document.querySelectorAll('[data-m]').forEach(el => el.onclick = () => {
     const m = S.mine[+el.dataset.m], C = CAT[m.cat];
     if (LIVE) return mineTap(m, +el.dataset.m);
@@ -1226,7 +1360,7 @@ function renderChat({ id = 'leo' } = {}) {
   v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><div style="flex:1"><b>${esc(nm === 2 ? c.name : c.who)}</b><small>${nm === 2 ? 'Ya saben sus nombres' : 'Nombres ocultos por ahora'}</small></div><button class="push sq" id="call" aria-label="Llamar">${ico('phone')}</button><button class="push sq" data-go="reportar" data-p='{"id":"${id}"}' aria-label="Reportar o bloquear">${ico('more')}</button></div>
     <div class="box" style="padding:16px"><span class="badge">${C.n}</span><p class="q" style="font-size:16px;margin:12px 0">${qq(b.q)}</p>${pathH(Math.max(c.st, nm === 2 ? 2 : 1, plan ? 4 : 0))}</div>
     <div class="thread" id="th">${msgs.map((m, i) => bubble(m, i, C)).join('')}${names}${planH}</div>
-    <div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`;
+    ${presAsk(msgs, id)}<div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`;
   v._msgs = msgs;
   const bind = () => v.querySelectorAll('[data-pl]').forEach(el => el.onclick = () => playBubble(+el.dataset.pl, C));
   bind();
@@ -1242,6 +1376,8 @@ function renderChat({ id = 'leo' } = {}) {
     const m = { me: 1, url, v: 'answer-1', t: Math.max(1, cs), w }; msgs.push(m); q('#th').insertAdjacentHTML('beforeend', bubble(m, msgs.length - 1, C)); bind(); pop(800); toast('Nota de voz enviada. Tócala para escucharla.', C.c);
   };
 }
+const presAsk = (msgs, id) => (LIVE ? R.me && !R.me.intro_voice : !store.get('pres', null)) && msgs.some(m => !m.me) && msgs.some(m => m.me)
+  ? `<button class="push card presb" data-go="presenta" data-p='${JSON.stringify({ edit: 1, back: { to: 'chat', p: { id } } })}'><span class="tile">${ico('mic', INK, '#fff')}</span><span class="tx"><b>Graba tu presentación</b><small>Alguien ya te escuchó. En vez de foto, tu voz es lo primero que escucha quien quiere conocerte.</small></span>${ico('chev', INK)}</button>` : '';
 const bubble = (m, i, C) => `<div class="msg box ${m.me ? 'me' : ''}"><button class="push sq" data-pl="${i}" aria-label="Escuchar">${ico('play')}</button><span id="mw${i}" style="flex:1;display:flex">${wave(m.w, m.me ? INK : C.c, 0, 6).replace('class="px"', 'class="px w"')}</span><span class="num">${mmss(m.t)}</span></div>`;
 function playBubble(i, C) { const m = $('#v-chat')._msgs[i]; play(m, p => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, p, 6, true, m.me ? '#fff' : C.h).replace('class="px"', 'class="px w"'); }, () => { $('#mw' + i).innerHTML = wave(m.w, m.me ? INK : C.c, 1, 6).replace('class="px"', 'class="px w"'); }); }
 
@@ -1251,12 +1387,12 @@ function renderLlamada({ id = 'leo', demo } = {}) {
   const c = (CONV.find(x => x.id === id) || CONV[0] || NOC), C = CAT[c.cat], v = $('#v-llamada'); v.setAttribute('style', cvars(C));
   let s = 0;
   v.innerHTML = `<span class="k mute">Llamada de voz</span>
-    <div class="orb"><i></i><i></i><i></i><span class="core box" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
+    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.c, 1, 6)}</span></div>
     <h1 class="h1">${esc(c.who)}</h1>
     <span class="num" id="ct" style="font-size:36px">0:00</span>
     <p class="mute" style="max-width:28ch;margin:0 auto">Solo sus voces. Nadie ve una cara hasta que los dos quieran.</p>
     <button class="push hang" id="hang" aria-label="Colgar">${ico('phone', '#fff')}</button>`;
-  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada') return clearInterval(t); s++; if (s % 12 === 0) ct.textContent = mmss(s / 12); $('#oc').innerHTML = wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6, true); }, 83);
+  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada') return clearInterval(t); s++; if (s % 12 === 0) ct.textContent = mmss(s / 12); $('#oc').innerHTML = wave(W(7).slice(0, 12), C.c, 1, 6, true); }, 83);
   if (LIVE && demo && c.raw && c.raw.call_voice) signed([c.raw.call_voice]).then(() => { if (cur === 'llamada') play({ url: R.urls.get(c.raw.call_voice), t: c.raw.call_secs || 20 }, () => {}); }).catch(() => {});
   $('#hang').onclick = () => { clearInterval(t); go('chat', { id }); };
 }
@@ -1316,7 +1452,7 @@ function renderTu() {
     <div class="box pres" style="${cvars(C)}"><span class="k mute">Tu voz de presentación</span>
       <p class="from" style="margin:4px 0 12px">Es lo primero que escucha quien quiere conocerte. En vez de foto.</p>
       ${LIVE && !(R.me && R.me.intro_voice) ? '<p class="from" style="margin:0">Todavía no la grabas. Con 10 segundos basta.</p>' : voiceRow(LIVE ? R.urls.get(R.me.intro_voice) || '' : (S.presUrl || localStorage.getItem('bp.presurl') || 'answer-1'), C, mmss(pres.secs), 0, 33)}
-      <button class="push btn" data-go="presenta" data-p='{"edit":1}' style="margin-top:12px;height:48px;font-size:15px">${ico('mic', INK, '#fff')} Grabar otra vez</button></div>
+      <button class="push btn" data-go="presenta" data-p='{"edit":1}' style="margin-top:12px;height:48px;font-size:15px">${ico('mic', INK, '#fff')} ${LIVE ? (R.me && R.me.intro_voice ? 'Grabar otra vez' : 'Grabar mi presentación') : (store.get('pres', null) ? 'Grabar otra vez' : 'Grabar mi presentación')}</button></div>
     <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${['roja', 'azul', 'dorada', 'verde', 'amarilla'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Tus botellas especiales</b><small>Te quedan ${S.left} para lanzar. Aquí ves tus botellas que llegan lejos, doradas y de regalo, y cómo ganar más.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>
     <button class="push mcard" data-go="mes"><span class="k">Tu ${LIVE ? LS.month : 'noviembre'} en Botella</span><b>${LIVE ? (LS.heard ? `${LS.heard} ${LS.heard === 1 ? 'persona escuchó' : 'personas escucharon'} tu voz este mes` : 'Este mes empieza tu voz: lanza una botella') : '36 personas escucharon tu voz este mes'}</b><span class="cbars">${KEYS.map((k, i) => `<i style="--c:${CAT[k].c};flex:${mix[i]}"></i>`).join('')}</span></button>
     <div class="sec"><span class="h2">Tus temas</span><button class="k" data-go="temas" data-p='{"edit":1}' style="height:44px;color:var(--sea)">Cambiar</button></div>
@@ -1356,7 +1492,7 @@ const UNLOCK = [[2, 'Una botella dorada', 'dorada'], [3, 'Vidrio coral', 'roja']
 function renderRacha() {
   const LS = LIVE ? liveStats() : null, UL = LIVE ? ULIVE : UNLOCK, n = LIVE ? LS.streak : 4, days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], on = LIVE ? LS.week : [1, 1, 1, 1, 0, 0, 0], nx = UL.find(u => u[0] > n) || UL[UL.length - 1], prev = (UL.filter(u => u[0] <= n).pop() || [0])[0];
   $('#v-racha').innerHTML = `${topbar('tu', 'Racha')}
-    <div class="row" style="align-items:flex-end;gap:16px"><span class="num" style="font-size:112px;line-height:.8;color:var(--sea)">${n}</span><h1 class="h1" style="padding-bottom:4px">días seguidos grabando tu voz.</h1></div>
+    <div class="row" style="align-items:flex-end;gap:16px"><span class="num" style="font-size:112px;line-height:.8;color:var(--sea)">${n}</span><h1 class="h1" style="padding-bottom:4px">${n === 1 ? 'día seguido' : 'días seguidos'} grabando tu voz.</h1></div>
     <p class="mute" style="margin:16px 0 0">Cuenta cada día en que grabas algo: una botella, una respuesta o la pregunta de hoy.</p>
     <div class="box" style="padding:16px;margin-top:24px"><div class="week" style="margin:0">${days.map((d, i) => `<span class="${on[i] ? 'on' : ''}"><i></i>${d}</span>`).join('')}</div></div>
     ${LIVE && LS.today ? `<div class="box today2"><span class="tile" style="width:44px;height:44px;background:#E6F3FF">${ico('check', INK)}</span><span class="tx" style="flex:1"><b>Hoy ya grabaste.</b><small>Vuelve mañana y tu racha sigue creciendo.</small></span></div>` : `<div class="box today2"><span class="tile" style="width:44px;height:44px;background:#E6F3FF">${ico('mic', INK, '#E6F3FF')}</span><span class="tx" style="flex:1"><b>Hoy todavía no grabas.</b><small>Si el día termina sin grabar, empiezas desde 0.</small></span><button class="push btn blue sm" data-go="lanzar">Grabar</button></div>`}
@@ -1479,7 +1615,7 @@ function renderInvitar() {
     <p class="k mute3" style="text-align:center;margin:16px 0 0">${LIVE ? 'Tu voz es la mejor invitación' : 'Ya entraron 2 por tu enlace'}</p>`;
   const cp = () => { try { navigator.clipboard.writeText(invLink()); } catch (e) {} pop(1000); toast('Enlace copiado', '#368DDB'); };
   v.querySelector('#cp').onclick = cp;
-  v.querySelector('#sh').onclick = () => navigator.share ? navigator.share({ title: 'Botella', text: 'Te invito a Botella: voces que llegan a tu orilla.', url: invLink() }).catch(() => {}) : cp();
+  v.querySelector('#sh').onclick = () => navigator.share ? navigator.share({ title: 'Botella', text: 'Te invito a Botella: voces de gente que ama lo mismo que tú.', url: invLink() }).catch(() => {}) : cp();
 }
 function renderMes() {
   const v = $('#v-mes'); let i = 0;
@@ -1530,15 +1666,34 @@ function renderRespondio({ cat = 'roja', i = 0 } = {}) {
     <button class="link" data-go="botellas">Después</button>`;
   setTimeout(() => { if (cur !== 'respondio') return; const [x, y] = center(v.querySelector('.ob')); pop(); burst(x, y, [C.c, C.h, '#FFC93C', '#fff'], 64); }, RM ? 0 : 380);
 }
-function renderMar() {
+// la orilla grande llena lo que queda de pantalla sobre los filtros y el reproductor mini
+function fitShore() {
+  const bz = $('#beach2'); if (!bz || cur !== 'mar') return;
+  const top = bz.getBoundingClientRect().top + scrollY, rest = $('#legend2').offsetHeight + $('#player2').offsetHeight + 12 + 12 + 16;
+  bz.style.height = Math.max(240, Math.min(560, innerHeight - top - rest)) + 'px';
+}
+addEventListener('resize', () => { fitShore(); fitHero(); });
+// la escena de la bienvenida ocupa el alto libre, sin dejar un hueco entre la isla y el título
+function fitHero() {
+  const v = $('#v-bienvenida'), h = v && v.querySelector('.hero'); if (!h || cur !== 'bienvenida') return;
+  let rest = 0; for (let n = h.nextElementSibling; n; n = n.nextElementSibling) { const cs = getComputedStyle(n); rest += n.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom); }
+  h.style.height = Math.max(200, Math.min(520, innerHeight - (h.getBoundingClientRect().top + scrollY) - rest - 32)) + 'px';
+}
+function renderMar(p = {}) {
+  if (p.v) S.marV = p.v; const mv = S.marV || 'mapa', v = $('#v-mar');
   const groups = KEYS.map(k => [k, BOT.filter(b => b.cat === k)]).filter(g => g[1].length);
-  $('#v-mar').innerHTML = `${topbar('playa', 'Todo el mar')}
-    <h1 class="h1">Lo que llegó a tu orilla</h1>
-    <p class="mute" style="margin:8px 0 0">${BOT.length} botellas de gente que ama lo mismo que tú.</p>
+  const seg = `<div class="seg" role="tablist" aria-label="Cómo ver el mar">${[['mapa', 'Orilla'], ['lista', 'Lista']].map(([k, t]) => `<button class="push" role="tab" aria-selected="${mv === k}" data-mv="${k}">${ico(k === 'mapa' ? 'map' : 'more', mv === k ? '#fff' : INK)}${t}</button>`).join('')}</div>`;
+  v.classList.toggle('mapv', mv === 'mapa');
+  v.innerHTML = `${topbar('playa', 'Todo el mar')}${seg}` + (mv === 'mapa'
+    ? `<div class="beach box big" id="beach2"></div><div class="legend" id="legend2" role="group" aria-label="Filtrar por color"></div><article class="player box" id="player2"></article>`
+    : `<h1 class="h1">Botellas que te llegaron</h1>
+    <p class="mute" style="margin:8px 0 0">${BOT.length ? `${BOT.length} ${BOT.length === 1 ? 'botella' : 'botellas'} de gente que ama lo mismo que tú.` : 'Todavía no llega ninguna. Mientras, lanza la tuya.'}</p>
     <button class="push card gold" data-go="doradas" style="margin-top:24px;${cvars(CAT.dorada)}"><span class="tile">${bottle('dorada')}</span><span class="tx"><b>Botellas doradas</b><small>Salen primero en el mar de todos</small></span>${ico('chev', INK)}</button>
     ${groups.map(([k, l]) => `<div class="sec"><span class="h2 row" style="gap:8px"><i class="dot" style="background:${CAT[k].c}"></i>${CAT[k].g}</span><span class="k mute3">${l.length}</span></div>
-      <div class="cards">${l.map(b => `<button class="card push" style="${cvars(CAT[k])}" data-pick="${b.id}"><span class="tile">${bottle(k)}</span><span class="tx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span>${S.heard.includes(b.id) ? '' : '<span class="new">Nueva</span>'}</button>`).join('')}</div>`).join('')}`;
-  document.querySelectorAll('#v-mar [data-pick]').forEach(el => el.onclick = () => { S.sel = el.dataset.pick; S.filt = null; go('playa'); });
+      <div class="cards">${l.map(b => `<button class="card push" style="${cvars(CAT[k])}" data-pick="${b.id}"><span class="tile">${bottle(k)}</span><span class="tx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span>${S.heard.includes(b.id) ? '' : '<span class="new">Nueva</span>'}</button>`).join('')}</div>`).join('')}`);
+  if (mv === 'mapa') { renderBeach(); renderLegend(); renderPlayer(true); fitShore(); }
+  v.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { if (b.dataset.mv === mv) return; stop(); S.marV = b.dataset.mv; renderMar(); });
+  v.querySelectorAll('[data-pick]').forEach(el => el.onclick = () => { S.sel = el.dataset.pick; S.filt = null; S.marV = 'mapa'; renderMar(); scrollTo(0, 0); });
 }
 const GOLD = [
   { q: '¿Cuál es el plato que te recuerda a tu casa? El mío es el ají de gallina de mi abuela.', who: 'Alguien que ama la comida', v: 'caro-say', s: 51, n: 412 },
@@ -1583,7 +1738,7 @@ function renderReportar({ id = 'leo' } = {}) {
   const draw = () => {
     v.innerHTML = `${topbar('chat', 'Reportar', JSON.stringify({ id }))}
       <h1 class="h1">¿Qué pasó?</h1>
-      <p class="mute" style="margin:8px 0 24px">Nadie se entera de lo que elijas aquí. Lo revisamos hoy.</p>
+      <p class="mute" style="margin:8px 0 24px">Nadie se entera de lo que elijas aquí. Una persona del equipo lo revisa.</p>
       <div class="box menu" role="radiogroup">${REP.map(t => `<button class="mrow orow" role="radio" aria-checked="${sel === t}" data-o="${t}"><span class="rad"></span><span class="tx"><b>${t}</b></span></button>`).join('')}</div>
       <button class="push btn red" id="rs" style="margin-top:32px" ${sel ? '' : 'disabled'}>${ico('flag', '#fff')} Enviar reporte</button>
       <button class="link" id="bl">Bloquear sin reportar</button>`;
@@ -1608,7 +1763,7 @@ const unread = () => AVISOS.filter(a => !store.get('read', []).includes(a.id)).l
 const bellBtn = () => { const n = unread(); return `<button class="push sq bell" data-go="avisos" aria-label="Avisos${n ? ', ' + n + ' sin leer' : ''}">${ico('bell', INK)}${n ? `<span class="nb2">${n}</span>` : ''}</button>`; };
 function renderAvisos() {
   const read = store.get('read', []), v = $('#v-avisos');
-  const row = a => { const C = CAT[a.cat], on = !read.includes(a.id); return `<button class="mrow av ${on ? 'unr' : ''}" data-a="${a.id}"><span class="mi" style="background:color-mix(in srgb,${C.c} 22%,#fff)">${ico(a.ic, C.k)}</span><span class="tx"><b>${esc(a.t)}</b><small>${esc(a.d)}</small><small class="k mute3" style="font-size:11px">${a.ago}</small></span>${on ? '<i class="udot" aria-label="Sin leer"></i>' : ''}</button>`; };
+  const row = a => { const C = CAT[a.cat], on = !read.includes(a.id); return `<button class="mrow av ${on ? 'unr' : ''}" data-a="${a.id}"><span class="mi" style="background:color-mix(in srgb,${C.c} 22%,#fff)">${ico(a.ic, C.k)}</span><span class="tx"><b>${esc(a.t)}</b><small>${esc(a.d)}</small><small class="k mute3" style="font-size:13px">${a.ago}</small></span>${on ? '<i class="udot" aria-label="Sin leer"></i>' : ''}</button>`; };
   v.innerHTML = `${topbar('playa', '', '', unread() ? `<button class="k" id="all" style="height:48px;color:var(--sea)">Marcar leído</button>` : '')}
     <h1 class="h1">Avisos</h1>
     <p class="mute" style="margin:8px 0 0">${unread() ? `Tienes ${unread()} sin leer.` : 'Estás al día.'}</p>
@@ -1650,7 +1805,7 @@ function renderSinred() {
   v.innerHTML = `${topbar('playa', '')}
     <div class="sp"></div>
     <div class="nosig" aria-hidden="true"><span class="nsb">${bottle('azul')}</span>${sprite(['o.......o', '.o.....o.', '..o...o..', '...o.o...', '....o....', '...o.o...', '..o...o..', '.o.....o.', 'o.......o'], { o: '#E03B3B' }, 'nsx')}</div>
-    <h1 class="hx" style="text-align:center">Sin señal en la orilla.</h1>
+    <h1 class="hx" style="text-align:center">Te quedaste sin internet.</h1>
     <p class="mute" style="text-align:center;margin:12px auto 0;max-width:30ch;font-size:16px">Tu grabación quedó guardada en el teléfono. La enviamos apenas vuelva internet.</p>
     <div class="box pend"><span class="tile" style="width:44px;height:44px">${bottle('roja')}</span><span class="tx"><b>1 botella esperando</b><small>Se envía sola, no tienes que hacer nada</small></span><span class="spin" aria-hidden="true"><i></i><i></i><i></i></span></div>
     <div class="sp"></div>
@@ -1675,7 +1830,7 @@ function renderAjustes() {
   v.innerHTML = `${topbar('tu', '')}
     <h1 class="h1">Ajustes</h1>
     <div class="sec"><span class="h2">Avisos</span></div>
-    <div class="box menu">${sw('n.resp', 'Cuando te responden', 'Una botella o una nota de voz')}${sw('n.hoy', 'Pregunta de hoy', 'Una vez al día, a las 8:00 a. m.')}${sw('n.racha', 'Recordatorio de racha', 'Si el día se acaba sin grabar', false)}${sw('n.mail', 'También por correo', 'Solo lo importante', false)}</div>
+    <div class="box menu">${sw('n.resp', 'Cuando te responden', 'Una botella o una nota de voz')}${sw('n.hoy', 'Pregunta de hoy', 'Una vez al día, a las 8 de la mañana')}${sw('n.racha', 'Recordatorio de racha', 'Si el día se acaba sin grabar', false)}${sw('n.mail', 'También por correo', 'Solo lo importante', false)}</div>
     <div class="sec"><span class="h2">Sonido</span></div>
     <div class="box menu">${sw('snd', 'Sonidos de consola', 'Un pequeño “pop” al tocar, lanzar y destapar')}${sw('vib', 'Vibración', 'Al lanzar, enviar y destapar')}</div>
     <div class="sec"><span class="h2">Tu cuenta</span></div>
@@ -1723,6 +1878,7 @@ const POS = WB.map(b => ({ x: b.x, y: b.y, w: b.w, sea: b.sea, d: b.d, dl: b.dl,
 // las botellas de bienvenida son las de ejemplo del servidor: al crear tu cuenta, tu respuesta le llega a esa persona
 const WEL = { leo: ['5a5ab000-0000-4000-8000-000000000002', 'Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.'], belen: ['5a5ab000-0000-4000-8000-000000000007', 'El día que me perdí en el Centro y terminó siendo lo mejor.'], ivan: ['5a5ab000-0000-4000-8000-000000000004', '¿Qué canción te devuelve a tus 15 años?'], caro: ['5a5ab000-0000-4000-8000-000000000010', '¿Cuál es el mejor atardecer que has visto en Lima?'], noche: ['5a5ab000-0000-4000-8000-000000000001', '¿Qué harías un domingo si nadie en esta ciudad te conociera?'] };
 const uid = () => R.ses && R.ses.user ? R.ses.user.id : null;
+const ev = (name, props) => { if (!LIVE || !sb) return; try { sb.from('events').insert({ name, props: props || null, user_id: uid() }).then(() => {}, () => {}); } catch (e) {} };
 async function rpc(n, a) { const { data, error } = await sb.rpc(n, a); if (error) throw error; return data; }
 const one = d => Array.isArray(d) ? d[0] : d;
 const hashS = s => { let h = 7; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return Math.abs(h); };
@@ -1731,7 +1887,7 @@ const KIND = { roja: 'Confesión', azul: 'Historia', morada: 'Pregunta', verde: 
 const catOf = (voice, kind, id) => { const m = /\/(roja|azul|morada|verde|amarilla|dorada)-/.exec(voice || ''); if (m) return m[1]; const h = hashS(id); return kind === 'Confesión' ? ['roja', 'verde'][h % 2] : kind === 'Historia' ? ['azul', 'amarilla'][h % 2] : ['morada', 'azul', 'verde'][h % 3]; };
 const toW = pk => Array.isArray(pk) && pk.length ? Array.from({ length: 30 }, (_, i) => .18 + .82 * Math.min(1, Math.max(0, +pk[Math.floor(i * pk.length / 30)] || .2))) : null;
 const peaksOf = w => (w || []).map(v => Math.round(v * 100) / 100);
-const agoS = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 1 ? 'ahora' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`; };
+const agoS = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 1 ? 'ahora' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} ${Math.round(m / 60) === 1 ? 'hora' : 'horas'}` : `hace ${Math.round(m / 1440)} ${Math.round(m / 1440) === 1 ? 'día' : 'días'}`; };
 const hhmm = iso => { const d = new Date(iso), n = new Date(); if (d.toDateString() === n.toDateString()) return d.toLocaleTimeString('es-PE', { hour: 'numeric', minute: '2-digit' }); if (n - d < 2 * 864e5) return 'Ayer'; return d.toLocaleDateString('es-PE', { weekday: 'short' }).replace('.', ''); };
 const LOVES = { 'Música': 'ama la música', 'Cine': 'ama el cine', 'Libros': 'ama los libros', 'Viajes': 'ama viajar', 'Fútbol': 'ama el fútbol', 'Comida': 'ama comer rico', 'La ciudad': 'ama la ciudad', 'Trabajo': 'vive su trabajo', 'Filosofía': 'ama la filosofía', 'Amor': 'cree en el amor', 'Tecnología': 'ama la tecnología', 'Arte': 'ama el arte' };
 const someone = t => t ? 'Alguien que ' + (LOVES[t] || 'ama ' + String(t).toLowerCase()) : 'Alguien';
@@ -1768,7 +1924,7 @@ function syncMe() { const m = R.me; if (!m) return; S.left = m.bottles; S.temas.
 async function loadMe() { R.me = one(await rpc('tide')); if (R.me && !R.me.id) R.me = null; syncMe(); if (R.me && R.me.intro_voice) await signed([R.me.intro_voice]).catch(() => {}); return R.me; }
 async function loadShore() {
   const rows = (await rpc('shore')) || []; await signed(rows.map(r => r.voice)); R.shore = rows;
-  const list = rows.map((r, i) => ({ id: r.id, cat: catOf(r.voice, r.kind, r.id), q: r.body || '', who: someone(r.place), ago: agoS(r.arrived), url: R.urls.get(r.voice), voice: r.voice, t: r.voice_secs, wv: toW(r.voice_peaks) || W(hashS(r.id) % 60 + 1), ...POS[i % POS.length], status: r.status }));
+  const list = rows.map((r, i) => ({ id: r.id, cat: catOf(r.voice, r.kind, r.id), q: r.body || '', who: someone(r.place) + (r.sample ? ' · voz de ejemplo' : ''), ago: agoS(r.arrived), url: R.urls.get(r.voice), voice: r.voice, t: r.voice_secs, wv: toW(r.voice_peaks) || W(hashS(r.id) % 60 + 1), ...POS[i % POS.length], status: r.status }));
   BOT.length = 0; BOT.push(...list);
   S.heard = list.filter(b => b.status === 'opened').map(b => b.id);
   if (!BOT.some(b => b.id === S.sel)) S.sel = BOT[0] ? BOT[0].id : null;
@@ -1782,7 +1938,7 @@ async function loadMine() {
 async function loadConvos() {
   const rows = (await rpc('my_convos')) || [], cc = store.get('ccat', {}), seen = store.get('seenc', {}); R.convos = rows;
   CONV.length = 0;
-  rows.forEach(c => CONV.push({ id: c.id, name: c.alias, cat: cc[c.id] || KEYS[hashS(c.id) % 5], who: c.alias, raw: c, ago: hhmm(c.last_at), st: c.my_key && c.other_key ? 3 : c.revealed ? 2 : 1,
+  rows.forEach(c => CONV.push({ id: c.id, name: c.alias, cat: cc[c.id] || KEYS[hashS(c.id) % 5], who: c.alias, eg: !!c.sample, raw: c, ago: hhmm(c.last_at), st: c.my_key && c.other_key ? 3 : c.revealed ? 2 : 1,
     last: c.closed ? 'La conversación terminó' : c.last_mine ? 'Le respondiste. Esperando su voz' : (seen[c.id] || '') >= c.last_at ? 'Te respondió con su voz' : 'Nota de voz nueva' }));
   // las respuestas de las personas de ejemplo llegan a los pocos segundos: se busca otra vez a esa hora
   clearTimeout(R.pt); const nx = rows.map(c => c.next_at ? new Date(c.next_at) - Date.now() : 0).filter(x => x > 0 && x < 3e5);
@@ -1802,8 +1958,8 @@ async function loadNotices() {
   AVISOS.length = 0;
   (data || []).filter(n => NK[n.kind]).forEach(n => { const [ic, cat] = NK[n.kind];
     // sin horas fijas: el mar siempre está trayendo voces
-    const t = n.kind === 'tide' ? 'Llegaron voces nuevas a la pregunta de hoy' : n.kind === 'expiring' ? 'Una botella de tu orilla está por seguir su viaje' : n.title;
-    const d = n.kind === 'tide' || n.kind === 'expiring' ? 'Escúchala antes de que siga a otra orilla' : (n.body || '');
+    const t = n.kind === 'tide' ? 'Llegaron voces nuevas a la pregunta de hoy' : n.kind === 'expiring' ? 'Una botella que te llegó está por seguir su viaje' : n.title;
+    const d = n.kind === 'tide' || n.kind === 'expiring' ? 'Escúchala antes de que siga su viaje' : (n.body || '');
     AVISOS.push({ id: n.id, ic, cat, t: t.replace(/con lacre/g, 'de regalo'), d: d.replace(/con lacre/g, 'de regalo'), ago: agoS(n.at), go: NGO[n.go] || 'playa', p: n.go === 'chat' && n.ref ? { id: n.ref } : {} }); });
 }
 async function loadAll() { await loadMe(); if (!R.me) return; await Promise.all([loadShore(), loadMine(), loadConvos(), loadHome(), loadNotices()].map(p => p.catch(e => console.warn(e)))); }
@@ -1843,7 +1999,7 @@ async function createProfile() {
 }
 async function enter(to, p = {}) {
   await loadAll();
-  if (!R.me) { go('presenta'); return; }
+  if (!R.me) { go('sobre'); return; }
   subscribe(); store.set('onb', true);
   const h = location.hash.slice(1);
   go(to || (NAVV.includes(h) ? h : 'playa'), p);
@@ -1959,7 +2115,7 @@ async function onMsg(m) {
   else if (m.voice) toast(`${c.who} te mandó una nota de voz`, CAT[c.cat].c);
   else if (m.body && m.body.startsWith('#plan|')) toast(`${c.who} te propone un plan`, CAT[c.cat].c);
 }
-async function onDelivery() { const before = BOT.length; await loadShore().catch(() => {}); if (BOT.length > before) { if (cur === 'playa' && !playing && !MIC.on) VIEWS.playa(); else if (!['lanzar', 'llamada', 'entrante'].includes(cur)) toast('Llegó una botella a tu orilla.', '#368DDB'); } }
+async function onDelivery() { const before = BOT.length; await loadShore().catch(() => {}); if (BOT.length > before) { if (cur === 'playa' && !playing && !MIC.on) VIEWS.playa(); else if (!['lanzar', 'llamada', 'entrante'].includes(cur)) toast('Te llegó una botella.', '#368DDB'); } }
 async function onConvo(row) {
   const prev = R.convos.find(x => x.id === row.id), had = prev && prev.my_key && prev.other_key, wasRev = prev && prev.revealed;
   await loadConvos().catch(() => {}); const c = CONV.find(x => x.id === row.id); if (!c) return;
@@ -1990,10 +2146,10 @@ function renderChatLive({ id } = {}) {
   const planH = plan ? `<div class="plan box pop"><span class="tile" style="width:44px;height:44px">${ico('pin', INK)}</span><span class="tx"><span class="k" style="color:var(--k)">${planOk ? 'Plan confirmado' : lp.sender === me ? 'Plan · esperando que confirme' : 'Te propone un plan'}</span><b>${esc(plan)}</b>${!planOk && lp.sender !== me ? '<button class="push btn sm" id="pok" style="margin-top:8px">Me parece bien</button>' : ''}</span></div>`
     : nm === 2 ? `<button class="push card" data-go="plan" data-p='{"id":"${id}"}'><span class="tile">${ico('pin', INK)}</span><span class="tx"><b>Proponer un plan</b><small>Un lugar público, un día y una hora</small></span>${ico('chev', INK)}</button>` : '';
   const st = planOk ? 4 : c.st;
-  v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><div style="flex:1"><b>${esc(c.name)}</b><small>${nm === 2 ? 'Ya saben sus nombres' : 'Nombres ocultos por ahora'}</small></div><button class="push sq" id="call" aria-label="Llamar">${ico('phone')}</button><button class="push sq" data-go="reportar" data-p='{"id":"${id}"}' aria-label="Reportar o bloquear">${ico('more')}</button></div>
+  v.innerHTML = `<div class="chead"><button class="push sq" data-go="voces" aria-label="Volver">${ico('back')}</button><div style="flex:1"><b>${esc(c.name)}</b><small>${raw.sample ? 'Voz de ejemplo · ' : ''}${nm === 2 ? 'Ya saben sus nombres' : 'Nombres ocultos por ahora'}</small></div><button class="push sq" id="call" aria-label="Llamar">${ico('phone')}</button><button class="push sq" data-go="reportar" data-p='{"id":"${id}"}' aria-label="Reportar o bloquear">${ico('more')}</button></div>
     <div class="box" style="padding:16px"><span class="badge">${C.n}</span><p class="q" style="font-size:16px;margin:12px 0">${qq(qtext)}</p>${pathH(st)}</div>
     <div class="thread" id="th">${L ? msgs.map((m, i) => bubble(m, i, C)).join('') : '<p class="k mute3" style="text-align:center">Trayendo las voces…</p>'}${raw.next_at ? '<p class="k mute3" style="text-align:center;margin:8px 0">Está grabando su respuesta…</p>' : ''}${L ? names + planH : ''}</div>
-    ${raw.closed ? '<div class="dock"><span class="hint2 box">Esta conversación terminó</span></div>' : `<div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`}`;
+    ${raw.closed ? '' : presAsk(msgs, id)}${raw.closed ? '<div class="dock"><span class="hint2 box">Esta conversación terminó</span></div>' : `<div class="dock"><span class="hint2 box">Responde con tu voz</span><button class="push sq mic" style="width:64px;height:64px" id="cmic" aria-label="Grabar">${ico('mic', C.on, C.c)}</button></div>`}`;
   v._msgs = msgs;
   v.querySelectorAll('[data-pl]').forEach(el => el.onclick = () => playBubble(+el.dataset.pl, C));
   q('#call').onclick = () => callTap(id);
@@ -2014,12 +2170,13 @@ function renderChatLive({ id } = {}) {
 
 /* ---------- arranque ---------- */
 async function liveBoot() {
+  ev('abrio', { h: innerHeight, w: innerWidth });
   WB.forEach(b => { if (WEL[b.id]) b.q = WEL[b.id][1]; });
   const qs = new URLSearchParams(location.search), code = qs.get('c');
   if (code) { const c = code.trim().toUpperCase(); store.set('code', c); history.replaceState(null, '', location.pathname + location.hash); rpc('check_code', { p_code: c }).then(ok => store.set('codeok', !!ok)).catch(() => {}); }
   sb.auth.onAuthStateChange((ev, ses) => { R.ses = ses; if (ev === 'PASSWORD_RECOVERY') setTimeout(() => go('olvide', { nueva: 1 }), 300); });
   try { const { data } = await sb.auth.getSession(); R.ses = data && data.session; } catch (e) {}
-  if (R.ses) { try { await loadAll(); } catch (e) { show('sinred', {}); return; } if (R.me) { subscribe(); store.set('onb', true); const h = location.hash.slice(1); show(VIEWS[h] && !['bienvenida', 'cuenta', 'entrar', 'primera', 'chat', 'llamada', 'entrante', 'respondio', 'lanzada', 'plan', 'reportar'].includes(h) ? h : 'playa', {}); return; } { const h = location.hash.slice(1); show(['sobre', 'temas'].includes(h) && localStorage.getItem('bp.presurl') ? h : 'presenta', {}); } return; }
+  if (R.ses) { try { await loadAll(); } catch (e) { show('sinred', {}); return; } if (R.me) { subscribe(); store.set('onb', true); const h = location.hash.slice(1); show(VIEWS[h] && !['bienvenida', 'cuenta', 'entrar', 'primera', 'chat', 'llamada', 'entrante', 'respondio', 'lanzada', 'plan', 'reportar'].includes(h) ? h : 'playa', {}); return; } { const h = location.hash.slice(1); show(['sobre', 'temas'].includes(h) ? h : 'sobre', {}); } return; }
   const h = location.hash.slice(1); show(['entrar', 'olvide', 'normas'].includes(h) ? h : 'bienvenida', {});
 }
 
@@ -2205,12 +2362,12 @@ function renderLlamadaLive(id) {
   if (!CALL) { setTimeout(() => go('chat', { id }), 0); return; }
   const lab = () => !CALL ? '' : CALL.state === 'live' ? mmss((Date.now() - CALL.t0) / 1000) : CALL.state === 'connecting' ? 'Conectando…' : 'Llamando…';
   v.innerHTML = `<span class="k mute">Llamada de voz</span>
-    <div class="orb"><i></i><i></i><i></i><span class="core box" id="oc">${wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6)}</span></div>
+    <div class="orb"><i></i><i></i><i></i><span class="core voice" id="oc">${wave(W(7).slice(0, 12), C.c, 1, 6)}</span></div>
     <h1 class="h1">${esc(c.name)}</h1>
     <span class="num" id="ct" style="font-size:36px">${lab()}</span>
     <p class="mute" style="max-width:28ch;margin:0 auto">Solo sus voces. Nadie ve una cara hasta que los dos quieran.</p>
     <button class="push hang" id="hang" aria-label="Colgar">${ico('phone', '#fff')}</button>`;
-  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada' || !CALL) return clearInterval(t); ct.textContent = lab(); if (CALL.state === 'live') $('#oc').innerHTML = wave(W(7).slice(0, 12), C.on === '#fff' ? '#fff' : INK, 1, 6, true); }, 250);
+  const t = setInterval(() => { const ct = $('#ct'); if (!ct || cur !== 'llamada' || !CALL) return clearInterval(t); ct.textContent = lab(); if (CALL.state === 'live') $('#oc').innerHTML = wave(W(7).slice(0, 12), C.c, 1, 6, true); }, 250);
   $('#hang').onclick = () => { clearInterval(t); callEnd(CALL && CALL.state === 'live' ? 'La llamada terminó.' : ''); };
 }
 
@@ -2231,6 +2388,7 @@ function show(name, p) {
   cur = name;
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + name));
   VIEWS[name](p);
+  longLabels(name);
   refresh(name, p);
   $('#nav').hidden = NONAV.includes(name);
   $('#app').classList.toggle('bare', NONAV.includes(name));
@@ -2238,14 +2396,16 @@ function show(name, p) {
   if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
   scrollTo(0, 0);
 }
+function longLabels(name) { document.querySelectorAll(`#v-${name} .btn, #v-${name} .k`).forEach(e => { if (e.textContent.trim().length > 18) e.classList.add('lg'); }); }
 function go(name, p = {}) {
   if (!VIEWS[name]) name = 'playa';
   stop(); $('#ov').innerHTML = '';
-  if (!cur || name === 'lanzada') show(name, p); else wipe(() => show(name, p));
+  if (!cur || name === 'lanzada' || (NAVV.includes(cur) && NAVV.includes(name))) show(name, p); else wipe(() => show(name, p));
 }
 document.addEventListener('click', e => {
   const gg = e.target.closest('[data-go]'); if (gg) { e.preventDefault(); go(gg.dataset.go, gg.dataset.p ? JSON.parse(gg.dataset.p) : {}); return; }
   const b = e.target.closest('[data-b]'); if (b) { select(b.dataset.b); return; }
+  if (e.target.closest('#beach')) { go('mar', { v: 'mapa' }); return; }
   const f = e.target.closest('[data-f]'); if (f) { S.filt = f.dataset.f || null; const l = BOT.filter(x => !S.filt || x.cat === S.filt); const keep = l.some(x => x.id === S.sel); if (l.length && !keep) S.sel = l[0].id; renderBeach(); renderLegend(); renderPlayer(!keep); }
 });
 $('#wm').innerHTML = [...'BOTELLA'].map((ch, i) => `<span style="animation-delay:${i * .12}s">${ch}</span>`).join('');
@@ -2256,7 +2416,7 @@ addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h !
 const h0 = location.hash.slice(1);
 const booted = LIVE ? liveBoot().catch(e => { console.error(e); show('bienvenida', {}); }) : (show(VIEWS[h0] ? h0 : (store.get('onb', false) ? 'playa' : 'bienvenida'), {}), null);
 const ready = (document.fonts && document.fonts.ready) || Promise.resolve();
-Promise.all([ready, booted, new Promise(r => setTimeout(r, RM ? 0 : 700))]).then(() => { const l = $('#loader'); wipe(() => l.remove()); });
+Promise.all([ready, booted, new Promise(r => setTimeout(r, RM ? 0 : 700))]).then(() => { fitHero(); fitShore(); const l = $('#loader'); wipe(() => l.remove()); });
 }
 </script>
 </body>
