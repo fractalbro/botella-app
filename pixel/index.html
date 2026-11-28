@@ -721,14 +721,13 @@ const cvars = C => `--c:${C.c};--k:${C.k};--hl:${C.h};--on:${C.on};--cb:${C.t ||
 /* ================= SPRITES (pixel art en SVG) ================= */
 const BOTTLE = ['....oooo....','...occcCo...','...occcCo...','...oooooo...','....ohgo....','....ohgo....','...ohggGo...','..ohgggGGo..','.ohgggggGGo.','.ohgpppPgGo.','.ohgpppPgGo.','.ohgrrrrgGo.','.ohgpppPgGo.','.ohgpppPgGo.','.oggpppPgGo.','.ogggggggGo.','.oGgggggGGo.','..oGGGGGGo..','...oooooo...'];
 const CORK = ['.oooo.','occcCo','occcCo','oooooo'];
-// El corcho dice qué tan lejos llega la botella. El color del vidrio es el del tema.
+// Todas llevan el mismo corcho. Las especiales se distinguen por su vidrio (ver SPG).
 const CORKS = {
   far:  ['.....oo.....','....oaao....','...oaaaAo...','...oooooo...'],
   tide: ['...o.oo.o...','...ouuuUo...','...ouuuUo...','...oooooo...'],
   gift: ['..oo....oo..','..ovoooovo..','...ovvvVo...','...oooooo...']
 };
 const CORKP = { a: '#5EC2F2', A: '#2477C4', u: '#FFD447', U: '#C7891A', v: '#F2506A', V: '#A3213A' };
-const CORKN = { free: 'corcho de madera', far: 'corcho azul en punta', tide: 'corona dorada', gift: 'corcho con moño' };
 const corkOf = b => b ? (b.gold || b.featured ? 'tide' : b.btype === 'far' || b.far ? 'far' : b.btype === 'gift' ? 'gift' : null) : null;
 const gk = b => b.gold ? 'dorada' : b.cat;
 function sprite(map, pal, cls = '') {
@@ -737,8 +736,11 @@ function sprite(map, pal, cls = '') {
   return `<svg class="px ${cls}" viewBox="0 0 ${map[0].length} ${map.length}" aria-hidden="true">${r}</svg>`;
 }
 const pal = (cat, empty) => { const C = CAT[cat] || CAT.azul; return empty ? { o: '#B9B2A4', c: '#E9E1D2', C: '#D8CFBD' } : { o: INK, c: '#D69A5A', C: '#94602F', h: C.h, g: C.c, G: C.k, p: '#F6EBD0', P: '#D9C49A', r: C.k }; };
-const bottle = (cat, empty, nocork, cork) => { const P = pal(cat, empty), M = nocork ? BOTTLE.map((r, i) => i < 3 ? '............' : r) : CORKS[cork] ? [...CORKS[cork], ...BOTTLE.slice(4)] : BOTTLE;
-  if (CORKS[cork]) Object.assign(P, empty ? { a: '#E9E1D2', A: '#D8CFBD', u: '#E9E1D2', U: '#D8CFBD', v: '#E9E1D2', V: '#D8CFBD' } : CORKP);
+// Las botellas especiales tienen vidrio propio, con colores que ningún tema usa: así en el Muelle se ven distintas.
+CAT.lejos = { n:'Llega lejos', g:'Llega lejos', d:'Empieza con 30 personas', c:'#2E3A7A', k:'#161D45', h:'#7FE8FF', on:'#fff' };
+CAT.regalo = { n:'De regalo', g:'De regalo', d:'Se manda en una conversación', c:'#C9D6E2', k:'#7F93A8', h:'#FFFFFF', on:'#181425' };
+const SPG = { far: 'lejos', tide: 'dorada', gift: 'regalo' };
+const bottle = (cat, empty, nocork, cork) => { if (SPG[cork]) cat = SPG[cork]; const P = pal(cat, empty), M = nocork ? BOTTLE.map((r, i) => i < 3 ? '............' : r) : BOTTLE;
   return sprite(M, P, 'spr'); };
 const IC = {
   playa: ['...ooo....','..oyyyo...','..oyyyo...','...ooo....','..........','o..oo..oo.','.oo..oo..o','..........','o..oo..oo.','.oo..oo..o'],
@@ -1349,10 +1351,10 @@ function renderLanzada({ cat = store.get('lastcat', 'amor') } = {}) {
 /* ================= INVENTARIO ================= */
 function renderBotellas() {
   const tot = S.mine.reduce((a, m) => a + m.reach, 0), ans = S.mine.reduce((a, m) => a + m.ans, 0), h = haveSp(), t0 = tk(S.temas[0] || '') || 'viajar';
-  // Lo primero: las botellas que tienes. Cada una lleva tu voz a gente que ama lo mismo que tú; el corcho dice cuánto llega.
+  // Lo primero: las botellas que tienes. Cada una lleva tu voz a gente que ama lo mismo que tú; las especiales tienen color propio.
   const MIAS = [['free', 'Normales', S.left, 'Llegan a 12 personas que aman tu tema.'], ['far', 'Llegan lejos', h.far || 0, 'Llegan a 30 personas, también de temas cercanos.'], ['tide', 'Doradas', h.tide || 0, 'Salen primero en el mar de todos.'], ['gift', 'De regalo', h.gift || 0, 'Se las mandas a alguien con quien conversas.']];
   $('#v-botellas').innerHTML = `<h1 class="h1">Mis botellas</h1>
-    <div class="box mias"><span class="k mute3">Tus botellas</span><b class="mias-t">Cada botella lleva tu voz a gente que ama lo mismo que tú.</b><small class="mute">Graba algo, lánzala y sigue llegando a más gente hasta que alguien te responde. El color es el tema; el corcho, qué tan lejos llega.</small>
+    <div class="box mias"><span class="k mute3">Tus botellas</span><b class="mias-t">Cada botella lleva tu voz a gente que ama lo mismo que tú.</b><small class="mute">Graba algo, lánzala y sigue llegando a más gente hasta que alguien te responde. El color es el tema. Las especiales tienen colores propios.</small>
       <div class="mias-g">${MIAS.map(([k, t, n, d]) => `<div class="mia ${n ? '' : 'cero'}"><span class="mia-b">${bottle(t0, !n, false, k === 'free' ? null : k)}</span><span class="tx"><b>${t}</b><small>${d}</small></span><span class="num mia-n" aria-label="Tienes ${n}">×${n}</span></div>`).join('')}</div>
       <div class="row mias-f"><span class="k mute3">${quedan(S.left)} · ${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
       <button class="push btn blue" data-go="lanzar" style="margin-top:16px">${ico('mic', '#fff')} Lanzar una botella</button></div>
@@ -1521,7 +1523,7 @@ const SPECIAL = [['far', 'vidrio', 'Que llega lejos', 'Empieza con 30 personas, 
 function renderMuelle() {
   const v = $('#v-muelle'), have = haveSp();
   v.innerHTML = `${topbar('tu', '')}
-    <h1 class="h1">Muelle</h1><p class="mute" style="margin:8px 0 24px">El corcho dice qué tan lejos llega cada botella. Por ahora todas son gratis: se ganan usando tu voz.</p>
+    <h1 class="h1">Muelle</h1><p class="mute" style="margin:8px 0 24px">Cada botella especial tiene su propio color. Por ahora todas son gratis: se ganan usando tu voz.</p>
     <div class="vlist">${SPECIAL.map(([k, c, t, d]) => `<div class="box spm" style="${cvars(CAT[c])}"><span class="sbot">${bottle('viajar', !have[k], false, k)}</span><span class="tx"><b>${t}</b><small>${d}</small><small class="gana">${GANA[k]}</small>${precio(k)}</span><span class="num" aria-label="Tienes ${have[k] || 0}">×${have[k] || 0}</span></div>`).join('')}
       <div class="box spm" style="${cvars(CAT.azul)}"><span class="sbot">${bottle('viajar')}</span><span class="tx"><b>Normales</b><small>Empiezan con 12 personas que aman tu tema.</small><small class="gana">Te llega una cada día y ganas otra cada vez que respondes una botella.</small>${precio('free')}</span><span class="num" aria-label="Tienes ${S.left}">×${S.left}</span></div></div>
     <div class="box menu" style="margin-top:16px">${menuRow(`<span style="width:16px;display:block">${bottle('cine')}</span>`, 'Botella para dos', 'Tu voz y la de un amigo. Empieza con 20 personas y usa una normal', 'dos')}</div>

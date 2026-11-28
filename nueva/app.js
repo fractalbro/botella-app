@@ -34,7 +34,7 @@ const TC = { 'Música': '#FF70A9', 'Cine': '#8E8CFF', 'Libros': '#9FE3B0', 'Comi
 const tc = t => (typeof TC !== 'undefined' && TC[t]) || '#7FD8C9';
 // El color de cada botella es el de su tema (como en la pixel). Solo la dorada tiene color propio.
 Object.values(B).forEach(b => { if (b.tag) b.c = tc(b.tag); });
-// El corcho dice el poder de la botella (normal, llega lejos, dorada, de regalo). El vidrio, su tema.
+// El tipo de botella (normal, llega lejos, dorada, de regalo). Las especiales tienen vidrio propio (SPC).
 const corkOf = x => x ? (x.gold || x.dorada ? 'tide' : x.far ? 'far' : x.gift ? 'gift' : '') : '';
 const PRECIO = { '': 'S/ 0.90', far: 'S/ 3.90', tide: 'S/ 5.90', gift: 'S/ 2.90' };
 const precio = k => `<span class="price"><s>${PRECIO[k]}</s><b>Gratis</b></span>`;
@@ -103,7 +103,9 @@ I.sea = '<svg viewBox="0 0 24 24"><path d="M5 8.5v-2l1-1.5v-1h2v1l1 1.5v2M15 13.
 I.shuffle = '<svg viewBox="0 0 24 24"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 3.8c1.1 1.6 2.3 2.6 4.3 2.6H21M17.5 13.5 21 17l-3.5 3.5M3 17h3.5c1.3 0 2.2-.4 3-1.2M13.2 8.2c.8-.8 1.8-1.2 3.3-1.2H21M17.5 3.5 21 7l-3.5 3.5"/></svg>';
 let bn = 0;
 const CORKH = { far: '<path d="M104 18h6l8 7-8 7h-6z" fill="#4FB3E8"/>', tide: '<rect x="104" y="18" width="10" height="14" rx="2" fill="#F5B82E"/><path d="M114 18l5 3-3 4 3 4-5 3z" fill="#FFD447"/>', gift: '<rect x="104" y="18" width="10" height="14" rx="2" fill="#E8455B"/><path d="M113 25l7-7v14z" fill="#FF7A8E"/>' };
-const bottleSVG = (c, cork) => { const id = 'g' + (bn++); return `<svg class="bt" viewBox="0 0 120 50" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".55"/><stop offset=".55" stop-color="${c}" stop-opacity=".14"/><stop offset="1" stop-color="${c}" stop-opacity=".38"/></linearGradient></defs><path d="M14 6h52c8 0 12 6 18 10h20v18H84c-6 4-10 10-18 10H14C8 44 4 40 4 34V16C4 10 8 6 14 6Z" fill="url(#${id})" stroke="${c}" stroke-opacity=".85" stroke-width="1.6"/><rect x="14" y="17.5" width="46" height="15" rx="7.5" fill="#F3E6C8"/>${CORKH[cork] || '<rect x="104" y="18" width="10" height="14" rx="2" fill="#8A5A33"/>'}<path d="M15 11.5h44" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/></svg>`; };
+// Las especiales tienen vidrio propio, con colores que ningún tema usa.
+const SPC = { far: '#00E1FF', tide: '#FFC24B', gift: '#E4ECF4' };
+const bottleSVG = (c, cork) => { if (SPC[cork]) c = SPC[cork]; const id = 'g' + (bn++); return `<svg class="bt" viewBox="0 0 120 50" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".55"/><stop offset=".55" stop-color="${c}" stop-opacity=".14"/><stop offset="1" stop-color="${c}" stop-opacity=".38"/></linearGradient></defs><path d="M14 6h52c8 0 12 6 18 10h20v18H84c-6 4-10 10-18 10H14C8 44 4 40 4 34V16C4 10 8 6 14 6Z" fill="url(#${id})" stroke="${c}" stroke-opacity=".85" stroke-width="1.6"/><rect x="14" y="17.5" width="46" height="15" rx="7.5" fill="#F3E6C8"/><rect x="104" y="18" width="10" height="14" rx="2" fill="#8A5A33"/><path d="M15 11.5h44" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/></svg>`; };
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const fakePeaks = n => Array.from({ length: 28 }, (_, i) => +(0.3 + Math.abs(Math.sin(i * 1.7 + n)) * .7).toFixed(2));
 
@@ -413,7 +415,7 @@ R.olvide = () => ({ html: `
 // Portada = la forma de la voz dentro de la botella + la pregunta grande, en el color del tema.
 let vb = 0;
 const CORKV = { far: '<path d="M64 44V30l16-14 16 14v14z" fill="#4FB3E8"/><path d="M64 30l16-14 16 14" fill="none" stroke="#9EDCFA" stroke-width="3" stroke-linejoin="round"/>', tide: '<rect x="64" y="22" width="32" height="22" rx="5" fill="#F5B82E"/><path d="M64 24l5-14 11 9 11-9 5 14z" fill="#FFD447"/>', gift: '<rect x="64" y="22" width="32" height="22" rx="5" fill="#E8455B"/><path d="M80 23L62 12v18zM80 23l18-11v18z" fill="#FF7A8E"/>' };
-const voiceBottle = (c, peaks, cork) => { const id = 'vb' + (vb++), pk = (peaks || []).slice(0, 18), n = pk.length || 18, w = 84 / n;
+const voiceBottle = (c, peaks, cork) => { if (SPC[cork]) c = SPC[cork]; const id = 'vb' + (vb++), pk = (peaks || []).slice(0, 18), n = pk.length || 18, w = 84 / n;
   return `<svg class="vbot" viewBox="0 0 160 300" aria-hidden="true"><defs>
     <clipPath id="${id}c"><path d="M62 70V40h36v30c0 10 26 22 26 52v128c0 14-10 24-24 24H60c-14 0-24-10-24-24V122c0-30 26-42 26-52Z"/></clipPath>
     <linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".5" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity=".55"/></linearGradient>
@@ -422,7 +424,7 @@ const voiceBottle = (c, peaks, cork) => { const id = 'vb' + (vb++), pk = (peaks 
     <g clip-path="url(#${id}c)">${Array.from({ length: n }, (_, i) => { const h = 26 + (pk[i] ?? Math.abs(Math.sin(i * 1.7))) * 110; return `<rect class="vbar" style="--i:${i}" x="${38 + i * w + w * .22}" y="${200 - h / 2}" width="${w * .56}" height="${h}" rx="${w * .28}" fill="url(#${id}g)"/>`; }).join('')}</g>
     <path d="M62 70V40h36v30c0 10 26 22 26 52v128c0 14-10 24-24 24H60c-14 0-24-10-24-24V122c0-30 26-42 26-52Z" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/>
     <path d="M46 132c0-20 12-30 20-38" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
-    ${CORKV[cork] || '<rect x="64" y="22" width="32" height="22" rx="5" fill="#9A6A3E"/><rect x="64" y="22" width="32" height="6" rx="3" fill="#B8865A"/>'}
+    <rect x="64" y="22" width="32" height="22" rx="5" fill="#9A6A3E"/><rect x="64" y="22" width="32" height="6" rx="3" fill="#B8865A"/>
   </svg>`; };
 R.mar = () => {
   // El mar nunca se queda vacío: si ya escuchaste todas, llegan otras voces de ejemplo.
@@ -794,7 +796,7 @@ const GLASS = [['Claro', '#CFE9F2'], ['Verde', '#7FD8A0'], ['Ámbar', '#FFB061']
 R.muelle = () => ({ cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">Muelle</h1>
-  <p class="sub mt1">El corcho dice qué tan lejos llega cada botella. Por ahora todas son gratis: se ganan usando tu voz.</p>
+  <p class="sub mt1">Cada botella especial tiene su propio color. Por ahora todas son gratis: se ganan usando tu voz.</p>
   <div class="list mt3">${SPECIAL.map(([k, t, d, c]) => `<div class="item spm"><span class="ic art">${bottleSVG('#B9C6D3', k)}</span><span class="tx"><b>${t}</b><small>${d}</small><small class="gana">${GANA[k]}</small>${precio(k)}</span><em class="have">${X[k] ? `Tienes ${X[k]}` : 'No tienes'}</em></div>`).join('')}
     <div class="item spm"><span class="ic art">${bottleSVG('#B9C6D3')}</span><span class="tx"><b>Normales</b><small>Empiezan con 12 personas que aman tu tema.</small><small class="gana">Te llega una cada día y ganas otra cada vez que respondes una botella.</small>${precio('')}</span><em class="have">Tienes ${S.left}</em></div>
     <button class="item" data-go="dos"><span class="ic art">${bottleSVG('#FF8E9E')}</span><span class="tx"><b>Para dos</b><small>Tu voz y la de un amigo. Empieza con 20 personas y usa una normal.</small></span>${I.chev}</button>
@@ -815,7 +817,7 @@ R.botellas = () => { const heard = S.sent.reduce((t, x) => t + reachOf(x), 0), a
   return { cls: 'pin', html: `
   ${back()}
   <h1 class="title mt1">Mis botellas</h1>
-  <div class="mias mt2"><p class="eyebrow" style="margin:0">Tus botellas</p><h2 class="mias-t">Cada botella lleva tu voz a gente que ama lo mismo que tú.</h2><p class="cap">La lanzas y sigue llegando a más gente hasta que alguien te responde. El color es el tema; el corcho, qué tan lejos llega.</p>
+  <div class="mias mt2"><p class="eyebrow" style="margin:0">Tus botellas</p><h2 class="mias-t">Cada botella lleva tu voz a gente que ama lo mismo que tú.</h2><p class="cap">La lanzas y sigue llegando a más gente hasta que alguien te responde. El color es el tema. Las especiales tienen colores propios.</p>
     <div class="mias-l">${[['', 'Normales', S.left, 'Llegan a 12 personas que aman tu tema.'], ['far', 'Llegan lejos', X.far || 0, 'Llegan a 30 personas, también de temas cercanos.'], ['tide', 'Doradas', X.tide || 0, 'Salen primero en el mar de todos.'], ['gift', 'De regalo', X.gift || 0, 'Se las mandas a alguien con quien conversas.']].map(([k, t, n, d]) => `<div class="mia ${n ? '' : 'cero'}"><span class="art">${voiceBottle(tc(S.temas[0]), null, k)}</span><span class="tx"><b>${t}</b><small>${d}</small></span><em>×${n}</em></div>`).join('')}</div>
     <button class="btn btn-a mt2" data-go="lanzar">${I.mic}Lanzar una botella</button></div>
   ${pend.length ? `<p class="eyebrow" style="margin-top:20px">${pend.length === 1 ? 'Te respondieron. Escucha.' : `${pend.length} respuestas por escuchar`}</p>
