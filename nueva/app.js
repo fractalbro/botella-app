@@ -448,8 +448,9 @@ R.mar = () => {
   // Las doradas salen primero: llegan a todas las orillas, sin importar el tema.
   const shore = [...S.shore].sort((a, b) => (B[b] && B[b].gold ? 1 : 0) - (B[a] && B[a].gold ? 1 : 0)), gtag = b => b.gold ? `Dorada · ${b.tag}` : b.tag;
   const reels = shore.map(id => ({ t: 'voz', id, b: B[id] })); const mode = store.get('marv', 'uno');
-  reels.push({ t: 'hoy' }); if (S.mine) reels.push({ t: 'mine' });
-  const nv = S.shore.length;
+  // La pregunta de hoy va después de las tres primeras botellas, para que no quede al final de todo.
+  const hi = Math.min(3, reels.length); reels.splice(hi, 0, { t: 'hoy' }); if (S.mine) reels.push({ t: 'mine' });
+  const nv = S.shore.length, SHOWN = 5, more = Math.max(0, shore.length - SHOWN);
   const reel = (r, i) => {
     if (r.t === 'voz') { const b = r.b, secs = (PK[b.v] || [12])[0];
       return `<section class="reel" style="--c:${b.c}" data-i="${i}">
@@ -476,11 +477,12 @@ R.mar = () => {
   <div class="rtop"><button class="dockc" data-go="muelle" aria-label="Muelle: ${X.far + X.tide} botellas especiales">${I.dock}<b>${X.far + X.tide || 'Muelle'}</b></button><span class="vmode" role="tablist" aria-label="Cómo ver el mar"><button role="tab" data-m="uno" aria-pressed="${mode === 'uno'}">Una a una</button><button role="tab" data-m="todo" aria-pressed="${mode === 'todo'}">Todo el mar</button></span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></div>
   <div class="sea" id="sea" aria-label="Todas las botellas del mar"><canvas class="seacv" aria-hidden="true"></canvas>
     <div class="seahead"><h2>${nv === 1 ? '1 botella nueva' : `${nv} botellas nuevas`} flotando</h2><p>Toca una para ver qué dice.</p></div>
-    ${(() => { const spots = [[24, 30], [70, 25], [40, 52], [78, 56], [20, 74], [60, 80], [44, 22]]; const all = [...shore.map(id => ({ k: 'voz', id, b: B[id] })), { k: 'hoy' }, ...(S.mine ? [{ k: 'mine' }] : [])];
+    ${(() => { const spots = [[24, 30], [70, 25], [40, 52], [78, 56], [20, 74], [60, 80], [44, 22]]; const all = [...shore.slice(0, SHOWN).map(id => ({ k: 'voz', id, b: B[id] })), ...(S.mine ? [{ k: 'mine' }] : []), { k: 'hoy' }];
       return all.slice(0, spots.length).map((x, i) => { const [px, py] = spots[i], rot = [-14, 10, -6, 16, -10, 8, -4][i];
         if (x.k === 'hoy') return `<button class="fb moon" style="--x:${px}%;--y:${py};--d:${i * -.7}s" data-k="hoy"><span class="art"><span class="mmoon"></span></span><span class="lbl"><i style="background:#FFE7B0"></i>Pregunta de hoy</span></button>`;
         if (x.k === 'mine') return `<button class="fb mine" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${tc(S.mine.tema)}" data-k="mine"><span class="rip" aria-hidden="true"></span><span class="art">${voiceBottle(tc(S.mine.tema))}</span><span class="lbl"><i></i>La tuya</span></button>`;
-        return `<button class="fb" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${x.b.c}" data-k="voz" data-id="${x.id}" data-i="${i}"><span class="rip" aria-hidden="true"></span><span class="art">${voiceBottle(x.b.c, PK[x.b.v] && PK[x.b.v][1])}</span><span class="lbl"><i></i>${esc(gtag(x.b))}</span></button>`; }).join(''); })()}
+        return `<button class="fb" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${x.b.c}" data-k="voz" data-id="${x.id}" data-i="${reels.findIndex(r => r.id === x.id)}"><span class="rip" aria-hidden="true"></span><span class="art">${voiceBottle(x.b.c, PK[x.b.v] && PK[x.b.v][1])}</span><span class="lbl"><i></i>${esc(gtag(x.b))}</span></button>`; }).join(''); })()}
+    ${more ? `<button class="seamore" id="seamore">Ver las otras ${more}${I.chev}</button>` : ''}
   </div>
   <div class="feed" id="feed">${nv ? '' : `<section class="reel calm" style="--c:#7FD8C9"><div class="cover">${voiceBottle('#7FD8C9')}</div><div class="rtx"><h2 class="rq">Vienen más botellas en camino.</h2><p class="rmeta">Ya escuchaste todas las de ahora. Mientras llegan otras, lanza la tuya: llega a todas las personas que aman tu tema.</p><div class="ract"><button class="btn rbtn" data-go="lanzar">${I.mic}Grabar mi botella</button></div></div></section>`}${reels.map(reel).join('')}</div>
   <div class="dots" id="dots">${reels.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`,
@@ -492,13 +494,16 @@ R.mar = () => {
     setMode(mode); $$('.vmode button', el).forEach(b => b.onclick = () => { setMode(b.dataset.m); track('mar_vista', { vista: b.dataset.m }); navigator.vibrate && navigator.vibrate(6); });
     const toReel = i => { setMode('uno'); f.scrollTo({ top: i * f.clientHeight, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' }); };
     $$('.fb', el).forEach(b => b.onclick = () => { const k = b.dataset.k;
-      if (k === 'hoy') return toReel(nv);
-      if (k === 'mine') return toReel(nv + 1);
+      if (k === 'hoy') return toReel(hi);
+      if (k === 'mine') return toReel(reels.length - 1);
       const id = b.dataset.id, x = B[id], i = +b.dataset.i, secs = (PK[x.v] || [12])[0];
       sheet(`<p class="rtag" style="--c:${x.c}"><i></i>${esc(gtag(x))} · ${esc(x.kind)}</p><h2 class="title mt2">${esc(x.q)}</h2><p class="sub mt1">Alguien que ama ${esc(x.theme)} · ${fmt(secs)}</p><div class="row-btns"><button class="btn btn-a" id="go"><span class="pl">${I.play}</span>Escuchar</button><button class="btn btn-q" id="one">Verla en grande</button></div>`, (s2, close) => { $('#go', s2).onclick = () => { close(); go('abrir', { id }); }; $('#one', s2).onclick = () => { close(); toReel(i); }; }); });
     rs[0] && rs[0].classList.add('on');
+    const sm = $('#seamore', el); if (sm) sm.onclick = () => sheet(`<h2 class="title">Las otras ${more} botellas</h2><p class="sub mt1">No caben en el dibujo, pero también te llegaron.</p>
+      <div class="slist mt2">${shore.slice(SHOWN).map(id => { const x = B[id]; return `<button class="srow" style="--c:${x.c}" data-sid="${id}"><span class="rtag"><i></i>${esc(gtag(x))} · ${esc(x.kind)}</span><b>${esc(x.q)}</b><span class="sgo">${I.play}Escuchar</span></button>`; }).join('')}</div>`,
+      (s2, close) => $$('[data-sid]', s2).forEach(r => r.onclick = () => { close(); go('abrir', { id: r.dataset.sid }); }));
     $$('[data-open]', el).forEach(bt => bt.onclick = () => { const rl = bt.closest('.reel'); rl.classList.add('zoom'); navigator.vibrate && navigator.vibrate(8); setTimeout(() => go('abrir', { id: bt.dataset.open, zin: 1 }), matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 280); });
-    const fresh = Object.keys(S.convs).find(k => S.convs[k].unread && !S.convs[k].cel); if (fresh) setTimeout(() => curName === 'mar' && go('respondio', { id: fresh }), 900);
+    const fresh = Object.keys(S.convs).filter(k => S.convs[k].unread && !S.convs[k].cel); if (fresh.length) setTimeout(() => curName === 'mar' && go('respondio', fresh.length > 1 ? { ids: fresh } : { id: fresh[0] }), 900);
     let last = 0; f.addEventListener('scroll', () => { const i = Math.round(f.scrollTop / f.clientHeight); if (i === last) return; last = i;
       rs.forEach((r, k) => r.classList.toggle('on', k === i)); ds.forEach((d, k) => d.classList.toggle('on', k === i));
       if (cnt && nv > 1) cnt.textContent = i < nv ? `${i + 1} de ${nv} botellas` : `${nv} botellas`; navigator.vibrate && navigator.vibrate(4); }, { passive: true });
@@ -597,19 +602,38 @@ const theirMark = (id, cls = '') => { const c = B[id].c; return voiceMark(cls, t
 const STEPN = ['Notas de voz', 'Nombres', 'Llamada', 'Plan'];
 const stepRing = (st, txt) => { const f = Math.min(1, (st + 1) / 4), C = 2 * Math.PI * 17; return `<span class="sring"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/><circle class="on" cx="20" cy="20" r="17" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - f)}"/></svg><b>${st + 1}<small>/4</small></b></span><span class="stx"><small>${STEPN[st]}</small>${txt}</span>`; };
 const pathHTML = st => `<span class="path">${STEP.map((t, i) => `<span class="${i < st ? 'done' : i === st ? 'now' : ''}"><i></i>${t}</span>`).join('')}</span>`;
-R.charlas = () => { const ids = Object.keys(S.convs).sort((x, y) => (S.convs[y].unread ? 1 : 0) - (S.convs[x].unread ? 1 : 0)); const nu = ids.filter(k => S.convs[k].unread).length;
-  return { cls: 'tabbed', html: `
-  <div class="top"><span class="wm">${I.logo}botella</span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></div>
-  <h1 class="title mt1">Conversaciones</h1>
-  <p class="sub mt1">${ids.length ? (nu ? `${nu === 1 ? 'Una voz nueva te espera.' : `${nu} voces nuevas te esperan.`}` : `${n_(ids.length, 'conversación', 'conversaciones')}. Todas por voz.`) : 'Cuando respondas una botella, la conversación aparece aquí.'}</p>
-  <div class="convs mt3">${ids.map(id => { const c = S.convs[id], b = B[id], last = c.msgs.filter(m => m.v).pop(), named = c.stage >= 1 && b.name, secs = last ? (PK[last.v] ? PK[last.v][0] : last.s || 8) : 0;
-    return `<button class="conv${c.unread ? ' new' : ''}" style="--c:${b.c}" data-go="${c.unread && !c.cel ? 'respondio' : 'chat'}" data-p='{"id":"${id}"}'>
+// Te toca: la última voz es de la otra persona. Esperando: la última es tuya. Terminadas: volvieron al mar.
+const grupoC = c => { const last = c.msgs.filter(m => m.v).pop(); return c.ended ? 'fin' : last && last.f === 'me' ? 'espera' : 'toca'; };
+const convRow = id => { const c = S.convs[id], b = B[id], last = c.msgs.filter(m => m.v).pop(), named = c.stage >= 1 && b.name, secs = last ? (PK[last.v] ? PK[last.v][0] : last.s || 8) : 0;
+  return `<button class="conv${c.unread ? ' new' : ''}${c.ended ? ' ended' : ''}" style="--c:${b.c}" data-go="${c.unread && !c.cel ? 'respondio' : 'chat'}" data-p='{"id":"${id}"}'>
       ${theirMark(id)}
       <span class="cx"><span class="ctop"><b>${named ? esc(b.name) : `Alguien que ama ${esc(b.theme)}`}</b><span class="when">${esc(c.when)}</span></span>
       <span class="cq">${esc(b.q)}</span>
-      <span class="clast">${last && last.f === 'them' ? `<span class="pip">${I.play}</span>${c.unread ? 'Nueva nota de voz' : 'Te respondió'} · ${fmt(secs)}` : `<span class="pip me">${I.check}</span>Le respondiste. Esperando su voz`}</span>
-      </span></button>`; }).join('')}</div>
+      <span class="clast">${c.ended ? 'Volvió al mar sin respuesta' : last && last.f === 'them' ? `<span class="pip">${I.play}</span>${c.unread ? 'Nueva nota de voz' : 'Te respondió'} · ${fmt(secs)}` : `<span class="pip me">${I.check}</span>Le respondiste. Esperando su voz`}</span>
+      </span></button>`; };
+R.charlas = () => { const ids = Object.keys(S.convs).sort((x, y) => (S.convs[y].unread ? 1 : 0) - (S.convs[x].unread ? 1 : 0));
+  const G = { toca: ids.filter(k => grupoC(S.convs[k]) === 'toca'), espera: ids.filter(k => grupoC(S.convs[k]) === 'espera'), fin: ids.filter(k => grupoC(S.convs[k]) === 'fin') };
+  return { cls: 'tabbed', html: `
+  <div class="top"><span class="wm">${I.logo}botella</span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></div>
+  <h1 class="title mt1">Conversaciones</h1>
+  <p class="sub mt1">${ids.length ? (G.toca.length ? `${G.toca.length === 1 ? 'Una persona espera' : `${G.toca.length} personas esperan`} tu voz.` : 'Estás al día. Nadie espera tu voz.') : 'Cuando respondas una botella, la conversación aparece aquí.'}</p>
+  ${G.toca.length ? `<p class="eyebrow cgh">Te toca responder · ${G.toca.length}</p><div class="convs">${G.toca.map(convRow).join('')}</div>` : ''}
+  ${G.espera.length ? `<p class="eyebrow cgh">Esperando su voz · ${G.espera.length}</p><div class="convs">${G.espera.map(convRow).join('')}</div>` : ''}
+  ${G.fin.length ? `<details class="cfin"><summary>Terminadas · ${G.fin.length}${I.chev}</summary><div class="convs mt2">${G.fin.map(convRow).join('')}</div></details>` : ''}
   ${S.shore.length ? `<div class="grow"></div><button class="waitc mt3" data-go="mar"><span class="wb">${S.shore.slice(0, 3).map(k => `<span class="mb">${voiceBottle(B[k].c)}</span>`).join('')}</span><span class="tx"><b>${S.shore.length === 1 ? 'Una botella flota en el mar' : `${S.shore.length} botellas flotan en el mar`}</b><small>Escúchalas y responde la que quieras</small></span>${I.chev}</button>` : ''}` }; };
+
+// Varias respuestas a la vez: una sola celebración con todas, en vez de una pantalla por cada una.
+const varias = ids => { ids.forEach(k => { if (S.convs[k]) S.convs[k].cel = true; }); save(); track('momento_respuesta', { n: ids.length }); const b = B[ids[0]];
+  return { cls: 'clear moment', html: `
+  <div class="mo" style="--c:${b.c}">
+    <div class="mo-glow"></div><div class="mo-rings"><i></i><i></i><i></i></div>
+    <div class="mo-spark">${Array.from({ length: 18 }, (_, k) => `<i style="--a:${k * 20}deg;--d:${(k % 3) * .06}s;--r:${90 + (k % 4) * 22}px"></i>`).join('')}</div>
+    <div class="mo-bot">${voiceBottle(b.c, PK[b.v] && PK[b.v][1])}<span class="mo-cork"></span></div>
+    <div class="mo-tx"><h1 class="display">${ids.length} personas te respondieron.</h1>
+      <div class="mo-who">${ids.slice(0, 4).map(k => `<span class="rtag" style="--c:${B[k].c}"><i></i>${esc(B[k].tag)}</span>`).join('')}${ids.length > 4 ? `<span class="rtag">y ${ids.length - 4} más</span>` : ''}</div>
+      <div class="row-btns mt3"><button class="btn btn-a" data-go="charlas"><span class="pl">${I.play}</span>Escuchar sus respuestas</button><button class="btn btn-q" data-go="mar">Después</button></div></div>
+  </div>`,
+  bind(el) { setTimeout(() => { el.classList.add('pop'); popSound(); navigator.vibrate && navigator.vibrate([18, 40, 70]); }, 950); } }; };
 
 // Chat: la ficha arriba (pregunta y pasos), las voces al medio, el siguiente paso y el micrófono abajo.
 const STEP = ['Voces', 'Nombres', 'Llamada', 'Plan'];
@@ -666,7 +690,7 @@ const popSound = () => { try { const ac = new (window.AudioContext || window.web
   const f = ac.createBuffer(1, ac.sampleRate * 1.2, ac.sampleRate), fd = f.getChannelData(0); for (let i = 0; i < fd.length; i++) fd[i] = (Math.random() < .004 ? (Math.random() * 2 - 1) : 0) * (1 - i / fd.length);
   const fs = ac.createBufferSource(); fs.buffer = f; const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000; const fg = ac.createGain(); fg.gain.value = .35; fs.connect(hp).connect(fg).connect(ac.destination); fs.start(t + .05);
   setTimeout(() => ac.close(), 1600); } catch (e) {} };
-R.respondio = ({ id = 'leo' }) => { const b = B[id], c = S.convs[id] || {}; c.cel = true; save(); track('momento_respuesta', { id });
+R.respondio = ({ id = 'leo', ids }) => { if (ids && ids.length > 1) return varias(ids); const b = B[id], c = S.convs[id] || {}; c.cel = true; save(); track('momento_respuesta', { id });
   return { cls: 'clear moment', html: `
   <div class="mo" style="--c:${b.c}">
     <div class="mo-glow"></div><div class="mo-rings"><i></i><i></i><i></i></div>
@@ -840,7 +864,9 @@ const reachRow = x => `<span class="rbar"><i style="width:${Math.min(100, (x.hea
 // Respuestas de ejemplo para tus botellas (voz + quién respondió, sin nombre ni distrito).
 const ANS = [['caro-reply', 'la ciudad', '#FFB061'], ['ivan-reply', 'la música', '#FFC24B'], ['majo-reply', 'la música', '#FF70A9'], ['belen-reply', 'los libros', '#9FE3B0']];
 const ansOf = (x, i) => x.ans ? Array.from({ length: x.ans }, (_, k) => ANS[(i * 2 + k) % ANS.length]) : [];
-R.botellas = () => { const heard = S.sent.reduce((t, x) => t + reachOf(x), 0), ans = S.sent.reduce((t, x) => t + (x.ans || 0), 0);
+R.botellas = () => { const heard = S.sent.reduce((t, x) => t + (x.heard || 0), 0), ans = S.sent.reduce((t, x) => t + (x.ans || 0), 0);
+  // Primero las que siguen viajando (todavía sin respuesta) y después las que ya cumplieron.
+  const order = S.sent.map((x, i) => i).sort((a, b) => (S.sent[a].ans ? 1 : 0) - (S.sent[b].ans ? 1 : 0));
   const pend = S.sent.flatMap((x, i) => ansOf(x, i).map(a => ({ a, x, i }))).filter(p => !(X.heardAns || []).includes(p.a[0] + p.i));
   return { cls: 'pin', html: `
   ${back()}
@@ -851,8 +877,8 @@ R.botellas = () => { const heard = S.sent.reduce((t, x) => t + reachOf(x), 0), a
   ${pend.length ? `<p class="eyebrow" style="margin-top:20px">${pend.length === 1 ? 'Te respondieron. Escucha.' : `${pend.length} respuestas por escuchar`}</p>
   <div class="anscards">${pend.map(({ a: [v, th, c], x, i }) => `<div class="anscard" style="--c:${c}" data-v="${v}${i}"><p class="awho"><i></i>Alguien que ama ${esc(th)} respondió a tu ${esc(x.kind.toLowerCase())}${x.idea ? `: “${esc(x.idea)}”` : ''}</p>${player(v, { real: true })}<div class="aact"><button class="chip sm" data-go="charlas">${I.mic}Responder</button></div></div>`).join('')}</div>` : ''}
   <p class="eyebrow" style="margin-top:24px">Las que mandaste</p>
-  <div class="bcards">${S.sent.length ? S.sent.map((x, i) => `<button class="bcard" style="--c:${tc(x.tema)}" data-i="${i}"><span class="mb">${voiceBottle(tc(x.tema), null, corkOf(x))}</span><span class="tx"><small class="btag"><i></i>Tu ${esc(x.kind.toLowerCase())} · ${esc(x.tema)} · ${esc(x.when)}</small><b>${x.idea ? esc(x.idea) : `Una ${esc(x.kind.toLowerCase())} solo con tu voz`}</b>${reachRow(x)}<small>${x.ans ? `<em class="hasans">${n_(x.ans, 'respuesta', 'respuestas')}</em> · ` : ''}Llegó a ${reachOf(x)} personas${x.heard ? `, ${x.heard} ya la escucharon` : ''}${x.far ? ' · con empujón' : ''}</small></span></button>`).join('') : `<div class="bempty"><span class="mb">${voiceBottle('#7FD8C9')}</span><p class="sub">Todavía no lanzas ninguna. Graba una pregunta y le llega a toda la gente que ama lo mismo que tú.</p></div>`}</div>
-  ${S.sent.length ? `<p class="eyebrow" style="margin-top:24px">En números</p><div class="hero-n mt1"><b class="cnt" data-n="${heard}">${heard}</b><p>personas recibieron tus botellas.</p><small>${n_(S.sent.length, 'botella lanzada', 'botellas lanzadas')} · ${ans === 1 ? 'una persona te respondió' : `${ans} personas te respondieron`}</small></div>` : ''}
+  <div class="bcards">${S.sent.length ? order.map(i => [S.sent[i], i]).map(([x, i]) => `<button class="bcard" style="--c:${tc(x.tema)}" data-i="${i}"><span class="mb">${voiceBottle(tc(x.tema), null, corkOf(x))}</span><span class="tx"><small class="btag"><i></i>Tu ${esc(x.kind.toLowerCase())} · ${esc(x.tema)} · ${esc(x.when)}</small><b>${x.idea ? esc(x.idea) : `Una ${esc(x.kind.toLowerCase())} solo con tu voz`}</b><small>${x.ans ? `<em class="hasans">${n_(x.ans, 'respuesta', 'respuestas')}</em> · ` : ''}${x.heard === 1 ? '1 persona la escuchó' : `${x.heard || 0} personas la escucharon`}</small><small class="bstate">${x.ans ? 'Ya te respondieron. Dejó de viajar.' : 'Viajando hasta que alguien responda'}</small></span></button>`).join('') : `<div class="bempty"><span class="mb">${voiceBottle('#7FD8C9')}</span><p class="sub">Todavía no lanzas ninguna. Graba una pregunta y le llega a toda la gente que ama lo mismo que tú.</p></div>`}</div>
+  ${S.sent.length ? `<p class="eyebrow" style="margin-top:24px">En números</p><div class="hero-n mt1"><b class="cnt" data-n="${heard}">${heard}</b><p>personas escucharon tus botellas.</p><small>${n_(S.sent.length, 'botella lanzada', 'botellas lanzadas')} · ${ans === 1 ? 'una persona te respondió' : `${ans} personas te respondieron`}</small></div>` : ''}
   <div class="mias mt3"><p class="eyebrow" style="margin:0">Muelle</p><h2 class="mias-t">Cómo conseguir más botellas</h2>
     <div class="mias-l">${[['', 'Normales', 'Una cada día y otra por cada botella que respondes.'], ['far', 'Llegan lejos', 'Al terminar tu primer día y a los 10 días seguidos.'], ['tide', 'Doradas', 'A los 2 días seguidos y cada lunes, si esa semana respondiste a alguien.'], ['gift', 'De regalo', 'A los 5 y a los 21 días seguidos.']].map(([k, t, d]) => `<div class="mia"><span class="art">${voiceBottle(tc(S.temas[0]), null, k)}</span><span class="tx"><b>${t}</b><small>${d}</small></span></div>`).join('')}</div>
     <button class="btn btn-2 mt2" data-go="muelle">Ver el Muelle</button></div>`,
@@ -860,7 +886,7 @@ R.botellas = () => { const heard = S.sent.reduce((t, x) => t + reachOf(x), 0), a
     $$('.anscard', el).forEach(c => $('.player', c).addEventListener('click', () => { const k = c.dataset.v; X.heardAns = [...new Set([...(X.heardAns || []), k])]; saveX(); }));
     $$('[data-i]', el).forEach(b => b.onclick = () => { const i = +b.dataset.i, x = S.sent[i], reach = reachOf(x), as = ansOf(x, i);
       sheet(`<p class="btag" style="--c:${tc(x.tema)};margin:6px 0 0"><i></i>Tu ${esc(x.kind.toLowerCase())} · ${esc(x.tema)}</p><h2 class="title mt1">${x.idea ? esc(x.idea) : `Una ${esc(x.kind.toLowerCase())} solo con tu voz`}</h2>
-      <div class="hero-n sm mt2"><b>${reach}</b><p>personas recibieron esta botella.</p><small>${x.heard} ya la escucharon · ${x.ans === 1 ? 'una respondió' : `${x.ans || 0} respondieron`}</small></div>
+      <div class="hero-n sm mt2"><b>${x.heard || 0}</b><p>${x.heard === 1 ? 'persona escuchó' : 'personas escucharon'} esta botella.</p><small>Llegó a ${reach} · ${x.ans === 1 ? 'una respondió' : `${x.ans || 0} respondieron`}</small></div>
       ${as.length ? `<div class="row-btns mt2">${as.map(([v, th]) => `<div class="mini"><small>Alguien que ama ${esc(th)}</small>${player(v, { real: true })}</div>`).join('')}</div>` : '<p class="cap mt2">Sigue viajando hasta que alguien te responda.</p>'}
       <div class="row-btns mt3"><button class="btn btn-q" id="del">Retirarla del mar</button></div>`, (s2, close) => {
         $('#del', s2).onclick = () => { close(); const was = S.sent.splice(i, 1)[0], mine = S.mine; if (S.mine && S.mine.idea === was.idea && S.mine.tema === was.tema) S.mine = null; saveX(); go('botellas', { nohash: true }); track('botella_retirada', { tema: was.tema });

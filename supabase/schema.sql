@@ -426,6 +426,7 @@ begin
         and not blocked(b.owner, me.id) and not (select is_sample from profiles o where o.id = b.owner)
         and not exists (select 1 from deliveries d where d.bottle_id = b.id and d.to_id = me.id)
         and (select count(*) from deliveries d where d.bottle_id = b.id and d.status in ('waiting','opened')) < 12
+        and not exists (select 1 from convos c where c.bottle_id = b.id)
         and (select count(*) from deliveries d where d.bottle_id = b.id) < bottle_cap(b.btype)
       order by b.created_at desc
       limit greatest(0, 3 - (select count(*) from deliveries d where d.to_id = me.id and d.status in ('waiting','opened')))
@@ -443,6 +444,8 @@ begin
       on conflict do nothing;
     -- Mientras somos pocos, las botellas de ejemplo acompañan: tres al llegar y luego hasta dos con cada marea de las 21:00.
     fresh := case when me.sample_fill is null then 3 when me.sample_fill < next_tide(now()) - interval '1 day' then 2 else 0 end;
+    -- Cuando ya hay bastante gente real lanzando botellas, el mar solo trae voces reales.
+    if (select count(*) from bottles b join profiles o on o.id = b.owner where not o.is_sample and b.created_at > now() - interval '1 day') >= 30 then fresh := 0; end if;
     if fresh > 0 then
       room := least(fresh, greatest(0, 4 - (select count(*) from deliveries d where d.to_id = me.id and d.status in ('waiting','opened'))::int));
       for r in
@@ -628,7 +631,7 @@ create or replace function public.my_convos() returns table (
   id uuid, alias text, place text, revealed boolean, my_reveal boolean, other_reveal boolean,
   my_key boolean, other_key boolean, closed boolean, last_at timestamptz, created_at timestamptz, i_launched boolean,
   intro_voice text, intro_secs int, last_mine boolean, sample boolean, next_at timestamptz, call_voice text, call_secs int,
-  cool_at timestamptz, cooled boolean, duo boolean, my_voices int, other_voices int
+  cool_at timestamptz, cooled boolean, duo boolean, my_voices int, other_voices int, q text
 ) language sql stable security definer set search_path = public as $$
   select c.id,
     case when c.reveal_a and c.reveal_b then o.name else alguien(auth.uid(), o.id) end,
@@ -651,7 +654,8 @@ create or replace function public.my_convos() returns table (
     not (c.key_a and c.key_b) and c.last_at < now() - interval '48 hours',
     exists (select 1 from bottles bb where bb.id = c.bottle_id and bb.voice2 is not null),
     (select count(*) from messages m where m.convo_id = c.id and m.voice is not null and m.created_at <= now() and m.sender = auth.uid())::int,
-    (select count(*) from messages m where m.convo_id = c.id and m.voice is not null and m.created_at <= now() and m.sender <> auth.uid())::int
+    (select count(*) from messages m where m.convo_id = c.id and m.voice is not null and m.created_at <= now() and m.sender <> auth.uid())::int,
+    (select bb.body from bottles bb where bb.id = c.bottle_id)
   from convos c join profiles o on o.id = case when c.a = auth.uid() then c.b else c.a end
   left join sample_voices v on v.id = o.id
   where auth.uid() in (c.a, c.b)
@@ -963,12 +967,20 @@ create trigger on_message after insert on public.messages for each row execute f
 
 -- "Tu botella llegó a alguien que ama el cine": cuando alguien descorcha una botella tuya.
 create or replace function public.on_open() returns trigger language plpgsql security definer set search_path = public as $$
-declare bo bottles; place text; who uuid;
+declare bo bottles; place text; who uuid; n int;
 begin
   if old.status = 'waiting' and new.status = 'opened' then
     select * into bo from bottles where id = new.bottle_id;
+    select count(*) into n from deliveries where bottle_id = bo.id and opened_at is not null and opened_at <= now();
     foreach who in array array_remove(array[bo.owner, bo.partner], null) loop
-      perform notify(who, 'opened', 'Tu botella llegó a ' || lower(alguien(who, new.to_id)), 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text);
+      -- Un aviso por botella al día: si ya hay uno, se cambia por el resumen y no vuelve a sonar.
+      if n > 1 and exists (select 1 from notices x where x.to_id = who and x.kind = 'opened' and x.ref = bo.id::text and x.created_at > now() - interval '1 day') then
+        delete from notices x where x.to_id = who and x.kind = 'opened' and x.ref = bo.id::text and x.created_at > now() - interval '1 day';
+        insert into notices(to_id, kind, title, body, go, ref, pushed_at)
+          values (who, 'opened', n || ' personas escucharon tu botella', 'La última fue ' || lower(alguien(who, new.to_id)) || '.', 'mine', bo.id::text, now());
+      else
+        perform notify(who, 'opened', 'Tu botella llegó a ' || lower(alguien(who, new.to_id)), 'Alguien la descorchó y la está escuchando.', 'mine', bo.id::text);
+      end if;
     end loop;
   end if;
   return new;
@@ -1058,7 +1070,9 @@ begin
     order by x.created_at limit 40 for update of x skip locked
   loop
     update deliveries set status = 'drifted' where id = r.id;
-    if not r.hidden and not r.is_sample and r.created_at > now() - interval '7 days' and (select count(*) from deliveries where bottle_id = r.bottle_id) < bottle_cap(r.btype) then
+    -- Si alguien ya respondió, la botella cumplió: deja de viajar. Si nadie respondió, sigue buscando hasta que venza.
+    if not r.hidden and not r.is_sample and r.created_at > now() - interval '7 days' and (select count(*) from deliveries where bottle_id = r.bottle_id) < bottle_cap(r.btype)
+       and not exists (select 1 from convos c where c.bottle_id = r.bottle_id) then
       perform deliver(r.bottle_id, 1);
     end if;
   end loop;
@@ -1083,7 +1097,8 @@ begin
       select t.to_id, 'expiring', case when t.c = 1 then 'La marea se lleva una botella a las 21:00' else 'La marea se lleva ' || t.c || ' botellas a las 21:00' end,
         'Todavía no la' || case when t.c = 1 then '' else 's' end || ' abres. Escucha antes de que siga' || case when t.c = 1 then '' else 'n' end || ' su viaje.', 'orilla'
       from (select x.to_id, count(*) c from deliveries x join profiles p on p.id = x.to_id
-            where x.status = 'waiting' and x.expires_at <= next_tide(now()) and x.expires_at > now() and not p.is_sample and not p.paused group by x.to_id) t;
+            where x.status = 'waiting' and x.expires_at <= next_tide(now()) and x.expires_at > now() and not p.is_sample and not p.paused
+              and p.last_seen > now() - interval '3 days' group by x.to_id) t;
     end if;
   end if;
   -- 21:00: llega la marea con las voces de la pregunta del día.
