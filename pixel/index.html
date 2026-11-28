@@ -617,6 +617,10 @@ svg.i-chev{width:8px!important;height:auto!important;flex:none;opacity:.6}
 /* la letra pixel queda para etiquetas cortas; las frases largas van en la letra de lectura */
 .btn.lg{font:700 16px/1.2 var(--sans);text-transform:none;letter-spacing:-.01em}
 .k.lg{font-family:var(--sans);font-weight:700;letter-spacing:.02em}
+.price{display:flex;align-items:baseline;gap:8px;margin-top:8px}.price s{color:var(--mute,#7A7468);font-size:13px}.price b{font-family:var(--px,inherit);font-size:13px;letter-spacing:.04em;color:#fff;background:#21854F;padding:2px 8px;border-radius:6px}
+.chip.ck{display:inline-flex;align-items:center;gap:8px}.chip.ck .ckb{width:14px;display:block}
+.mias{padding:20px;margin-top:16px;display:flex;flex-direction:column;gap:8px}.mias-t{font-size:20px;line-height:1.25}.mias-g{display:flex;flex-direction:column;margin-top:16px}.mias-g .mia+.mia{border-top:2px dashed #E8DFC9}
+.mia{display:flex;gap:16px;align-items:center;padding:12px 0}.mia-b{width:44px;flex:none;display:block}.mia .tx{flex:1}.mia-n{font-size:22px}.mia .tx{display:flex;flex-direction:column;gap:2px}.mia b{font-size:15px}.mia small{font-size:12.5px;line-height:1.3;color:var(--mute,#6B6559)}.mia.cero b{opacity:.55}.mias-f{margin-top:8px}
 </style>
 </head>
 <body>
@@ -692,7 +696,7 @@ const INK = '#181425';
 const TIPO = {
   free: ['Normal', 'Empieza con 12 personas que aman tu tema', 12, 'vidrio'],
   far: ['Llega lejos', 'Empieza con 30 personas, también de temas cercanos', 30, 'vidrio'],
-  tide: ['Dorada', 'Además sale en Botellas doradas, donde cualquiera puede abrirla', 12, 'dorada']
+  tide: ['Dorada', 'Sale primero en el mar de todos y cualquiera puede abrirla', 12, 'vidrio']
 };
 const GANA = {
   far: 'La ganas al terminar tu primer día y a los 10 días seguidos.',
@@ -717,13 +721,25 @@ const cvars = C => `--c:${C.c};--k:${C.k};--hl:${C.h};--on:${C.on};--cb:${C.t ||
 /* ================= SPRITES (pixel art en SVG) ================= */
 const BOTTLE = ['....oooo....','...occcCo...','...occcCo...','...oooooo...','....ohgo....','....ohgo....','...ohggGo...','..ohgggGGo..','.ohgggggGGo.','.ohgpppPgGo.','.ohgpppPgGo.','.ohgrrrrgGo.','.ohgpppPgGo.','.ohgpppPgGo.','.oggpppPgGo.','.ogggggggGo.','.oGgggggGGo.','..oGGGGGGo..','...oooooo...'];
 const CORK = ['.oooo.','occcCo','occcCo','oooooo'];
+// El corcho dice qué tan lejos llega la botella. El color del vidrio es el del tema.
+const CORKS = {
+  far:  ['.....oo.....','....oaao....','...oaaaAo...','...oooooo...'],
+  tide: ['...o.oo.o...','...ouuuUo...','...ouuuUo...','...oooooo...'],
+  gift: ['..oo....oo..','..ovoooovo..','...ovvvVo...','...oooooo...']
+};
+const CORKP = { a: '#5EC2F2', A: '#2477C4', u: '#FFD447', U: '#C7891A', v: '#F2506A', V: '#A3213A' };
+const CORKN = { free: 'corcho de madera', far: 'corcho azul en punta', tide: 'corona dorada', gift: 'corcho con moño' };
+const corkOf = b => b ? (b.gold || b.featured ? 'tide' : b.btype === 'far' || b.far ? 'far' : b.btype === 'gift' ? 'gift' : null) : null;
+const gk = b => b.gold ? 'dorada' : b.cat;
 function sprite(map, pal, cls = '') {
   let r = '';
   map.forEach((row, y) => { let x = 0; while (x < row.length) { const ch = row[x]; let w = 1; while (row[x + w] === ch) w++; if (pal[ch]) r += `<rect x="${x}" y="${y}" width="${w}" height="1" fill="${pal[ch]}"/>`; x += w; } });
   return `<svg class="px ${cls}" viewBox="0 0 ${map[0].length} ${map.length}" aria-hidden="true">${r}</svg>`;
 }
 const pal = (cat, empty) => { const C = CAT[cat] || CAT.azul; return empty ? { o: '#B9B2A4', c: '#E9E1D2', C: '#D8CFBD' } : { o: INK, c: '#D69A5A', C: '#94602F', h: C.h, g: C.c, G: C.k, p: '#F6EBD0', P: '#D9C49A', r: C.k }; };
-const bottle = (cat, empty, nocork) => sprite(nocork ? BOTTLE.map((r, i) => i < 3 ? '............' : r) : BOTTLE, pal(cat, empty), 'spr');
+const bottle = (cat, empty, nocork, cork) => { const P = pal(cat, empty), M = nocork ? BOTTLE.map((r, i) => i < 3 ? '............' : r) : CORKS[cork] ? [...CORKS[cork], ...BOTTLE.slice(4)] : BOTTLE;
+  if (CORKS[cork]) Object.assign(P, empty ? { a: '#E9E1D2', A: '#D8CFBD', u: '#E9E1D2', U: '#D8CFBD', v: '#E9E1D2', V: '#D8CFBD' } : CORKP);
+  return sprite(M, P, 'spr'); };
 const IC = {
   playa: ['...ooo....','..oyyyo...','..oyyyo...','...ooo....','..........','o..oo..oo.','.oo..oo..o','..........','o..oo..oo.','.oo..oo..o'],
   bot:   ['....oo....','....oo....','...o..o...','..o....o..','..o.oo.o..','..o.oo.o..','..o....o..','..oooooo..','..........','..........'],
@@ -763,7 +779,7 @@ const ico = (n, col = 'currentColor', x = '#fff') => sprite(IC[n], { o: col, y: 
 const W = n => { let s = n * 9301 + 49297; return Array.from({ length: 30 }, (_, i) => { s = (s * 9301 + 49297) % 233280; const v = s / 233280; return .25 + .75 * Math.abs(Math.sin(i * .45 + n)) * (.55 + .45 * v); }); };
 // x, y en unidades de la isla (112 × 84)
 const BOT = [
-  { id:'oro',   cat:'dorada',   q:'Mañana renuncio a mi trabajo para estudiar música. Díganme algo bonito.', who:'Alguien que ama la música', ago:'hace 8 min', v:'ivan-say', t:14, x:56, y:44, w:28, gold:1 },
+  { id:'oro',   cat:'musica',   q:'Mañana renuncio a mi trabajo para estudiar música. Díganme algo bonito.', who:'Alguien que ama la música', ago:'hace 8 min', v:'ivan-say', t:14, x:56, y:44, w:28, gold:1 },
   { id:'leo',   cat:'cine',    q:'Me mudé a Lima hace tres meses y todavía no tengo con quién ir al cine.', who:'Alguien que ama el cine', ago:'hace 12 min', v:'leo-say', t:13, x:28, y:36, w:36 },
   { id:'belen', cat:'libros',     q:'El día que me perdí en el Centro y terminó siendo lo mejor de mi semana.', who:'Alguien que ama los libros', ago:'hace 40 min', v:'belen-say', t:17, x:44, y:23, w:28 },
   { id:'ivan',  cat:'musica',     q:'¿Qué canción te devuelve a tus 15 años? La mía todavía me da vergüenza.', who:'Alguien que ama la música', ago:'hace 1 h', v:'ivan-say', t:14, x:73, y:25, w:24, sea:1, d:3.4, dl:-1.2, a:'5px' },
@@ -825,7 +841,7 @@ const SKY = (() => {
 })();
 const ISL = [island(0), island(1, 'f2')];
 const scene = () => `<svg class="px" viewBox="0 0 112 84" aria-hidden="true">${SKY}${ISL[0]}${ISL[1]}</svg>`;
-const bottlesOn = (list, opt = {}) => list.map(b => { const C = CAT[b.cat]; return `<button class="bt ${b.sea ? 'sea' : ''} ${b.id === S.sel && !opt.deco ? 'sel' : ''} ${S.heard.includes(b.id) || opt.deco ? 'heard' : ''} ${S.filt && S.filt !== b.cat ? 'off' : ''}" style="left:${b.x / 112 * 100}%;top:${b.y / 84 * 100}%;--w:${b.w}px;--c:${C.c};--d:${b.d || 3}s;--dl:${b.dl || 0}s;--a:${b.a || '6px'}" ${opt.deco ? 'tabindex="-1" aria-hidden="true"' : `data-b="${b.id}" aria-label="Botella ${C.n}"`}><span class="mark" aria-hidden="true">!</span>${bottle(b.cat)}</button>`; }).join('');
+const bottlesOn = (list, opt = {}) => list.map(b => { const C = CAT[b.cat]; return `<button class="bt ${b.sea ? 'sea' : ''} ${b.id === S.sel && !opt.deco ? 'sel' : ''} ${S.heard.includes(b.id) || opt.deco ? 'heard' : ''} ${S.filt && S.filt !== gk(b) ? 'off' : ''}" style="left:${b.x / 112 * 100}%;top:${b.y / 84 * 100}%;--w:${b.w}px;--c:${C.c};--d:${b.d || 3}s;--dl:${b.dl || 0}s;--a:${b.a || '6px'}" ${opt.deco ? 'tabindex="-1" aria-hidden="true"' : `data-b="${b.id}" aria-label="Botella ${C.n}"`}><span class="mark" aria-hidden="true">!</span>${bottle(b.cat, false, false, corkOf(b))}</button>`; }).join('');
 
 // la orilla vive en la Playa y, en grande, en Todo el mar (mismos ids con un 2)
 const BIG = () => cur === 'mar', E = id => $('#' + id + (BIG() ? '2' : ''));
@@ -837,7 +853,7 @@ function renderBeach() {
   $('#beach').innerHTML = `<div class="stage">${scene()}${bottlesOn(BOT.slice(0, 5))}</div><span class="cap">${unheard ? unheard + ' sin escuchar' : 'Todo escuchado'}</span><button class="seeall" data-go="mar" data-p='{"v":"lista"}'>Todo el mar ${ico('chev', INK)}</button><button class="push sq expand" data-go="mar" data-p='{"v":"mapa"}' aria-label="Ver la orilla en grande">${ico('expand', INK)}</button>`;
 }
 function renderLegend() {
-  E('legend').innerHTML = `<button class="chip" aria-pressed="${!S.filt}" data-f="">Todas</button>` + ['dorada', ...KEYS].filter(k => BOT.some(b => b.cat === k)).map(k => [k, CAT[k]]).map(([k, c]) => `<button class="chip" style="--c:${c.c}" aria-pressed="${S.filt === k}" data-f="${k}"><i></i>${c.g}</button>`).join('');
+  E('legend').innerHTML = `<button class="chip" aria-pressed="${!S.filt}" data-f="">Todas</button>` + ['dorada', ...KEYS].filter(k => BOT.some(b => gk(b) === k)).map(k => [k, CAT[k]]).map(([k, c]) => `<button class="chip" style="--c:${c.c}" aria-pressed="${S.filt === k}" data-f="${k}"><i></i>${c.g}</button>`).join('');
 }
 
 /* ================= ONDA EN BLOQUES (osciloscopio a 12 cuadros) ================= */
@@ -1179,7 +1195,7 @@ function renderPlayer(anim) {
     if (!S.heard.includes(b.id)) { S.heard.push(b.id); store.set('heard', S.heard); if (LIVE) rpc('open_delivery', { p_id: b.id }).catch(() => {}); uncork(b, () => { renderBeach(); start(); }); }
     else start();
   };
-  const step = d => { const list = BOT.filter(x => !S.filt || x.cat === S.filt); const i = list.findIndex(x => x.id === S.sel); select(list[(i + d + list.length) % list.length].id); };
+  const step = d => { const list = BOT.filter(x => !S.filt || gk(x) === S.filt); const i = list.findIndex(x => x.id === S.sel); select(list[(i + d + list.length) % list.length].id); };
   E('prev').onclick = () => step(-1); E('next').onclick = () => step(1);
   E('resp').onclick = () => { stop(); go('lanzar', { reply: b }); };
 }
@@ -1247,7 +1263,7 @@ function renderLanzar(p = {}) {
       const w = lw || W(secs + 7);
       z.innerHTML = `${p.reply ? '' : `<p class="catline"><span class="dot"></span>${kind} para quien ama ${AMA[cat] || esc(C.n.toLowerCase())}</p>`}<div class="box ready" style="width:100%"><span class="k mute3">Escucha cómo quedó</span><div class="wavebox" style="margin:8px 0 0"><button class="push sq play" id="lpl" aria-label="Escuchar lo que grabaste">${ico('play', C.on)}</button><span id="lwv" style="flex:1;display:flex">${wave(w, C.c, 1)}</span><span class="num">${mmss(secs)}</span><button class="push btn sm" id="again">Otra vez</button></div></div>
         ${p.reply ? `<button class="push btn c" id="send" style="margin-top:24px;height:64px">${ico('voz', C.on)} Enviar respuesta</button>` :
-        `${envio()}<div class="pad" id="pad" style="width:100%"><div class="hint">${ico('up', 'currentColor')}<span>Desliza la botella hacia arriba</span></div><span class="toss" id="toss" role="button" tabindex="0" aria-label="Lanzar al mar">${bottle(cat)}</span></div>
+        `${envio()}<div class="pad" id="pad" style="width:100%"><div class="hint">${ico('up', 'currentColor')}<span>Desliza la botella hacia arriba</span></div><span class="toss" id="toss" role="button" tabindex="0" aria-label="Lanzar al mar">${bottle(cat, false, false, tipo)}</span></div>
          <button class="push btn c" id="send">${ico('bot', C.on)} Lanzar al mar</button>`}`;
       $('#again').onclick = () => { stop(); rec = 0; drawRec(); };
       $('#lpl').onclick = () => { const b = $('#lpl'); if (playing) { stop(); b.innerHTML = ico('play', C.on); $('#lwv').innerHTML = wave(w, C.c, 1); return; } b.innerHTML = ico('pause', C.on); play({ url, v: 'answer-1', t: secs }, pp => $('#lwv').innerHTML = wave(w, C.c, pp, 9, true, C.h), () => { b.innerHTML = ico('play', C.on); $('#lwv').innerHTML = wave(w, C.c, 1); }); };
@@ -1268,11 +1284,11 @@ function renderLanzar(p = {}) {
   const envio = () => { const h = haveSp(), T = TIPO[tipo];
     if (!envOpen) return `<button class="box envio mini" id="envio" aria-expanded="false"><span class="tx"><small class="k mute3">Cómo viaja</small><b>${TIPO[tipo][0]}</b></span><span class="chg">Cambiar</span></button>`;
     return `<div class="box envio" id="envio">
-      ${p.dorada ? '' : `<span class="k mute3">Cómo viaja</span><div class="echips" role="radiogroup" aria-label="Cómo viaja">${Object.keys(TIPO).map(k => `<button class="chip${k !== 'free' && !h[k] ? ' off' : ''}" role="radio" style="${cvars(CAT[TIPO[k][3]])}" aria-checked="${k === tipo}" aria-pressed="${k === tipo}" data-tp="${k}"><i></i>${TIPO[k][0]}${k === 'free' ? '' : ` ×${h[k] || 0}`}</button>`).join('')}</div>`}
+      ${p.dorada ? '' : `<span class="k mute3">Cómo viaja</span><div class="echips" role="radiogroup" aria-label="Cómo viaja">${Object.keys(TIPO).map(k => `<button class="chip ck${k !== 'free' && !h[k] ? ' off' : ''}" role="radio" aria-checked="${k === tipo}" aria-pressed="${k === tipo}" data-tp="${k}"><span class="ckb">${bottle(cat, false, false, k)}</span>${TIPO[k][0]}${k === 'free' ? '' : ` ×${h[k] || 0}`}</button>`).join('')}</div>`}
       <small class="mute edesc">${T[1]}. Y sigue llegando a más gente hasta que alguien responde.</small></div>`; };
   const bindEnvio = () => { const e = $('#envio'); if (!e) return;
     if (!envOpen) { e.onclick = () => { envOpen = true; e.outerHTML = envio(); bindEnvio(); }; return; }
-        e.querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const k = b.dataset.tp; if (k !== 'free' && !haveSp()[k]) { toast(`No te quedan. ${GANA[k]}`, INK); return; } tipo = k; if (S.rec) { S.rec.tipo = k; S.rec.dorada = k === 'tide'; } pop(700); e.outerHTML = envio(); bindEnvio(); }); };
+        e.querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { const k = b.dataset.tp; if (k !== 'free' && !haveSp()[k]) { toast(`No te quedan. ${GANA[k]}`, INK); return; } tipo = k; if (S.rec) { S.rec.tipo = k; S.rec.dorada = k === 'tide'; } pop(700); e.outerHTML = envio(); bindEnvio(); const t = $('#toss'); if (t) t.innerHTML = bottle(cat, false, false, tipo); }); };
   let real = false, url = null, lw = null, blob = null, idea = null;
   const start = async () => { stop(); const ok = await MIC.start(); if (ok === false) { go('mic'); return; } if (ok === null) return; real = ok === true; rec = 1; secs = 0; drawRec(); timer = setInterval(() => { secs++; const rt = $('#rt'); if (!rt) { clearInterval(timer); if (real) MIC.stop(); return; } rt.textContent = mmss(secs); $('#lf').innerHTML = life(secs / 60); if (secs >= 60) end(); }, 1000); };
   const end = async () => { clearInterval(timer); url = null; lw = null; blob = null; if (real) { const r = await MIC.stop(); if (r) { url = r.url; lw = r.w; blob = r.blob; } } secs = Math.max(secs, 1); rec = 2; R.readyAt = Date.now(); if (!p.reply) ev('grabo', { secs }); drawRec(); };
@@ -1305,7 +1321,7 @@ function renderLanzar(p = {}) {
 }
 function launch(cat) {
   ev('lanzo', { cat, ms: R.readyAt ? Date.now() - R.readyAt : null, h: innerHeight });
-  const r = S.rec || {}, tp = r.tipo || (r.dorada ? 'tide' : 'free'), k = tp === 'tide' ? 'dorada' : cat;
+  const r = S.rec || {}, tp = r.tipo || (r.dorada ? 'tide' : 'free'), k = cat;
   if (LIVE) {
     R.launching = (async () => { const path = await upload(r.blob, k); const row = one(await rpc('launch_bottle', { p_kind: r.kind || 'Pregunta', p_body: r.idea || null, p_voice: path, p_secs: Math.max(1, Math.min(60, r.secs || 1)), p_peaks: peaksOf(r.w), p_type: tp === 'far' ? 'far' : 'free', p_topic: r.tema ? T2S(r.tema) : null, p_district: null, p_featured: tp === 'tide' })); S.left = row.left_bottles; if (R.me) { R.me.bottles = row.left_bottles; R.me.far_left = row.left_far; R.me.tide_left = row.left_tide; } loadMine().catch(() => {}); return row.shores; })();
     go('lanzada', { cat: k }); return; }
@@ -1332,14 +1348,19 @@ function renderLanzada({ cat = store.get('lastcat', 'amor') } = {}) {
 
 /* ================= INVENTARIO ================= */
 function renderBotellas() {
-  const tot = S.mine.reduce((a, m) => a + m.reach, 0), ans = S.mine.reduce((a, m) => a + m.ans, 0);
+  const tot = S.mine.reduce((a, m) => a + m.reach, 0), ans = S.mine.reduce((a, m) => a + m.ans, 0), h = haveSp(), t0 = tk(S.temas[0] || '') || 'viajar';
+  // Lo primero: las botellas que tienes. Cada una lleva tu voz a gente que ama lo mismo que tú; el corcho dice cuánto llega.
+  const MIAS = [['free', 'Normales', S.left, 'Llegan a 12 personas que aman tu tema.'], ['far', 'Llegan lejos', h.far || 0, 'Llegan a 30 personas, también de temas cercanos.'], ['tide', 'Doradas', h.tide || 0, 'Salen primero en el mar de todos.'], ['gift', 'De regalo', h.gift || 0, 'Se las mandas a alguien con quien conversas.']];
   $('#v-botellas').innerHTML = `<h1 class="h1">Mis botellas</h1>
-    <button class="push muellehero" data-go="muelle"><span class="mh-art" aria-hidden="true">${['amor', 'viajar', 'dorada', 'filo', 'ciudad'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Tus botellas especiales</b><small>Que llegan lejos, doradas y de regalo. Se ganan usando tu voz.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>
+    <div class="box mias"><span class="k mute3">Tus botellas</span><b class="mias-t">Cada botella lleva tu voz a gente que ama lo mismo que tú.</b><small class="mute">Graba algo, lánzala y sigue llegando a más gente hasta que alguien te responde. El color es el tema; el corcho, qué tan lejos llega.</small>
+      <div class="mias-g">${MIAS.map(([k, t, n, d]) => `<div class="mia ${n ? '' : 'cero'}"><span class="mia-b">${bottle(t0, !n, false, k === 'free' ? null : k)}</span><span class="tx"><b>${t}</b><small>${d}</small></span><span class="num mia-n" aria-label="Tienes ${n}">×${n}</span></div>`).join('')}</div>
+      <div class="row mias-f"><span class="k mute3">${quedan(S.left)} · ${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
+      <button class="push btn blue" data-go="lanzar" style="margin-top:16px">${ico('mic', '#fff')} Lanzar una botella</button></div>
+    <div class="sec"><span class="h2">Las que mandaste</span></div>
+    <div class="cards">${S.mine.length ? '' : '<div class="box empty"><b>Todavía no lanzas ninguna.</b><small>Toca Lanzar, graba lo que quieras contar y llega a gente que ama lo mismo que tú.</small></div>'}${S.mine.map((m, i) => { const C = CAT[m.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on}" data-m="${i}"><span class="tile">${bottle(m.cat, false, false, corkOf(m))}</span><span class="tx"><b>${esc(m.q)}</b><small>${m.reach} ${m.reach === 1 ? 'persona la recibió' : 'personas la recibieron'} · ${m.ans ? m.ans + (m.ans > 1 ? ' respuestas' : ' respuesta') : 'sigue llegando'}</small></span>${m.nuevo ? '<span class="new">Nueva</span>' : ''}</button>`; }).join('')}</div>
+    <div class="sec"><span class="h2">En números</span></div>
     <div class="stats box"><div><span class="num">${S.mine.length}</span><small>${S.mine.length === 1 ? 'botella lanzada' : 'botellas lanzadas'}</small></div><div><span class="num">${tot}</span><small>${tot === 1 ? 'persona las recibió' : 'personas las recibieron'}</small></div><div><span class="num">${ans}</span><small>${ans === 1 ? 'respuesta' : 'respuestas'}</small></div></div>
-    <div class="sec"><span class="h2">${quedan(S.left)}</span><span class="k mute3">${LIVE ? 'Mañana +1' : 'Mañana +5'}</span></div>
-    <div class="slots">${[0, 1, 2, 3, 4].map(i => bottle(K5[i], i >= S.left)).join('')}</div>
-    <div class="sec"><span class="h2">En el mar</span></div>
-    <div class="cards">${S.mine.length ? '' : '<div class="box empty"><b>Todavía no lanzas ninguna.</b><small>Toca Lanzar, graba lo que quieras contar y llega a gente que ama lo mismo que tú.</small></div>'}${S.mine.map((m, i) => { const C = CAT[m.cat]; return `<button class="card push" style="--c:${C.c};--on:${C.on}" data-m="${i}"><span class="tile">${bottle(m.cat)}</span><span class="tx"><b>${esc(m.q)}</b><small>${m.reach} ${m.reach === 1 ? 'persona la recibió' : 'personas la recibieron'} · ${m.ans ? m.ans + (m.ans > 1 ? ' respuestas' : ' respuesta') : 'sigue llegando'}</small></span>${m.nuevo ? '<span class="new">Nueva</span>' : ''}</button>`; }).join('')}</div>`;
+    <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${[null, 'far', 'tide', 'gift'].map(k => `<span>${bottle(t0, false, false, k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Cómo ganar más botellas</b><small>Las que llegan lejos, las doradas y las de regalo se ganan usando tu voz.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>`;
   document.querySelectorAll('[data-m]').forEach(el => el.onclick = () => {
     const m = S.mine[+el.dataset.m], C = CAT[m.cat];
     if (LIVE) return mineTap(m, +el.dataset.m);
@@ -1470,7 +1491,7 @@ function renderTu() {
       <p class="from" style="margin:4px 0 12px">Es lo primero que escucha quien quiere conocerte. En vez de foto.</p>
       ${LIVE && !(R.me && R.me.intro_voice) ? '<p class="from" style="margin:0">Todavía no la grabas. Con 10 segundos basta.</p>' : voiceRow(LIVE ? R.urls.get(R.me.intro_voice) || '' : (S.presUrl || localStorage.getItem('bp.presurl') || 'answer-1'), C, mmss(pres.secs), 0, 33)}
       <button class="push btn" data-go="presenta" data-p='{"edit":1}' style="margin-top:12px;height:48px;font-size:15px">${ico('mic', INK, '#fff')} ${LIVE ? (R.me && R.me.intro_voice ? 'Grabar otra vez' : 'Grabar mi presentación') : (store.get('pres', null) ? 'Grabar otra vez' : 'Grabar mi presentación')}</button></div>
-    <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${['amor', 'viajar', 'dorada', 'filo', 'ciudad'].map(k => `<span>${bottle(k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Tus botellas especiales</b><small>Te quedan ${S.left} para lanzar. Aquí ves tus botellas que llegan lejos, doradas y de regalo, y cómo ganar más.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>
+    <button class="push muellehero" data-go="muelle" style="margin-top:24px"><span class="mh-art" aria-hidden="true">${[null, 'far', 'tide', 'gift'].map(k => `<span>${bottle('viajar', false, false, k)}</span>`).join('')}</span><span class="mh-tx"><span class="k">Muelle</span><b>Tus botellas especiales</b><small>Te quedan ${S.left} para lanzar. Aquí ves tus botellas que llegan lejos, doradas y de regalo, y cómo ganar más.</small></span><span class="push btn sm mh-go" aria-hidden="true">Ver el Muelle</span></button>
     <button class="push mcard" data-go="mes"><span class="k">Tu ${LIVE ? LS.month : 'noviembre'} en Botella</span><b>${LIVE ? (LS.heard ? `${LS.heard} ${LS.heard === 1 ? 'persona escuchó' : 'personas escucharon'} tu voz este mes` : 'Este mes empieza tu voz: lanza una botella') : '36 personas escucharon tu voz este mes'}</b><span class="cbars">${KEYS.map((k, i) => `<i style="--c:${CAT[k].c};flex:${mix[i]}"></i>`).join('')}</span></button>
     <div class="sec"><span class="h2">Tus temas</span><button class="k" data-go="temas" data-p='{"edit":1}' style="height:44px;color:var(--sea)">Cambiar</button></div>
     <div class="tchips">${temas.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
@@ -1494,18 +1515,20 @@ function renderTu() {
   startOrb(v.querySelector('#vorb'));
 }
 // Muelle: tus botellas especiales y cómo se ganan. Nada se compra.
-const SPECIAL = [['far', 'vidrio', 'Que llega lejos', 'Empieza con 30 personas, también de temas cercanos.'], ['tide', 'dorada', 'Dorada', 'Además sale en Botellas doradas, donde cualquiera puede abrirla.'], ['gift', 'vidrio', 'De regalo', 'Se la mandas a alguien con quien conversas y recibe una botella más.']];
+const PRECIO = { free: 'S/ 0.90', far: 'S/ 3.90', tide: 'S/ 5.90', gift: 'S/ 2.90' };
+const precio = k => `<span class="price"><s>${PRECIO[k]}</s><b>Gratis</b></span>`;
+const SPECIAL = [['far', 'vidrio', 'Que llega lejos', 'Empieza con 30 personas, también de temas cercanos.'], ['tide', 'vidrio', 'Dorada', 'Sale primero en el mar de todos y cualquiera puede abrirla.'], ['gift', 'vidrio', 'De regalo', 'Se la mandas a alguien con quien conversas y recibe una botella más.']];
 function renderMuelle() {
   const v = $('#v-muelle'), have = haveSp();
   v.innerHTML = `${topbar('tu', '')}
-    <h1 class="h1">Muelle</h1><p class="mute" style="margin:8px 0 24px">Tus botellas especiales. Ninguna se compra: todas se ganan usando tu voz.</p>
-    <div class="vlist">${SPECIAL.map(([k, c, t, d]) => `<div class="box spm" style="${cvars(CAT[c])}"><span class="sbot">${bottle(c, !have[k])}</span><span class="tx"><b>${t}</b><small>${d}</small><small class="gana">${GANA[k]}</small></span><span class="num" aria-label="Tienes ${have[k] || 0}">×${have[k] || 0}</span></div>`).join('')}
-      <div class="box spm" style="${cvars(CAT.azul)}"><span class="sbot">${bottle('viajar')}</span><span class="tx"><b>Normales</b><small>Empiezan con 12 personas que aman tu tema.</small><small class="gana">Te llega una cada día y ganas otra cada vez que respondes una botella.</small></span><span class="num" aria-label="Tienes ${S.left}">×${S.left}</span></div></div>
+    <h1 class="h1">Muelle</h1><p class="mute" style="margin:8px 0 24px">El corcho dice qué tan lejos llega cada botella. Por ahora todas son gratis: se ganan usando tu voz.</p>
+    <div class="vlist">${SPECIAL.map(([k, c, t, d]) => `<div class="box spm" style="${cvars(CAT[c])}"><span class="sbot">${bottle('viajar', !have[k], false, k)}</span><span class="tx"><b>${t}</b><small>${d}</small><small class="gana">${GANA[k]}</small>${precio(k)}</span><span class="num" aria-label="Tienes ${have[k] || 0}">×${have[k] || 0}</span></div>`).join('')}
+      <div class="box spm" style="${cvars(CAT.azul)}"><span class="sbot">${bottle('viajar')}</span><span class="tx"><b>Normales</b><small>Empiezan con 12 personas que aman tu tema.</small><small class="gana">Te llega una cada día y ganas otra cada vez que respondes una botella.</small>${precio('free')}</span><span class="num" aria-label="Tienes ${S.left}">×${S.left}</span></div></div>
     <div class="box menu" style="margin-top:16px">${menuRow(`<span style="width:16px;display:block">${bottle('cine')}</span>`, 'Botella para dos', 'Tu voz y la de un amigo. Empieza con 20 personas y usa una normal', 'dos')}</div>
     <p class="k mute3" style="text-align:center;margin:16px 0 0">Toda botella sigue llegando a más gente hasta que alguien responde.</p>
     <button class="push btn" data-go="racha" style="margin-top:24px">Ver los regalos por días seguidos</button>`;
 }
-const UNLOCK = [[2, 'Una botella dorada', 'dorada'], [3, 'Vidrio coral', 'amor'], [5, 'Una botella de regalo', 'vidrio'], [7, 'Vidrio violeta', 'cine'], [10, 'Una que llega lejos', 'vidrio'], [14, 'Vidrio aurora', 'filo'], [21, 'Dos botellas de regalo', 'vidrio'], [30, 'Vidrio de luna', 'dorada']];
+const UNLOCK = [[2, 'Una botella dorada', 'vidrio', 'tide'], [3, 'Vidrio coral', 'amor'], [5, 'Una botella de regalo', 'vidrio', 'gift'], [7, 'Vidrio violeta', 'cine'], [10, 'Una que llega lejos', 'vidrio', 'far'], [14, 'Vidrio aurora', 'filo'], [21, 'Dos botellas de regalo', 'vidrio', 'gift'], [30, 'Vidrio de luna', 'dorada']];
 function renderRacha() {
   const LS = LIVE ? liveStats() : null, UL = LIVE ? ULIVE : UNLOCK, n = LIVE ? LS.streak : 4, days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], on = LIVE ? LS.week : [1, 1, 1, 1, 0, 0, 0], nx = UL.find(u => u[0] > n) || UL[UL.length - 1], prev = (UL.filter(u => u[0] <= n).pop() || [0])[0];
   $('#v-racha').innerHTML = `${topbar('tu', 'Racha')}
@@ -1515,7 +1538,7 @@ function renderRacha() {
     ${LIVE && LS.today ? `<div class="box today2"><span class="tile" style="width:44px;height:44px;background:#E6F3FF">${ico('check', INK)}</span><span class="tx" style="flex:1"><b>Hoy ya grabaste.</b><small>Vuelve mañana y tu racha sigue creciendo.</small></span></div>` : `<div class="box today2"><span class="tile" style="width:44px;height:44px;background:#E6F3FF">${ico('mic', INK, '#E6F3FF')}</span><span class="tx" style="flex:1"><b>Hoy todavía no grabas.</b><small>Si el día termina sin grabar, empiezas desde 0.</small></span><button class="push btn blue sm" data-go="lanzar">Grabar</button></div>`}
     <div class="box nextg" style="${cvars(CAT[nx[2]])}"><span class="k mute3">Con ${nx[0]} días seguidos te regalamos</span><b>${nx[1]}</b><div class="life" style="max-width:none;padding:0;height:20px">${life((n - prev) / (nx[0] - prev), 16)}</div><span class="k mute3">${nx[0] > n ? `Faltan ${nx[0] - n} ${nx[0] - n === 1 ? 'día' : 'días'}` : 'Ya tienes todos los regalos'}</span></div>
     <div class="sec"><span class="h2">Regalos por días seguidos</span></div>
-    <div class="grid2">${UL.map(([d, t, k]) => `<div class="box spc ${d <= n ? '' : 'lock'}" style="${cvars(CAT[k])}"><span class="sbot">${bottle(k, d > n)}</span><b>${t}</b><small>${d <= n ? 'Ya es tuyo' : `A los ${d} días`}</small></div>`).join('')}</div>`;
+    <div class="grid2">${UL.map(([d, t, k, ck]) => `<div class="box spc ${d <= n ? '' : 'lock'}" style="${cvars(CAT[k])}"><span class="sbot">${bottle(k, d > n, false, ck)}</span><b>${t}</b><small>${d <= n ? 'Ya es tuyo' : `A los ${d} días`}</small></div>`).join('')}</div>`;
 }
 const MAPA = [['Cine', 5, 'cine'], ['Música', 3, 'musica'], ['Libros', 2, 'libros'], ['La ciudad', 1, 'ciudad']];
 function renderMapa() {
@@ -1698,7 +1721,7 @@ function fitHero() {
 }
 function renderMar(p = {}) {
   if (p.v) S.marV = p.v; const mv = S.marV || 'mapa', v = $('#v-mar');
-  const groups = ['dorada', ...KEYS].map(k => [k, BOT.filter(b => b.cat === k)]).filter(g => g[1].length);
+  const groups = ['dorada', ...KEYS].map(k => [k, BOT.filter(b => gk(b) === k)]).filter(g => g[1].length);
   const seg = `<div class="seg" role="tablist" aria-label="Cómo ver el mar">${[['mapa', 'Orilla'], ['lista', 'Lista']].map(([k, t]) => `<button class="push" role="tab" aria-selected="${mv === k}" data-mv="${k}">${ico(k === 'mapa' ? 'map' : 'more', mv === k ? '#fff' : INK)}${t}</button>`).join('')}</div>`;
   v.classList.toggle('mapv', mv === 'mapa');
   v.innerHTML = `${topbar('playa', 'Todo el mar')}${seg}` + (mv === 'mapa'
@@ -1706,7 +1729,7 @@ function renderMar(p = {}) {
     : `<h1 class="h1">Botellas que te llegaron</h1>
     <p class="mute" style="margin:8px 0 0">${BOT.length ? `${BOT.length} ${BOT.length === 1 ? 'botella' : 'botellas'} de gente que ama lo mismo que tú.` : 'Todavía no llega ninguna. Mientras, lanza la tuya.'}</p>
     ${groups.map(([k, l]) => `<div class="sec"><span class="h2 row" style="gap:8px"><i class="dot" style="background:${CAT[k].c}"></i>${k === 'dorada' ? 'Doradas · las abre cualquiera' : CAT[k].g}</span><span class="k mute3">${l.length}</span></div>
-      <div class="cards">${l.map(b => `<button class="card push" style="${cvars(CAT[k])}" data-pick="${b.id}"><span class="tile">${bottle(k)}</span><span class="tx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span>${S.heard.includes(b.id) ? '' : '<span class="new">Nueva</span>'}</button>`).join('')}</div>`).join('')}`);
+      <div class="cards">${l.map(b => `<button class="card push" style="${cvars(CAT[k])}" data-pick="${b.id}"><span class="tile">${bottle(b.cat, false, false, corkOf(b))}</span><span class="tx"><b>${qq(b.q)}</b><small>${esc(b.who)} · ${b.ago}</small></span>${S.heard.includes(b.id) ? '' : '<span class="new">Nueva</span>'}</button>`).join('')}</div>`).join('')}`);
   if (mv === 'mapa') { renderBeach(); renderLegend(); renderPlayer(true); fitShore(); }
   v.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { if (b.dataset.mv === mv) return; stop(); S.marV = b.dataset.mv; renderMar(); });
   v.querySelectorAll('[data-pick]').forEach(el => el.onclick = () => { S.sel = el.dataset.pick; S.filt = null; S.marV = 'mapa'; renderMar(); scrollTo(0, 0); });
@@ -1924,16 +1947,16 @@ function syncMe() { const m = R.me; if (!m) return; S.left = m.bottles; S.temas.
 async function loadMe() { R.me = one(await rpc('tide')); if (R.me && !R.me.id) R.me = null; syncMe(); if (R.me && R.me.intro_voice) await signed([R.me.intro_voice]).catch(() => {}); return R.me; }
 async function loadShore() {
   const rows = (await rpc('shore')) || []; await signed(rows.map(r => r.voice)); R.shore = rows;
-  const list = rows.map((r, i) => ({ id: r.id, cat: r.featured ? 'dorada' : catOf(r.voice, r.kind, r.id, r.topic || r.place), tema: S2T(r.topic || r.place || ''), gold: !!r.featured, q: r.body || '', who: someone(r.place) + (r.sample ? ' · voz de ejemplo' : ''), ago: agoS(r.arrived), url: R.urls.get(r.voice), voice: r.voice, t: r.voice_secs, wv: toW(r.voice_peaks) || W(hashS(r.id) % 60 + 1), ...POS[i % POS.length], status: r.status }));
+  const list = rows.map((r, i) => ({ id: r.id, cat: catOf(r.voice, r.kind, r.id, r.topic || r.place), btype: r.btype, tema: S2T(r.topic || r.place || ''), gold: !!r.featured, q: r.body || '', who: someone(r.place) + (r.sample ? ' · voz de ejemplo' : ''), ago: agoS(r.arrived), url: R.urls.get(r.voice), voice: r.voice, t: r.voice_secs, wv: toW(r.voice_peaks) || W(hashS(r.id) % 60 + 1), ...POS[i % POS.length], status: r.status }));
   BOT.length = 0; BOT.push(...list);
   S.heard = list.filter(b => b.status === 'opened').map(b => b.id);
   if (!BOT.some(b => b.id === S.sel)) S.sel = BOT[0] ? BOT[0].id : null;
-  if (S.filt && !BOT.some(b => b.cat === S.filt)) S.filt = null;
+  if (S.filt && !BOT.some(b => gk(b) === S.filt)) S.filt = null;
 }
 async function loadMine() {
   const rows = (await rpc('my_bottles')) || [], seen = store.get('seenAns', {});
   S.mine.length = 0;
-  rows.forEach(r => S.mine.push({ id: r.id, cat: r.featured ? 'dorada' : catOf(r.voice, r.kind, r.id, r.target), q: r.body || (r.tide_day ? 'Tu respuesta a la pregunta de hoy' : 'Tu nota de voz'), reach: r.shores, opened: r.opened, ans: r.answers, nuevo: r.answers > (seen[r.id] || 0), convo: r.convo, voice: r.voice, t: r.voice_secs, at: r.created_at }));
+  rows.forEach(r => S.mine.push({ id: r.id, cat: catOf(r.voice, r.kind, r.id, r.target), gold: !!r.featured, btype: r.btype, q: r.body || (r.tide_day ? 'Tu respuesta a la pregunta de hoy' : 'Tu nota de voz'), reach: r.shores, opened: r.opened, ans: r.answers, nuevo: r.answers > (seen[r.id] || 0), convo: r.convo, voice: r.voice, t: r.voice_secs, at: r.created_at }));
 }
 async function loadConvos() {
   const rows = (await rpc('my_convos')) || [], cc = store.get('ccat', {}), seen = store.get('seenc', {}); R.convos = rows;
@@ -2313,7 +2336,7 @@ function renderBloqueadosLive() {
 }
 
 const SPI = { roja: 'color', morada: 'far', dorada: 'tide', amarilla: 'gift' };
-const ULIVE = [[2, 'Una botella dorada', 'dorada'], [3, 'Vidrio coral', 'amor'], [5, 'Una botella de regalo', 'vidrio'], [7, 'Vidrio violeta', 'cine'], [10, 'Una que llega lejos', 'vidrio'], [14, 'Vidrio aurora', 'filo'], [21, 'Dos botellas de regalo', 'vidrio'], [30, 'Vidrio de luna', 'dorada']];
+const ULIVE = [[2, 'Una botella dorada', 'vidrio', 'tide'], [3, 'Vidrio coral', 'amor'], [5, 'Una botella de regalo', 'vidrio', 'gift'], [7, 'Vidrio violeta', 'cine'], [10, 'Una que llega lejos', 'vidrio', 'far'], [14, 'Vidrio aurora', 'filo'], [21, 'Dos botellas de regalo', 'vidrio', 'gift'], [30, 'Vidrio de luna', 'dorada']];
 const invLink = () => LIVE ? `${location.origin}/pixel/?c=${encodeURIComponent((R.me && R.me.code_used) || store.get('code', '') || 'BOTELLA-01')}` : 'https://botella-app.vercel.app';
 function liveStats() {
   const m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
@@ -2405,7 +2428,7 @@ document.addEventListener('click', e => {
   const gg = e.target.closest('[data-go]'); if (gg) { e.preventDefault(); go(gg.dataset.go, gg.dataset.p ? JSON.parse(gg.dataset.p) : {}); return; }
   const b = e.target.closest('[data-b]'); if (b) { select(b.dataset.b); return; }
   if (e.target.closest('#beach')) { go('mar', { v: 'mapa' }); return; }
-  const f = e.target.closest('[data-f]'); if (f) { S.filt = f.dataset.f || null; const l = BOT.filter(x => !S.filt || x.cat === S.filt); const keep = l.some(x => x.id === S.sel); if (l.length && !keep) S.sel = l[0].id; renderBeach(); renderLegend(); renderPlayer(!keep); }
+  const f = e.target.closest('[data-f]'); if (f) { S.filt = f.dataset.f || null; const l = BOT.filter(x => !S.filt || gk(x) === S.filt); const keep = l.some(x => x.id === S.sel); if (l.length && !keep) S.sel = l[0].id; renderBeach(); renderLegend(); renderPlayer(!keep); }
 });
 $('#wm').innerHTML = [...'BOTELLA'].map((ch, i) => `<span style="animation-delay:${i * .12}s">${ch}</span>`).join('');
 $('#invb').innerHTML = bottle('viajar'); 
