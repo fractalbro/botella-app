@@ -450,7 +450,7 @@ R.mar = () => {
   const reels = shore.map(id => ({ t: 'voz', id, b: B[id] })); const mode = store.get('marv', 'uno');
   // La pregunta de hoy va después de las tres primeras botellas, para que no quede al final de todo.
   const hi = Math.min(3, reels.length); reels.splice(hi, 0, { t: 'hoy' }); if (S.mine) reels.push({ t: 'mine' });
-  const nv = S.shore.length, SHOWN = 5, more = Math.max(0, shore.length - SHOWN);
+  const nv = S.shore.length, SHOWN = 10, more = Math.max(0, shore.length - SHOWN);
   const reel = (r, i) => {
     if (r.t === 'voz') { const b = r.b, secs = (PK[b.v] || [12])[0];
       return `<section class="reel" style="--c:${b.c}" data-i="${i}">
@@ -475,10 +475,14 @@ R.mar = () => {
   };
   return { cls: 'tabbed reels', html: `
   <div class="rtop"><button class="dockc" data-go="muelle" aria-label="Muelle: ${X.far + X.tide} botellas especiales">${I.dock}<b>${X.far + X.tide || 'Muelle'}</b></button><span class="vmode" role="tablist" aria-label="Cómo ver el mar"><button role="tab" data-m="uno" aria-pressed="${mode === 'uno'}">Una a una</button><button role="tab" data-m="todo" aria-pressed="${mode === 'todo'}">Todo el mar</button></span><button class="me-pill solo" data-go="perfil" aria-label="Tu perfil">${voiceMark()}</button></div>
-  <div class="sea" id="sea" aria-label="Todas las botellas del mar"><canvas class="seacv" aria-hidden="true"></canvas>
+  <div class="sea${shore.slice(0, SHOWN).length + (S.mine ? 2 : 1) > 6 ? ' dense' : ''}" id="sea" aria-label="Todas las botellas del mar"><canvas class="seacv" aria-hidden="true"></canvas>
     <div class="seahead"><h2>${nv === 1 ? '1 botella nueva' : `${nv} botellas nuevas`} flotando</h2><p>Toca una para ver qué dice.</p></div>
-    ${(() => { const spots = [[24, 30], [70, 25], [40, 52], [78, 56], [20, 74], [60, 80], [44, 22]]; const all = [...shore.slice(0, SHOWN).map(id => ({ k: 'voz', id, b: B[id] })), ...(S.mine ? [{ k: 'mine' }] : []), { k: 'hoy' }];
-      return all.slice(0, spots.length).map((x, i) => { const [px, py] = spots[i], rot = [-14, 10, -6, 16, -10, 8, -4][i];
+    ${(() => { const all = [...shore.slice(0, SHOWN).map(id => ({ k: 'voz', id, b: B[id] })), ...(S.mine ? [{ k: 'mine' }] : []), { k: 'hoy' }];
+      // Hasta 12 en el dibujo: la luna arriba a la derecha y las botellas en tres columnas que se alternan, como si flotaran sueltas.
+      const nb = all.length - 1, rows = Math.max(2, Math.ceil((nb + 1) / 3)), spots = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < 3; c++) { if (r === 0 && c === 2) continue; spots.push([[21, 50, 77][c] + (r % 2 ? 4 : -3), Math.round((nb > 5 ? 11 : 24) + r * ((nb > 5 ? 58 : 50) / (rows - 1 || 1)) + (c === 1 && r < rows - 1 ? 7 : 0))]); }
+      const moonAt = [72, 4];
+      return all.map((x, i) => { const [px, py] = x.k === 'hoy' ? moonAt : spots[i], rot = [-14, 10, -6, 16, -10, 8, -4][i % 7];
         if (x.k === 'hoy') return `<button class="fb moon" style="--x:${px}%;--y:${py};--d:${i * -.7}s" data-k="hoy"><span class="art"><span class="mmoon"></span></span><span class="lbl"><i style="background:#FFE7B0"></i>Pregunta de hoy</span></button>`;
         if (x.k === 'mine') return `<button class="fb mine" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${tc(S.mine.tema)}" data-k="mine"><span class="rip" aria-hidden="true"></span><span class="art">${voiceBottle(tc(S.mine.tema))}</span><span class="lbl"><i></i>La tuya</span></button>`;
         return `<button class="fb" style="--x:${px}%;--y:${py};--d:${i * -.7}s;--r:${rot}deg;--c:${x.b.c}" data-k="voz" data-id="${x.id}" data-i="${reels.findIndex(r => r.id === x.id)}"><span class="rip" aria-hidden="true"></span><span class="art">${voiceBottle(x.b.c, PK[x.b.v] && PK[x.b.v][1])}</span><span class="lbl"><i></i>${esc(gtag(x.b))}</span></button>`; }).join(''); })()}

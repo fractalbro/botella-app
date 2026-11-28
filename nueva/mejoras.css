@@ -240,3 +240,8 @@
 .conv.ended{opacity:.62}
 /* Mis botellas: en qué va cada una */
 .bcard .bstate{display:block;margin-top:2px;color:var(--fg-3)}
+
+/* Todo el mar con muchas botellas: más chicas para que entren hasta 12 sin amontonarse */
+.sea.dense .fb .vbot{height:min(9.6vh,76px)}
+.sea.dense .fb .lbl{font-size:11px;padding:3px 8px 3px 7px}
+.sea.dense .fb.moon .mmoon{width:min(7vh,52px)}
