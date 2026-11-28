@@ -216,3 +216,32 @@
 .toast .undo{white-space:nowrap;flex:none}
 .dlbl{gap:12px;flex-wrap:wrap}.dlbl .lock{white-space:nowrap;flex:none}
 .mcar{scroll-padding-inline:var(--pad)}
+
+/* ---------- 1000 personas: que todo siga a la vista cuando llegan muchas ---------- */
+/* Todo el mar: las que no caben en el dibujo se alcanzan con un botón */
+.seamore{position:absolute;left:50%;bottom:calc(var(--safe-b, 0px) + 112px);transform:translateX(-50%);z-index:3;height:44px;padding:0 18px 0 20px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;font-size:15px;color:var(--fg);background:rgba(12,30,47,.72);box-shadow:inset 0 0 0 1px var(--line-2);backdrop-filter:blur(10px)}
+.seamore .chev{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.slist{display:grid;gap:8px;max-height:56vh;overflow:auto}
+.srow{display:grid;gap:8px;text-align:left;padding:14px 16px;border-radius:var(--r-m);background:var(--s1);width:100%}
+.srow .rtag{justify-self:start;background:rgba(255,255,255,.06);backdrop-filter:none}
+.srow b{font-weight:400;font-size:16px;line-height:1.35}
+.srow .sgo{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--a)}
+.srow .sgo svg{width:14px;height:14px;fill:currentColor}
+/* Una sola celebración para varias respuestas */
+.mo-who{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+.mo-who .rtag{margin:0}
+/* Conversaciones en grupos */
+.cgh{margin:28px 0 10px;color:var(--fg-2)}
+.cfin{margin-top:28px}
+.cfin summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 16px;border-radius:var(--r-m);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--fg-2);font-size:15px}
+.cfin summary::-webkit-details-marker{display:none}
+.cfin summary .chev{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;transform:rotate(90deg);transition:transform .2s}
+.cfin[open] summary .chev{transform:rotate(-90deg)}
+.conv.ended{opacity:.62}
+/* Mis botellas: en qué va cada una */
+.bcard .bstate{display:block;margin-top:2px;color:var(--fg-3)}
+
+/* Todo el mar con muchas botellas: más chicas para que entren hasta 12 sin amontonarse */
+.sea.dense .fb .vbot{height:min(9.6vh,76px)}
+.sea.dense .fb .lbl{font-size:11px;padding:3px 8px 3px 7px}
+.sea.dense .fb.moon .mmoon{width:min(7vh,52px)}

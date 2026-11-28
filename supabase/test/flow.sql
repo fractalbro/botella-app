@@ -116,7 +116,13 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
 select pg_temp.ok((select bottles from tide()) = 4, 'botella gratis del día');
 reset role;
 select pg_temp.ok(exists (select 1 from deliveries where status = 'drifted'), 'la marea movió las botellas viejas');
-select pg_temp.ok(exists (select 1 from deliveries where to_id = '00000000-0000-0000-0000-000000000005' and status = 'waiting'), 'llegaron a una orilla nueva');
+-- ya la respondieron (la persona de ejemplo): la botella cumplió y deja de viajar
+select pg_temp.ok(not exists (select 1 from deliveries where to_id = '00000000-0000-0000-0000-000000000005'), 'ya respondida, deja de viajar');
+-- sin respuesta, lo que vence sigue su viaje a otra persona
+delete from convos where bottle_id = (select id from bottles where voice like '%b2.m4a');
+update deliveries set status = 'waiting', expires_at = now() - interval '1 hour' where bottle_id = (select id from bottles where voice like '%b2.m4a') and status = 'drifted';
+select tick();
+select pg_temp.ok(exists (select 1 from deliveries where to_id = '00000000-0000-0000-0000-000000000005' and status = 'waiting'), 'sin respuesta, sigue llegando a gente nueva');
 
 -- límite de premios: 3 por día
 update profiles set earned = 3, earned_day = lima_today() where id = '00000000-0000-0000-0000-000000000005';
@@ -137,7 +143,8 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
 select delete_me();
 reset role;
 select pg_temp.ok(not exists (select 1 from profiles where id = '00000000-0000-0000-0000-000000000003'), 'cuenta borrada');
--- una persona nueva recibe botellas recientes que aún buscan orilla
+-- una persona nueva recibe botellas recientes que aún buscan orilla (las que nadie respondió todavía)
+insert into bottles(owner, kind, voice, voice_secs) values ('00000000-0000-0000-0000-000000000001', 'Pregunta', '00000000-0000-0000-0000-000000000001/b4.m4a', 5);
 insert into auth.users(id) values ('00000000-0000-0000-0000-000000000006');
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000006');
@@ -474,4 +481,11 @@ select tide();
 select pg_temp.ok((select featured from shore() limit 1), 'la dorada llegó a otra orilla y sale primero');
 select pg_temp.ok((select topic from shore() limit 1) = 'Música', 'la botella trae su tema, que decide su color');
 reset role;
+
+-- avisos: varias personas abren la misma botella y queda un solo aviso con el resumen
+insert into bottles(id, owner, kind, voice, voice_secs) values ('0000b000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000001', 'Pregunta', '00000000-0000-0000-0000-000000000001/b9.m4a', 5);
+insert into deliveries(bottle_id, to_id) values ('0000b000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000002'), ('0000b000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000005'), ('0000b000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000006');
+update deliveries set status = 'opened', opened_at = now() where bottle_id = '0000b000-0000-4000-8000-000000000001';
+select pg_temp.ok((select count(*) from notices where kind = 'opened' and ref = '0000b000-0000-4000-8000-000000000001') = 1, 'un solo aviso por botella');
+select pg_temp.ok((select title from notices where kind = 'opened' and ref = '0000b000-0000-4000-8000-000000000001') = '3 personas escucharon tu botella', 'el aviso dice cuántas la escucharon');
 \echo 'TODO OK'
