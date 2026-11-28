@@ -432,6 +432,15 @@ begin
     loop
       insert into deliveries(bottle_id, to_id) values (r.id, me.id) on conflict do nothing;
     end loop;
+    -- Las doradas de las últimas 48 horas llegan a todas las orillas, sin importar el tema: salen primero en el mar de cada persona.
+    insert into deliveries(bottle_id, to_id)
+      select b.id, me.id from bottles b join profiles o on o.id = b.owner
+      where b.featured and not b.hidden and not o.is_sample and b.created_at > now() - interval '48 hours'
+        and b.owner <> me.id and b.partner is distinct from me.id and not blocked(b.owner, me.id)
+        and not exists (select 1 from deliveries d where d.bottle_id = b.id and d.to_id = me.id)
+        and not exists (select 1 from convos c where c.bottle_id = b.id and c.b = me.id)
+      order by b.created_at desc limit 3
+      on conflict do nothing;
     -- Mientras somos pocos, las botellas de ejemplo acompañan: tres al llegar y luego hasta dos con cada marea de las 21:00.
     fresh := case when me.sample_fill is null then 3 when me.sample_fill < next_tide(now()) - interval '1 day' then 2 else 0 end;
     if fresh > 0 then
@@ -526,15 +535,17 @@ drop function if exists public.shore();
 create or replace function public.shore() returns table (
   id uuid, status text, arrived timestamptz, kind text, body text, voice text, voice_secs int, voice_peaks jsonb, place text, btype text,
   featured boolean, glass text, sample boolean, expires_at timestamptz, tide_day date,
-  voice2 text, voice2_secs int, voice2_peaks jsonb, place2 text
+  voice2 text, voice2_secs int, voice2_peaks jsonb, place2 text, topic text
 ) language sql stable security definer set search_path = public as $$
   select d.id, d.status, d.created_at, b.kind, b.body, b.voice, b.voice_secs, b.voice_peaks, vibe(auth.uid(), b.owner), b.btype, b.featured, b.glass, p.is_sample,
     case when d.status = 'waiting' then coalesce(d.expires_at, d.created_at + interval '24 hours') else d.opened_at + interval '48 hours' end,
-    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (case when b.voice2 is not null then vibe(auth.uid(), b.partner) end)
+    b.tide_day, b.voice2, b.voice2_secs, b.voice2_peaks, (case when b.voice2 is not null then vibe(auth.uid(), b.partner) end),
+    -- El tema decide el color de la botella en las dos versiones: el que eligió quien la lanzó o el que tienen en común.
+    coalesce(b.target_topic, vibe(auth.uid(), b.owner))
   from deliveries d join bottles b on b.id = d.bottle_id join profiles p on p.id = b.owner
   where d.to_id = auth.uid() and d.status in ('waiting','opened') and not b.hidden and not blocked(b.owner, auth.uid())
     and (d.status <> 'waiting' or coalesce(d.expires_at, d.created_at + interval '24 hours') > now())
-  order by d.created_at desc limit 20;
+  order by b.featured desc, d.created_at desc limit 20;
 $$;
 grant execute on function public.shore() to authenticated;
 
